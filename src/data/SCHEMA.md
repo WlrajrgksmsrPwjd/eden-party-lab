@@ -92,3 +92,18 @@
   "note_kr": "자상 기반 초고화력 전체 딜러. 양옆 아군에 버프."
 }
 ```
+
+# 파티 버프 조건 규칙 (`buff_rules.json`)
+
+`party_buff.restrict`에 적힌 조건을 계산용 규칙으로 옮긴 파일. 키는 캐릭터 id, 값은 규칙 배열. 빌드 때 각 캐릭터의 `party_rules`로 들어간다.
+규칙에 없는 버프 항목은 기존처럼 전방 전원에게 100% 들어간다. 같은 항목에 규칙이 여러 개면 곱한다.
+
+```json
+{"f":["stat","weap"], "to":{"elem":["water"]}, "when":{"zone":["thunder"],"zlv":2}, "x":1, "e":0.5, "me":1}
+```
+
+- `f` 대상 버프 묶음: `stat`(pwr·int·spd) `pwr` `int` `spd` `elem`(전속성+속성) `allel`(전속성) `elat`(속성) `elat:fire`(특정 속성만) `weap` `crit` `critd` `sf` `mf` `focus`(sf+mf) `ot` `eagle` `oc` `mh` `xhit` `pierce` `weak` `link` `*`(전부)
+- `to` 받는 사람 조건: `pos`(`self` `one` `adj` `selfone` `selfadj` `others`) + `side`(`r` 오른쪽/`l` 왼쪽), `elem` `weap` `wt` `align` `kind`(phys/mag) `kof`, `p`(판정 불가 퍼스널리티 → 맞을 확률)
+- `when` 발동 조건: `zone`(`any` `elem` `weap` 또는 존 키 배열: fire…crystal, slash/pierce/blunt/magic, slash_pierce, slash_magic, all(성해진), all_weapon(섬격진), moonlight), `zlv`(2=극/어나더 존, 3=절), `sb`, `af`, `req`(전방 구성, parseReq 형식), `pain`(파티에 독·페인), `up`(켜져 있는 비율), `t`(짧은 버프: SB·AF 땐 100%, 평상 턴엔 이 비율)
+- `x` 조건 충족 시 배율(기본 1), `e` 미충족 시 배율(기본 0), `me` 1이면 버퍼 자신은 조건과 무관하게 `x`
+- `{"zel":true}`: 속성 공격 버프가 펼친 속성 존의 속성을 따라감

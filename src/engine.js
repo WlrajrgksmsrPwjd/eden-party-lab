@@ -41,11 +41,13 @@ const SPECIAL_GRASTA = {none:1, vc:1.03, shin:1.07, goku:1.12};
 const MANIFEST = [1, 1.08, 1.15];
 const FOCUS_VAL = 1.6, OVERTHROW_VAL = 1.0, EAGLE_VAL = 0.6;
 
+const _dbuf = new Float64Array(128);
 function dimin(vals, cap){ // 체감 중첩: 1 + A + A·B + A·B·C … (A가 최대값)
-  let arr = vals.filter(v=>v>0).sort((a,b)=>b-a);
-  if(!arr.length) return 0;
+  let n=0;
+  for(let i=0;i<vals.length;i++){ const v=vals[i]; if(v>0){ let k=n++; while(k>0 && _dbuf[k-1]<v){ _dbuf[k]=_dbuf[k-1]; k--; } _dbuf[k]=v; } }
+  if(!n) return 0;
   let tot=0, prod=1;
-  for(const v of arr){ prod*=v; tot+=prod; if(prod<1e-4) break; }
+  for(let i=0;i<n;i++){ prod*=_dbuf[i]; tot+=prod; if(prod<1e-4) break; }
   return cap!=null ? Math.min(tot,cap) : tot;
 }
 const pct = v => (typeof v==='number' ? v : 0)/100;
@@ -163,7 +165,126 @@ function reqText(req){
 const ELEM_SWITCH = {
   jilfany_as: {need:{kind:'elem', vals:['crystal'], n:3, others:false}, yes:'crystal', no:'water'}
 };
+/* ---------- 파티 버프 조건 규칙 (data/buff_rules.json → party_rules) ---------- */
+const FG = {
+  stat:['pwr','int','spd'], pwr:['pwr'], int:['int'], spd:['spd'],
+  elem:['all_elem_atk','elem_atk'], allel:['all_elem_atk'], elat:['elem_atk'],
+  weap:['weapon_atk'], crit:['crit_rate'], critd:['crit_dmg'],
+  sf:['singular_focus'], mf:['mental_focus'], focus:['singular_focus','mental_focus'],
+  ot:['overthrow'], eagle:['eagle_eyes'], oc:['over_crit'], mh:['multihit'], xhit:['extra_hit'],
+  pierce:['barrier_pierce'], weak:['weak_dmg'], link:['link']
+};
+const ALLF = [...new Set(Object.values(FG).flat())];
+function compileRules(c){
+  const p = c.party_buff||{};
+  let rules = Array.isArray(c.party_rules) ? c.party_rules.slice() : [];
+  if(!rules.length && p.scope==='adjacent') rules=[{f:['*'],to:{pos:'adj'}}];
+  if(!rules.length && (p.scope==='left'||p.scope==='right')) rules=[{f:['*'],to:{pos:'one',side:p.scope==='left'?'l':'r'}}];
+  if(!rules.length) return null;
+  const list=[]; let zel=false, zdep=false, sdep=false;
+  for(const r of rules){
+    if(r.zel){ zel=true; zdep=true; continue; }
+    const fs=new Set();
+    for(const g of (r.f||['*'])){
+      if(g==='*') ALLF.forEach(k=>fs.add(k));
+      else if(g.indexOf('elat:')===0) fs.add('elem_atk:'+g.slice(5));
+      else (FG[g]||[]).forEach(k=>fs.add(k));
+    }
+    const w=r.when||{}, to=r.to||{};
+    if(w.zone||w.zlv) zdep=true;
+    if(w.sb||w.af||w.t!=null) sdep=true;
+    list.push({fs:[...fs], to, w, x:r.x!=null?r.x:1, e:r.e!=null?r.e:0, me:!!r.me, pos:to.pos||null, side:to.side||null});
+  }
+  return {list, zel, zdep, sdep, hasPos:list.some(r=>r.pos)};
+}
+function zoneMatch(spec, z){
+  if(!z || z.kind==='none' || !z.level) return false;
+  if(spec==='any') return true;
+  if(spec==='elem') return z.kind==='elem';
+  if(spec==='weap') return z.kind==='weap';
+  const k=z.key;
+  return [].concat(spec).some(s=> s===k || (s==='all' && (k==='starsea'||k==='stellar_sea'||k==='星海陣')));
+}
+function ruleAct(r, j, team, progs, sit, z, A){
+  const w=r.w; let a=1;
+  if(w.zone && !zoneMatch(w.zone, z)) return 0;
+  if(w.zlv && !(z && z.kind!=='none' && z.level>=w.zlv)) return 0;
+  if(w.sb && !(sit==='sb' && progs[j] && progs[j].sbOK)) return 0;
+  if(w.af && sit!=='af') return 0;
+  if(w.req && !reqMet(w.req, team, team[j])) return 0;
+  if(w.pain && !A.painAny) return 0;
+  if(w.up!=null) a*=w.up;
+  if(w.t!=null && sit==='normal') a*=w.t;
+  return a;
+}
+function toFilterOK(to, m){
+  if(to.elem && !m.elems.some(e=>to.elem.includes(e))) return false;
+  if(to.weap && !to.weap.includes(m.weapon)) return false;
+  if(to.wt && !to.wt.includes(m.atkWt)) return false;
+  if(to.align && m.align!==to.align) return false;
+  if(to.kind && m.atkKind!==to.kind) return false;
+  if(to.kof && !KOF_JP.includes((m.raw||{}).name_jp)) return false;
+  return true;
+}
+/* 위치 지정 버프(양옆·오른쪽 1명 등)의 대상: 조건에 맞는 아군 중 화력 잠재력 순. 한 캐릭터 옆자리는 둘뿐이라 위치 버퍼는 2명까지 */
+function computePos(team){
+  const n=team.length, load=team.map(()=>new Set()), out=new Array(n).fill(null);
+  for(let j=0;j<n;j++){
+    const R=team[j].rules; if(!R||!R.hasPos) continue;
+    out[j]=R.list.map(r=>{
+      if(!r.pos) return null;
+      const self = r.pos==='self'||r.pos==='selfone'||r.pos==='selfadj';
+      const k = r.pos==='one'||r.pos==='selfone' ? 1 : r.pos==='adj'||r.pos==='selfadj' ? 2 : r.pos==='others' ? 9 : 0;
+      const set=new Set(); if(self) set.add(j);
+      const cand=[]; for(let i=0;i<n;i++) if(i!==j && toFilterOK(r.to, team[i])) cand.push(i);
+      cand.sort((a,b)=>(team[b].pow||0)-(team[a].pow||0));
+      let got=0;
+      for(const i of cand){
+        if(got>=k) break;
+        if(k<9 && !load[i].has(j) && load[i].size>=2) continue;
+        set.add(i); got++; if(k<9) load[i].add(j);
+      }
+      return set;
+    });
+  }
+  return out;
+}
+function buildBF(team, progs, sit, z, A, posSets){
+  const n=team.length; let any=false; const FX=new Array(n).fill(null);
+  for(let j=0;j<n;j++){
+    const R=team[j].rules; if(!R) continue;
+    any=true;
+    const rows=[]; for(let i=0;i<n;i++) rows.push({});
+    const L=R.list;
+    for(let ri=0;ri<L.length;ri++){
+      const r=L[ri];
+      const a = ruleAct(r,j,team,progs,sit,z,A);
+      const ps = posSets&&posSets[j] ? posSets[j][ri] : null;
+      for(let i=0;i<n;i++){
+        let v;
+        if(r.me && i===j) v=r.x;
+        else {
+          let t=0;
+          if(a>0){ t = r.pos ? (ps&&ps.has(i)?1:0) : 1; if(t && !r.pos && !toFilterOK(r.to, team[i])) t=0; if(t && r.to.p!=null) t*=r.to.p; }
+          v = r.e + a*t*(r.x-r.e);
+        }
+        if(v===1) continue;
+        const row=rows[i]; for(const k of r.fs) row[k]=(row[k]==null?1:row[k])*v;
+      }
+    }
+    FX[j]={rows, zel:R.zel};
+  }
+  return any?FX:null;
+}
+
 /* ---------- 캐릭터 전처리 ---------- */
+function skillPow(sk){
+  if(!sk) return 0;
+  const tgt = sk.target==='st'?'st':'aoe', kind = sk.kind==='mag'?'mag':'phys', el=(sk.element||'none')==='none'?'no':'el';
+  const sv = (SIZE_TABLE[tgt+'_'+kind+'_'+el]||SIZE_TABLE.aoe_phys_el)[SIZE_IDX[sk.size]??3]/100;
+  let m = Math.max(sk.mult||1,1); if(isCharge(sk.condition) && m>=30){ m*=0.4; if(m>25) m=25+(m-25)*0.2; }
+  return sv*m*(1+(sk.repeat||0)*0.7);
+}
 function prepChar(c){
   const p = c.party_buff||{}, s=c.self_buff||{}, d=c.debuff||{}, sp=c.support||{};
   const wt = WEAPON_TYPE[c.weapon]||'slash';
@@ -171,8 +292,11 @@ function prepChar(c){
   const zoneTypes = zone ? normZoneType(zone.type) : null;
   const zspec = zone ? parseZoneCond(zone.condition||'', !!zone.awakened) : null;
   const cx = complexity(c);
+  const m0 = c.main||{};
+  const atkKind = m0.kind==='mag'?'mag':'phys';
+  const pow = Math.max(skillPow(c.main), 0.6*skillPow(c.sb)) * ((c.roles||[]).includes('dps')?1:0.5);
   return {
-    cx: cx.v, cxWhy: cx.why,
+    cx: cx.v, cxWhy: cx.why, rules: compileRules(c), pow, atkKind, atkWt: m0.weapon_type || (atkKind==='mag'?'magic':wt),
     id:c.id, raw:c, name:c.name_kr, elem:(c.element&&c.element[0])||'none', elems:c.element||[], weapon:c.weapon, wt,
     align:c.align, stellar:!!c.stellar, tier:c.tier||'', score:c.score||0, roles:c.roles||[],
     main:c.main, sb:c.sb,
@@ -273,7 +397,7 @@ function zoneCandidates(team, progs, situation){
     const lvl = level>=2 && zetsu ? 3 : level;
     const zname = ZONE_KR[best.key] || ZONE_KR[c.zone.type] || '존';
     const pre = lvl===3?'절·':lvl===2?'극·':'';
-    cands.push({kind:best.kind, types:best.types, level:lvl, by:c.id, byName:c.name, how, unmet,
+    cands.push({kind:best.kind, types:best.types, key:best.key, level:lvl, by:c.id, byName:c.name, how, unmet,
       label: pre + zname});
   }
   return cands;
@@ -303,28 +427,23 @@ function zoneFactorEff(z, el, wt, S){
 
 /* ---------- 팀 단위 공통 집계 ---------- */
 function teamAgg(team){
-  const A = {painAny:false, multihit:false, overcrit:false, pierceGive:false, breaks:[], weakAdd:[], weakDmg:[],
-    crit:0, critDmg:0, linkAny:false, extraHit:false};
+  // 적에게 거는 것(독·페인, 브레이크, 약점 부여)만 팀 공통. 아군 버프는 attackerCore에서 받는 사람별로 조건을 따진다.
+  const A = {painAny:false, breaks:[], weakAdd:[]};
   for(const c of team){
     if(c.pain) A.painAny=true;
-    if(c.party.multihit) A.multihit=true;
-    if(c.party.over_crit) A.overcrit=true;
-    if(c.party.barrier_pierce) A.pierceGive=true;
-    if(c.party.extra_hit) A.extraHit=true;
     if(c.breakT) A.breaks.push(c.breakT);
     if(c.weakExpose) A.weakAdd.push(c.weakExpose);
-    A.crit += pct(c.party.crit_rate);
-    A.critDmg += pct(c.party.crit_dmg);
-    if(c.party.weak_dmg) A.weakDmg.push(pct(c.party.weak_dmg));
   }
   return A;
 }
 
-/* ---------- 공격자 1명의 존 무관 대미지 (상대값) ---------- */
-function attackerCore(team, idx, progs, A, enemy, S, situation, ctx){
+/* ---------- 공격자 1명의 대미지 (상대값, 존 배율 제외) ---------- */
+function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const c = team[idx], pr = progs[idx];
+  const sit = situation==='af' ? 'normal' : situation; // AF는 스킬 선택이 평상과 같음
+  let row=null; const F = (j,k)=>{ if(!row) return 1; const v=row[k]; return v==null?1:v; };
   let sk = c.main, usingSB=false;
-  if(situation==='sb' && c.sb && pr.sbOK && c.sb.mult>0){ sk=c.sb; usingSB=true; }
+  if(sit==='sb' && c.sb && pr.sbOK && c.sb.mult>0){ sk=c.sb; usingSB=true; }
   if(!sk) return null;
   let el = sk.element||c.elem; const kind = sk.kind==='mag'?'mag':'phys';
   const swc = ELEM_SWITCH[c.id];
@@ -334,33 +453,51 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx){
   const key = tgt+'_'+kind+'_'+(el==='none'?'no':'el');
   const sizeV = (SIZE_TABLE[key]||SIZE_TABLE.aoe_phys_el)[SIZE_IDX[sk.size]??3]/100;
   let mult = Math.max(sk.mult||1, 1);
-  if(situation!=='sb' && isCharge(sk.condition) && mult>=30) mult*=0.4;
+  if(situation!=='sb' && isCharge(sk.condition) && mult>=30){ mult*=0.4; if(mult>25) mult = 25 + (mult-25)*0.2; } // 축적형 큰 한 방은 평상시 평균으로 낮춤
   if(usingSB) mult*=pr.sbMul;
   let dmg = sizeV*mult*(tgt==='st'?1.1:1)*(el!=='none'?1.75:1);
 
   // 스탯 버프 (완력/지성/속도)
   const stat = sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
   const sv=[pct(c.self[stat])], ev=[pct(c.self.elem_atk)], wv=[pct(c.self.weapon_atk)], spv=[];
-  let critR = (kind==='phys'?0.2:0) + pct(c.self.crit_rate) + A.crit, critD = pct(c.self.crit_dmg)+A.critDmg;
-  let oc = !!c.self.over_crit || A.overcrit, mh = !!c.self.multihit || A.multihit;
-  const weakD = [pct(c.self.weak_dmg)].concat(A.weakDmg);
+  let critA=0, critD = pct(c.self.crit_dmg);
+  let ocW = c.self.over_crit?1:0, mhW = c.self.multihit?1:0, xW=0, pierceW = sk.barrier_pierce?1:0;
+  const weakD = [pct(c.self.weak_dmg)];
   if(kind==='phys' && c.self.singular_focus) spv.push(FOCUS_VAL);
   if(kind==='mag' && c.self.mental_focus) spv.push(FOCUS_VAL);
   if(c.self.overthrow) spv.push(OVERTHROW_VAL);
   if(c.self.eagle_eyes) spv.push(EAGLE_VAL);
+  const zElem = zone && zone.kind==='elem' && zone.level>0 ? zone.types : null;
   for(let j=0;j<team.length;j++){
     const p = team[j].party; if(!p || p.scope==='none') continue;
-    sv.push(pct(p[stat]));
-    if(el!=='none'){ ev.push(pct(p.all_elem_atk)); if(p.elem_atk) ev.push(pct(p.elem_atk[el])); }
-    else ev.push(pct(p.all_elem_atk)*0.5);
-    if(p.weapon_atk){ wv.push(pct(p.weapon_atk.all)); wv.push(pct(p.weapon_atk[c.weapon])); wv.push(pct(p.weapon_atk[wt])); }
+    row = FX&&FX[j] ? FX[j].rows[idx] : null;
+    sv.push(pct(p[stat])*F(j,stat));
+    if(el!=='none'){
+      ev.push(pct(p.all_elem_atk)*F(j,'all_elem_atk'));
+      if(p.elem_atk){
+        let ea;
+        if(FX&&FX[j]&&FX[j].zel&&zElem) ea = zElem.includes(el) ? Math.max(0,...Object.values(p.elem_atk).map(pct)) : 0; // 존 속성을 따라가는 속성 버프
+        else ea = pct(p.elem_atk[el]);
+        if(ea) ev.push(ea*F(j,'elem_atk')*F(j,'elem_atk:'+el));
+      }
+    }
+    else ev.push(pct(p.all_elem_atk)*0.5*F(j,'all_elem_atk'));
+    if(p.weapon_atk){ const fw=F(j,'weapon_atk'); wv.push(pct(p.weapon_atk.all)*fw, pct(p.weapon_atk[c.weapon])*fw, pct(p.weapon_atk[wt])*fw); }
+    critA += pct(p.crit_rate)*F(j,'crit_rate');
+    critD += pct(p.crit_dmg)*F(j,'crit_dmg');
+    if(p.over_crit) ocW=Math.max(ocW, F(j,'over_crit'));
+    if(p.multihit) mhW=Math.max(mhW, F(j,'multihit'));
+    if(p.extra_hit) xW=Math.max(xW, F(j,'extra_hit'));
+    if(p.barrier_pierce) pierceW=Math.max(pierceW, F(j,'barrier_pierce'));
+    if(p.weak_dmg) weakD.push(pct(p.weak_dmg)*F(j,'weak_dmg'));
     if(j!==idx){
-      if(kind==='phys' && p.singular_focus) spv.push(FOCUS_VAL);
-      if(kind==='mag' && p.mental_focus) spv.push(FOCUS_VAL);
-      if(p.overthrow) spv.push(OVERTHROW_VAL);
-      if(p.eagle_eyes) spv.push(EAGLE_VAL);
+      if(kind==='phys' && p.singular_focus) spv.push(FOCUS_VAL*F(j,'singular_focus'));
+      if(kind==='mag' && p.mental_focus) spv.push(FOCUS_VAL*F(j,'mental_focus'));
+      if(p.overthrow) spv.push(OVERTHROW_VAL*F(j,'overthrow'));
+      if(p.eagle_eyes) spv.push(EAGLE_VAL*F(j,'eagle_eyes'));
     }
   }
+  let critR = (kind==='phys'?0.2:0) + pct(c.self.crit_rate) + critA;
   const statB = dimin(sv,1), elB = dimin(ev,1), wB = dimin(wv,1);
   let specB = dimin(spv, 3.5);
   dmg *= (1+statB)*(stat==='spd'?(1+statB*0.6):1)*(1+elB)*(1+wB)*(1+specB);
@@ -383,7 +520,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx){
   const p = Math.min(Math.max(critR,0),1);
   const critF = 1 + p*(1.857*(1+critD)-1);
   // 오버크리티컬: 크리율 100% 초과분 ÷ 10 이 발생 확률 (1100%면 확정), 발생 시 대미지 2배
-  const ocP = oc ? Math.min(Math.max((critR-1)/10,0),1) : 0;
+  const ocP = ocW>0 ? Math.min(Math.max((critR-1)/10,0),1)*Math.min(1,ocW) : 0;
   dmg *= critF * (1+ocP);
 
   // 브레이크
@@ -412,18 +549,20 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx){
   dmg *= relF;
 
   // 다단강화
-  const hits = Math.max(1, sk.hits||1) + (A.extraHit && kind==='phys' ? 1 : 0);
-  if(mh) dmg *= multihitAvg(hits);
-  if(A.extraHit && kind==='phys') dmg *= hits/Math.max(1,hits-1);
+  const xh = xW>=0.5 && kind==='phys';
+  const hits = Math.max(1, sk.hits||1) + (xh ? 1 : 0);
+  if(mhW>0) dmg *= 1 + (multihitAvg(hits)-1)*Math.min(1,mhW);
+  if(xh) dmg *= hits/Math.max(1,hits-1);
 
   // 장비: 공격 글래스터 (속성/HP계 가산 +30%, 페인·독 곱연산 ×1.3)
-  const gq = grastaFactor(pr, A.painAny);
+  const gk = A.painAny?'_gq1':'_gq0';
+  const gq = pr[gk] || (pr[gk] = grastaFactor(pr, A.painAny));
   dmg *= gq.f * pr.f;
 
   // 방어 무시/배리어
   if(sk.def_ignore) dmg *= 1.1;
-  const pierce = sk.barrier_pierce || A.pierceGive;
-  if(ctx.needPierce && !pierce) dmg *= 0.25;
+  const pierce = pierceW>=0.5;
+  if(ctx.needPierce) dmg *= 0.25 + 0.75*Math.min(1,pierceW);
 
   // 반복/재공격
   let rep = sk.repeat||0;
@@ -492,38 +631,122 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   const flux = light>shadow?'light':shadow>light?'shadow':'both';
   const hasSB = team.some((c,i)=>c.stellar && progs[i].sbOK);
   const cx = Object.assign({}, ctx, {flux});
+  const anyR = team.some(c=>c.rules), zdep = anyR && team.some(c=>c.rules&&c.rules.zdep), sdep = anyR && team.some(c=>c.rules&&c.rules.sdep);
+  const posSets = anyR && team.some(c=>c.rules&&c.rules.hasPos) ? computePos(team) : null;
+  // 같은 상황에서 규칙 발동 상태가 같으면 계산을 재사용 (존 후보가 버프 조건을 바꾸지 않는 경우가 대부분)
+  const memo = new Map();
+  const coresFor = (sit, z)=>{
+    if(!zdep){ const FX = anyR ? buildBF(team,progs,sit,z,A,posSets) : null; return team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,sit,cx,FX,z)); }
+    let key = sit==='sb'?7:sit==='af'?13:3;
+    for(let j=0;j<team.length;j++){ const R=team[j].rules; if(!R) continue;
+      if(R.zel) key = (key*131 + (z&&z.kind==='elem'&&z.level>0 ? ELEMS.indexOf(z.types[0])+1+(z.types.length>1?40:0) : 0)) % 2147483629;
+      for(const r of R.list) key = (key*1009 + Math.round(ruleAct(r,j,team,progs,sit,z,A)*1000)) % 2147483629; }
+    const hit = memo.get(key); if(hit) return hit;
+    const FX = anyR ? buildBF(team,progs,sit,z,A,posSets) : null;
+    const cores = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,sit,cx,FX,z));
+    memo.set(key, cores); return cores;
+  };
+  const fw = focusW(ctx&&ctx.focus);
+  const sumZ = (cores,z,combo)=>{ let v=0; const per=cores.map(co=>{ const d=applyZoneCap(co,z,S,cap,combo)*fw(co); v+=d; return d; }); return {v,per}; };
   const res = {};
-  const situations = ['normal','sb'];
-  const coreCache = {};
-  for(const sit of situations){
+  for(const sit of ['normal','sb']){
+    const s2 = (sit==='sb'&&!hasSB)?'normal':sit;
     const zs = zoneCandidates(team, progs, sit);
-    const cores = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,(sit==='sb'&&!hasSB)?'normal':sit,cx));
-    coreCache[sit]=cores;
-    let best=null, bestV=-1, bestPer=null;
+    const shared = zdep ? null : coresFor(s2, null);
+    let best=null, bestV=-1, bestPer=null, bestCores=shared;
     for(const z of zs){
-      const per = cores.map(co=>applyZoneCap(co,z,S,cap));
-      const v = per.reduce((a,b)=>a+b,0);
-      if(v>bestV){bestV=v;best=z;bestPer=per;}
+      const cores = zdep ? coresFor(s2, z) : shared;
+      const r = sumZ(cores, z);
+      if(r.v>bestV){ bestV=r.v; best=z; bestPer=r.per; bestCores=cores; }
     }
-    res[sit] = {total:bestV, zone:best, per:bestPer, cores, zones:zs};
+    res[sit] = {total:bestV, zone:best, per:bestPer, cores:bestCores, zones:zs, sit:s2};
   }
-  // 지속: 일반 존은 상시, 어나더 존은 2/5 턴 가동
+  // 지속: 일반 존은 상시, 어나더 존은 2/5 턴 가동 (어나더 존 한정 버프도 그 동안만)
   const nz = res.normal.zone;
   let sustain = res.normal.total;
   if(nz && nz.level>=2){
     const z1 = Object.assign({}, nz, {level:1});
-    const base1 = res.normal.cores.map(co=>applyZoneCap(co,z1,S,cap)).reduce((a,b)=>a+b,0);
-    sustain = base1*0.6 + res.normal.total*0.4;
+    const cores1 = zdep ? coresFor('normal', z1) : res.normal.cores;
+    sustain = sumZ(cores1, z1).v*0.6 + res.normal.total*0.4;
   }
-  // AF: 0MP, 콤보 배율
+  // AF: 0MP, 콤보 배율 (AF 중 한정 버프·타이밍 버프 반영)
+  const afCores = sdep ? coresFor('af', nz) : res.normal.cores;
   let gain=0;
-  res.normal.cores.forEach(co=>{ if(co) gain += S.afActions*co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); });
+  afCores.forEach(co=>{ if(co) gain += S.afActions*co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); });
   const avgCombo = Math.min(0.75 + 0.5*gain, 4);
-  const af = res.normal.cores.reduce((a,co)=>a+applyZoneCap(co,res.normal.zone,S,cap,avgCombo),0)*S.afActions;
+  const af = sumZ(afCores, nz, avgCombo).v*S.afActions;
   const sbTurn = res.sb.total;
   const surv = survival(team, progs);
   return {sbTurn, af, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
-    flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A};
+    flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A, posSets};
+}
+/* 속성·공격 타입 지정: 지정과 맞는 공격만 화력으로 센다 */
+function focusMatch(co, f){
+  if(!co) return false;
+  if(f.kind==='elem') return co.el===f.v;
+  if(f.v==='magic') return co.kind==='mag' || co.wt==='magic';
+  return co.kind!=='mag' && co.wt===f.v;
+}
+function focusW(f){ return f ? (co=>focusMatch(co,f)?1:0) : (()=>1); }
+function charFocusMatch(c, f){
+  if(!f) return true;
+  const sks=[c.main,c.sb].filter(Boolean);
+  return sks.some(sk=>{
+    const kind=sk.kind==='mag'?'mag':'phys';
+    let el=sk.element||c.elem; const sw=ELEM_SWITCH[c.id]; if(sw && (el===sw.yes||el===sw.no) && f.kind==='elem' && (f.v===sw.yes||f.v===sw.no)) el=f.v;
+    return focusMatch({el, kind, wt: sk.weapon_type||(kind==='mag'?'magic':c.wt)}, f);
+  });
+}
+
+/* ---------- 결과 설명: 조건부 버프 적용 상태 + 추천 배치 ---------- */
+function explainTeam(team, progs, ev, S, ctx){
+  const A = teamAgg(team);
+  const posSets = ev.posSets || (team.some(c=>c.rules&&c.rules.hasPos) ? computePos(team) : null);
+  const sbz = ev.sb.zone, sit = ev.sb.sit || 'sb';
+  const FX = buildBF(team, progs, sit, sbz, A, posSets);
+  const per = ev.sb.per, tot = per.reduce((a,b)=>a+b,0)||1;
+  const dealers = per.map((v,i)=>[v/tot,i]).filter(x=>x[0]>=0.2).map(x=>x[1]);
+  const notes = [];
+  team.forEach((c,j)=>{
+    const R=c.rules; if(!R || !R.list.length) return;
+    const p=c.party||{};
+    const hasVal = r=>[...r.fs].some(k=>{ const kk=k.split(':')[0]; const v=p[kk]; return typeof v==='number'?v>0 : v&&typeof v==='object' ? Object.values(v).some(x=>x>0) : !!v; });
+    const dv=new Map(dealers.map(i=>[i,1])); const tgt=new Set();
+    R.list.forEach((r,ri)=>{
+      if(!hasVal(r) || r.x===0) return;
+      const a = ruleAct(r,j,team,progs,sit,sbz,A);
+      const ps = posSets&&posSets[j] ? posSets[j][ri] : null;
+      if(ps) ps.forEach(i=>{ if(i!==j) tgt.add(i); });
+      const rs = dealers.filter(i=>i!==j || r.me);
+      for(const i of rs){
+        let v;
+        if(r.me && i===j) v=r.x;
+        else { let t=0; if(a>0){ t = r.pos ? (ps&&ps.has(i)?1:0) : 1; if(t && !r.pos && !toFilterOK(r.to, team[i])) t=0; if(t && r.to.p!=null) t*=r.to.p; } v=r.e+a*t*(r.x-r.e); }
+        dv.set(i, Math.min(dv.get(i), v/Math.max(r.x,1e-9)));
+      }
+    });
+    const vals=[...dv.values()];
+    const lo=vals.length?Math.min(...vals):1, hi=vals.length?Math.max(...vals):1;
+    const txt = (c.raw.party_buff||{}).restrict || (p.scope==='adjacent'?'양옆 아군만':'');
+    notes.push({j, name:c.name, text:txt, lvl: lo>=0.95?'ok':hi<0.3?'off':'part', to:[...tgt].map(i=>team[i].name), toIdx:[...tgt]});
+  });
+  // 추천 배치: 위치 지정 버프가 가장 많이 성립하는 좌→우 순서
+  const rel=[];
+  if(posSets) team.forEach((c,j)=>{ if(!posSets[j]) return; c.rules.list.forEach((r,ri)=>{ const ps=posSets[j][ri]; if(!ps) return; ps.forEach(i=>{ if(i!==j) rel.push({j,i,side:r.side}); }); }); });
+  let order=[0,1,2,3].slice(0,team.length), okN=-1;
+  if(rel.length){
+    const perms=[]; const permute=(a,l)=>{ if(l===a.length){ perms.push(a.slice()); return; } for(let k=l;k<a.length;k++){ [a[l],a[k]]=[a[k],a[l]]; permute(a,l+1); [a[l],a[k]]=[a[k],a[l]]; } };
+    permute(team.map((_,i)=>i),0);
+    const uniq=new Map(); rel.forEach(x=>uniq.set(x.j+'-'+x.i+'-'+(x.side||''),x));
+    const R2=[...uniq.values()];
+    for(const pm of perms){
+      const pos=[]; pm.forEach((m,slot)=>pos[m]=slot);
+      let ok=0; for(const x of R2){ const d=pos[x.i]-pos[x.j]; if(x.side==='r'?d===1 : x.side==='l'?d===-1 : Math.abs(d)===1) ok++; }
+      if(ok>okN){ okN=ok; order=pm; }
+    }
+    return {notes, order, posOk:okN, posTotal:R2.length, rel:R2};
+  }
+  return {notes, order, posOk:0, posTotal:0, rel:[]};
 }
 
 /* ---------- 1타 상한 (상대값 단위) ---------- */
@@ -564,17 +787,28 @@ function buildPool(owned, locked, opts){
   const pick = new Map();
   scored.filter(o=>lockedSet.has(o.pc.id)).forEach(o=>pick.set(o.pc.id,o));
   const free = scored.filter(o=>!lockedSet.has(o.pc.id));
-  const quota = mode==='stability' ? {dps:14,sup:14,surv:14} : {dps:18,sup:16,surv:8};
-  const add = (key,n)=>{ free.slice().sort((a,b)=>b.pot[key]-a.pot[key]).slice(0,n).forEach(o=>pick.set(o.pc.id,o)); };
-  add('dps',quota.dps); add('sup',quota.sup); add('surv',quota.surv);
+  const add = (key,n,src)=>{ (src||free).slice().sort((a,b)=>b.pot[key]-a.pot[key]).slice(0,n).forEach(o=>pick.set(o.pc.id,o)); };
+  const F = ctx&&ctx.focus;
+  if(F){
+    // 지정 속성·타입 공격자 + 그 속성·타입 존 담당 + 버퍼·생존 보강
+    const fm = free.filter(o=>charFocusMatch(o.pc,F));
+    add('dps', 20, fm);
+    const zm = free.filter(o=>o.pc.zoneTypes && o.pc.zoneTypes.opts.some(op=>F.kind==='elem' ? op.kind==='elem'&&op.types.includes(F.v) : op.kind==='weap'&&op.types.includes(F.v)));
+    add('sup', 8, zm);
+    add('sup', mode==='stability'?12:14); add('surv', mode==='stability'?10:5);
+  } else {
+    const quota = mode==='stability' ? {dps:14,sup:14,surv:14} : {dps:18,sup:16,surv:8};
+    add('dps',quota.dps); add('sup',quota.sup); add('surv',quota.surv);
+  }
   // 존 제공자 중 상위 딜러 속성과 맞는 캐릭터 보강
   const topEl = new Set(free.slice().sort((a,b)=>b.pot.dps-a.pot.dps).slice(0,8).map(o=>o.pc.elem));
   free.filter(o=>o.pc.zoneTypes && o.pc.zoneTypes.opts.some(op=>op.types.some(t=>topEl.has(t)))).sort((a,b)=>b.pot.sup-a.pot.sup).slice(0,4).forEach(o=>pick.set(o.pc.id,o));
   let arr=[...pick.values()];
-  const MAXP = 44;
+  const MAXP = opts.maxPool || 44;
   if(arr.length>MAXP){
     const lk = arr.filter(o=>lockedSet.has(o.pc.id));
-    const rest = arr.filter(o=>!lockedSet.has(o.pc.id)).sort((a,b)=>(b.pot.dps/ (opts.maxD||1) + b.pot.sup*0.3)-(a.pot.dps/(opts.maxD||1)+a.pot.sup*0.3));
+    const fb = o=> F && charFocusMatch(o.pc,F) ? 1.5 : 1;
+    const rest = arr.filter(o=>!lockedSet.has(o.pc.id)).sort((a,b)=>(b.pot.dps*fb(b)/ (opts.maxD||1) + b.pot.sup*0.3)-(a.pot.dps*fb(a)/(opts.maxD||1)+a.pot.sup*0.3));
     arr = lk.concat(rest.slice(0,MAXP-lk.length));
   }
   return arr;
@@ -609,13 +843,14 @@ function needPenalty(ev, boss){
 async function optimize(input, onProgress){
   const {owned, locked=[], excluded=[], backLocked=[], mode, enemy, boss, settings, recommendedIds=[]} = input;
   const S = Object.assign({}, DEFAULT_SETTINGS, settings||{});
-  const ctx = {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce)};
+  const ctx = {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null};
   const cap = input.cap;
   const ex = new Set(excluded.concat(backLocked));
   const own = owned.filter(o=>!ex.has(o.pc.id));
   if(own.length<4) return {error:'보유 캐릭터가 4명 이상 필요합니다. (제외 목록 포함 확인)'};
+  if(ctx.focus && !own.some(o=>charFocusMatch(o.pc,ctx.focus))) return {error:'지정한 속성·타입으로 공격하는 보유 캐릭터가 없습니다.', results:[], evaluated:0, poolSize:0};
   const lockIds = locked.filter(id=>own.some(o=>o.pc.id===id)).slice(0,4);
-  const pool = buildPool(own, lockIds, {enemy,S,cap,ctx,mode});
+  const pool = buildPool(own, lockIds, {enemy,S,cap,ctx,mode,maxPool:input.maxPool});
   const lockIdx = lockIds.map(id=>pool.findIndex(o=>o.pc.id===id));
   const free = pool.map((_,i)=>i).filter(i=>!lockIdx.includes(i));
   const need = 4-lockIdx.length;
@@ -648,13 +883,14 @@ async function optimize(input, onProgress){
   scored.sort((a,b)=>b[0]-a[0]);
   const chosen=[];
   const minDiff = S.diverse ? 2 : 1;
+  const nTop = input.topN || 5;
   for(const [sc,i] of scored){
-    if(chosen.length>=5) break;
+    if(chosen.length>=nTop) break;
     const ids = teams[i];
     if(chosen.some(c=>{ const set=new Set(c.ids); return 4-ids.filter(x=>set.has(x)).length < minDiff; })) continue;
     // 보스 패널티/추천 보너스는 최종 후보 재평가에 반영
     chosen.push({ids, sc, i});
-    if(chosen.length>=5 && mode!=='boss') break;
+    if(chosen.length>=nTop && mode!=='boss') break;
   }
   // 보스 모드: 상위 60개 재정렬
   let finalList = chosen;
@@ -670,7 +906,7 @@ async function optimize(input, onProgress){
     cand.sort((a,b)=>b.sc-a.sc);
     finalList=[];
     for(const c of cand){
-      if(finalList.length>=5) break;
+      if(finalList.length>=nTop) break;
       if(finalList.some(f=>{const set=new Set(f.ids); return 4-c.ids.filter(x=>set.has(x)).length<minDiff;})) continue;
       finalList.push(c);
     }
@@ -689,14 +925,14 @@ async function optimize(input, onProgress){
       norm:{b:ev.burst/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss,
       recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))};
   });
-  return {results, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w};
+  return {results, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus};
 }
 
 /* ---------- 캐릭터별 최적 조합 ---------- */
 async function perCharBest(input, onProgress){
   const {owned, excluded=[], backLocked=[], mode, enemy, boss, settings, recommendedIds=[]} = input;
   const S = Object.assign({}, DEFAULT_SETTINGS, settings||{});
-  const ctx = {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce)};
+  const ctx = {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null};
   const cap = input.cap, maxLv = input.maxDiff||4;
   const ex = new Set(excluded.concat(backLocked));
   const own = owned.filter(o=>!ex.has(o.pc.id));
@@ -750,6 +986,7 @@ async function perCharBest(input, onProgress){
 }
 
 const API = {ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
-  prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin};
+  prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
+  explainTeam, charFocusMatch, compileRules};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);

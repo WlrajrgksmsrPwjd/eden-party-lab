@@ -25,7 +25,11 @@ function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'
 
 /* ---------- 상태 ---------- */
 let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
-const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4}, rosterView:{}});
+const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null}, rosterView:{}});
+const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
+const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
+const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성' : (FT_KR[f.v]||f.v);
+const sameFocus = (a,b) => (!a&&!b) || (a&&b&&a.kind===b.kind&&a.v===b.v);
 function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1}); }
 function rebuildChars(){
   chars = CHARS_BASE.concat(state.custom||[]);
@@ -114,6 +118,7 @@ function renderPlanControls(){
   }).join('');
   $$('#countSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.n===(P.enemyCount||1)?'true':'false'));
   $$('#diffSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.lv===(P.maxDiff||4)?'true':'false'));
+  $('#focusSeg').innerHTML = [null].concat(FOCUS_LIST).map((f,k)=>`<button type="button" data-fi="${k-1}" aria-pressed="${sameFocus(f,P.focus)?'true':'false'}">${f&&f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(f?(f.kind==='elem'?E.ELEM_KR[f.v]:FT_KR[f.v]):'전체')}</button>`).join('');
   renderChips('#lockChips', P.locked, 'locked');
   renderChips('#exChips', P.excluded, 'excluded');
   renderChips('#backChips', P.backLocked||[], 'backLocked');
@@ -167,7 +172,7 @@ async function runPlan(){
   const owned=ids.map(id=>({pc:byId.get(id), prog:progOf(id)}));
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   $('#runBtn').disabled=true; $('#prog').hidden=false; $('#prog i').style.width='0%';
-  const r = await E.optimize({owned, locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode, enemy:any?enemy:null, boss, settings:settings(), cap, recommendedIds:rec, maxDiff:P.maxDiff||4},
+  const r = await E.optimize({owned, locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode, enemy:any?enemy:null, boss, settings:settings(), cap, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null},
     f=>{ if(my===runToken) $('#prog i').style.width=Math.round(f*100)+'%'; });
   if(my!==runToken) return;
   $('#runBtn').disabled=false; $('#prog').hidden=true;
@@ -177,30 +182,60 @@ async function runPlan(){
 
 function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e8) return (v/1e8).toFixed(2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
 const MODE_KR={burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤'};
+const RES = new Map(); // 카드 키 → 결과 (추천 세팅 패널용)
+function teamWarns(x, boss, enemy, ex){
+  const ev=x.ev, sbz=ev.sb.zone;
+  const top = ev.sb.per.indexOf(Math.max(...ev.sb.per)), co = ev.sb.cores[top];
+  const warns = (x.miss||[]).slice();
+  const needPierce = boss&&boss.needs&&boss.needs.barrier_pierce;
+  if(needPierce && co && !co.pierce) warns.push({t:'주딜 배리어 관통 없음'});
+  if(ev.survDet.heal===0) warns.push({t:'회복 수단 없음'});
+  x.team.forEach((c,i)=>{ if(c.stellar && state.owned[c.id] && state.owned[c.id].s && (x.progs[i].t||0)<15) warns.push({t:c.name+': 천명치 15 미만 → 성도 스킬 미반영'}); });
+  if(!ev.hasSB) warns.push({t:'성도각성 캐릭터 없음 → 스텔라 버스트 불가'});
+  for(const z of (ev.sb.zones||[])) if(z.by && sbz && z.by===sbz.by) for(const u of (z.unmet||[])) warns.push({t:(byId.get(z.by)?byId.get(z.by).name:'')+': '+u});
+  if(sbz && sbz.how==='스킬 각성') warns.push({t:'극존은 스킬로 각성해야 함(준비 1턴)'});
+  if(enemy && ev.sb.cores.some(c=>c&&(c.rel==='null'||c.rel==='absorb'))) warns.push({t:'무효·흡수 당하는 공격자 포함'});
+  for(const n of ex.notes){
+    if(n.lvl==='ok') continue;
+    const short = n.text.length>46 ? n.text.slice(0,46)+'…' : n.text;
+    warns.push({t:`${n.name}: ${n.lvl==='off'?'버프 조건 미충족':'버프 일부만 적용'} — ${short}`, full:n.text});
+  }
+  if(ex.posTotal && ex.posOk<ex.posTotal) warns.push({t:`위치 버프 ${ex.posTotal}개 중 ${ex.posOk}개만 동시에 성립`});
+  const seen=new Set(); return warns.filter(w=>{ if(seen.has(w.t)) return false; seen.add(w.t); return true; });
+}
+function memHtml(x, i, key, focus, lockSet){
+  const c=x.team[i], ev=x.ev, cs=ev.sb.cores[i], sbTot=ev.sb.per.reduce((a,b)=>a+b,0)||1, share=ev.sb.per[i]/sbTot;
+  const gq = cs&&cs.gq;
+  const off = focus && !E.charFocusMatch(c, focus);
+  return `<div class="mem${lockSet&&lockSet.has(c.id)?' locked':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="눌러서 추천 세팅 보기">
+    <div class="nm">${esc(c.name)}</div>
+    <div class="meta">${elChip(c.elem)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
+    <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}</div>
+    <div class="sk">${gq?'글래 '+esc(glText(gq))+(gq.painOK||!(gq.pa||gq.po)?'':' (독·페 미부여)'):''}</div>
+    <div class="share" title="SB 턴 대미지 비중 ${(share*100).toFixed(0)}%"><i style="width:${(share*100).toFixed(0)}%"></i></div>
+    <div class="sk">SB 턴 비중 <span class="num">${(share*100).toFixed(0)}%</span>${off?' <span class="badge">지정 외 · 지원</span>':''}</div>
+    <div class="tap">추천 세팅 ▾</div>
+  </div>`;
+}
 function renderResults(r, boss, enemy){
   const P=state.plan, out=$('#results');
   const hot = {burst:'b',sustain:'s',stability:'t',weak:'s',boss:''}[P.mode];
+  for(const k of [...RES.keys()]) if(k[0]==='p') RES.delete(k);
   let h='';
   if(state.sample) h+=`<div class="notice">예시 보유 목록(SS·S 티어 전원, 천명치 80, 성도각성 완료 가정)으로 계산한 결과입니다. <b>보유 캐릭터</b> 탭에서 실제 보유·천명치·글래스터를 입력하면 그 기준으로 다시 짭니다.</div>`;
   const enemyTxt = enemy ? Object.entries(enemy).map(([k,v])=>(E.ELEM_KR[k]||E.WT_KR[k])+' '+REL_KR[v]).join(', ') : '중립(약점·내성 없음)';
-  h+=`<div class="runmeta">${esc(MODE_KR[P.mode])} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
+  h+=`<div class="runmeta">${esc(MODE_KR[P.mode])}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
   if(!r.results.length) h+=`<div class="empty">조건을 만족하는 조합이 없습니다. 난이도 상한을 올리거나 고정·제외 캐릭터를 줄여 보세요.</div>`;
   for(const x of r.results){
+    const key='p'+x.rank; RES.set(key, {x, focus:r.focus});
     const ev=x.ev, sbz=ev.sb.zone, nz=ev.normal.zone;
-    const sbTot=ev.sb.total||1;
+    const ex = x.ex = E.explainTeam(x.team, x.progs, ev, settings(), {});
     const lockSet=new Set(P.locked);
     const top = ev.sb.per.indexOf(Math.max(...ev.sb.per));
     const co = ev.sb.cores[top];
     const tSum = x.progs.reduce((a,p)=>a+(p.t||0),0);
-    const warns = x.miss.slice();
-    const needPierce = boss&&boss.needs&&boss.needs.barrier_pierce;
-    if(needPierce && co && !co.pierce) warns.push('주딜 배리어 관통 없음');
-    if(ev.survDet.heal===0) warns.push('회복 수단 없음');
-    x.team.forEach((c,i)=>{ if(c.stellar && state.owned[c.id] && state.owned[c.id].s && (x.progs[i].t||0)<15) warns.push(c.name+': 천명치 15 미만 → 성도 스킬 미반영'); });
-    if(!ev.hasSB) warns.push('성도각성 캐릭터 없음 → 스텔라 버스트 불가');
-    for(const z of (ev.sb.zones||[])) if(z.by && sbz && z.by===sbz.by) for(const u of (z.unmet||[])) warns.push((byId.get(z.by)?byId.get(z.by).name:'')+': '+u);
-    if(sbz && sbz.how==='스킬 각성') warns.push('극존은 스킬로 각성해야 함(준비 1턴)');
-    if(enemy && ev.sb.cores.some(c=>c&&(c.rel==='null'||c.rel==='absorb'))) warns.push('무효·흡수 당하는 공격자 포함');
+    const warns = teamWarns(x, boss, enemy, ex);
+    const order = ex.posTotal ? ex.order : x.team.map((_,i)=>i);
     h+=`<section class="card${x.rank===1?' first':''}">
       <div class="card-head">
         <div class="rank">${x.rank}<small>위</small></div>
@@ -209,17 +244,9 @@ function renderResults(r, boss, enemy){
         <span class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span></span>
         <div class="scorebar"><span>종합 ${(x.rel*100).toFixed(0)}</span><div class="bar"><i style="width:${(x.rel*100).toFixed(0)}%"></i></div></div>
       </div>
-      <div class="members">${x.team.map((c,i)=>{
-        const cs=ev.sb.cores[i], share=ev.sb.per[i]/sbTot;
-        const gq = cs&&cs.gq;
-        return `<div class="mem${lockSet.has(c.id)?' locked':''}">
-          <div class="nm">${esc(c.name)}</div>
-          <div class="meta">${elChip(c.elem)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
-          <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}</div>
-          <div class="sk">${gq?'글래 '+esc(glText(gq))+(gq.painOK||!(gq.pa||gq.po)?'':' (독·페 미부여)'):''}</div>
-          <div class="share" title="SB 턴 대미지 비중 ${(share*100).toFixed(0)}%"><i style="width:${(share*100).toFixed(0)}%"></i></div>
-          <div class="sk">SB 턴 비중 <span class="num">${(share*100).toFixed(0)}%</span></div>
-        </div>`;}).join('')}</div>
+      ${ex.posTotal?`<div class="order">전방 배치 <span class="hint">왼쪽 → 오른쪽 · 위치 버프 ${ex.posOk}/${ex.posTotal} 성립</span></div>`:''}
+      <div class="members">${order.map(i=>memHtml(x,i,key,r.focus,lockSet)).join('')}</div>
+      <div class="setup" data-for="${key}" hidden></div>
       <div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}`).join(', '):'—'} <span class="hint">(남는 자리는 회복·수호·해제 보강 기준)</span></div>
       <div class="metrics">
         ${metric('SB 턴 화력', ev.sbTurn, ev.sbTurn/ (r.results[0].ev.sbTurn||1), hot==='b')}
@@ -227,7 +254,7 @@ function renderResults(r, boss, enemy){
         ${metric('일반 턴 평균', ev.sustain, ev.sustain/(Math.max(...r.results.map(y=>y.ev.sustain))||1), hot==='s')}
         ${metric('생존력', ev.surv, ev.surv/(Math.max(...r.results.map(y=>y.ev.surv))||1), hot==='t', true)}
       </div>
-      ${warns.length?`<div class="warns">${[...new Set(warns)].map(w=>`<span class="warn">${esc(w)}</span>`).join('')}</div>`:''}
+      ${warns.length?`<div class="warns">${warns.map(w=>`<span class="warn"${w.full?` title="${esc(w.full)}"`:''}>${esc(w.t)}</span>`).join('')}</div>`:''}
       <details class="why"><summary>계산 근거·운용 포인트 보기 (주딜 ${esc(x.team[top].name)} 기준)</summary>
         <div class="grid">
           <div><span>스탯 버프</span><span class="num">+${pctTxt(co&&co.statB)}</span></div>
@@ -243,11 +270,97 @@ function renderResults(r, boss, enemy){
           <div><span>공격 글래스터</span><span class="num">×${co&&co.gq?co.gq.f.toFixed(2):'1.00'}</span></div>
           <div><span>회복/배리어/해제/수호</span><span class="num">${ev.survDet.heal}/${ev.survDet.barrier}/${ev.survDet.cleanse}/${ev.survDet.guard}</span></div>
         </div>
+        ${ex.notes.length?`<ul class="ops">${ex.notes.map(n=>`<li><b>${esc(n.name)}</b> <span class="cond ${n.lvl}">${n.lvl==='ok'?'조건 충족':n.lvl==='off'?'조건 미충족':'일부 적용'}</span> ${esc(n.text)}${n.to.length?` → 대상 ${esc(n.to.join(', '))}`:''}</li>`).join('')}</ul>`:''}
         <ul class="ops">${x.team.filter(c=>c.cxWhy&&c.cxWhy.length).map(c=>`<li><b>${esc(c.name)}</b>: ${esc(c.cxWhy.join(' · '))}</li>`).join('')}${x.diff.noHeal?'<li>회복 수단이 없어 피격 관리 부담 +</li>':''}${x.team.every(c=>!(c.cxWhy&&c.cxWhy.length))?'<li>특별히 신경 쓸 조작 요소가 적습니다.</li>':''}</ul>
       </details>
     </section>`;
   }
   out.innerHTML=h;
+}
+
+/* ---------- 추천 세팅 패널 ---------- */
+const TGT_KR={st:'단일',aoe:'전체'}, KIND_KR={phys:'물리',mag:'마법'}, SIZE_KR={s:'소',m:'중',l:'대',xl:'특대',xxl:'극대'};
+function skillLine(sk){
+  if(!sk) return '';
+  const el = sk.element&&sk.element!=='none' ? (E.ELEM_KR[sk.element]||sk.element)+' ' : '무속성 ';
+  const wt = FT_KR[sk.weapon_type] || '';
+  return `<b>${esc(sk.skill||'')}</b> <span class="hint">${esc(TGT_KR[sk.target]||'')} ${esc(el)}${esc(wt||KIND_KR[sk.kind]||'')} ${esc(SIZE_KR[sk.size]||'')} ${sk.mult>1?esc(sk.mult)+'배 ':''}${sk.hits>1?esc(sk.hits)+'타':''}${sk.repeat?` · 재공격 ${esc(sk.repeat)}`:''}${sk.crit_sure?' · 확정 크리':''}${sk.barrier_pierce?' · 배리어 관통':''}</span>${sk.condition?`<div class="hint">${esc(sk.condition)}</div>`:''}`;
+}
+function setupHtml(x, i){
+  const c=x.team[i], pr=x.progs[i], o=state.owned[c.id]||{}, ev=x.ev, r=c.raw;
+  const ex = x.ex || (x.ex=E.explainTeam(x.team,x.progs,ev,settings(),{}));
+  const sum=a=>a.reduce((s,v)=>s+v,0)||1;
+  const sSB=ev.sb.per[i]/sum(ev.sb.per), sN=ev.normal.per[i]/sum(ev.normal.per), share=Math.max(sSB,sN);
+  const role = share>=0.35?'주 딜러':share>=0.12?'보조 딜러':'서포터';
+  const dealer = share>=0.12;
+  const order = ex.posTotal ? ex.order : x.team.map((_,k)=>k);
+  const slot = order.indexOf(i)+1;
+  const nm = k=>esc(x.team[k].name);
+  const L = []; // 이 조합에서
+  L.push(`<li>${role} · SB 턴 비중 <span class="num">${(sSB*100).toFixed(0)}%</span> · 평상 턴 <span class="num">${(sN*100).toFixed(0)}%</span></li>`);
+  L.push(`<li>전방 <b>왼쪽에서 ${slot}번째</b>${ex.posTotal?'':' (위치 조건 없음 · 아무 자리나)'}</li>`);
+  for(const rl of ex.rel){
+    if(rl.j===i) L.push(`<li>위치 버프 대상 <b>${nm(rl.i)}</b>을(를) 바로 ${rl.side==='r'?'오른쪽':rl.side==='l'?'왼쪽':'옆'}에</li>`);
+    else if(rl.i===i) L.push(`<li><b>${nm(rl.j)}</b>의 위치 버프를 받음 → ${nm(rl.j)} 바로 ${rl.side==='r'?'오른쪽':rl.side==='l'?'왼쪽':'옆'}에 서기</li>`);
+  }
+  const note = ex.notes.find(n=>n.j===i);
+  if(note && note.text) L.push(`<li>주는 버프 조건: <span class="cond ${note.lvl}">${note.lvl==='ok'?'이 조합에서 충족':note.lvl==='off'?'이 조합에서 미충족':'일부만 충족'}</span> <span class="hint">${esc(note.text)}</span></li>`);
+  const zc = (ev.sb.zones||[]).find(z=>z.by===c.id);
+  if(c.zone){
+    const used = ev.sb.zone && ev.sb.zone.by===c.id;
+    L.push(`<li>존: ${esc(E.ZONE_KR[c.zone.type]||c.zone.type)}${c.zone.awakened?' (극/절 가능)':''} — ${used?`<b>이 조합의 존 담당</b> (${esc(ev.sb.zone.label)}${ev.sb.zone.how?' · '+esc(ev.sb.zone.how):''})`:'이 조합에서는 다른 존을 씀'}${zc&&zc.unmet&&zc.unmet.length?`<div class="hint">${zc.unmet.map(esc).join(' / ')}</div>`:''}</li>`);
+  }
+  // 육성·장비
+  const G = [];
+  const t = +o.t||0;
+  const mark = ok=>ok?'<span class="ok">✓</span>':'<span class="ng">!</span>';
+  if(c.stellar){
+    if(!o.s) G.push(`<li>${mark(false)} 성도각성: 입력 안 됨 → 성도 스킬·SB 미반영</li>`);
+    const steps=[[15,'성도 스킬 사용'],[30,'성도 스킬 완전'],[80,'스탯 노드']].concat(dealer?[[200,'공격 글래스터 4칸']]:[]);
+    G.push(`<li>천명치 목표: ${steps.map(([v,l])=>`${t>=v?'<span class="ok">':'<span class="ng">'}${v}</span> ${l}`).join(' · ')} <span class="hint">(현재 ${t})</span></li>`);
+  } else {
+    G.push(`<li>성도각성 없음 · 천명치는 120 배지 칸${dealer?' · 200 글래스터 4칸':''} · 255 전 스탯 <span class="hint">(현재 ${t})</span></li>`);
+  }
+  // 전용 글래스터
+  const g=o.g||'none', GK={none:'없음',vc:'상급(VC)',shin:'진',goku:'극'};
+  if(c.zone && c.zoneAwak){
+    const needGoku = zc && zc.unmet && zc.unmet.length && !(ev.sb.zone&&ev.sb.zone.by===c.id&&ev.sb.zone.level>=2&&ev.sb.zone.how!=='극 글래스터');
+    G.push(`<li>${mark(needGoku ? g==='goku' : (g==='shin'||g==='goku'))} 전용 글래스터: <b>${needGoku?'극 권장':'진 이상'}</b>${needGoku?' — 극이면 조건 없이 개전 극존':' — 극존 조건은 편성으로 충족'} <span class="hint">(현재 ${GK[g]})</span></li>`);
+  } else if(dealer){
+    G.push(`<li>${mark(g==='shin'||g==='goku')} 전용 글래스터: 진 ×1.07 · 극 ×1.12 <span class="hint">(현재 ${GK[g]})</span></li>`);
+  } else G.push(`<li>전용 글래스터: 딜 비중이 낮아 우선순위 낮음 <span class="hint">(현재 ${GK[g]})</span></li>`);
+  // 공격 글래스터
+  if(dealer){
+    const painAny = ev.A && ev.A.painAny;
+    const best = E.grastaFactor({gl:{mode:'auto'}, slots:pr.slots}, painAny);
+    const cur = ev.sb.cores[i] && ev.sb.cores[i].gq;
+    let txt = `<b>${esc(glText(best))}</b> (×${best.f.toFixed(2)})`;
+    if(!painAny){ const ore = E.grastaFactor({gl:{mode:'auto',ore:true}, slots:pr.slots}, false); if(ore.f>best.f+1e-6) txt += ` · 잠재 광석을 끼우면 <b>${esc(glText(ore))}</b> (×${ore.f.toFixed(2)})`; }
+    else txt += ' · 파티에 독·페인 부여자 있음';
+    G.push(`<li>${mark(cur && cur.f>=best.f-1e-6)} 공격 글래스터: ${txt} <span class="hint">(현재 ${cur?esc(glText(cur))+' ×'+cur.f.toFixed(2):'—'}, ${pr.slots}칸)</span></li>`);
+    G.push(`<li>${mark((+o.m||0)>=1)} 현현 무기: 현현 ×1.08 · 진현현 ×1.15 <span class="hint">(현재 ${['없음','현현','진현현'][+o.m||0]})</span></li>`);
+  } else {
+    G.push(`<li>공격 글래스터: 딜 비중이 낮아 생존·MP 회복 계열 권장</li>`);
+  }
+  const S2 = [];
+  if(c.stellar && c.sb) S2.push(`<li>SB: ${skillLine(c.sb)}</li>`);
+  if(c.main) S2.push(`<li>평상: ${skillLine(c.main)}</li>`);
+  if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req)}</span></li>`);
+  const O = (c.cxWhy||[]).map(w=>`<li>${esc(w)}</li>`);
+  return `<div class="shead"><b>${esc(c.name)}</b> ${(c.elems.length?c.elems:['none']).map(elChip).join('')} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> <span class="hint">${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span><button type="button" class="btn small sclose" data-sclose="1">닫기</button></div>
+    <div><h4>이 조합에서</h4><ul>${L.join('')}</ul></div>
+    <div><h4>추천 육성·장비</h4><ul>${G.join('')}</ul></div>
+    <div><h4>주력 스킬</h4><ul>${S2.join('')||'<li class="hint">—</li>'}</ul></div>
+    <div><h4>운용 포인트</h4><ul>${O.join('')}${r.note_kr?`<li class="hint">${esc(r.note_kr)}</li>`:''}</ul></div>`;
+}
+function toggleSetup(memEl){
+  const key=memEl.dataset.sk, i=+memEl.dataset.i, rec=RES.get(key); if(!rec) return;
+  const box=memEl.closest('.card,.fcard').querySelector(`.setup[data-for="${key}"]`); if(!box) return;
+  const open = memEl.getAttribute('aria-expanded')==='true';
+  $$(`[data-sk="${key}"]`).forEach(m=>m.setAttribute('aria-expanded','false'));
+  if(open){ box.hidden=true; return; }
+  memEl.setAttribute('aria-expanded','true');
+  box.innerHTML = setupHtml(rec.x, i); box.hidden=false;
 }
 function pctTxt(v){ return v==null?'0%':Math.round(v*100)+'%'; }
 function metric(k,v,rel,hot,isSurv){ rel=Math.max(0,Math.min(1,rel||0)); return `<div class="metric${hot?' hot':''}"><div class="k">${k}</div><div class="v">${isSurv?v.toFixed(0)+'점':fmtN(v)}</div><div class="bar"><i style="width:${(rel*100).toFixed(0)}%"></i></div></div>`; }
@@ -263,12 +376,12 @@ async function runPerChar(){
   const owned=ids.map(id=>({pc:byId.get(id), prog:progOf(id)}));
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   $('#pcRun').disabled=true; $('#pcProg').hidden=false; $('#pcProg i').style.width='0%';
-  const r = await E.perCharBest({owned, excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='boss'&&!boss?'burst':P.mode, enemy:any?enemy:null, boss, settings:settings(), cap, recommendedIds:rec, maxDiff:P.maxDiff||4},
+  const r = await E.perCharBest({owned, excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='boss'&&!boss?'burst':P.mode, enemy:any?enemy:null, boss, settings:settings(), cap, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null},
     f=>{ $('#pcProg i').style.width=Math.round(f*100)+'%'; });
   $('#pcRun').disabled=false; $('#pcProg').hidden=true;
   if(r.error){ $('#pcTable').innerHTML=`<div class="empty">${esc(r.error)}</div>`; return; }
   pcResult=r;
-  $('#pcMeta').textContent = `${MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''} · ${r.evaluated.toLocaleString()}개 조합`;
+  $('#pcMeta').textContent = `${MODE_KR[P.mode]}${P.focus?' · '+focusLabel(P.focus):''}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''} · ${r.evaluated.toLocaleString()}개 조합`;
   renderPerChar();
 }
 function renderPerChar(){
@@ -288,6 +401,50 @@ function renderPerChar(){
         <td><span class="diff lv${x.diff.lv}">Lv${x.diff.lv} ${esc(x.diff.kr)}</span></td>
         <td><button type="button" class="btn small" data-focus="${esc(x.pc.id)}">1~5위 보기</button></td></tr>`;
     }).join('')}</tbody></table>`;
+}
+
+/* ---------- 속성·타입별 조합 ---------- */
+let fxToken=0;
+async function runFocusAll(){
+  const P=state.plan, my=++fxToken;
+  const boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
+  const ids=ownedList(), grid=$('#fxGrid');
+  if(ids.length<4){ grid.innerHTML='<div class="empty">보유 캐릭터가 4명 이상이어야 합니다.</div>'; return; }
+  const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
+  const owned=ids.map(id=>({pc:byId.get(id), prog:progOf(id)}));
+  const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
+  for(const k of [...RES.keys()]) if(k[0]==='f') RES.delete(k);
+  grid.innerHTML = FOCUS_LIST.map((f,k)=>`<section class="fcard" id="fx-${k}"><div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><span class="hint">대기 중…</span></div></section>`).join('');
+  $('#fxRun').disabled=true; $('#fxProg').hidden=false; $('#fxProg i').style.width='0%';
+  $('#fxMeta').textContent = `${MODE_KR[P.mode]==='보스 맞춤'&&!boss?'최고점 딜':MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''}`;
+  for(let k=0;k<FOCUS_LIST.length;k++){
+    const f=FOCUS_LIST[k];
+    const r = await E.optimize({owned, locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='boss'&&!boss?'burst':P.mode, enemy:any?enemy:null, boss, settings:settings(), cap, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:f, maxPool:28, topN:3},
+      v=>{ if(my===fxToken) $('#fxProg i').style.width=Math.round((k+v)/FOCUS_LIST.length*100)+'%'; });
+    if(my!==fxToken) return;
+    $('#fx-'+k).outerHTML = fcardHtml(f, k, r);
+  }
+  $('#fxRun').disabled=false; $('#fxProg').hidden=true;
+}
+function fcardHtml(f, k, r){
+  const head = `<div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><button type="button" class="btn small" data-fgo="${k}">1~5위 자세히</button></div>`;
+  if(r.error || !r.results || !r.results.length) return `<section class="fcard" id="fx-${k}">${head}<div class="hint">${esc(r.error||'조건에 맞는 조합이 없습니다.')}</div></section>`;
+  const top = r.results[0].ev;
+  const rows = r.results.map(x=>{
+    const key=`f${k}-${x.rank}`; RES.set(key,{x, focus:f});
+    const ex = x.ex = E.explainTeam(x.team, x.progs, x.ev, settings(), {});
+    const order = ex.posTotal ? ex.order : x.team.map((_,i)=>i);
+    const z=x.ev.sb.zone, bad=ex.notes.filter(n=>n.lvl==='off').length;
+    const sbTot=x.ev.sb.per.reduce((a,b)=>a+b,0)||1;
+    return `<div class="frow">
+      <div class="frank">${x.rank}</div>
+      <div class="fmain">
+        <div class="fmem">${order.map(i=>{ const c=x.team[i], sh=x.ev.sb.per[i]/sbTot; return `<span class="mchip${sh>=0.35?' main':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="추천 세팅 보기">${elChip(c.elem)} ${esc(c.name)}</span>`; }).join('')}</div>
+        <div class="fmeta"><span>${esc(z&&z.level?z.label:'존 없음')}</span> · <span class="diff lv${x.diff.lv}">Lv${x.diff.lv}</span> · SB 턴 <span class="num">${fmtN(x.ev.sbTurn)}</span> · 평상 <span class="num">${fmtN(x.ev.sustain)}</span>${bad?` · <span class="ng">버프 조건 미충족 ${bad}</span>`:''}</div>
+        <div class="setup" data-for="${key}" hidden></div>
+      </div></div>`;
+  }).join('');
+  return `<section class="fcard" id="fx-${k}">${head}${rows}</section>`;
 }
 
 /* ---------- 보유 탭 ---------- */
@@ -473,6 +630,12 @@ function bind(){
   $('#optDiverse').addEventListener('change',e=>{ state.settings.diverse=e.target.checked; save(); });
   $('#optCap').addEventListener('change',e=>{ state.settings.capOn=e.target.checked; save(); });
   $('#runBtn').addEventListener('click',runPlan);
+  $('#focusSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-fi]'); if(!b) return; const k=+b.dataset.fi; state.plan.focus = k<0?null:Object.assign({},FOCUS_LIST[k]); save(); renderPlanControls(); runPlan(); });
+  $('#fxRun').addEventListener('click', runFocusAll);
+  $('#fxGrid').addEventListener('click',e=>{ const b=e.target.closest('button[data-fgo]'); if(!b) return; state.plan.focus=Object.assign({},FOCUS_LIST[+b.dataset.fgo]); state.plan.locked=[]; save(); renderPlanControls(); showTab('plan'); runPlan(); });
+  const onMem = e=>{ if(e.target.closest('[data-sclose]')){ const box=e.target.closest('.setup'); const key=box.dataset.for; $$(`[data-sk="${key}"]`).forEach(m=>m.setAttribute('aria-expanded','false')); box.hidden=true; return; }
+    const m=e.target.closest('[data-sk]'); if(!m) return; if(e.type==='keydown'){ if(e.key!=='Enter'&&e.key!==' ') return; e.preventDefault(); } toggleSetup(m); };
+  ['#results','#fxGrid'].forEach(sel=>{ $(sel).addEventListener('click',onMem); $(sel).addEventListener('keydown',onMem); });
   setupPicker('#lockIn','#lockDrop','locked',3);
   setupPicker('#exIn','#exDrop','excluded',20);
   setupPicker('#backIn','#backDrop','backLocked',2);
@@ -508,7 +671,7 @@ function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); rende
   bind();
   renderAll();
   let tab='plan'; try{ tab=localStorage.getItem('aeopt_tab')||'plan'; }catch(e){}
-  const h=(location.hash||'').slice(1); if(['plan','roster','perchar','boss','method'].includes(h)) tab=h;
+  const h=(location.hash||'').slice(1); if(['plan','roster','perchar','focus','boss','method'].includes(h)) tab=h;
   showTab(tab);
   setSaveText(state.sample?'예시 데이터 · 아직 저장 안 함':'이 기기에 저장됨');
   runPlan();

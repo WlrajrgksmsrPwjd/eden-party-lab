@@ -4,6 +4,9 @@ here=os.path.dirname(os.path.abspath(__file__))
 P=lambda *a: os.path.join(here,*a)
 chars=[]
 for f in sorted(glob.glob(P('data','chars_*.json'))): chars+=json.load(open(f,encoding='utf-8'))
+rules=json.load(open(P('data','buff_rules.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in rules: c['party_rules']=rules[c['id']]
 bosses=json.load(open(P('data','bosses.json'),encoding='utf-8'))+json.load(open(P('data','bosses_more.json'),encoding='utf-8'))
 def js(o): return json.dumps(o,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
 rd=lambda n: open(P(n),encoding='utf-8').read()

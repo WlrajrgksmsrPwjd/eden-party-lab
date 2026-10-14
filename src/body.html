@@ -5,6 +5,7 @@
       <button class="tab" role="tab" data-tab="plan" aria-selected="true">편성 추천</button>
       <button class="tab" role="tab" data-tab="roster" aria-selected="false">보유 캐릭터 <span class="num" id="tabOwnN">0</span></button>
       <button class="tab" role="tab" data-tab="perchar" aria-selected="false">캐릭터별 최적</button>
+      <button class="tab" role="tab" data-tab="focus" aria-selected="false">속성·타입별</button>
       <button class="tab" role="tab" data-tab="boss" aria-selected="false">보스 공략</button>
       <button class="tab" role="tab" data-tab="method" aria-selected="false">계산 방식</button>
     </nav>
@@ -27,6 +28,10 @@
             <button type="button" data-mode="boss">보스 맞춤</button>
           </div>
           <p class="hint" style="margin:6px 0 0">최고점 = SB 턴 + AF 한 번 화력 · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력</p>
+        </div>
+        <div>
+          <label class="lbl">속성·타입 지정 <span class="hint" style="letter-spacing:0;font-weight:400">고르면 그 속성·공격 타입 화력만 셉니다</span></label>
+          <div class="seg focusseg" id="focusSeg"></div>
         </div>
         <div id="bossRow" hidden>
           <label class="lbl" for="bossSel">보스</label>
@@ -166,6 +171,22 @@
     <div class="tblwrap" id="pcTable"><div class="empty">계산을 누르면 보유 캐릭터별 최적 조합을 보여줍니다. (보유 300명 기준 10초 안팎)</div></div>
   </section>
 
+  <!-- 속성·타입별 -->
+  <section class="panel" id="p-focus" role="tabpanel">
+    <div class="pcbar">
+      <div>
+        <h2 class="pch">속성·타입별 조합</h2>
+        <p class="hint" style="margin:2px 0 0;max-width:72ch">불·물·땅·바람·번개·그림자·결정 7속성과 참격·타격·돌격·마법 4타입마다, 보유 캐릭터로 짤 수 있는 상위 3개 조합을 보여줍니다. 그 속성·타입으로 때리는 화력만 점수에 넣고, 버퍼·힐러는 속성과 관계없이 들어갑니다. 성향·상대·난이도 상한·제외·후열 고정은 <b>편성 추천</b> 탭 설정을 씁니다. 캐릭터 이름을 누르면 추천 세팅이 열립니다.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="runmeta" id="fxMeta"></span>
+        <button type="button" class="btn primary" id="fxRun">계산</button>
+      </div>
+    </div>
+    <div class="progress" id="fxProg" hidden style="margin-top:10px"><i></i></div>
+    <div class="fgrid" id="fxGrid"><div class="empty">계산을 누르면 속성·타입별 상위 조합을 차례로 채웁니다. (11가지, 30초 안팎)</div></div>
+  </section>
+
   <!-- 보스 공략 -->
   <section class="panel" id="p-boss" role="tabpanel">
     <div class="bossbar">
@@ -230,12 +251,25 @@
           <li><b>약점 맞춤</b>: 입력한 약점·내성 기준으로 최고점 50% + 지속 50%.</li>
           <li><b>보스 맞춤</b>: 보스의 필요 요소에 따라 가중치를 바꾸고, 배리어 관통이 필요한데 없으면 그 공격자 화력 ×0.25, 수호·해제·상태이상 무효·장기전 회복이 부족하면 감점, 공략 추천 캐릭터 1명당 +3%.</li>
         </ul>
+        <h2>조건부 버프</h2>
+        <p>버프마다 붙은 조건을 받는 캐릭터별로 따집니다. 조건이 안 맞으면 그 캐릭터에게는 버프가 0이 되거나, 데이터에 적힌 비율(예: 水 아군 아니면 50%)만 들어갑니다. 결과 카드에 "버프 조건 미충족"으로 표시합니다.</p>
+        <ul>
+          <li><b>대상 제한</b>: 속성(水 아군만), 무기(권갑·망치 장비자), 천/명, 물리/마법, KOF 같은 퍼스널리티.</li>
+          <li><b>위치 제한</b>: 양옆·오른쪽 1명·왼쪽 1명. 조건에 맞는 아군 중 화력이 가장 큰 캐릭터에게 준다고 보고, 한 캐릭터 옆자리는 둘뿐이라 위치 버퍼는 두 명까지만 붙입니다. 결과 카드는 위치 버프가 가장 많이 성립하는 왼쪽→오른쪽 배치 순서로 보여줍니다.</li>
+          <li><b>존 제한</b>: 招雷陣 중, 어나더 존(극) 중, 절존 중, 속성 존/공격종 존 중. 고른 존 하나 기준으로 켜고 끕니다. 지속 딜에서는 어나더 존이 켜진 5턴 중 2턴에만 넣습니다.</li>
+          <li><b>상황 제한</b>: SB 때만, AF 중만. 전투 시작 몇 턴·VC 1턴·초회 2배처럼 짧은 버프는 SB 턴·AF에 맞춰 쓴다고 보고, 평상 턴에는 일부만 넣습니다.</li>
+          <li><b>편성 조건</b>: 전방 火 3명 이상, 전방 활·창 3명 이상처럼 팀 구성으로 판정합니다. 적 독·페인 조건은 파티에 독·페인 부여자가 있을 때만.</li>
+          <li><b>판정이 어려운 조건</b>(아르카디아 2명, 예지 누적, 피격 후 트랜스 등)은 켜져 있는 비율을 30~80%로 잡아 기대값으로 넣습니다.</li>
+        </ul>
+        <p>축적형 큰 한 방(핵열 20 누적 300배 등)은 평상 턴에 위력의 40%만 넣고, 25배를 넘는 몫은 다시 20%만 인정합니다. 몇 턴에 한 번 쓰는 기술이 지속 딜 점수를 독차지하지 않게 하려는 실전 보정입니다.</p>
+        <h2>속성·타입 지정</h2>
+        <p>속성(불 등)이나 공격 타입(참격 등)을 지정하면 그 속성·타입으로 나가는 공격 화력만 점수에 넣습니다. 지정과 다른 캐릭터도 버퍼·힐러로는 들어갈 수 있습니다. 후보는 지정에 맞는 공격자, 그 속성·타입 존 담당, 버퍼·생존 상위로 추립니다.</p>
         <h2>후열 고정 · 캐릭터별 최적</h2>
         <p>후열 고정에 넣은 캐릭터(글래스터 연성 셔틀 등)는 전방 후보에서 빠지고 후열 자리를 먼저 차지합니다. 남은 후열 자리는 회복·수호·해제를 가장 많이 보강하는 캐릭터로 채웁니다. 캐릭터별 최적은 상위 후보 36명의 모든 4인 조합과, 그 밖의 캐릭터마다 상위 14명 중 3명을 붙인 조합을 평가해 캐릭터마다 가장 높은 조합을 고릅니다.</p>
         <h2>운용 난이도</h2>
         <p>캐릭터마다 조작 부담을 0~4점으로 매기고(상태·모드 전환 +1, 축적 관리 +1, 자상·HP 조건 +0.8, 요격·피격 유도 +0.5, 기도·노래 유지 +0.5, 존 각성 타이밍 +0.4, AF 운용 +0.4, SB 의존 +0.3, 자동 발동형 −0.3), 전방 4명 합에 회복 수단이 없으면 +0.6을 더합니다. 합이 4.9 미만이면 Lv1 쉬움, 6.6 미만 Lv2 보통, 8.2 미만 Lv3 중간, 그 이상은 Lv4 고인물용입니다. 경계값은 SS·S 캐릭터 무작위 4인 조합의 하위 15%·50%·85% 지점에 맞췄습니다.</p>
         <h2>데이터 출처와 한계</h2>
-        <p>캐릭터 323명(★5 스타일 전체)과 보스 63개는 altema(일본 공략 위키) 캐릭터·보스 페이지와 어나더 에덴 위키의 대미지 공식을 바탕으로 2026년 10월 14일에 정리했습니다. 일부 캐릭터는 페이지에 수치가 없어 추정값이 들어가 있고, 버프의 "인접 아군만", "특정 존에서만 2배" 같은 조건은 대부분 단순화했습니다. 결과는 출발점으로 쓰고, 실제 보스에서 한 번 굴려 보는 것을 전제로 하세요.</p>
+        <p>캐릭터 323명(★5 스타일 전체)과 보스 63개는 altema(일본 공략 위키) 캐릭터·보스 페이지와 어나더 에덴 위키의 대미지 공식을 바탕으로 2026년 10월 14일에 정리했습니다. 일부 캐릭터는 페이지에 수치가 없어 추정값이 들어가 있습니다. 조건부 버프는 조건이 적힌 135명분을 규칙으로 옮겨 반영했지만, 수치가 미기재된 강화나 턴 단위 순서(누가 먼저 행동하는지)는 따지지 않습니다. 결과는 출발점으로 쓰고, 실제 보스에서 한 번 굴려 보는 것을 전제로 하세요.</p>
         <p class="hint">출처: <a href="https://anothereden.wiki/w/Damage_Formula" target="_blank" rel="noopener">Another Eden Wiki – Damage Formula</a> · <a href="https://anothereden.wiki/w/Another_Force/Combo" target="_blank" rel="noopener">AF Combo</a> · <a href="https://altema.jp/anaden/sikyo" target="_blank" rel="noopener">altema 최강 랭킹</a> · <a href="https://wiki.biligame.com/ae/%E6%9C%BA%E5%88%B6%EF%BC%9AZONE" target="_blank" rel="noopener">BWIKI ZONE 기제</a></p>
       </article>
       <aside class="consts">
