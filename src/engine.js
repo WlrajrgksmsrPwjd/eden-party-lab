@@ -62,6 +62,7 @@ function dimin(vals, cap){ // 체감 중첩: 1 + A + A·B + A·B·C … (A가 �
 const pct = v => (typeof v==='number' ? v : 0)/100;
 const isCharge = cond => /축적|누적|소비|스택|蓄積|消費/.test(cond||'');
 
+const ZKEYS = ['fire','water','earth','wind','thunder','shade','crystal','slash','pierce','blunt','magic','slash_pierce','slash_magic','starsea','stellar_sea','星海陣','all_weapon','moonlight','thunder_shade_crystal'];
 /* ---------- 존 종류 정규화 ---------- */
 const ZT_ALIAS = {starsea:'all', stellar_sea:'all', '星海陣':'all', all_weapon:'all', moonlight:'moon', thunder_shade_crystal:'moon'};
 function zoneOpt(t){
@@ -160,7 +161,7 @@ function reqMet(req, team, self){
   else if(req.kind==='weap') n = pool.filter(m=>req.vals.includes(m.weapon)).length;
   else if(req.kind==='align') n = pool.filter(m=>req.vals.includes(m.align)).length;
   else if(req.kind==='kof') n = pool.filter(m=>KOF_JP.includes(m.raw.name_jp)||m.pers.has('KOF')).length;
-  else if(req.kind==='pers') n = pool.filter(m=>req.vals.some(v=>m.pers.has(v))).length;
+  else if(req.kind==='pers') n = pool.filter(m=>req.vals.some(v=>m.pers&&m.pers.has(v))).length;
   else if(req.kind==='name') n = pool.filter(m=>req.vals.includes(m.raw.name_jp)).length;
   else if(req.kind==='distinct') n = new Set(pool.flatMap(m=>m.elems.filter(e=>req.vals.includes(e)))).size;
   else return false;
@@ -195,27 +196,35 @@ const FG = {
   pierce:['barrier_pierce'], weak:['weak_dmg'], link:['link']
 };
 const ALLF = [...new Set(Object.values(FG).flat())];
+/* 디버프 규칙 그룹 (적에게 거는 것이라 받는 사람 조건 to는 쓰지 않음, '*'에 들어가지 않음) */
+const DG = { allres:['d_all_elem_res'], elres:['d_elem_res'], res:['d_all_elem_res','d_elem_res'], pres:['d_phys_res','d_mag_res'], wres:['d_weapon_res'], def:['d_end','d_spr'] };
+const DEBF = [...new Set(Object.values(DG).flat())];
 function compileRules(c){
   const p = c.party_buff||{};
   let rules = Array.isArray(c.party_rules) ? c.party_rules.slice() : [];
   if(!rules.length && p.scope==='adjacent') rules=[{f:['*'],to:{pos:'adj'}}];
   if(!rules.length && (p.scope==='left'||p.scope==='right')) rules=[{f:['*'],to:{pos:'one',side:p.scope==='left'?'l':'r'}}];
+  const drules = Array.isArray(c.debuff_rules) ? c.debuff_rules.map(r=>Object.assign({}, r, {deb:true})) : [];
+  rules = rules.concat(drules);
   if(!rules.length) return null;
-  const list=[]; let zel=false, zdep=false, sdep=false;
+  const list=[]; let zel=false, zdep=false, sdep=false; const debSt=new Set();
   for(const r of rules){
     if(r.zel){ zel=true; zdep=true; continue; }
     const fs=new Set();
     for(const g of (r.f||['*'])){
+      if(r.deb){ (DG[g]||[]).forEach(k=>fs.add(k)); continue; }
       if(g==='*') ALLF.forEach(k=>fs.add(k));
       else if(g.indexOf('elat:')===0) fs.add('elem_atk:'+g.slice(5));
       else (FG[g]||[]).forEach(k=>fs.add(k));
     }
-    const w=r.when||{}, to=r.to||{};
+    if(!fs.size) continue;
+    if(r.deb && r.st) fs.forEach(k=>debSt.add(k));
+    const w=r.when||{}, to=r.deb ? {} : (r.to||{});
     if(w.zone||w.zlv) zdep=true;
     if(w.sb||w.af||w.t!=null) sdep=true;
-    list.push({fs:[...fs], to, w, x:r.x!=null?r.x:1, e:r.e!=null?r.e:0, en:r.en!=null?r.en:null, me:!!r.me, pos:to.pos||null, side:to.side||null});
+    list.push({fs:[...fs], to, w, x:r.x!=null?r.x:1, e:r.e!=null?r.e:0, en:r.en!=null?r.en:null, me:!!r.me, pos:to.pos||null, side:to.side||null, deb:!!r.deb});
   }
-  return {list, zel, zdep, sdep, hasPos:list.some(r=>r.pos)};
+  return {list, zel, zdep, sdep, hasPos:list.some(r=>r.pos), debSt};
 }
 function zoneMatch(spec, z){
   if(!z || z.kind==='none' || !z.level) return false;
@@ -310,7 +319,9 @@ function skillPow(sk){
   if(!sk) return 0;
   const tgt = sk.target==='st'?'st':'aoe', kind = sk.kind==='mag'?'mag':'phys', el=(sk.element||'none')==='none'?'no':'el';
   const sv = (SIZE_TABLE[tgt+'_'+kind+'_'+el]||SIZE_TABLE.aoe_phys_el)[SIZE_IDX[sk.size]??3]/100;
-  let m = Math.max(sk.mult||1,1); if(isCharge(sk.condition) && m>=30){ m*=0.4; if(m>25) m=25+(m-25)*0.2; }
+  let m = Math.max(sk.mult||1,1);
+  if(sk.mcond){ const b=Math.max(0.1, sk.mcond.base!=null?+sk.mcond.base:1); m = b + (m-b)*0.6; }
+  else if(isCharge(sk.condition) && m>=30){ m*=0.4; if(m>25) m=25+(m-25)*0.2; }
   return sv*m*(1+(sk.repeat||0)*0.7);
 }
 function prepChar(c){
@@ -331,6 +342,8 @@ function prepChar(c){
   const buffAct = ex.buff_how==='skill' && !!partyHas && !(c.roles||[]).includes('dps') && mpx.buff!==0 && tx.buff!==99 && !(mpx.buff!=null && mpx.main!=null && mpx.buff===mpx.main);
   return {
     pers: new Set((ex.personality||[]).concat(c.element||[]).map(x=>({fire:'火',water:'水',earth:'地',wind:'風',thunder:'雷',shade:'陰',crystal:'晶'}[x]||x))),
+    // 속성 퍼스널리티(서약 '속성 ○의 아군' 판정용). 데이터에 없으면 공격 속성으로
+    persEl: (()=>{ const K={'火':'fire','水':'water','地':'earth','風':'wind','雷':'thunder','陰':'shade','晶':'crystal'}; const L=(ex.personality||[]).map(x=>K[x]).filter(Boolean); return L.length?L:(c.element||[]); })(),
     mpMain: mpx.main!=null ? mpx.main : null, mpBuff: mpx.buff!=null ? mpx.buff : null, mpSB: mpx.sb!=null ? mpx.sb : null,
     buffAct, buffTurns: tx.buff==null ? 3 : tx.buff, manifestMax: ex.manifest!=null ? ex.manifest : null,
     naR: Math.min(1, 1.6/Math.max(1.6, skillPow(c.main))),
@@ -343,7 +356,9 @@ function prepChar(c){
     breakT: (d.break||'').toLowerCase(),
     weakExpose: (d.weak_expose||'').split(/[(\s]/)[0],
     pain: !!d.pain_poison,
-    selfDamage: (c.tags||[]).includes('self_damage')
+    selfDamage: (c.tags||[]).includes('self_damage'),
+    chain: Array.isArray(c.chain) && c.chain.some(e=>e&&e.atk) ? c.chain.filter(e=>e&&e.atk) : null,
+    mzone: (()=>{ const L=[]; for(const sk of [c.main, c.sb]) if(sk && sk.mcond) for(const cd of [].concat(sk.mcond.need||[], ...((sk.mcond.steps||[]).map(s=>s[1]||[])))) if(cd && cd.zone) L.push(cd); return L.length?L:null; })()
   };
 }
 
@@ -496,7 +511,8 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const key = tgt+'_'+kind+'_'+(el==='none'?'no':'el');
   const sizeV = (SIZE_TABLE[key]||SIZE_TABLE.aoe_phys_el)[SIZE_IDX[sk.size]??3]/100;
   let mult = Math.max(sk.mult||1, 1);
-  if(situation!=='sb' && isCharge(sk.condition) && mult>=30){ mult*=0.4; if(mult>25) mult = 25 + (mult-25)*0.2; } // 축적형 큰 한 방은 평상시 평균으로 낮춤
+  if(sk.mcond) mult = condMult(sk, sk.mcond, situation, team, c, progs, idx, A, zone, enemy, el);
+  else if(situation!=='sb' && isCharge(sk.condition) && mult>=30){ mult*=0.4; if(mult>25) mult = 25 + (mult-25)*0.2; } // 축적형 큰 한 방은 평상시 평균으로 낮춤
   if(usingSB) mult*=pr.sbMul;
   let dmg = sizeV*mult*(tgt==='st'?1.1:1)*(el!=='none'?1.75:1);
 
@@ -545,17 +561,28 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let specB = dimin(spv, 3.5);
   dmg *= (1+statB)*(stat==='spd'?(1+statB*0.6):1)*(1+elB)*(1+wB)*(1+specB);
 
-  // 적 디버프 (내성 그룹)
-  const tv=[], phv=[], mgv=[];
-  for(const m of team){
-    const d=m.deb; if(!d) continue;
-    tv.push(pct(d.all_elem_res)); if(d.elem_res && el!=='none') tv.push(pct(d.elem_res[el]));
-    if(kind==='phys'){ phv.push(pct(d.phys_res)); if(d.weapon_res) phv.push(pct(d.weapon_res[wt])); }
-    else mgv.push(pct(d.mag_res));
+  // 적 디버프 (내성 그룹). 디버프 규칙(지속·조건) 배율, 단일 대상 디버프는 전체 공격일 때 맞는 적 비율만큼
+  const tv=[], phv=[], mgv=[], dfv=[];
+  const nTg = sk.target==='st' ? 1 : Math.max(1, S.enemyCount||1);
+  for(let j=0;j<team.length;j++){
+    const m=team[j], d=m.deb; if(!d) continue;
+    const fr = FX&&FX[j] ? FX[j].rows[idx] : null, st = m.rules && m.rules.debSt && nTg>1 ? m.rules.debSt : null;
+    if(!fr && !st){
+      tv.push(pct(d.all_elem_res)); if(d.elem_res && el!=='none') tv.push(pct(d.elem_res[el]));
+      if(kind==='phys'){ phv.push(pct(d.phys_res)); if(d.weapon_res) phv.push(pct(d.weapon_res[wt])); } else mgv.push(pct(d.mag_res));
+      const dv = kind==='phys' ? d.end : d.spr; if(dv) dfv.push(pct(dv));
+      continue;
+    }
+    const D = k=>{ let v = fr&&fr[k]!=null ? fr[k] : 1; if(st && st.has(k)) v/=nTg; return v; };
+    tv.push(pct(d.all_elem_res)*D('d_all_elem_res')); if(d.elem_res && el!=='none') tv.push(pct(d.elem_res[el])*D('d_elem_res'));
+    if(kind==='phys'){ phv.push(pct(d.phys_res)*D('d_phys_res')); if(d.weapon_res) phv.push(pct(d.weapon_res[wt])*D('d_weapon_res')); }
+    else mgv.push(pct(d.mag_res)*D('d_mag_res'));
+    const dv = kind==='phys' ? d.end : d.spr; if(dv) dfv.push(pct(dv)*D(kind==='phys'?'d_end':'d_spr'));
   }
   const typeR = (el!=='none'||kind==='mag') ? dimin(tv,1) : 0;
   const physR = kind==='phys' ? dimin(phv,1) : dimin(mgv,1);
-  dmg *= (1+typeR+physR);
+  const defR = dfv.length ? dimin(dfv,1) : 0; // 내구·정신 DOWN: 빌더 계산식 기준 −50%에 물리 약 +8%, 마법 약 +6.5%
+  dmg *= (1+typeR+physR) * (1 + defR*(kind==='phys'?0.16:0.13));
 
   // 크리티컬
   if(sk.crit_sure) critR = Math.max(critR,1);
@@ -627,6 +654,36 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     afx: sk.af_combo_x||1, hitsPerAct: totHits, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1)};
 }
 
+/* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
+function condP(cd, sit, team, c, A, zone, enemy, el){
+  const nrm = sit==='normal';
+  if(cd.zone){ const ok = zoneMatch(cd.zone, zone) && (!cd.zlv || (zone && zone.level>=cd.zlv)); return ok?1:0; }
+  if(cd.req) return reqMet(cd.req, team, c) ? 1 : 0;
+  if(cd.stack!=null){ const tn=+cd.turns||0, consume=/소비형/.test(String(cd.stack));
+    if(consume) return nrm ? Math.min(1, 2/Math.max(2,tn)) : 1;
+    if(tn<=0) return 1;
+    return nrm ? Math.max(0.3, 1-tn/12) : (tn<=3 ? 1 : tn<=6 ? 0.75 : 0.5); }
+  if(cd.hp) return cd.hp==='self' ? 1 : cd.hp==='max' ? 0.8 : 0.5;
+  if(cd.mp) return 0.8;
+  if(cd.af!=null) return (sit==='af') === !!cd.af ? 1 : 0;
+  if(cd.enemy){ const e=cd.enemy;
+    if(e==='poison'||e==='pain') return A.painAny ? 1 : 0;
+    if(e==='weak') return enemy ? (enemyRel(enemy, el)==='weak' || A.weakAdd.includes(el) ? 1 : 0) : 0.4;
+    if(e==='break') return A.breaks.length ? 1 : 0.3;
+    return 0.8; }
+  if(cd.turn) return nrm ? 0.3 : 0.5;
+  if(cd.other) return 0.6;
+  return 1;
+}
+function condMult(sk, mc, sit, team, c, progs, idx, A, zone, enemy, el){
+  const top = Math.max(sk.mult||1, 1), base = Math.max(0.1, mc.base!=null ? +mc.base : 1);
+  const P = conds => { let p=1; if(conds) for(let i=0;i<conds.length && p>0;i++) p*=condP(conds[i], sit, team, c, A, zone, enemy, el); return p; };
+  let e=base, prev=base;
+  const st = mc._st || (mc._st = (Array.isArray(mc.steps)?mc.steps:[]).filter(s=>Array.isArray(s)&&s.length>=2&&+s[0]>base&&+s[0]<top).sort((a,b)=>a[0]-b[0]));
+  for(let i=0;i<st.length;i++){ const v=+st[i][0]; e += (v-prev)*P(st[i][1]); prev=v; }
+  e += (top-prev)*P(mc.need);
+  return Math.max(0.1, e);
+}
 function grastaFactor(pr, teamPain){
   const gl = pr.gl||DEFAULT_SETTINGS.grastaDefault, n = pr.slots||3;
   const painOK = !!(gl.ore || teamPain);
@@ -713,7 +770,8 @@ function muleShare(team, S, ctx){
     if(S.muleAuto===false) return null;
     let best=null; for(const c of team) if(!best || (c.pow||0)>(best.pow||0)) best=c;
     wp = best && WEAPON_PERS[best.weapon]; if(!wp) return null;
-    const sl = S.muleSlots||3; mules=[{pers:new Set([wp]), slots:sl},{pers:new Set([wp]), slots:sl}]; auto=true;
+    const sl = S.muleSlots||3, nb = ctx && ctx.maxBack!=null ? ctx.maxBack : 2; if(nb<=0) return null;
+    mules=[{pers:new Set([wp]), slots:sl},{pers:new Set([wp]), slots:sl}].slice(0,nb); auto=true;
   }
   const per = (S.mulePct||0.3)*100;
   const k = team.map(c=>{ const w=WEAPON_PERS[c.weapon]; return mules.reduce((a,m)=>a+(m.shares ? shareSlots(m.shares, c, per) : (m.pers.has(w)?m.slots:0)),0); });
@@ -734,9 +792,67 @@ function shareSlots(shares, c, per){
 /* 계산 상황: 배리어 관통 필요 여부, 속성·타입 지정, 후열 고정 셔틀 */
 function buildCtx(input, ownedAll){
   const boss=input.boss;
-  const mules = (input.backLocked||[]).slice(0,2).map(id=>(ownedAll||[]).find(o=>o.pc.id===id)).filter(Boolean)
+  const maxBack = input.pledge && input.pledge.size ? Math.max(0, Math.min(2, input.pledge.size-4)) : 2;
+  const mules = (input.backLocked||[]).slice(0,maxBack).map(id=>(ownedAll||[]).find(o=>o.pc.id===id)).filter(Boolean)
     .map(o=>({id:o.pc.id, name:o.pc.name, pers:o.pc.pers, slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
-  return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules};
+  return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack};
+}
+/* ---------- 체인 어빌리티: 다른 아군의 행동에 반응하는 추격 ----------
+   턴당 발동 수 = min(최대, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치 */
+function chainActP(m, i, on, cores, sit, sim){
+  const co = cores[i];
+  const atkP = sit==='normal' && sim ? (sim.act[i]+sim.alt[i]) : 1;
+  const act = on.act||'attack';
+  if(act==='any') return 1;
+  if(act==='skill') return sit==='normal' && sim ? 1-sim.na[i] : 1;
+  if(act==='attack'){
+    if(!co) return 0;
+    if(on.elem && !on.elem.includes(co.el)) return 0;
+    if(on.wt && !on.wt.includes(co.wt)) return 0;
+    if(on.kind && co.kind!==on.kind) return 0;
+    if(on.tgt && co.tgt!==on.tgt) return 0;
+    return atkP;
+  }
+  const p=m.party||{}, d=m.deb||{};
+  if(act==='buff'){ const has = ['pwr','int','spd','all_elem_atk','crit_rate','crit_dmg'].some(k=>(p[k]||0)>0) || Object.values(p.elem_atk||{}).some(v=>v>0); if(!has) return 0; return m.buffAct ? (sit==='normal'&&sim ? Math.max(0.2,1-sim.act[i]-sim.alt[i]-sim.na[i]) : 1) : 0.5*atkP; }
+  if(act==='debuff'){ const has = ['pwr','int','spd','all_elem_res','phys_res','mag_res','end','spr'].some(k=>(d[k]||0)>0) || Object.values(d.elem_res||{}).some(v=>v>0); return has ? 0.7*atkP : 0; }
+  if(act==='heal') return ((m.sup||{}).heal||0)>=2 ? 0.35 : 0;
+  return 0;
+}
+function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, combo, fw){
+  const per = team.map(()=>0), trig = team.map(()=>0);
+  let any=false;
+  for(let h=0;h<team.length;h++){
+    const c=team[h]; if(!c.chain) continue;
+    for(const e of c.chain){
+      if(e.af===false && sit==='af') continue;
+      if(e.when && Object.keys(e.when).length && ruleAct({w:e.when}, h, team, progs, sit==='af'?'normal':sit, z, A)<=0) continue;
+      const on = e.on||{};
+      const opts = Array.isArray(on.rand) && on.rand.length ? on.rand.map(o=>Object.assign({}, o, {by:on.by})) : [on];
+      let n=0;
+      for(const o of opts){
+        let s=0;
+        for(let i=0;i<team.length;i++){ if(i===h && (o.by||'other')!=='any') continue; s += chainActP(team[i], i, o, cores, sit==='af'?'sb':sit, sim); }
+        n += sit==='af' ? (s>0 ? (e.max||1) : 0) : Math.min(e.max||1, s);
+      }
+      n /= opts.length;
+      if(e.every>1) n = Math.floor(n/e.every+1e-9) + (sit==='normal' ? (n%e.every)/e.every*0.5 : 0);
+      if(n<=0) continue;
+      const a=e.atk; let mult=+a.mult||1;
+      if(a.mult_max){ const fh=team.filter((m,k)=>k!==h && (m.weapon==='fist'||m.weapon==='hammer')).length; mult=Math.min(a.mult_max, mult+0.5*fh); }
+      let multSum = mult*n;
+      if(Array.isArray(a.mult_seq) && a.mult_seq.length){ multSum=0; let r=n; for(let k=0;k<a.mult_seq.length && r>0;k++){ const f=Math.min(1,r); multSum+=a.mult_seq[k]*f; r-=f; } }
+      const sk = {skill:e.name||'체인', target:a.target==='st'?'st':'aoe', kind:a.kind==='mag'?'mag':'phys', stat:a.stat||(a.kind==='mag'?'int':'pwr'), element:a.element||'none',
+        weapon_type:a.weapon_type||null, size:a.size||'xl', mult:1, hits:Math.max(1,a.hits||1), repeat:0, crit_sure:false, def_ignore:false, barrier_pierce:false, af_combo_x:1, condition:''};
+      const proxy = Object.assign({}, c, {main:sk, sb:null});
+      const t2 = team.slice(); t2[h]=proxy;
+      const co = attackerCore(t2, h, progs, A, enemy, S, 'normal', cx, FX, z);
+      if(!co) continue;
+      const d1 = applyZoneCap(co, z, S, cap, combo)*fw(co);
+      per[h] += d1*multSum; trig[h] += n; any=true;
+    }
+  }
+  return any ? {per, trig, total:per.reduce((x,y)=>x+y,0)} : null;
 }
 function evalTeam(team, progs, enemy, S, cap, ctx){
   const A = teamAgg(team);
@@ -745,7 +861,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   const flux = light>shadow?'light':shadow>light?'shadow':'both';
   const hasSB = team.some((c,i)=>c.stellar && progs[i].sbOK);
   const cx = Object.assign({}, ctx, {flux});
-  const anyR = team.some(c=>c.rules), zdep = anyR && team.some(c=>c.rules&&c.rules.zdep), sdep = anyR && team.some(c=>c.rules&&c.rules.sdep);
+  const anyR = team.some(c=>c.rules), mz = team.some(c=>c.mzone), zdep = mz || (anyR && team.some(c=>c.rules&&c.rules.zdep)), sdep = anyR && team.some(c=>c.rules&&c.rules.sdep);
   const posSets = anyR && team.some(c=>c.rules&&c.rules.hasPos) ? computePos(team) : null;
   // 같은 상황에서 규칙 발동 상태가 같으면 계산을 재사용 (존 후보가 버프 조건을 바꾸지 않는 경우가 대부분)
   const memo = new Map();
@@ -755,6 +871,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     const upt = useSim && uptLow ? sim.upt : null;
     if(!zdep){ const FX = (anyR||upt) ? buildBF(team,progs,sit,z,A,posSets,upt) : null; return team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,sit,cx,FX,z)); }
     let key = (sit==='sb'?7:sit==='af'?13:3) + (upt?100:0);
+    if(mz){ let b=1; for(const c of team) if(c.mzone) for(const cd of c.mzone){ b = b*2 + (zoneMatch(cd.zone, z) && (!cd.zlv || (z&&z.level>=cd.zlv)) ? 1 : 0); } key = (key*131 + b) % 2147483629; } // 스킬 위력이 존에 따라 바뀌는 캐릭터
     for(let j=0;j<team.length;j++){ const R=team[j].rules; if(!R) continue;
       if(R.zel) key = (key*131 + (z&&z.kind==='elem'&&z.level>0 ? ELEMS.indexOf(z.types[0])+1+(z.types.length>1?40:0) : 0)) % 2147483629;
       for(const r of R.list) key = (key*1009 + Math.round(ruleAct(r,j,team,progs,sit,z,A)*1000)) % 2147483629; }
@@ -764,6 +881,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     memo.set(key, cores); return cores;
   };
   const fw = focusW(ctx&&ctx.focus);
+  const hasChain = team.some(c=>c.chain);
   // 일반 턴 행동 비중: 주력기 턴 + 통상 공격 턴(주력기 대비 약한 위력)
   const wN = simUse ? team.map((c,i)=>sim.act[i] + sim.alt[i]*Math.max(ALT_R, c.naR) + sim.na[i]*c.naR) : null;
   const sumZ = (cores,z,combo,w)=>{ let v=0; const per=cores.map((co,i)=>{ const d=applyZoneCap(co,z,S,cap,combo)*fw(co)*(w?w[i]:1); v+=d; return d; }); return {v,per}; };
@@ -780,6 +898,11 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
       if(r.v>bestV){ bestV=r.v; best=z; bestPer=r.per; bestCores=cores; }
     }
     res[sit] = {total:bestV, zone:best, per:bestPer, cores:bestCores, zones:zs, sit:s2};
+    if(hasChain){
+      const FXc = anyR ? buildBF(team,progs,s2,best,A,posSets,null) : null;
+      const ch = chainCalc(team, progs, A, enemy, S, s2, cx, FXc, best, bestCores, useSim?sim:null, cap, null, fw);
+      if(ch){ res[sit].chain=ch; res[sit].total+=ch.total; res[sit].per=bestPer.map((v,i)=>v+ch.per[i]); }
+    }
   }
   // 지속: 일반 존은 상시, 어나더 존은 2/5 턴 가동 (어나더 존 한정 버프도 그 동안만)
   const nz = res.normal.zone;
@@ -794,10 +917,12 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   let gain=0;
   afCores.forEach(co=>{ if(co) gain += S.afActions*co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); });
   const avgCombo = Math.min(0.75 + 0.5*gain, 4);
-  const af = sumZ(afCores, nz, avgCombo).v*S.afActions;
+  let af = sumZ(afCores, nz, avgCombo).v*S.afActions;
+  let afChain = null;
+  if(hasChain){ const FXa = anyR ? buildBF(team,progs,'af',nz,A,posSets,null) : null; afChain = chainCalc(team, progs, A, enemy, S, 'af', cx, FXa, nz, afCores, null, cap, avgCombo, fw); if(afChain) af += afChain.total; }
   const sbTurn = res.sb.total;
   const surv = survival(team, progs);
-  return {sbTurn, af, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
+  return {sbTurn, af, afChain, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A, posSets, sim, mule:A.mule};
 }
 /* 속성·공격 타입 지정: 지정과 맞는 공격만 화력으로 센다 */
@@ -830,7 +955,7 @@ function explainTeam(team, progs, ev, S, ctx){
   team.forEach((c,j)=>{
     const R=c.rules; if(!R || !R.list.length) return;
     const p=c.party||{};
-    const hasVal = r=>[...r.fs].some(k=>{ const kk=k.split(':')[0]; const v=p[kk]; return typeof v==='number'?v>0 : v&&typeof v==='object' ? Object.values(v).some(x=>x>0) : !!v; });
+    const hasVal = r=>[...r.fs].some(k=>{ const kk=k.split(':')[0]; const v = kk.indexOf('d_')===0 ? (c.deb||{})[kk.slice(2)] : p[kk]; return typeof v==='number'?v>0 : v&&typeof v==='object' ? Object.values(v).some(x=>x>0) : !!v; });
     const dv=new Map(dealers.map(i=>[i,1])); const tgt=new Set();
     R.list.forEach((r,ri)=>{
       if(!hasVal(r) || r.x===0) return;
@@ -917,7 +1042,7 @@ function buildPool(owned, locked, opts){
     add('sup', 8, zm);
     add('sup', mode==='stability'?12:14); add('surv', mode==='stability'?10:5);
   } else {
-    const quota = mode==='stability' ? {dps:14,sup:14,surv:14} : {dps:18,sup:16,surv:8};
+    const quota = mode==='stability' ? {dps:12,sup:12,surv:12} : {dps:15,sup:14,surv:6};
     add('dps',quota.dps); add('sup',quota.sup); add('surv',quota.surv);
   }
   // 존 제공자 중 상위 딜러 속성과 맞는 캐릭터 보강
@@ -934,7 +1059,9 @@ function buildPool(owned, locked, opts){
   return arr;
 }
 
-function modeWeights(mode, boss){
+function modeWeights(mode, boss, cw, pl){
+  if(mode==='custom' && cw){ const b=Math.max(0,+cw.b||0), s=Math.max(0,+cw.s||0), t=Math.max(0,+cw.t||0), z=b+s+t||1; return {b:b/z, s:s/z, t:t/z}; }
+  if(pl){ const w=modeWeights(mode, boss); if(pl.nokill) w.t+=0.25; if(pl.turns>0 && pl.turns<=10) w.b+=0.3; else if(pl.turns>0 && pl.turns<=15) w.b+=0.12; return w; }
   if(mode==='burst') return {b:1,s:0,t:0};
   if(mode==='sustain') return {b:0,s:1,t:0};
   if(mode==='stability') return {b:0,s:0.4,t:0.6};
@@ -969,7 +1096,12 @@ async function optimize(input, onProgress){
   const own = owned.filter(o=>!ex.has(o.pc.id));
   if(own.length<4) return {error:'보유 캐릭터가 4명 이상 필요합니다. (제외 목록 포함 확인)'};
   if(ctx.focus && !own.some(o=>charFocusMatch(o.pc,ctx.focus))) return {error:'지정한 속성·타입으로 공격하는 보유 캐릭터가 없습니다.', results:[], evaluated:0, poolSize:0};
-  const lockIds = locked.filter(id=>own.some(o=>o.pc.id===id)).slice(0,4);
+  const pl = input.pledge || null; // 결현현 서약
+  if(pl && pl.required && !own.some(o=>o.pc.id===pl.required)) return {error:'이 보스의 필수 캐릭터를 보유하지 않았습니다(또는 제외 목록에 있음).', results:[], evaluated:0, poolSize:0};
+  const lockIds = (pl && pl.required ? [pl.required] : []).concat(locked.filter(id=>!(pl&&pl.required===id))).filter(id=>own.some(o=>o.pc.id===id)).slice(0,4);
+  const nRes = pl && pl.size ? Math.max(0, Math.min(2, pl.size-4)) : 2;
+  const compM = pl && pl.comp && pl.comp.n>0 ? (m=>(pl.comp.elem||[]).some(e=>(m.persEl||m.elems).includes(e)) || (pl.comp.weap||[]).includes(m.weapon)) : null;
+  const compOK = compM ? (team=>{ const ids=new Set(team.map(m=>m.id)); const f=team.filter(compM).length; if(f>=pl.comp.n) return true; const extra=own.filter(o=>!ids.has(o.pc.id)&&compM(o.pc)).length; return f+Math.min(nRes,extra)>=pl.comp.n; }) : null;
   const pool = buildPool(own, lockIds, {enemy,S,cap,ctx,mode,maxPool:input.maxPool});
   const lockIdx = lockIds.map(id=>pool.findIndex(o=>o.pc.id===id));
   const free = pool.map((_,i)=>i).filter(i=>!lockIdx.includes(i));
@@ -980,21 +1112,85 @@ async function optimize(input, onProgress){
   let done=0, lastYield=Date.now();
   const recSet = new Set(recommendedIds);
   const it = need>0 ? combos(free.length, need) : [[]][Symbol.iterator]();
+  const seen = new Set();
   for(const cmb of it){
     const idxs = lockIdx.concat(cmb.map(k=>free[k]));
     const team = idxs.map(i=>pool[i].pc), progs = idxs.map(i=>pool[i].prog);
     const ev = evalTeam(team, progs, enemy, S, cap, ctx);
     teams.push(idxs); raws.push(ev.burst, ev.sustain, ev.surv);
+    seen.add(idxs.map(i=>pool[i].pc.id).sort().join());
     done++;
-    if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(done/total); await new Promise(r=>setTimeout(r,0)); }
+    if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(Math.min(0.85, done/total*0.85)); await new Promise(r=>setTimeout(r,0)); }
+  }
+  // 속성덱·타입덱 후보: 속성·타입마다 작은 후보 풀로 조합을 더 만들어 같은 기준(지정 없음)으로 평가
+  // (조합 시너지로 강해지는 캐릭터가 전체 후보 풀에서 빠지는 것을 막는다)
+  const posOf = new Map(pool.map((o,i)=>[o.pc.id,i]));
+  const deckIdx = []; // 속성덱·타입덱 후보 (전방 3명 이상이 그 속성·타입으로 공격)
+  if(!ctx.focus && input.deckSeeds!==false){
+    const FOC = ELEMS.map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
+    for(let fi=0; fi<FOC.length; fi++){
+      const F=FOC[fi];
+      if(!own.some(o=>charFocusMatch(o.pc,F))) continue;
+      const fp = buildPool(own, lockIds, {enemy,S,cap,ctx:Object.assign({},ctx,{focus:F}),mode,maxPool:14});
+      for(const o of fp) if(!posOf.has(o.pc.id)){ posOf.set(o.pc.id,pool.length); pool.push(o); }
+      const lk = lockIds.map(id=>fp.findIndex(o=>o.pc.id===id)).filter(i=>i>=0);
+      const fr = fp.map((_,i)=>i).filter(i=>!lk.includes(i));
+      const nd = 4-lk.length;
+      const it2 = nd>0 ? combos(fr.length, nd) : [[]][Symbol.iterator]();
+      for(const cmb of it2){
+        const mem = lk.concat(cmb.map(k=>fr[k])).map(i=>fp[i]);
+        const nMatch = mem.filter(o=>charFocusMatch(o.pc,F)).length; if(!nMatch) continue;
+        const key = mem.map(o=>o.pc.id).sort().join();
+        if(seen.has(key)){ if(nMatch>=3){ const ti=teams.findIndex(tt=>tt.map(i=>pool[i].pc.id).sort().join()===key); if(ti>=0) (deckIdx[fi]=deckIdx[fi]||[]).push(ti); } continue; }
+        seen.add(key);
+        const team=mem.map(o=>o.pc), progs=mem.map(o=>o.prog);
+        const ev = evalTeam(team, progs, enemy, S, cap, ctx);
+        teams.push(mem.map(o=>posOf.get(o.pc.id))); raws.push(ev.burst, ev.sustain, ev.surv);
+        if(nMatch>=3) (deckIdx[fi]=deckIdx[fi]||[]).push(teams.length-1);
+        if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(0.85+0.15*fi/FOC.length); await new Promise(r=>setTimeout(r,0)); }
+      }
+    }
   }
   let mb=1e-9, ms=1e-9, mt=1e-9;
   for(let i=0;i<teams.length;i++){ mb=Math.max(mb,raws[3*i]); ms=Math.max(ms,raws[3*i+1]); mt=Math.max(mt,raws[3*i+2]); }
-  const w = modeWeights(mode, boss);
+  const w = modeWeights(mode, boss, input.weights, pl);
+  // 상위 조합에서 한 명씩 바꿔 보기 (후보 풀 밖의 시너지 캐릭터 찾기)
+  if(input.refine!==false && teams.length){
+    const scoreOf = (b,s,tt)=>{ let sc = w.b*b/mb + w.s*s/ms + w.t*tt/mt; if((mode==='burst'||mode==='sustain'||mode==='weak') && tt/mt<0.25) sc*=0.85; return sc; };
+    const order = teams.map((_,i)=>i).sort((a,b)=>scoreOf(raws[3*b],raws[3*b+1],raws[3*b+2])-scoreOf(raws[3*a],raws[3*a+1],raws[3*a+2]));
+    const starts=[]; for(const i of order){ if(starts.length>=6) break; const ids=new Set(teams[i]); if(starts.some(s=>s.filter(x=>ids.has(x)).length>=3)) continue; starts.push(teams[i].slice()); }
+    const cand = own.map(o=>Object.assign({},o,{pot:soloPotential(o.pc,o.prog,enemy,S,cap,ctx)})).sort((a,b)=>(b.pot.dps+b.pot.sup*0.5)-(a.pot.dps+a.pot.sup*0.5)).slice(0,90);
+    for(const o of cand) if(!posOf.has(o.pc.id)){ posOf.set(o.pc.id,pool.length); pool.push(o); }
+    const lockSet=new Set(lockIds);
+    for(const st of starts){
+      let cur=st, curEv=null;
+      { const tm=cur.map(i=>pool[i]); curEv=evalTeam(tm.map(o=>o.pc),tm.map(o=>o.prog),enemy,S,cap,ctx); }
+      let curSc=scoreOf(curEv.burst,curEv.sustain,curEv.surv);
+      for(let pass=0;pass<2;pass++){
+        let best=null;
+        for(let k=0;k<4;k++){
+          if(lockSet.has(pool[cur[k]].pc.id)) continue;
+          for(const o of cand){
+            const pi=posOf.get(o.pc.id); if(cur.includes(pi)) continue;
+            const nt=cur.slice(); nt[k]=pi;
+            const key=nt.map(i=>pool[i].pc.id).sort().join(); if(seen.has(key)) continue; seen.add(key);
+            const tm=nt.map(i=>pool[i]); const ev=evalTeam(tm.map(x=>x.pc),tm.map(x=>x.prog),enemy,S,cap,ctx);
+            teams.push(nt); raws.push(ev.burst, ev.sustain, ev.surv);
+            const sc=scoreOf(ev.burst,ev.sustain,ev.surv); if(sc>curSc+1e-9 && (!best||sc>best.sc)) best={nt,sc};
+            if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r=>setTimeout(r,0)); }
+          }
+        }
+        if(!best) break; cur=best.nt; curSc=best.sc;
+      }
+    }
+    for(let i=0;i<teams.length;i++){ mb=Math.max(mb,raws[3*i]); ms=Math.max(ms,raws[3*i+1]); mt=Math.max(mt,raws[3*i+2]); }
+  }
+  if(onProgress) onProgress(1);
   const scored = [];
   const maxLv = input.maxDiff||4;
   for(let i=0;i<teams.length;i++){
     if(maxLv<4){ const d=teamDifficulty(teams[i].map(k=>pool[k].pc)); if(d.lv>maxLv) continue; }
+    if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue;
     const b=raws[3*i]/mb, s=raws[3*i+1]/ms, t=raws[3*i+2]/mt;
     let sc = w.b*b + w.s*s + w.t*t;
     if(mode==='burst'||mode==='sustain'||mode==='weak') sc *= (t<0.25?0.85:1);
@@ -1032,21 +1228,34 @@ async function optimize(input, onProgress){
     }
   }
   const topScore = finalList.length? finalList[0].sc : 1;
+  function pickReserves(team, progs, ev){
+    const inTeam=new Set(team.map(t=>t.id));
+    const fixedBack = nRes>0 ? backLocked.map(id=>owned.find(o=>o.pc.id===id)).filter(Boolean).slice(0,nRes).map(o=>o.pc) : [];
+    const mw = ev.mule && ev.mule.auto ? ev.mule.wp : null; // 셔틀 가정이면 그 무기 퍼스널리티 캐릭터를 후열 우선
+    const needComp = compM ? Math.max(0, pl.comp.n - team.filter(compM).length) : 0;
+    const reserves = fixedBack.concat(own.filter(o=>!inTeam.has(o.pc.id)).map(o=>({o, v:survival(team.concat([o.pc]),progs.concat([o.prog])).score - ev.surv + (o.pc.sup.revive?3:0) + (mw && o.pc.pers.has(mw) ? 8 + ((o.prog&&o.prog.slots)||3) : 0) + (needComp && compM(o.pc) ? 100 : 0)}))
+      .sort((a,b)=>b.v-a.v).slice(0,Math.max(0,nRes-fixedBack.length)).map(x=>x.o.pc));
+    return {reserves, fixedBack};
+  }
   const results = finalList.map((c,rank)=>{
     const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog);
     const ev=evalTeam(team,progs,enemy,S,cap,ctx);
     const np=needPenalty(ev,boss);
     // 후방 2명: 남은 보유 캐릭터 중 생존 기여 상위
-    const inTeam=new Set(team.map(t=>t.id));
-    const fixedBack = backLocked.map(id=>owned.find(o=>o.pc.id===id)).filter(Boolean).slice(0,2).map(o=>o.pc);
-    const mw = ev.mule && ev.mule.auto ? ev.mule.wp : null; // 셔틀 가정이면 그 무기 퍼스널리티 캐릭터를 후열 우선
-    const reserves = fixedBack.concat(own.filter(o=>!inTeam.has(o.pc.id)).map(o=>({o, v:survival(team.concat([o.pc]),progs.concat([o.prog])).score - ev.surv + (o.pc.sup.revive?3:0) + (mw && o.pc.pers.has(mw) ? 8 + ((o.prog&&o.prog.slots)||3) : 0)}))
-      .sort((a,b)=>b.v-a.v).slice(0,2-fixedBack.length).map(x=>x.o.pc));
+    const {reserves, fixedBack} = pickReserves(team, progs, ev);
     return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topScore,
       norm:{b:ev.burst/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss,
       recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))};
   });
-  return {results, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus};
+  // 속성덱·타입덱: 각 속성·타입에서 점수가 가장 높은 조합
+  const FOCL = ELEMS.map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
+  const decks = [];
+  deckIdx.forEach((L,fi)=>{ if(!L||!L.length) return; let bi=-1, bs=-1;
+    for(const i of L){ if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue; const b=raws[3*i]/mb, s=raws[3*i+1]/ms, tt=raws[3*i+2]/mt; let sc=w.b*b+w.s*s+w.t*tt; if((mode==='burst'||mode==='sustain'||mode==='weak') && tt<0.25) sc*=0.85; if(maxLv<4 && teamDifficulty(teams[i].map(k=>pool[k].pc)).lv>maxLv) continue; if(sc>bs){ bs=sc; bi=i; } }
+    if(bi>=0){ const team=teams[bi].map(k=>pool[k].pc), progs=teams[bi].map(k=>pool[k].prog); const ev=evalTeam(team,progs,enemy,S,cap,ctx); const rv=pickReserves(team,progs,ev);
+      decks.push({focus:FOCL[fi], team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:ev.burst/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); } });
+  decks.sort((a,b)=>b.score-a.score);
+  return {results, decks, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus};
 }
 
 /* ---------- 캐릭터별 최적 조합 ---------- */

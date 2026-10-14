@@ -1,0 +1,580 @@
+{
+ "melito": [
+  {
+   "name": "緋炎爪",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "fire"
+    ]
+   },
+   "max": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "fire",
+    "weapon_type": "blunt",
+    "size": "xl",
+    "mult": 3,
+    "hits": 1
+   },
+   "effect": "자신 HP 30% 회복",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1198",
+   "jp": "【チェインアビリティ：緋炎爪】発動条件：自身以外の味方の火属性攻撃スキル使用時 ターン中の最大発動回数 3回 / 【緋炎爪】敵全体に火属性の打攻撃(特大 3倍) +自身にHP30%回復",
+   "note": "히트 수 표기 없음(1로 둠)"
+  }
+ ],
+ "sesta_as": [],
+ "velette_as": [
+  {
+   "name": "イレクトリ",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "thunder"
+    ]
+   },
+   "max": 10,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "thunder",
+    "weapon_type": "blunt",
+    "size": "xl",
+    "mult": 1,
+    "hits": 3,
+    "hits_max": 6
+   },
+   "effect": "브레이크 부여, 턴 종료까지 レヴマ 1 축적. デドメナ 축적 수에 따라 공격 횟수 증가(최대 6회)·レヴマ 축적 수 증가(최대 6개)",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1150",
+   "jp": "【チェインアビリティ：イレクトリ】発動条件：自身以外の味方の雷属性攻撃スキル使用時 ターン中の最大発動回数10回 / 【イレクトリ】いずれかの敵に雷属性の打攻撃(特大3回)+ブレイク付与+ターン終了時までレヴマを1蓄積 / 自身のデドメナ蓄積数に応じて攻撃回数増(最大6回)・レヴマの蓄積数増加(最大6個)",
+   "note": "배율(〇倍) 표기 없음(1). 대상은 무작위 적 1체(いずれかの敵). デドメナ 수별 히트 증가 단계는 미기재"
+  }
+ ],
+ "flammelapis_es": [
+  {
+   "name": "アム・ルアス",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "kind": "mag"
+   },
+   "max": 5,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "water",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": 2,
+    "hits": 1
+   },
+   "effect": "자신 マナ・ルアス 1 축적(최대 10), 아군 전체 MP 5% 회복",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1212",
+   "jp": "【チェインアビリティ：アム・ルアス】発動条件：自身以外の味方の魔法攻撃スキル使用時 ターン中の最大発動回数 5回 / 敵全体に水属性の斬攻撃(特大 2倍) +自身にマナ・ルアスを1蓄積 +味方全体にMP回復5%",
+   "note": "히트 수 표기 없음(1)"
+  }
+ ],
+ "dalnis_as": [
+  {
+   "name": "狩人の護射",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "wt": [
+     "slash",
+     "pierce"
+    ]
+   },
+   "max": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "wind",
+    "weapon_type": "pierce",
+    "size": "xl",
+    "mult": 1,
+    "hits": 1
+   },
+   "effect": "공격 대상에 웨폰브레이크(斬突) 3 축적",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1240",
+   "jp": "【チェインアビリティ：狩人の護射】発動条件：自身以外の味方の斬・突攻撃スキル使用時 ターン中の最大発動回数：3回 / 敵全体に風属性の突攻撃(特大) +ウェポンブレイク(斬突)を3蓄積",
+   "note": "배율·히트 수 표기 없음(1)"
+  }
+ ],
+ "yuna": [
+  {
+   "name": "霊水の蝕",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "water"
+    ]
+   },
+   "max": 3,
+   "atk": null,
+   "effect": "적 전체에 엘리멘탈 브레이크(水) 3 축적 (대미지 없음)",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/148",
+   "jp": "【チェインアビリティ】発動条件：自身以外の味方の水属性攻撃スキル使用時 ターン中の最大発動回数 3回 / チェインアビリティ専用スキル「霊水の蝕」：敵全体にエレメンタルブレイク(水)を3蓄積",
+   "note": "공식 공지(2025-02-06)에서 자신의 수속성 스킬로도 발동하던 버그 수정 → by=other 확정"
+  }
+ ],
+ "id": [
+  {
+   "name": "追討蹴",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "tgt": "aoe"
+   },
+   "max": 5,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "earth",
+    "weapon_type": "blunt",
+    "size": "xl",
+    "mult": 2,
+    "hits": 1,
+    "mult_max": 3
+   },
+   "effect": "기절 부여. 자신 이외 아군 중 拳·槌 장비자 수에 따라 위력 증가(최대 3배)",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1121",
+   "jp": "【チェインアビリティ】発動条件：自身以外の味方の全体攻撃スキル使用時 ターン中の最大発動回数 5回 / 【追討蹴】敵全体に地属性の打攻撃(特大2倍)+気絶を付与 +自身以外の味方全体の「拳」「槌」装備者数に応じてさらに威力増加(3倍)",
+   "note": "拳/槌 인원별 증가 단계 미기재(2배→최대 3배로 해석). 히트 수 표기 없음(1)"
+  }
+ ],
+ "elseal_as": [
+  {
+   "name": "ハスタティ",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "water"
+    ],
+    "tgt": "st"
+   },
+   "max": 4,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "none",
+    "weapon_type": "slash",
+    "size": "l",
+    "mult": 1,
+    "hits": 1
+   },
+   "effect": "전위 아군에 アンティック 1 축적 (anaden-style 표기: 전위의 水 캐릭터)",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1126",
+   "jp": "【チェインアビリティ】発動条件：自身以外の味方の水属性単体攻撃スキル使用時 ターン中の最大発動回数 4回 発動効果：チェインアビリチ専用スキル「ハスタティ」を実行する / 【ハスタティ】敵単体に斬攻撃(大) +前衛のキャラにアンティックを1蓄積",
+   "note": "공격 속성 표기 없음 → none(무속성)으로 둠. 배율·히트 표기 없음"
+  }
+ ],
+ "nina": [
+  {
+   "name": "オートコーディネイト",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "crystal"
+    ]
+   },
+   "max": 3,
+   "atk": {
+    "target": "st",
+    "kind": "mag",
+    "stat": "int",
+    "element": "crystal",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 4,
+    "hits": 1
+   },
+   "effect": "아군 전체 크리율 100%UP + 마법 크리율 100%UP + 전속성공격 100%UP(3회 행동), 자신 コーディネイト 1 축적",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1171",
+   "jp": "【チェインアビリティ：オートコーディネート】発動条件：自身以外の味方の晶属性攻撃スキル使用時 ターン中の最大発動回数3回 / 敵単体に晶属性の魔法攻撃(特大 4倍) 味方全体：クリティカル率100%UP＋魔法クリティカル率100%UP＋全属性攻撃100%UP(3回行動) ＋コーディネイトを1蓄積",
+   "note": "크리율 버프 지속 표기 없음(전속성공격만 3회 행동 명시). 히트 수 표기 없음(1)"
+  }
+ ],
+ "rabina_as": [
+  {
+   "name": "薫風の輪唱",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "tgt": "aoe"
+   },
+   "max": 3,
+   "atk": null,
+   "effect": "어나더포스 게이지 5% 회복",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1200",
+   "jp": "【チェインアビリティ：薫風の輪唱】アナザーフォースゲージを5%回復 発動条件：自身意外の味方の全体攻撃スキル使用時 ターン中の最大発動回数 3回"
+  }
+ ],
+ "shisou_no_yaritsukai_as": [
+  {
+   "name": "アースピアサー",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "earth"
+    ]
+   },
+   "max": 2,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "earth",
+    "weapon_type": "pierce",
+    "size": "xl",
+    "mult": 1,
+    "hits": 1
+   },
+   "effect": "자신 共鳴<心眼> 2 축적",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1204",
+   "jp": "チェインアビリティ：アースピアサー 発動条件：自身以外の味方の地属性攻撃スキル使用時 ターン中の最大発動回数 2回 / 敵全体に地属性の突攻撃(特大) +共鳴<心眼>を2蓄積",
+   "note": "배율·히트 표기 없음(1)"
+  }
+ ],
+ "kuchinawa_as": [
+  {
+   "name": "連蛇之祓",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "earth"
+    ]
+   },
+   "max": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "stat": "int",
+    "element": "earth",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 1,
+    "hits": 1
+   },
+   "effect": "공격 대상에 蛇祓印 2 축적(축적 수×10 완력·지성·내구·정신 DOWN, 최대 20, 쿠치나와 전투불능 시 전소비)",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1217",
+   "jp": "【チェインアビリティ：連蛇之祓】発動条件：自身以外の味方の地属性攻撃スキル使用時 ターン中の最大発動回数:3回 / 敵全体に地属性の魔法攻撃(特大) +攻撃対象に蛇祓印を2蓄積 / ＜蛇祓印＞蓄積数に応じて腕力・知性・耐久・精神10DOWN 最大蓄積数：20",
+   "note": "배율·히트 표기 없음(1). 연계(壊呪之印/加護之光煌의 아군 공격 시 추가공격)는 체인과 별개"
+  }
+ ],
+ "xianhua_as": [],
+ "yorna": [
+  {
+   "name": "魂刈",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "shade"
+    ]
+   },
+   "max": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "shade",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": 3,
+    "hits": 3,
+    "mult_seq": [
+     3,
+     5,
+     15
+    ]
+   },
+   "effect": "그 턴의 발동 횟수에 따라 위력 증가(1회째 3배 / 2회째 5배 / 3회째 15배). anaden-style은 '殺意 1 축적'도 기재(altema엔 없음)",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1234",
+   "jp": "【チェインアビリティ：魂刈】発動条件：自身以外の味方の陰属性攻撃スキル使用時 ターン中の最大発動回数：3回 / ＜魂刈＞敵全体に陰属性の斬攻撃3回(特大) ターン中の発動回数に応じて威力増加 (1回目：3倍/2回目：5倍/3回目：15倍)"
+  }
+ ],
+ "kullervo_as": [
+  {
+   "name": "デバフ・リユース",
+   "on": {
+    "by": "other",
+    "act": "debuff"
+   },
+   "max": 5,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "stat": "int",
+    "element": "none",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 3,
+    "hits": 1
+   },
+   "effect": "아군 전체 HP 최대치 500UP(3턴, 최대 6누적/3000UP) + 회복(특대)",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1134",
+   "jp": "【チェインアビリティ】発動条件：自身以外の味方のパラメータのデバフスキル使用時 ターン中の最大発動回数 5回 / 「デバフ・リユース」敵全体に魔法攻撃(特大 3倍) +味方全体にHP最大値500UP(3ターン 最高累積回数6/3000UP) +回復(特大)",
+   "note": "속성 표기 없음 → none. 히트 표기 없음(1)"
+  }
+ ],
+ "ramyu": [
+  {
+   "name": "CPチャージ → ヴォルタレス",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "fire",
+     "water",
+     "earth",
+     "wind",
+     "thunder",
+     "shade",
+     "crystal"
+    ]
+   },
+   "max": 3,
+   "every": 3,
+   "atk": {
+    "target": "st",
+    "kind": "mag",
+    "stat": "int",
+    "element": "earth",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 30,
+    "hits": 3
+   },
+   "effect": "발동마다 CP 1 축적, CP 3이면 ヴォルタレス 실행 후 CP 전소비. ヴォルタレス: AF 게이지 10% 회복",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1238",
+   "jp": "【チェインアビリティ：CPチャージ】発動条件：自身以外の味方の属性攻撃スキル使用時 ターン中の最大発動回数：3回 発動効果：自身にCPを1蓄積 CP3蓄積時、チェインアビリティ専用スキル「ヴォルタレス」を実行する / 【ヴォルタレス】敵単体に地属性の魔法攻撃3回(特大 30倍) +アナザーフォースゲージを10%回復する +CPを全消費",
+   "note": "'속성 공격 스킬' = 무속성 제외로 해석. 체인 3회(=턴 최대) 채우면 턴당 공격 1회. CP가 턴을 넘어 유지되는지는 미기재"
+  }
+ ],
+ "ryza": [
+  {
+   "name": "アストラルスフィア (オーダースキル)",
+   "on": {
+    "by": "other",
+    "rand": [
+     {
+      "act": "attack",
+      "elem": [
+       "fire"
+      ]
+     },
+     {
+      "act": "heal"
+     },
+     {
+      "act": "buff"
+     }
+    ]
+   },
+   "max": 2,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "stat": "int",
+    "element": "fire",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 3,
+    "hits": 1
+   },
+   "effect": "타크틱스 레벨 +20. 발동 조건은 매 턴 시작 시 3개 중 무작위 1개",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1118",
+   "jp": "【チェインアビリティ】発動条件：ターン開始時、以下からランダムに選出 自身以外の味方の火属性攻撃スキル使用時/自身以外の味方の回復スキル使用時/自身以外の味方のパラメータのバフスキル使用時 ターン中の最大発動回数 2回 発動効果：オーダースキル「アストラルスフィア」を実行する / 敵全体に火属性の魔法攻撃(特大 3倍)+タクティクスレベル20上昇",
+   "note": "히트 표기 없음(1)"
+  }
+ ],
+ "ampel": [
+  {
+   "name": "アクセスシフト (オーダースキル)",
+   "on": {
+    "by": "other",
+    "rand": [
+     {
+      "act": "heal"
+     },
+     {
+      "act": "buff"
+     },
+     {
+      "act": "debuff"
+     }
+    ]
+   },
+   "max": 2,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "stat": "int",
+    "element": "none",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 3,
+    "hits": 1
+   },
+   "effect": "타크틱스 레벨 +20. 발동 조건은 매 턴 시작 시 3개 중 무작위 1개",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1120",
+   "jp": "【チェインアビリティ】ターン開始時、以下からランダムに選出 自身以外の味方の回復スキル使用時/自身以外の味方のパラメータのバフスキル使用時/自身以外の味方のパラメータのデバフスキル使用時 ターン中の最大発動回数 2回 オーダースキル「アクセスシフト」を実行する / 敵全体に魔法攻撃(特大 3倍) +タクティクスレベル20上昇",
+   "note": "속성 표기 없음 → none. 히트 표기 없음(1)"
+  }
+ ],
+ "m2_hardy_as": [],
+ "m2_claudia": [
+  {
+   "name": "チューニング (オーダースキル)",
+   "on": {
+    "by": "other",
+    "rand": [
+     {
+      "act": "attack",
+      "elem": [
+       "fire"
+      ]
+     },
+     {
+      "act": "attack",
+      "elem": [
+       "water"
+      ]
+     },
+     {
+      "act": "debuff"
+     }
+    ]
+   },
+   "max": 2,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "stat": "int",
+    "element": "water",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 3,
+    "hits": 1
+   },
+   "effect": "타크틱스 레벨 +20. 발동 조건은 매 턴 시작 시 3개 중 무작위 1개",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1119",
+   "jp": "【チェインアビリティ】ターン開始時、以下からランダムに選出 自身以外の味方の火属性攻撃スキル使用時/自身以外の味方の水属性攻撃スキル使用時/自身以外の味方のパラメータのデバフスキル使用時 ターン中の最大発動回数 2回 オーダースキル「チューニング」を実行する / 敵全体に水属性の魔法攻撃(特大 3倍) +タクティクスレベル20上昇",
+   "note": "히트 표기 없음(1)"
+  }
+ ],
+ "m3_cetie_as": [],
+ "m6_ruvi": [
+  {
+   "name": "クロスアシスト",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "wt": [
+     "slash"
+    ]
+   },
+   "max": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "none",
+    "weapon_type": "slash",
+    "size": "m",
+    "mult": 1,
+    "hits": 1
+   },
+   "effect": "자신 スフィアカウント 1 축적. 3 축적 상태로 전위에서 턴 종료 시 적 전체 斬攻撃(特大 3倍) 후 전소비",
+   "bonus": {
+    "every": 3,
+    "timing": "turn_end",
+    "front": true,
+    "atk": {
+     "target": "aoe",
+     "kind": "phys",
+     "stat": "pwr",
+     "element": "none",
+     "weapon_type": "slash",
+     "size": "xl",
+     "mult": 3,
+     "hits": 1
+    }
+   },
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/1213",
+   "jp": "【チェインアビリティ：クロスアシスト】発動条件：自身以外の味方の斬攻撃スキル使用時 ターン中の最大発動回数：3回 / 敵全体に斬攻撃(中) +自身にスフィアカウントを1蓄積 / 【前衛でターン終了時】自身にスフィアカウントが3蓄積している場合 敵全体に斬攻撃(特大 3倍)を実行する",
+   "note": "속성 표기 없음 → none. 배율·히트 표기 없음(1)"
+  }
+ ],
+ "toova": [
+  {
+   "name": "霊の呼び声",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "elem": [
+     "earth"
+    ]
+   },
+   "max": 3,
+   "atk": null,
+   "effect": "자신 死霊の髄 3 축적 + 마법내성 25%UP(1턴, 최대 3누적). 死霊の髄는 星導스킬 地塊滅葬 위력(최대 40배)에 사용",
+   "when": {},
+   "af": null,
+   "src": "https://altema.jp/anaden/chara/6",
+   "jp": "【チェインアビリティ】発動条件：自身以外の味方の地属性攻撃スキル使用時 ターン中の最大発動回数 3回 発動効果：チェインアビリティ専用スキル「霊の呼び声」を実行する / 自身に死霊の髄を3蓄積 +魔法耐性25%UP(1ターン 最高累積回数3)",
+   "note": "기존 chain_current.json에 없던 캐릭터. 클래스 ジオマンサー(★5) 고유 어빌리티"
+  }
+ ]
+}

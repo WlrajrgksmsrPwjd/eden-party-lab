@@ -345,3 +345,27 @@ a.lnk{display:inline-flex; align-items:center}
 .bldin input{flex:1 1 220px; min-width:0; font-family:var(--f-mono); font-size:12px}
 .inbox{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; padding:10px 12px; border:1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius:10px; background:color-mix(in srgb, var(--accent) 7%, var(--surface)); font-size:13px}
 .inbox select{max-width:100%}
+
+/* 성향 직접 조절 · 결현현 서약 */
+.wsl{display:grid; grid-template-columns:auto 1fr 3ch; gap:6px 10px; align-items:center; font-size:13px}
+.wsl label{white-space:nowrap}
+.wsl .hint{font-size:11.5px}
+.wsl input[type=range]{width:100%; min-width:0; accent-color:var(--accent)}
+.wsl output{text-align:right}
+@media (max-width:420px){ .wsl{grid-template-columns:1fr 3ch} .wsl label{grid-column:1 / -1} }
+.pledge{border:1px solid var(--line); border-radius:var(--r); padding:8px 10px 10px; margin:8px 0 0; display:flex; flex-direction:column; gap:8px; min-width:0}
+.pledge legend{font-size:12.5px; font-weight:700; padding:0 4px}
+.pledge legend .hint{font-weight:400}
+.plrow{display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13px}
+.plrow input[type=number]{width:56px; min-height:30px}
+.plcomp{display:flex; flex-wrap:wrap; gap:4px}
+.plcomp button{font:inherit; font-size:12px; padding:3px 8px; border:1px solid var(--line); border-radius:999px; background:var(--surface); color:var(--ink); cursor:pointer; min-height:28px}
+.plcomp button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+/* 속성덱 */
+.decks{margin-top:18px}
+.decks h3{font-size:14px; margin:0 0 4px}
+.deckrow{display:grid; grid-template-columns:5.5em 1fr auto; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:var(--r); background:var(--surface); margin-top:6px; font-size:13px; cursor:pointer; width:100%; text-align:left; font:inherit; color:inherit}
+.deckrow:hover{border-color:var(--accent)}
+.deckrow .dk{font-weight:700}
+.deckrow .dm{overflow-wrap:anywhere}
+.deckcard{margin-top:6px}

@@ -112,3 +112,27 @@
 
 EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·buff_how·manifest)로 들어가고, `ko`가 있으면 공식 한국어 스킬명으로 표시한다.
 엔진은 `mp.main`·`mp.buff`·`turns.buff`·`buff_how`로 일반 턴 시뮬레이션(MP·버프 지속)을, `personality`로 퍼스널리티 조건을 판정한다.
+
+# 디버프 조건 규칙 (`debuff_rules.json`)
+
+적에게 거는 디버프의 지속 턴·조건·단일 대상 여부. 형식은 파티 버프 규칙과 같고(`when`·`x`·`e`·`en`), 받는 사람 조건 `to`는 쓰지 않는다.
+
+- `f` 디버프 묶음: `allres`(전속성 내성) `elres`(속성 내성) `res`(둘 다) `pres`(물리·마법 내성) `wres`(참·타·돌 내성) `def`(내구·정신)
+- `st: true` 단일 대상 디버프 → 적이 여럿인데 전체 공격이면 맞는 적 비율만큼만
+- 지속 턴 가이드(`when.t`): 매 턴 다시 걸어야 하는 1턴 효과 0.4~0.5, 2턴 0.65, 3턴 0.85
+
+캐릭터 `debuff`에 `end`(내구 DOWN %)·`spr`(정신 DOWN %)를 둘 수 있다. 화력 효과는 빌더 계산식 기준 −50%에 물리 약 +8%, 마법 약 +6.5%.
+
+# 체인 어빌리티 (`chain.json`)
+
+키 = 캐릭터 id, 값 = 배열. `on`(발동 조건: `by` other/any, `act` attack/skill/buff/debuff/heal/any, `elem`·`wt`·`kind`·`tgt` 필터, `rand` 턴마다 무작위 조건 목록), `max`(턴당 최대), `atk`(추격: target kind stat element weapon_type size mult hits, 선택 `mult_seq`·`mult_max`), `every`(N회마다 공격), `when`(규칙 when 형식), `af`(AF 중 발동 여부, 모르면 null).
+턴당 발동 수 = min(max, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치.
+
+# 스킬 위력 조건 (`skill_cond.json`)
+
+키 = 캐릭터 id, 값 = `{"main": {...}, "sb": {...}}`. 스킬의 `mult`(최대 배율)는 `need` 조건이 모두 맞을 때만 쓰고, 아니면 `base`. `steps`는 중간 단계 `[[배율, [조건…]], …]`.
+조건: `{"zone":[키],"zlv":2}` `{"req":{…}}` `{"stack":"이름","turns":N}`(이름에 '소비형'이면 쓸 때마다 다 소모) `{"hp":"self|max|low"}` `{"mp":"high"}` `{"af":true|false}` `{"enemy":"poison|pain|weak|break|debuffs"}` `{"turn":">=N"}` `{"other":"…"}`(판정 불가 → 60%로 계산).
+
+# 결실 현현 보스 (`bosses_kesshitsu.json`)
+
+보스 스키마 + `required`(필수 캐릭터 id), `required_alt`(AS 등 대체 가능 후보), `enemies`(적 구성), `pledges`(페이지에 실린 서약 예시: `as_of`, `list[].conds[]` — kind `nokill` `size` `comp`(elem·weap·n, `gender`) `turns` `all` `other`). 서약은 매주 화요일 12:00(JST) 바뀌고 모든 보스가 같은 서약을 쓴다.

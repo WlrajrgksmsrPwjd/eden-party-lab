@@ -34,7 +34,21 @@ for c in chars:
 rules=json.load(open(P('data','buff_rules.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in rules: c['party_rules']=rules[c['id']]
+# 디버프 조건 규칙(지속·단일 대상 등), 체인 어빌리티
+drules=json.load(open(P('data','debuff_rules.json'),encoding='utf-8'))
+chain=json.load(open(P('data','chain.json'),encoding='utf-8'))
+scond=json.load(open(P('data','skill_cond.json'),encoding='utf-8'))
+for c in chars:
+    for k,v in (scond.get(c['id']) or {}).items():
+        if c.get(k): c[k]['mcond']={x:v[x] for x in ('base','need','steps') if x in v}
+for c in chars:
+    if c['id'] in drules: c['debuff_rules']=drules[c['id']]
+    if chain.get(c['id']): c['chain']=[{k:e[k] for k in ('on','max','atk','when','af','every','name','effect') if k in e} for e in chain[c['id']]]
 bosses=json.load(open(P('data','bosses.json'),encoding='utf-8'))+json.load(open(P('data','bosses_more.json'),encoding='utf-8'))
+# 결실 현현(결현현): 필수 캐릭터·서약
+for b in json.load(open(P('data','bosses_kesshitsu.json'),encoding='utf-8')):
+    b=dict(b); b['kesshitsu']=True; b.pop('enemies',None) if False else None
+    bosses.append(b)
 for b in bosses:
     for k in ('name_kr','phases','strategy_kr'):
         if has_jp(b.get(k)): b[k]=ko(b[k])

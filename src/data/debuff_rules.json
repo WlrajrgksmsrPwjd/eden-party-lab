@@ -1,0 +1,19 @@
+{
+  "_doc": "디버프 조건 규칙. 형식은 SCHEMA.md의 '디버프 조건 규칙' 참고. 키 = 캐릭터 id",
+  "velette_as": [{"f":["allres"],"when":{"t":0.45}}],
+  "hismena_es": [{"f":["allres"],"when":{"t":0.5}}],
+  "dalnis_as": [{"f":["allres"],"st":true}],
+  "myrus_es": [{"f":["allres"],"when":{"req":{"kind":"distinct","vals":["fire","water","earth","wind","thunder","shade","crystal"],"n":4}},"e":0.5,"st":true},{"f":["allres"],"when":{"t":0.85},"st":true}],
+  "nekoko_ac": [{"f":["allres","pres"],"when":{"req":{"kind":"align","vals":["shadow"],"n":3,"others":true}},"e":0.4}],
+  "xianhua_as": [{"f":["allres"],"when":{"t":0.85},"st":true},{"f":["pres"],"when":{"t":0.85}}],
+  "melina": [{"f":["allres","pres"],"when":{"up":0.6},"e":0.5,"st":true},{"f":["elres","wres"],"when":{"up":0.3}}],
+  "anabel_es": [{"f":["allres","pres"],"when":{"t":0.3}}],
+  "isuka": [{"f":["allres","pres"],"when":{"up":0.7},"e":0.5,"st":true},{"f":["elres","wres"],"when":{"t":0.85},"st":true}],
+  "lovely_as": [{"f":["allres"],"when":{"t":0.5}},{"f":["wres"],"when":{"t":0.5},"e":0.5}],
+  "venefica": [{"f":["elres"],"when":{"sb":true}}],
+  "kid": [{"f":["def"],"when":{"sb":true}}],
+  "m2_claudia": [{"f":["def"],"when":{"up":0.5}}],
+  "nonold": [{"f":["def"],"st":true}],
+  "kuchinawa_as": [{"f":["def"],"st":true}],
+  "fermina": [{"f":["def"],"st":true}]
+}

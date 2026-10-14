@@ -27,7 +27,7 @@ function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'
 
 /* ---------- 상태 ---------- */
 let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
-const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null}, rosterView:{}, goals:[]});
+const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null, weights:{b:70,s:40,t:30}, kesId:'', pledge:{nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0}}, rosterView:{}, goals:[]});
 const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
 const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
 const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성' : (FT_KR[f.v]||f.v);
@@ -118,6 +118,7 @@ function workerMain(){
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])]})),
+    decks:(r.decks||[]).map(d=>({focus:d.focus, ids:d.team.map(c=>c.id), reserveIds:d.reserves.map(c=>c.id), fixedBackIds:[...(d.fixedBack||[])], score:d.score, rel:d.rel, norm:d.norm, miss:d.miss, recCount:d.recCount})),
     evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, focus:r.focus||null};
   const litePc = r => r.error ? {error:r.error} : {
     list: r.list.map(x=>x.none ? {id:x.pc.id, none:true} : {id:x.pc.id, teamIds:x.team.map(c=>c.id), score:x.score, rel:x.rel}),
@@ -217,7 +218,14 @@ async function calcOptimize(chan, inp, onProgress, J){
       reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[],
       recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])});
   }
-  return Object.assign({}, lr, {results});
+  const decks = [];
+  for(const y of lr.decks||[]){
+    if(y.ids.some(id=>!byId.has(id))) continue;
+    const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
+    decks.push({focus:y.focus, team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx), reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)),
+      fixedBack:new Set(y.fixedBackIds||[]), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team)});
+  }
+  return Object.assign({}, lr, {results, decks});
 }
 async function calcPerChar(inp, onProgress){
   const J = jobSnap();
@@ -487,16 +495,67 @@ async function saveInbox(){
   catch(e){ $('#inboxMsg').textContent=e.message||String(e); $('#inboxSave').disabled=false; }
 }
 
+/* ---------- 결현현(결실 현현) 서약 ---------- */
+function plOf(){
+  const P=state.plan; const d={nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0};
+  P.pledge = Object.assign(d, P.pledge||{}); P.pledge.comp = Object.assign({on:false,elem:[],weap:[],n:3}, P.pledge.comp||{});
+  return P.pledge;
+}
+/* 필수 캐릭터: 5성을 보유했으면 그 캐릭터, 아니면 보유한 AS(어나더 스타일) */
+function kesRequired(b){ if(state.owned[b.required]) return b.required; return (b.required_alt||[]).find(a=>state.owned[a])||null; }
+function plExample(b){
+  const PL=plOf(); const L=(b.pledges&&b.pledges.list)||[];
+  PL.nokill=false; PL.size=6; PL.comp={on:false,elem:[],weap:[],n:3}; PL.turns=0;
+  for(const x of L){ for(const c of (x.conds||[{kind:x.kind}])){
+    if(c.kind==='nokill') PL.nokill=true;
+    else if(c.kind==='size' && c.max) PL.size=Math.min(PL.size, c.max);
+    else if(c.kind==='comp' && !c.gender){ PL.comp={on:true, elem:c.elem||[], weap:c.weap||[], n:c.n||3}; }
+    else if(c.kind==='turns' && c.max && (!PL.turns || c.max<PL.turns)) PL.turns=c.max;
+  } }
+  return b.pledges && b.pledges.as_of ? b.pledges.as_of : '';
+}
+function pledgeInput(b){
+  const PL=plOf(), rid=kesRequired(b);
+  return {required: rid || b.required, comp: PL.comp.on && (PL.comp.elem.length||PL.comp.weap.length) ? {elem:PL.comp.elem.slice(), weap:PL.comp.weap.slice(), n:+PL.comp.n||3} : null,
+    size: +PL.size||6, nokill: !!PL.nokill, turns: +PL.turns||0};
+}
+function pledgeText(pl){
+  const t=[];
+  if(pl.nokill) t.push('전투불능 없이');
+  if(pl.size<6) t.push(pl.size+'명 이하');
+  if(pl.comp) t.push([...pl.comp.elem.map(e=>E.ELEM_KR[e]), ...pl.comp.weap.map(w=>E.WEAPON_KR[w])].join('·')+' '+pl.comp.n+'명 이상');
+  if(pl.turns) t.push(pl.turns+'턴 이내');
+  return t.join(' · ')||'서약 없음';
+}
+
 /* ---------- 편성 탭 ---------- */
 function renderPlanControls(){
   const P=state.plan;
   $$('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.mode===P.mode?'true':'false'));
   $('#bossRow').hidden = P.mode!=='boss';
+  $('#weightRow').hidden = P.mode!=='custom';
+  $('#kesRow').hidden = P.mode!=='kesshitsu';
   const sel=$('#bossSel');
   if(!sel.options.length){
-    sel.innerHTML = '<option value="">보스 선택…</option>' + BOSSES.map(b=>`<option value="${esc(b.id)}">${esc(b.name_kr)} · ${esc(CONTENT_KR(b.content))}</option>`).join('');
+    sel.innerHTML = '<option value="">보스 선택…</option>' + BOSSES.filter(b=>!b.kesshitsu).map(b=>`<option value="${esc(b.id)}">${esc(b.name_kr)} · ${esc(CONTENT_KR(b.content))}</option>`).join('');
   }
   sel.value = P.bossId||'';
+  { // 성향 직접 조절
+    const W=P.weights||(P.weights={b:70,s:40,t:30});
+    [['wB','b'],['wS','s'],['wT','t']].forEach(([id,k])=>{ $('#'+id).value=W[k]; $('#'+id+'v').textContent=W[k]; });
+  }
+  { // 결현현
+    const ks=$('#kesSel');
+    if(!ks.options.length) ks.innerHTML='<option value="">보스 선택…</option>'+BOSSES.filter(b=>b.kesshitsu).map(b=>{ const rq=byId.get(b.required); return `<option value="${esc(b.id)}">${esc(b.name_kr)}${rq?' · 필수 '+esc(rq.name):''}</option>`; }).join('');
+    ks.value=P.kesId||'';
+    const kb=BOSSES.find(b=>b.id===P.kesId);
+    if(kb){ const rid=kesRequired(kb), rq=byId.get(kb.required);
+      $('#kesReq').innerHTML = `필수: <b>${esc(rq?rq.name:kb.required_jp||'')}</b>${(kb.required_alt||[]).length?` <span class="hint">(${esc(kb.required_alt.map(a=>byId.get(a)?byId.get(a).name:a).join('·'))}도 가능할 수 있음)</span>`:''} ${rid?'<span class="ok">보유</span>':'<span class="ng">미보유</span>'} · 약점 ${esc((kb.weak||[]).map(k=>E.ELEM_KR[k]||E.WT_KR[k]||k).join('·')||'없음')}`;
+    } else $('#kesReq').textContent='';
+    const PL=plOf();
+    $('#plNokill').checked=!!PL.nokill; $('#plSize').value=String(PL.size||6); $('#plComp').checked=!!PL.comp.on; $('#plCompN').value=PL.comp.n||3; $('#plTurns').value=PL.turns||0;
+    $('#plCompBox').innerHTML = E.ELEMS.map(e=>`<button type="button" data-pce="${e}" aria-pressed="${PL.comp.elem.includes(e)}">${esc(E.ELEM_KR[e])}</button>`).join('') + Object.entries(E.WEAPON_KR).map(([k,v])=>`<button type="button" data-pcw="${k}" aria-pressed="${PL.comp.weap.includes(k)}">${esc(v)}</button>`).join('');
+  }
   $('#enemyGrid').innerHTML = ENEMY_TYPES.map(t=>{
     const r=P.enemy[t]||'';
     const lab = E.ELEM_KR[t]||E.WT_KR[t];
@@ -549,25 +608,31 @@ let runToken=0;
 async function runPlan(){
   const P=state.plan, my=++runToken;
   const out=$('#results');
-  const boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
+  const kes = P.mode==='kesshitsu';
+  const boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : kes ? BOSSES.find(b=>b.id===P.kesId) : null;
   if(P.mode==='boss' && !boss){ out.innerHTML=`<div class="empty">보스를 고르면 그 보스의 약점·기믹에 맞춘 1~5순위 편성을 계산합니다.</div>`; return; }
+  if(kes && !boss){ out.innerHTML=`<div class="empty">결실 현현 보스를 고르고 이번 주 서약을 체크하면, 필수 캐릭터를 넣고 서약 조건에 맞는 1~5순위 편성을 계산합니다.</div>`; return; }
+  if(kes && !kesRequired(boss)){ const rq=byId.get(boss.required); out.innerHTML=`<div class="empty">필수 캐릭터: <b>${esc(rq?rq.name:boss.required_jp||'')}</b> (미보유) — 이 보스는 필수 캐릭터가 파티에 있어야 도전할 수 있습니다. 보유 캐릭터 탭에서 체크해 주세요.</div>`; return; }
   const ids=ownedList();
   if(ids.length<4){ out.innerHTML=`<div class="empty">보유 캐릭터가 4명 이상이어야 편성을 짤 수 있습니다. <b>보유 캐릭터</b> 탭에서 체크해 주세요.</div>`; return; }
   const enemy={}; let any=false;
   for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
-  const mode=P.mode;
+  const mode = kes ? 'boss' : P.mode;
+  const pledge = kes ? pledgeInput(boss) : null;
   $('#runBtn').disabled=true; $('#prog').hidden=false; $('#prog i').style.width='0%';
-  const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null},
+  const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null,
+      weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, pledge},
     f=>{ if(my===runToken) $('#prog i').style.width=Math.round(f*100)+'%'; });
   if(my!==runToken || !r) return;
   $('#runBtn').disabled=false; $('#prog').hidden=true;
   if(r.error){ out.innerHTML=`<div class="empty">${esc(r.error)}</div>`; return; }
-  renderResults(r, boss, any?enemy:null, mode);
+  r.pledge = pledge;
+  renderResults(r, boss, any?enemy:null, P.mode);
 }
 
 function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e8) return (v/1e8).toFixed(2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
-const MODE_KR={burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤'};
+const MODE_KR={burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
 const RES = new Map(); // 카드 키 → 결과 (추천 세팅 패널용)
 function teamWarns(x, boss, enemy, ex){
   const ev=x.ev, sbz=ev.sb.zone;
@@ -604,7 +669,7 @@ function memHtml(x, i, key, focus, lockSet){
     <div class="tap">추천 세팅 ▾</div>
   </div>`;
 }
-const HOT = {burst:'b',sustain:'s',stability:'t',weak:'s',boss:''};
+const HOT = {burst:'b',sustain:'s',stability:'t',weak:'s',boss:'',kesshitsu:'',custom:''};
 function renderResults(r, boss, enemy, mode){
   const P=state.plan, out=$('#results');
   mode = mode||P.mode;
@@ -612,7 +677,8 @@ function renderResults(r, boss, enemy, mode){
   let h='';
   if(state.sample) h+=`<div class="notice">예시 보유 목록(SS·S 티어 전원, 천명치 80, 성도각성 완료 가정)으로 계산한 결과입니다. <b>보유 캐릭터</b> 탭에서 실제 보유·천명치·글래스터를 입력하면 그 기준으로 다시 짭니다.</div>`;
   const enemyTxt = enemy ? Object.entries(enemy).map(([k,v])=>(E.ELEM_KR[k]||E.WT_KR[k])+' '+REL_KR[v]).join(', ') : '중립(약점·내성 없음)';
-  h+=`<div class="runmeta">${esc(MODE_KR[mode])}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
+  const W=r.weights, wTxt = mode==='custom'&&W ? ` (공격성 ${Math.round(W.b*100)}% · 유지력 ${Math.round(W.s*100)}% · 안정성 ${Math.round(W.t*100)}%)` : '';
+  h+=`<div class="runmeta">${esc(MODE_KR[mode])}${esc(wTxt)}${r.pledge?' · 서약: <b>'+esc(pledgeText(r.pledge))+'</b>':''}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
   if(!r.results.length) h+=`<div class="empty">조건을 만족하는 조합이 없습니다. 난이도 상한을 올리거나 고정·제외 캐릭터를 줄여 보세요.</div>`;
   const all=r.results, mx=k=>Math.max(...all.map(y=>y.ev[k]));
   const ref = all.length ? {sbTurn:all[0].ev.sbTurn, af:mx('af'), sustain:mx('sustain'), surv:mx('surv')} : null;
@@ -621,7 +687,24 @@ function renderResults(r, boss, enemy, mode){
     const key='p'+x.rank; RES.set(key, {x, focus:r.focus, mode, bossId:boss?boss.id:''});
     h+=cardHtml(x, key, {boss, enemy, focus:r.focus, ref, hot:HOT[mode], lockSet});
   }
+  const decks=(r.decks||[]).filter(d=>!all.some(x=>sameTeam(x.team,d.team)));
+  if(decks.length){
+    h+=`<section class="decks"><h3>속성덱 · 타입덱</h3><p class="hint" style="margin:0">전방 3명 이상이 같은 속성·공격 타입으로 싸우는 조합 중 가장 좋은 것. 점수는 위 1위를 100으로 둔 값입니다. 눌러서 자세히 보기.</p>`;
+    decks.forEach((d,k)=>{ const key='d'+k; d.rank=k+1; RES.set(key,{x:d, focus:r.focus, mode, bossId:boss?boss.id:''}); DECKCTX[key]={boss, enemy, focus:r.focus, ref, hot:HOT[mode], lockSet};
+      h+=`<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${d.focus.kind==='elem'?`<span class="dot ${d.focus.v}"></span> `:''}${esc(focusLabel(d.focus))}</span><span class="dm">${d.team.map(c=>esc(c.name)).join(', ')}</span><span class="num">${(d.rel*100).toFixed(0)}</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; });
+    h+='</section>';
+  }
   out.innerHTML=h;
+}
+const DECKCTX={};
+const sameTeam=(a,b)=>a.length===b.length && a.every(c=>b.some(d=>d.id===c.id));
+function toggleDeck(btn){
+  const key=btn.dataset.deck, box=$('#dc-'+key), rec=RES.get(key); if(!box||!rec) return;
+  const open=btn.getAttribute('aria-expanded')==='true';
+  btn.setAttribute('aria-expanded', open?'false':'true');
+  if(open){ box.hidden=true; return; }
+  if(!box.innerHTML){ const o=DECKCTX[key]; box.innerHTML=cardHtml(rec.x, key, o).replace('<div class="rank">'+rec.x.rank+'<small>위</small></div>', `<div class="rank" style="font-size:15px">${esc(focusLabel(rec.x.focus))}</div>`); }
+  box.hidden=false;
 }
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
 function cardHtml(x, key, o){
@@ -760,11 +843,12 @@ function closeShare(){
 }
 
 /* ---------- 후열 글래스터 셔틀 ---------- */
+const slotTxt = v => Number.isInteger(v) ? String(v) : v.toFixed(1);
 function muleBadge(x, c){ const mu=x.ev.mule; if(!mu) return ''; const w=mu.auto?mu.wp:null; return w && c.pers && c.pers.has(w) ? ' <span class="fixed">셔틀</span>' : ''; }
 function muleLine(x){
   const mu=x.ev.mule; if(!mu) return '';
-  const got = x.team.map((c,i)=>mu.k[i]>0?`${esc(c.name)} +${mu.k[i]}칸`:null).filter(Boolean);
-  if(mu.auto) return `<div class="hint">P글래 셔틀 가정: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 2명이 잠재 광석 단 P글래를 공유 → ${got.join(', ')||'—'}</div>`;
+  const got = x.team.map((c,i)=>mu.k[i]>0?`${esc(c.name)} +${slotTxt(mu.k[i])}칸`:null).filter(Boolean);
+  if(mu.auto) return `<div class="hint">P글래 셔틀 가정: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 ${mu.mules.length}명이 잠재 광석 단 P글래를 공유 → ${got.join(', ')||'—'}</div>`;
   return `<div class="hint">후열 고정 셔틀의 P글래 공유: ${got.join(', ')||'<span class="ng">무기 퍼스널리티가 맞는 전열 캐릭터 없음</span>'}</div>`;
 }
 
@@ -808,7 +892,7 @@ function turnPlanHtml(x, boss){
   // 개전
   const o0 = [`전방 배치(왼→오): ${order.map(nm).join(' · ')}${x.reserves&&x.reserves.length?` / 후열 ${x.reserves.map(c=>esc(c.name)).join(', ')}`:''}`];
   if(ev.mule){ const mu=ev.mule, got=team.map((c,i)=>mu.k[i]>0?esc(c.name):null).filter(Boolean);
-    if(got.length) o0.push(mu.auto ? `후열 셔틀: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 캐릭터 2명에게 잠재 광석 단 P글래 장착 → ${got.join(', ')} 대미지 증가` : `후열 셔틀(${mu.mules.map(m=>esc(m.name||'')).join(', ')})의 P글래가 ${got.join(', ')}에게 공유`); }
+    if(got.length) o0.push(mu.auto ? `후열 셔틀: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 캐릭터 ${mu.mules.length}명에게 잠재 광석 단 P글래 장착 → ${got.join(', ')} 대미지 증가` : `후열 셔틀(${mu.mules.map(m=>esc(m.name||'')).join(', ')})의 P글래가 ${got.join(', ')}에게 공유`); }
   if(sbz && sbz.level && sbz.how==='개전 자동') o0.push(`${esc(sbz.byName)}: 전투 시작과 함께 <b>${esc(sbz.label)}</b> 자동 전개`);
   team.forEach((c,i)=>{ const ts=c.raw.tags||[]; if(ts.includes('taunt')||c.sup.taunt>=2) o0.push(`${nm(i)}: 도발로 공격 받아내기`); });
   if(boss) (boss.mechanics||[]).filter(m=>/개시|시작|개전|선제|첫 턴/.test(m)).slice(0,2).forEach(m=>o0.push(`<span class="hint">보스: ${esc(m)}</span>`));
@@ -890,6 +974,15 @@ function turnPlanHtml(x, boss){
 }
 
 /* ---------- 추천 세팅 패널 ---------- */
+function chainOnText(on){
+  const one = o=>{ const act=o.act||'attack';
+    const el=(o.elem||[]).map(e=>E.ELEM_KR[e]).join('·'), wt=(o.wt||[]).map(w=>FT_KR[w]).join('·');
+    if(act==='attack') return `${el?el+' ':''}${wt?wt+' ':''}${o.kind==='mag'?'마법 ':o.kind==='phys'?'물리 ':''}${o.tgt==='aoe'?'전체 ':o.tgt==='st'?'단일 ':''}공격 스킬`;
+    return {buff:'버프 스킬', debuff:'디버프 스킬', heal:'회복 스킬', skill:'스킬', any:'행동'}[act]||act; };
+  const who = (on.by||'other')==='any' ? '아군' : '다른 아군';
+  if(Array.isArray(on.rand)) return `${who}의 (턴마다 무작위) ${on.rand.map(one).join(' / ')}`;
+  return `${who}의 ${one(on)}`;
+}
 const TGT_KR={st:'단일',aoe:'전체'}, KIND_KR={phys:'물리',mag:'마법'}, SIZE_KR={s:'소',m:'중',l:'대',xl:'특대',xxl:'극대'};
 function skillLine(sk){
   if(!sk) return '';
@@ -914,6 +1007,10 @@ function setupHtml(x, i){
   for(const rl of ex.rel){
     if(rl.j===i) L.push(`<li>위치 버프 대상 <b>${nm(rl.i)}</b>을(를) 바로 ${rl.side==='r'?'오른쪽':rl.side==='l'?'왼쪽':'옆'}에</li>`);
     else if(rl.i===i) L.push(`<li><b>${nm(rl.j)}</b>의 위치 버프를 받음 → ${nm(rl.j)} 바로 ${rl.side==='r'?'오른쪽':rl.side==='l'?'왼쪽':'옆'}에 서기</li>`);
+  }
+  if(c.chain){
+    const tS = ev.sb.chain ? ev.sb.chain.trig[i] : 0, tN = ev.normal.chain ? ev.normal.chain.trig[i] : 0;
+    for(const e of c.chain) L.push(`<li>체인 어빌리티: ${esc(chainOnText(e.on||{}))}마다 추격 (턴당 최대 ${e.max||1}회${e.every>1?`, ${e.every}회마다 공격`:''}) → 이 조합에서 SB 턴 약 <b>${tS.toFixed(1)}회</b> · 평상 턴 약 ${tN.toFixed(1)}회${tS<0.5?' <span class="ng">— 발동시킬 아군이 거의 없음</span>':''}</li>`);
   }
   const note = ex.notes.find(n=>n.j===i);
   if(note && note.text) L.push(`<li>주는 버프 조건: <span class="cond ${note.lvl}">${note.lvl==='ok'?'이 조합에서 충족':note.lvl==='off'?'이 조합에서 미충족':'일부만 충족'}</span> <span class="hint">${esc(note.text)}</span></li>`);
@@ -951,7 +1048,7 @@ function setupHtml(x, i){
     else txt += ' · 파티에 독·페인 부여자 있음';
     G.push(`<li>${mark(cur && (cur.f/(cur.share? (1+0.3*(cur.e||0)+settings().mulePct*cur.share)/(1+0.3*(cur.e||0)) : 1))>=best.f-1e-6)} 공격 글래스터: ${txt} <span class="hint">(현재 ${cur?esc(glText(cur)):'—'}, ${pr.slots}칸)</span></li>`);
     const mu=ev.mule; const wpk=E.WEAPON_PERS[c.weapon];
-    if(mu) G.push(`<li>${mark(mu.k[i]>0)} 후열 P글래 공유: ${mu.k[i]>0?`+${mu.k[i]}칸 (${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티)`:`없음 — ${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티 셔틀이 있으면 +${settings().muleSlots}칸씩`}</li>`);
+    if(mu) G.push(`<li>${mark(mu.k[i]>0)} 후열 P글래 공유: ${mu.k[i]>0?`+${slotTxt(mu.k[i])}칸 (${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티)`:`없음 — ${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티 셔틀이 있으면 +${settings().muleSlots}칸씩`}</li>`);
     if(c.manifestMax===0) G.push(`<li>현현 무기: 이 캐릭터는 없음</li>`);
     else G.push(`<li>${mark((+o.m||0)>=(c.manifestMax||1))} 현현 무기: ${c.manifestMax===2?'진현현까지 있음':c.manifestMax===1?'현현 있음':'현현 ×1.08 · 진현현 ×1.15'} <span class="hint">(현재 ${['없음','현현','진현현'][+o.m||0]})</span></li>`);
     const sm = ev.sim;
@@ -1537,6 +1634,23 @@ function renderMeta(){
 function bind(){
   $$('.tab[data-tab]').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
   $('#modeSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-mode]'); if(!b) return; state.plan.mode=b.dataset.mode; save(); renderPlanControls(); if(b.dataset.mode!=='boss') runPlan(); else if(state.plan.bossId) runPlan(); else runPlan(); });
+  // 성향 직접 조절
+  $('#weightRow').addEventListener('input',e=>{ const k=e.target.dataset.w; if(!k) return; state.plan.weights[k]=+e.target.value; $('#'+e.target.id+'v').textContent=e.target.value; });
+  $('#weightRow').addEventListener('change',e=>{ if(!e.target.dataset.w) return; save(); runPlan(); });
+  // 결현현
+  $('#kesSel').addEventListener('change',e=>{ const b=BOSSES.find(x=>x.id===e.target.value); state.plan.kesId=e.target.value||'';
+    if(b){ state.plan.enemy=bossToEnemy(b); state.plan.enemyCount = (b.enemies&&b.enemies.length>1)||(b.needs&&b.needs.multi_target) ? Math.min(3, (b.enemies||[]).length||2) : 1; }
+    save(); renderPlanControls(); runPlan(); });
+  const plChanged=()=>{ save(); renderPlanControls(); runPlan(); };
+  $('#plNokill').addEventListener('change',e=>{ plOf().nokill=e.target.checked; plChanged(); });
+  $('#plSize').addEventListener('change',e=>{ plOf().size=+e.target.value; plChanged(); });
+  $('#plComp').addEventListener('change',e=>{ plOf().comp.on=e.target.checked; plChanged(); });
+  $('#plCompN').addEventListener('change',e=>{ plOf().comp.n=Math.max(1,Math.min(6,+e.target.value||3)); plChanged(); });
+  $('#plTurns').addEventListener('change',e=>{ plOf().turns=Math.max(0,Math.min(99,+e.target.value||0)); plChanged(); });
+  $('#plCompBox').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const C=plOf().comp; const L = b.dataset.pce ? C.elem : C.weap, v=b.dataset.pce||b.dataset.pcw;
+    const i=L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); C.on=true; plChanged(); });
+  $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
+  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); });
   $('#bossSel').addEventListener('change',e=>{ if(e.target.value) applyBoss(e.target.value); else { state.plan.bossId=''; save(); renderPlanControls(); } runPlan(); });
   $('#enemyGrid').addEventListener('click',e=>{ const b=e.target.closest('.etype'); if(!b) return; const t=b.dataset.t; const cur=state.plan.enemy[t]||null; const nx=REL_CYCLE[(REL_CYCLE.indexOf(cur)+1)%REL_CYCLE.length]; if(nx) state.plan.enemy[t]=nx; else delete state.plan.enemy[t]; save(); renderPlanControls(); });
   $('#enemyClear').addEventListener('click',()=>{ state.plan.enemy={}; save(); renderPlanControls(); });
