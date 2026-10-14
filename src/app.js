@@ -25,7 +25,7 @@ function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'
 
 /* ---------- 상태 ---------- */
 let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
-const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null}, rosterView:{}});
+const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null}, rosterView:{}, goals:[]});
 const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
 const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
 const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성' : (FT_KR[f.v]||f.v);
@@ -243,6 +243,7 @@ function renderResults(r, boss, enemy){
         <span class="zonebadge" title="스텔라 버스트 턴 기준 존">${esc(sbz&&sbz.level?sbz.label:'존 없음')}${sbz&&sbz.byName&&sbz.level?` <span class="hint">· ${esc(sbz.byName)}${sbz.how?' · '+esc(sbz.how):''}</span>`:''}</span>
         <span class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span></span>
         <div class="scorebar"><span>종합 ${(x.rel*100).toFixed(0)}</span><div class="bar"><i style="width:${(x.rel*100).toFixed(0)}%"></i></div></div>
+        <button type="button" class="btn small" data-goalsave="${key}">목표로 저장</button>
       </div>
       ${ex.posTotal?`<div class="order">전방 배치 <span class="hint">왼쪽 → 오른쪽 · 위치 버프 ${ex.posOk}/${ex.posTotal} 성립</span></div>`:''}
       <div class="members">${order.map(i=>memHtml(x,i,key,r.focus,lockSet)).join('')}</div>
@@ -255,6 +256,7 @@ function renderResults(r, boss, enemy){
         ${metric('생존력', ev.surv, ev.surv/(Math.max(...r.results.map(y=>y.ev.surv))||1), hot==='t', true)}
       </div>
       ${warns.length?`<div class="warns">${warns.map(w=>`<span class="warn"${w.full?` title="${esc(w.full)}"`:''}>${esc(w.t)}</span>`).join('')}</div>`:''}
+      <details class="why turns"${boss&&x.rank===1?' open':''}><summary>턴별 운영${boss?' · '+esc(boss.name_kr)+' 기믹 대응':''}</summary>${turnPlanHtml(x, boss)}</details>
       <details class="why"><summary>계산 근거·운용 포인트 보기 (주딜 ${esc(x.team[top].name)} 기준)</summary>
         <div class="grid">
           <div><span>스탯 버프</span><span class="num">+${pctTxt(co&&co.statB)}</span></div>
@@ -278,13 +280,126 @@ function renderResults(r, boss, enemy){
   out.innerHTML=h;
 }
 
+
+/* ---------- 턴별 운영 ---------- */
+const PCT = v => Math.round(v)+'%';
+function buffSummary(c){
+  const p=c.party||{}, out=[];
+  if(!p || p.scope==='none') return out;
+  const st=[['pwr','완력'],['int','지성'],['spd','속도']].filter(([k])=>p[k]>0);
+  if(st.length){ const v=Math.max(...st.map(([k])=>p[k])); out.push(st.map(x=>x[1]).join('·')+' '+PCT(v)); }
+  if(p.all_elem_atk>0) out.push('전속성 공격 '+PCT(p.all_elem_atk));
+  const ea=Object.entries(p.elem_atk||{}).filter(([k,v])=>v>0); if(ea.length) out.push(ea.map(([k])=>E.ELEM_KR[k]).join('·')+' 공격 '+PCT(Math.max(...ea.map(x=>x[1]))));
+  const wa=Object.entries(p.weapon_atk||{}).filter(([k,v])=>v>0); if(wa.length) out.push((wa.some(([k])=>k==='all')?'전무기종':wa.map(([k])=>E.WEAPON_KR[k]||FT_KR[k]||k).join('·'))+' 대미지 '+PCT(Math.max(...wa.map(x=>x[1]))));
+  if(p.crit_rate>0) out.push('크리율 '+PCT(p.crit_rate)); if(p.crit_dmg>0) out.push('크리 피해 '+PCT(p.crit_dmg));
+  if(p.singular_focus) out.push('심기일체'); if(p.mental_focus) out.push('정신통일'); if(p.overthrow) out.push('하극상');
+  if(p.over_crit) out.push('오버크리티컬'); if(p.multihit) out.push('다단강화'); if(p.extra_hit) out.push('연격수+1'); if(p.barrier_pierce) out.push('배리어 관통'); if(p.link) out.push('연계');
+  return out;
+}
+function debuffSummary(c){
+  const d=c.deb||{}, out=[];
+  const st=[['pwr','완력'],['int','지성'],['spd','속도']].filter(([k])=>d[k]>0); if(st.length) out.push('적 '+st.map(x=>x[1]).join('·')+' −'+PCT(Math.max(...st.map(([k])=>d[k]))));
+  if(d.all_elem_res>0) out.push('전속성 내성 −'+PCT(d.all_elem_res));
+  const er=Object.entries(d.elem_res||{}).filter(([k,v])=>v>0); if(er.length) out.push(er.map(([k])=>E.ELEM_KR[k]).join('·')+' 내성 −'+PCT(Math.max(...er.map(x=>x[1]))));
+  if(d.phys_res>0) out.push('물리 내성 −'+PCT(d.phys_res)); if(d.mag_res>0) out.push('마법 내성 −'+PCT(d.mag_res));
+  const wr=Object.entries(d.weapon_res||{}).filter(([k,v])=>v>0); if(wr.length) out.push(wr.map(([k])=>FT_KR[k]||k).join('·')+' 내성 −'+PCT(Math.max(...wr.map(x=>x[1]))));
+  if(c.breakT) out.push('브레이크'); if(c.weakExpose) out.push('약점 부여('+(E.ELEM_KR[c.weakExpose]||FT_KR[c.weakExpose]||c.weakExpose)+')');
+  if(c.pain) out.push('독·페인');
+  return out;
+}
+const SUP_KR={heal:'회복',barrier:'배리어',cleanse:'해제',guard:'수호',taunt:'도발',status_immune:'상태이상 무효',mp_recover:'MP 회복'};
+function whoHas(team, f){ return team.filter(f).map(c=>c.name); }
+function turnPlanHtml(x, boss){
+  const team=x.team, ev=x.ev, ex=x.ex, sbz=ev.sb.zone, nz=ev.normal.zone;
+  const sum=a=>a.reduce((q,v)=>q+v,0)||1;
+  const shSB=ev.sb.per.map(v=>v/sum(ev.sb.per)), shN=ev.normal.per.map(v=>v/sum(ev.normal.per));
+  const mainI = shSB.indexOf(Math.max(...shSB)), mainN = shN.indexOf(Math.max(...shN));
+  const dealers = team.map((c,i)=>i).filter(i=>shSB[i]>=0.2 || shN[i]>=0.2);
+  const order = ex.posTotal ? ex.order : team.map((_,i)=>i);
+  const nm = i=>`<b>${esc(team[i].name)}</b>`;
+  const T = [];
+  // 개전
+  const o0 = [`전방 배치(왼→오): ${order.map(nm).join(' · ')}${x.reserves&&x.reserves.length?` / 후열 ${x.reserves.map(c=>esc(c.name)).join(', ')}`:''}`];
+  if(sbz && sbz.level && sbz.how==='개전 자동') o0.push(`${esc(sbz.byName)}: 전투 시작과 함께 <b>${esc(sbz.label)}</b> 자동 전개`);
+  team.forEach((c,i)=>{ const ts=c.raw.tags||[]; if(ts.includes('taunt')||c.sup.taunt>=2) o0.push(`${nm(i)}: 도발로 공격 받아내기`); });
+  if(boss) (boss.mechanics||[]).filter(m=>/개시|시작|개전|선제|첫 턴/.test(m)).slice(0,2).forEach(m=>o0.push(`<span class="hint">보스: ${esc(m)}</span>`));
+  T.push(['개전', o0]);
+  // 1턴: 세팅
+  const o1=[];
+  const zoneBy = sbz&&sbz.level ? team.findIndex(c=>c.id===sbz.by) : -1;
+  if(zoneBy>=0 && sbz.how!=='개전 자동') o1.push(`${nm(zoneBy)}: ${esc(sbz.how==='SB 시'?(nz&&nz.level?nz.label:'존'):sbz.how==='스킬 각성'?sbz.label.replace(/^[극절]·/,''):sbz.label)} 전개${sbz.how==='극 글래스터'?' (극 글래스터)':''}`);
+  team.forEach((c,i)=>{
+    if(dealers.includes(i) && shSB[i]>=0.35) return;
+    const b=buffSummary(c); if(b.length) o1.push(`${nm(i)}: 버프 — ${esc(b.slice(0,4).join(', '))}${(ex.notes.find(n=>n.j===i&&n.lvl!=='ok'))?' <span class="cond part">조건 확인</span>':''}`);
+  });
+  team.forEach((c,i)=>{ const d=debuffSummary(c); if(d.length && !(shSB[i]>=0.35)) o1.push(`${nm(i)}: 디버프 — ${esc(d.slice(0,4).join(', '))}`); });
+  team.forEach((c,i)=>{ const ts=(c.raw.tags||[]).join(' ')+' '+(c.cxWhy||[]).join(' ');
+    if(/prayer|기도/.test(ts)) o1.push(`${nm(i)}: 기도 시작(유지)`); else if(/song|가창|노래/.test(ts)) o1.push(`${nm(i)}: 가창 시작(3턴마다 갱신)`); });
+  dealers.forEach(i=>{ const c=team[i]; if(/축적|누적|스택|모드|상태/.test((c.cxWhy||[]).join(' '))) o1.push(`${nm(i)}: 축적·상태 준비 <span class="hint">${esc((c.raw.req_ko||c.raw.req||'').slice(0,60))}</span>`); });
+  if(!o1.length) o1.push('특별한 준비 없이 바로 공격');
+  T.push(['1턴 · 세팅', o1]);
+  // 2턴
+  const o2=[];
+  if(sbz && sbz.level>=2 && sbz.how==='스킬 각성') o2.push(`${esc(sbz.byName)}: 존 각성 → <b>${esc(sbz.label)}</b>`);
+  const shortB = team.map((c,i)=>i).filter(i=>team[i].rules && team[i].rules.list.some(r=>r.w.t!=null));
+  if(shortB.length) o2.push(`${shortB.map(nm).join(', ')}: 짧은 버프(VC·초회·개막 한정)는 SB 턴 직전에 맞춰 쓰기`);
+  o2.push(`${dealers.map(nm).join(', ')||nm(mainN)}: 평상 공격 — ${esc((ev.normal.cores[mainN]&&ev.normal.cores[mainN].skill)||'')} 위주, 버프·디버프 남은 턴 확인`);
+  T.push(['2턴', o2]);
+  // 폭딜 턴
+  const o3=[];
+  if(ev.hasSB){
+    const co=ev.sb.cores[mainI];
+    o3.push(`버프·디버프·존(${esc(sbz&&sbz.level?sbz.label:'없음')})이 모두 켜진 턴에 <b>스텔라 버스트</b> — 주딜 ${nm(mainI)} ${esc(co&&co.usingSB?co.skill:'')}`);
+  } else o3.push('성도각성 캐릭터가 없어 SB 없이 AF로 폭딜');
+  o3.push(`이어서 <b>AF</b>: 평균 콤보 ${(ev.avgCombo*100).toFixed(0)}% 기준, 타수 많은 공격으로 콤보를 쌓고 ${nm(mainI)}로 마무리`);
+  T.push(['3턴~ · 폭딜', o3]);
+  // 유지·생존
+  const o4=[];
+  for(const k of ['heal','barrier','cleanse','guard','status_immune']){ const w=whoHas(team,c=>(c.sup[k]||0)>=2); if(w.length) o4.push(`${SUP_KR[k]}: ${w.map(esc).join(', ')}`); }
+  if(team.some(c=>c.sup.revive)) o4.push(`부활: ${whoHas(team,c=>c.sup.revive).map(esc).join(', ')}`);
+  if(!o4.length) o4.push('<span class="ng">회복·배리어 담당이 약함 → 후열 교대로 보강</span>');
+  o4.push('버프 지속이 끝나는 턴에 다시 걸고, 존이 꺼지면 바로 재전개');
+  T.push(['유지 · 생존', o4]);
+  // 보스 기믹
+  if(boss){
+    const ob=[];
+    const pierceW = team.map((c,i)=>i).filter(i=>(team[i].party||{}).barrier_pierce || (ev.sb.cores[i]&&ev.sb.cores[i].pierce)).map(nm);
+    const multi = team.map((c,i)=>i).filter(i=>ev.normal.cores[i] && ev.normal.cores[i].totHits>=4).map(nm);
+    const aoe = team.map((c,i)=>i).filter(i=>ev.normal.cores[i] && ev.normal.cores[i].tgt==='aoe' && shN[i]>=0.1).map(nm);
+    const cleanse = whoHas(team,c=>(c.sup.cleanse||0)>=1||(c.sup.status_immune||0)>=1).map(esc);
+    const guard = whoHas(team,c=>(c.sup.barrier||0)>=2||(c.sup.guard||0)>=1||(c.sup.taunt||0)>=1).map(esc);
+    const healer = whoHas(team,c=>(c.sup.heal||0)>=2).map(esc);
+    const res = (x.reserves||[]).map(c=>esc(c.name));
+    const pick=(arr,alt)=>arr.length?arr.join(', '):`<span class="ng">없음</span>${alt?` → ${alt}`:''}`;
+    const guardRule = ()=>`대비: ${pick(guard)} 배리어·수호, ${pick(healer)} 회복으로 HP 채워 두기`;
+    const RULES=[
+      [/소환|분신|부하/, ()=>`전체 공격으로 소환체부터 정리: ${pick(aoe)}`],
+      [/피격 1회|연격|다단|스택.*(감소|깎)/, ()=>`연타로 스택 깎기: ${pick(multi,'후열 다단 캐릭터 교대')}`],
+      [/배리어|장벽/, ()=>`배리어 관통: ${pick(pierceW,'다단 공격으로 먼저 벗기기')}`],
+      [/버프\s*해제|버프.*(초기화|지움)|초기화/, ()=>`해제 직후 1턴 재세팅: ${team.map((c,i)=>i).filter(i=>buffSummary(team[i]).length).map(nm).join(', ')||'—'}`],
+      [/혼란|암흑|기절|수면|봉인|석화|마비|공포|매혹|상태이상|독/, ()=>`해제·무효: ${pick(cleanse,res.length?'후열 '+res.join(', '):'')}`],
+      [/즉사|息吹|숨결|전체.*(피해|공격)|고정 피해|대미지 대폭|강력/, guardRule],
+      [/존|ZONE/, ()=>sbz&&sbz.level?`존이 깨지면 ${esc(sbz.byName)} 재전개`:'존 담당 없음'],
+      [/반격|카운터|반사/, ()=>'반격 조건을 피해 한 방이 큰 공격 위주로'],
+      [/HP\s*\d+\s*%|페이즈|스토퍼/, ()=>'페이즈 전환(HP 구간) 직전엔 SB·AF를 아끼고, 전환 직후 버프가 풀리면 다시 세팅'],
+    ];
+    for(const m of (boss.mechanics||[])){
+      const hits = RULES.filter(([re],k)=>re.test(m) && !(RULES[k][1]===guardRule && /처리|필요/.test(m))).slice(0,2);
+      ob.push(`${esc(m)}${hits.map(h=>`<div class="tip">→ ${h[1](m)}</div>`).join('')}`);
+    }
+    if(boss.phases) ob.unshift(`<span class="hint">페이즈: ${esc(boss.phases)}</span>`);
+    T.push(['보스 기믹 대응', ob]);
+  }
+  return `<ol class="tplan">${T.map(([h,ls])=>`<li><div class="th">${esc(h)}</div><ul>${ls.map(l=>`<li>${l}</li>`).join('')}</ul></li>`).join('')}</ol>`;
+}
+
 /* ---------- 추천 세팅 패널 ---------- */
 const TGT_KR={st:'단일',aoe:'전체'}, KIND_KR={phys:'물리',mag:'마법'}, SIZE_KR={s:'소',m:'중',l:'대',xl:'특대',xxl:'극대'};
 function skillLine(sk){
   if(!sk) return '';
   const el = sk.element&&sk.element!=='none' ? (E.ELEM_KR[sk.element]||sk.element)+' ' : '무속성 ';
   const wt = FT_KR[sk.weapon_type] || '';
-  return `<b>${esc(sk.skill||'')}</b> <span class="hint">${esc(TGT_KR[sk.target]||'')} ${esc(el)}${esc(wt||KIND_KR[sk.kind]||'')} ${esc(SIZE_KR[sk.size]||'')} ${sk.mult>1?esc(sk.mult)+'배 ':''}${sk.hits>1?esc(sk.hits)+'타':''}${sk.repeat?` · 재공격 ${esc(sk.repeat)}`:''}${sk.crit_sure?' · 확정 크리':''}${sk.barrier_pierce?' · 배리어 관통':''}</span>${sk.condition?`<div class="hint">${esc(sk.condition)}</div>`:''}`;
+  return `<b${sk.skill_jp?` title="원문: ${esc(sk.skill_jp)}"`:''}>${esc(sk.skill||'')}</b> <span class="hint">${esc(TGT_KR[sk.target]||'')} ${esc(el)}${esc(wt||KIND_KR[sk.kind]||'')} ${esc(SIZE_KR[sk.size]||'')} ${sk.mult>1?esc(sk.mult)+'배 ':''}${sk.hits>1?esc(sk.hits)+'타':''}${sk.repeat?` · 재공격 ${esc(sk.repeat)}`:''}${sk.crit_sure?' · 확정 크리':''}${sk.barrier_pierce?' · 배리어 관통':''}</span>${(sk.cond_ko||sk.condition)?`<div class="hint">${esc(sk.cond_ko||sk.condition)}</div>`:''}`;
 }
 function setupHtml(x, i){
   const c=x.team[i], pr=x.progs[i], o=state.owned[c.id]||{}, ev=x.ev, r=c.raw;
@@ -345,7 +460,7 @@ function setupHtml(x, i){
   const S2 = [];
   if(c.stellar && c.sb) S2.push(`<li>SB: ${skillLine(c.sb)}</li>`);
   if(c.main) S2.push(`<li>평상: ${skillLine(c.main)}</li>`);
-  if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req)}</span></li>`);
+  if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req_ko||r.req)}</span></li>`);
   const O = (c.cxWhy||[]).map(w=>`<li>${esc(w)}</li>`);
   return `<div class="shead"><b>${esc(c.name)}</b> ${(c.elems.length?c.elems:['none']).map(elChip).join('')} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> <span class="hint">${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span><button type="button" class="btn small sclose" data-sclose="1">닫기</button></div>
     <div><h4>이 조합에서</h4><ul>${L.join('')}</ul></div>
@@ -440,11 +555,169 @@ function fcardHtml(f, k, r){
       <div class="frank">${x.rank}</div>
       <div class="fmain">
         <div class="fmem">${order.map(i=>{ const c=x.team[i], sh=x.ev.sb.per[i]/sbTot; return `<span class="mchip${sh>=0.35?' main':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="추천 세팅 보기">${elChip(c.elem)} ${esc(c.name)}</span>`; }).join('')}</div>
-        <div class="fmeta"><span>${esc(z&&z.level?z.label:'존 없음')}</span> · <span class="diff lv${x.diff.lv}">Lv${x.diff.lv}</span> · SB 턴 <span class="num">${fmtN(x.ev.sbTurn)}</span> · 평상 <span class="num">${fmtN(x.ev.sustain)}</span>${bad?` · <span class="ng">버프 조건 미충족 ${bad}</span>`:''}</div>
+        <div class="fmeta"><span>${esc(z&&z.level?z.label:'존 없음')}</span> · <span class="diff lv${x.diff.lv}">Lv${x.diff.lv}</span> · SB 턴 <span class="num">${fmtN(x.ev.sbTurn)}</span> · 평상 <span class="num">${fmtN(x.ev.sustain)}</span>${bad?` · <span class="ng">버프 조건 미충족 ${bad}</span>`:''} · <button type="button" class="linkbtn" data-goalsave="${key}">목표로 저장</button></div>
         <div class="setup" data-for="${key}" hidden></div>
       </div></div>`;
   }).join('');
   return `<section class="fcard" id="fx-${k}">${head}${rows}</section>`;
+}
+
+
+/* ---------- 목표 세팅 ---------- */
+const G_RANK={none:0,vc:1,shin:2,goku:3}, G_KR={none:'없음',vc:'상급(VC)',shin:'진',goku:'극'}, M_KR=['없음','현현','진현현'];
+const BASE_OWN = ()=>({t:0,s:false,m:0,g:'none',gl:null});
+function planCtx(){
+  const P=state.plan, boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
+  const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
+  return {boss, enemy:any?enemy:null, ctx:{needPierce:!!(boss&&boss.needs&&boss.needs.barrier_pierce)}, mode:P.mode};
+}
+function evalWith(team, owns){
+  const S=settings(), pc=planCtx();
+  const progs = team.map((c,i)=>E.charProg(c, owns[i], S));
+  return E.evalTeam(team, progs, pc.enemy, S, cap, pc.ctx);
+}
+function goalScore(ev, mode){ return mode==='sustain' ? ev.sustain : mode==='stability' ? ev.sustain : ev.sbTurn + 0.5*ev.af; }
+function defaultTarget(c, dealer, needGoku){
+  const cur = state.owned[c.id] || BASE_OWN();
+  const t = Math.max(+cur.t||0, c.stellar ? (dealer?200:80) : (dealer?200:0));
+  const g = needGoku ? 'goku' : (dealer && G_RANK[cur.g||'none']<2 ? 'shin' : (cur.g||'none'));
+  return {t, s: !!c.stellar || !!cur.s, m: +cur.m||0, g: G_RANK[g]>=G_RANK[cur.g||'none']?g:(cur.g||'none'),
+    gl: dealer ? {mode:'auto', ore: !!(cur.gl&&cur.gl.ore)} : (cur.gl||null)};
+}
+function makeGoal(ids, x){
+  const team = ids.map(id=>byId.get(id)).filter(Boolean); if(team.length!==4) return null;
+  const ev = x ? x.ev : evalWith(team, team.map(c=>Object.assign(BASE_OWN(), state.owned[c.id]||{}, {t:Math.max(80,+(state.owned[c.id]||{}).t||0), s:!!c.stellar})));
+  const sum=a=>a.reduce((q,v)=>q+v,0)||1;
+  const sh = team.map((c,i)=>Math.max(ev.sb.per[i]/sum(ev.sb.per), ev.normal.per[i]/sum(ev.normal.per)));
+  const tgt={};
+  team.forEach((c,i)=>{
+    const zc=(ev.sb.zones||[]).find(z=>z.by===c.id);
+    const needGoku = !!(c.zone && c.zoneAwak && zc && zc.unmet && zc.unmet.length);
+    tgt[c.id]=defaultTarget(c, sh[i]>=0.12, needGoku);
+  });
+  return {id:'g'+Date.now().toString(36), members:ids, tgt, mode:state.plan.mode, ts:Date.now()};
+}
+function saveGoalFromResult(key){
+  const rec=RES.get(key); if(!rec) return;
+  const ids=rec.x.team.map(c=>c.id);
+  state.goals = state.goals||[];
+  if(state.goals.some(g=>g.members.slice().sort().join()===ids.slice().sort().join())){ flash('이미 같은 조합이 목표에 있습니다.'); return; }
+  const g=makeGoal(ids, rec.x); if(!g) return;
+  state.goals.unshift(g); save(); renderGoals(); flash('목표 세팅 탭에 저장했습니다.');
+}
+function flash(t){ let el=$('#flash'); if(!el){ el=document.createElement('div'); el.id='flash'; el.className='flash'; el.setAttribute('role','status'); document.body.appendChild(el); } el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2200); }
+function thresholdsCrossed(c, a, b){
+  const L=[]; const add=(v,l)=>{ if(a<v && b>=v) L.push(v+' '+l); };
+  if(c.stellar){ add(15,'성도 스킬'); add(30,'성도 스킬 완전'); add(50,'스탯'); add(80,'스탯 노드'); }
+  add(120,'배지 칸'); add(200,'글래스터 4칸'); add(255,'전 스탯');
+  return L;
+}
+function goalAnalysis(g){
+  const team=g.members.map(id=>byId.get(id)); if(team.some(c=>!c)) return null;
+  const curOwn = team.map(c=>Object.assign(BASE_OWN(), state.owned[c.id]||{}));
+  const tgOwn = team.map((c,i)=>{ const t=g.tgt[c.id]||{}; return Object.assign({}, curOwn[i], t, {gl: t.gl===undefined?curOwn[i].gl:t.gl}); });
+  const evC=evalWith(team, curOwn), evT=evalWith(team, tgOwn);
+  const mode=g.mode||state.plan.mode, sC=goalScore(evC,mode)||1e-9, sT=goalScore(evT,mode);
+  const S=settings();
+  const items=[];
+  team.forEach((c,i)=>{
+    const cu=curOwn[i], tg=tgOwn[i], owned=!!state.owned[c.id];
+    const push=(label, patch, extra)=>{
+      const own2=curOwn.map((o,k)=>k===i?Object.assign({},o,patch):o);
+      const gain = goalScore(evalWith(team, own2), mode)/sC - 1;
+      items.push({i, label, gain, extra});
+    };
+    if(!owned) items.push({i, label:'캐릭터 획득', gain:null, need:true});
+    if(c.stellar && tg.s && !cu.s) push('성도각성', {s:true, t:Math.max(cu.t,15)}, '천명치 15 이상과 함께');
+    if((+tg.t||0) > (+cu.t||0)){ const cr=thresholdsCrossed(c, +cu.t||0, +tg.t); push(`천명치 ${cu.t||0} → ${tg.t} (+${tg.t-(cu.t||0)})`, {t:+tg.t, s:tg.s}, cr.join(' · ')); }
+    if((+tg.m||0) > (+cu.m||0)) push(`${M_KR[+tg.m]} 무기`, {m:+tg.m});
+    if(G_RANK[tg.g||'none'] > G_RANK[cu.g||'none']) push(`전용 글래스터 ${G_KR[tg.g]}`, {g:tg.g}, tg.g==='goku'&&c.zone?'극존 해금':'');
+    const fC=E.grastaFactor(E.charProg(c,cu,S), evC.A.painAny).f, fT=E.grastaFactor(E.charProg(c,Object.assign({},cu,{gl:tg.gl}),S), evC.A.painAny).f;
+    if(tg.gl && fT>fC+1e-6){ const gq=E.grastaFactor(E.charProg(c,Object.assign({},cu,{gl:tg.gl}),S), evC.A.painAny); push(`공격 글래스터 → ${glText(gq)}${tg.gl.ore&&!(cu.gl&&cu.gl.ore)?' + 잠재 광석':''}`, {gl:tg.gl}); }
+  });
+  const minor = items.filter(x=>!x.need && Math.abs(x.gain)<0.001);
+  const main = items.filter(x=>x.need || Math.abs(x.gain)>=0.001);
+  main.sort((a,b)=>(b.need?1:0)-(a.need?1:0) || (b.gain||0)-(a.gain||0));
+  return {minor, team, curOwn, tgOwn, evC, evT, gainAll: sT/sC-1, items:main, mode};
+}
+function renderGoals(){
+  const box=$('#goalList'); if(!box) return;
+  const G=state.goals||[];
+  $('#tabGoalN').textContent=G.length;
+  if(!G.length){ box.innerHTML='<div class="empty">아직 목표가 없습니다. 편성 추천 결과에서 <b>목표로 저장</b>을 누르거나 위에서 4명을 골라 보세요.</div>'; return; }
+  box.innerHTML = G.map(goalHtml).join('');
+}
+function goalHtml(g){
+  const A=goalAnalysis(g);
+  if(!A) return `<section class="card goal" data-goal="${esc(g.id)}"><div class="card-head"><b>삭제된 캐릭터가 포함된 목표</b><button type="button" class="btn small" data-gdel="${esc(g.id)}">삭제</button></div></section>`;
+  const {team, curOwn, tgOwn, evC, evT, items} = A;
+  const unowned = team.filter(c=>!state.owned[c.id]);
+  const done = items.filter(x=>!x.need).length===0 && !unowned.length;
+  const pctS = v=>(v>=0?'+':'')+(v*100).toFixed(1)+'%';
+  const mem = team.map((c,i)=>{
+    const cu=curOwn[i], tg=tgOwn[i], o=!!state.owned[c.id], gk=glKey(tg.gl);
+    const st=(ok)=>ok?'<span class="ok">✓</span>':'<span class="ng">남음</span>';
+    return `<div class="gmem" data-gid="${esc(g.id)}" data-cid="${esc(c.id)}">
+      <div class="gh"><b>${esc(c.name)}</b> ${elChip(c.elem)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${o?'':'<span class="badge warn">미보유</span>'}</div>
+      <div class="grow"><span>천명치</span><span class="num">${cu.t||0}</span><span>→</span><input type="number" min="0" max="255" data-gf="t" value="${tg.t||0}" aria-label="${esc(c.name)} 목표 천명치">${st((cu.t||0)>=(tg.t||0))}</div>
+      ${c.stellar?`<div class="grow"><span>성도각성</span><span>${cu.s?'완료':'안 함'}</span><span>→</span><label><input type="checkbox" data-gf="s" ${tg.s?'checked':''}> 목표</label>${st(!tg.s||cu.s)}</div>`:''}
+      <div class="grow"><span>현현</span><span>${M_KR[+cu.m||0]}</span><span>→</span><select data-gf="m">${M_KR.map((l,k)=>`<option value="${k}"${(+tg.m||0)===k?' selected':''}>${l}</option>`).join('')}</select>${st((+cu.m||0)>=(+tg.m||0))}</div>
+      <div class="grow"><span>전용 글래</span><span>${G_KR[cu.g||'none']}</span><span>→</span><select data-gf="g">${Object.entries(G_KR).map(([k,l])=>`<option value="${k}"${(tg.g||'none')===k?' selected':''}>${l}</option>`).join('')}</select>${st(G_RANK[cu.g||'none']>=G_RANK[tg.g||'none'])}</div>
+      <div class="grow"><span>공격 글래</span><span>${esc({def:'기본',auto:'자동',none:'없음'}[glKey(cu.gl)]||GL_PRESETS[glKey(cu.gl)].label)}</span><span>→</span><select data-gf="gl">${Object.entries(GL_PRESETS).map(([k,p])=>`<option value="${k}"${gk===k?' selected':''}>${p.label}</option>`).join('')}</select><label title="잠재 광석"><input type="checkbox" data-gf="ore" ${tg.gl&&tg.gl.ore?'checked':''} ${tg.gl?'':'disabled'}> 광석</label></div>
+    </div>`;
+  }).join('');
+  const list = items.length ? `<ol class="gitems">${items.map(x=>`<li><b>${esc(team[x.i].name)}</b> · ${esc(x.label)}${x.extra?` <span class="hint">(${esc(x.extra)})</span>`:''} ${x.need?'<span class="ng">편성 필수</span>':`<span class="gain">${pctS(x.gain)}</span>`}</li>`).join('')}</ol>`
+    : (A.minor.length?'':'<p class="ok" style="margin:0">목표를 모두 채웠습니다.</p>');
+  const minorTxt = A.minor.length ? `<p class="hint" style="margin:6px 0 0">화력 변화가 거의 없는 항목: ${A.minor.map(x=>esc(team[x.i].name+' '+x.label)).join(', ')} — 이 조합에서는 딜 비중이 낮거나 이미 상한이라 우선순위가 낮습니다.</p>` : '';
+  const mlabel = {burst:'최고점',sustain:'지속',stability:'지속',weak:'최고점',boss:'최고점'}[A.mode]||'최고점';
+  return `<section class="card goal" data-goal="${esc(g.id)}">
+    <div class="card-head">
+      <div class="gname">${team.map(c=>esc(c.name)).join(' · ')}</div>
+      ${done?'<span class="cond ok">달성</span>':''}
+      <span class="hint">${esc(MODE_KR[A.mode]||'')} 기준</span>
+      <button type="button" class="btn small" data-gdel="${esc(g.id)}" style="margin-left:auto">삭제</button>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="k">지금 SB 턴</div><div class="v">${unowned.length?'—':fmtN(evC.sbTurn)}</div></div>
+      <div class="metric"><div class="k">목표 SB 턴</div><div class="v">${fmtN(evT.sbTurn)}</div></div>
+      <div class="metric"><div class="k">지금 일반 턴</div><div class="v">${unowned.length?'—':fmtN(evC.sustain)}</div></div>
+      <div class="metric hot"><div class="k">목표 달성 시 ${mlabel}</div><div class="v">${unowned.length?'획득 후':pctS(A.gainAll)}</div></div>
+    </div>
+    <div><h4 class="gsub">남은 것 · 화력 오르는 순서</h4>${list}${minorTxt}<p class="hint" style="margin:6px 0 0">퍼센트는 그 항목 하나만 채웠을 때 이 조합의 ${mlabel} 화력 변화입니다. 재료 개수·입수처는 계산하지 않습니다.</p></div>
+    <div class="gmems">${mem}</div>
+  </section>`;
+}
+function onGoalInput(e){
+  const t=e.target, row=t.closest('.gmem'); if(!row||!t.dataset.gf) return;
+  const g=(state.goals||[]).find(x=>x.id===row.dataset.gid); if(!g) return;
+  const id=row.dataset.cid, tg=g.tgt[id]||(g.tgt[id]={}), f=t.dataset.gf;
+  if(f==='t') tg.t=Math.max(0,Math.min(255,parseInt(t.value||'0',10)||0));
+  else if(f==='s') tg.s=t.checked;
+  else if(f==='m') tg.m=+t.value;
+  else if(f==='g') tg.g=t.value;
+  else if(f==='gl'){ const p=GL_PRESETS[t.value]; tg.gl = p.v ? Object.assign({}, p.v, {ore: tg.gl?!!tg.gl.ore:false}) : null; }
+  else if(f==='ore'){ if(tg.gl) tg.gl.ore=t.checked; }
+  save();
+  clearTimeout(onGoalInput._t);
+  onGoalInput._t = setTimeout(()=>{ const sec=$(`#goalList .goal[data-goal="${g.id}"]`); if(sec) sec.outerHTML=goalHtml(g); }, 0);
+}
+let goalPick=[];
+function setupGoalPicker(){
+  const inp=$('#goalIn'), drop=$('#goalDrop'); let items=[];
+  const close=()=>{ drop.hidden=true; };
+  const refresh=()=>{
+    const q=inp.value.trim().toLowerCase(); if(!q){ close(); return; }
+    items=prepped.filter(c=>!goalPick.includes(c.id) && (c.name.toLowerCase().includes(q)||(c.raw.name_jp||'').toLowerCase().includes(q))).slice(0,30);
+    drop.innerHTML = items.map((c,i)=>`<button type="button" data-i="${i}">${elChip(c.elem)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span>${state.owned[c.id]?'':' <span class="badge">미보유</span>'}</button>`).join('') || '<div class="hint" style="padding:8px 10px">일치하는 캐릭터가 없습니다.</div>';
+    drop.hidden=false;
+  };
+  const render=()=>{ $('#goalChips').innerHTML=goalPick.map(id=>`<span class="chip">${esc(byId.get(id).name)}<button type="button" data-gpr="${esc(id)}" aria-label="빼기">×</button></span>`).join(''); $('#goalAdd').disabled=goalPick.length!==4; $('#goalAdd').textContent=goalPick.length===4?'목표로 추가':`목표로 추가 (${goalPick.length}/4)`; };
+  inp.addEventListener('input',refresh); inp.addEventListener('focus',refresh); inp.addEventListener('blur',()=>setTimeout(close,120));
+  drop.addEventListener('mousedown',e=>{ const b=e.target.closest('button[data-i]'); if(!b) return; e.preventDefault(); if(goalPick.length<4) goalPick.push(items[+b.dataset.i].id); inp.value=''; close(); render(); });
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter' && items[0] && !drop.hidden){ e.preventDefault(); if(goalPick.length<4) goalPick.push(items[0].id); inp.value=''; close(); render(); } });
+  $('#goalChips').addEventListener('click',e=>{ const b=e.target.closest('[data-gpr]'); if(!b) return; goalPick=goalPick.filter(x=>x!==b.dataset.gpr); render(); });
+  $('#goalAdd').addEventListener('click',()=>{ if(goalPick.length!==4) return; const g=makeGoal(goalPick.slice(), null); if(!g) return; state.goals=state.goals||[]; state.goals.unshift(g); goalPick=[]; render(); save(); renderGoals(); });
+  render();
 }
 
 /* ---------- 보유 탭 ---------- */
@@ -607,12 +880,12 @@ function onConst(e){
 }
 
 /* ---------- 내보내기/불러오기 ---------- */
-function exportState(){ const ta=$('#ioText'); ta.value=JSON.stringify({owned:state.owned, custom:state.custom, settings:state.settings}); ta.select();
+function exportState(){ const ta=$('#ioText'); ta.value=JSON.stringify({owned:state.owned, custom:state.custom, settings:state.settings, goals:state.goals||[]}); ta.select();
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(()=>{$('#ioMsg').textContent='복사했습니다. 메모장 등에 붙여 두세요.';},()=>{$('#ioMsg').textContent='선택된 텍스트를 직접 복사하세요.';});
   else $('#ioMsg').textContent='선택된 텍스트를 직접 복사하세요.'; }
 function importState(){
   try{ const d=JSON.parse($('#ioText').value); if(!d||typeof d.owned!=='object') throw 0;
-    state.owned=d.owned; state.custom=Array.isArray(d.custom)?d.custom:[]; state.settings=d.settings||{}; state.sample=false;
+    state.owned=d.owned; state.custom=Array.isArray(d.custom)?d.custom:[]; state.settings=d.settings||{}; state.sample=false; if(Array.isArray(d.goals)) state.goals=d.goals;
     save(); rebuildChars(); renderAll(); $('#ioMsg').textContent='불러왔습니다.'; }
   catch(e){ $('#ioMsg').textContent='형식이 맞지 않습니다. 내보내기로 만든 텍스트 전체를 붙여 넣으세요.'; }
 }
@@ -632,6 +905,10 @@ function bind(){
   $('#runBtn').addEventListener('click',runPlan);
   $('#focusSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-fi]'); if(!b) return; const k=+b.dataset.fi; state.plan.focus = k<0?null:Object.assign({},FOCUS_LIST[k]); save(); renderPlanControls(); runPlan(); });
   $('#fxRun').addEventListener('click', runFocusAll);
+  document.addEventListener('click',e=>{ const b=e.target.closest('button[data-goalsave]'); if(b) saveGoalFromResult(b.dataset.goalsave); });
+  $('#goalList').addEventListener('change', onGoalInput);
+  $('#goalList').addEventListener('click',e=>{ const b=e.target.closest('button[data-gdel]'); if(!b) return; state.goals=(state.goals||[]).filter(g=>g.id!==b.dataset.gdel); save(); renderGoals(); });
+  setupGoalPicker();
   $('#fxGrid').addEventListener('click',e=>{ const b=e.target.closest('button[data-fgo]'); if(!b) return; state.plan.focus=Object.assign({},FOCUS_LIST[+b.dataset.fgo]); state.plan.locked=[]; save(); renderPlanControls(); showTab('plan'); runPlan(); });
   const onMem = e=>{ if(e.target.closest('[data-sclose]')){ const box=e.target.closest('.setup'); const key=box.dataset.for; $$(`[data-sk="${key}"]`).forEach(m=>m.setAttribute('aria-expanded','false')); box.hidden=true; return; }
     const m=e.target.closest('[data-sk]'); if(!m) return; if(e.type==='keydown'){ if(e.key!=='Enter'&&e.key!==' ') return; e.preventDefault(); } toggleSetup(m); };
@@ -662,7 +939,7 @@ function bind(){
   $('#constBox').addEventListener('change',onConst);
   $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
-function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); }
+function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); }
 
 /* ---------- 시작 ---------- */
 (async function init(){
@@ -671,7 +948,7 @@ function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); rende
   bind();
   renderAll();
   let tab='plan'; try{ tab=localStorage.getItem('aeopt_tab')||'plan'; }catch(e){}
-  const h=(location.hash||'').slice(1); if(['plan','roster','perchar','focus','boss','method'].includes(h)) tab=h;
+  const h=(location.hash||'').slice(1); if(['plan','roster','perchar','focus','goal','boss','method'].includes(h)) tab=h;
   showTab(tab);
   setSaveText(state.sample?'예시 데이터 · 아직 저장 안 함':'이 기기에 저장됨');
   runPlan();

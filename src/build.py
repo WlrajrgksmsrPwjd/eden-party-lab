@@ -4,10 +4,29 @@ here=os.path.dirname(os.path.abspath(__file__))
 P=lambda *a: os.path.join(here,*a)
 chars=[]
 for f in sorted(glob.glob(P('data','chars_*.json'))): chars+=json.load(open(f,encoding='utf-8'))
+import sys; sys.path.insert(0, here)
+from ko import ko, has_jp
+# 화면 표시용 한국어: 계산용 조건 원문은 두고 *_ko 필드를 덧붙인다
+for c in chars:
+    for k in ('main','sb'):
+        sk=c.get(k)
+        if not sk: continue
+        if has_jp(sk.get('skill')): sk['skill_jp']=sk['skill']; sk['skill']=ko(sk['skill'])
+        if has_jp(sk.get('condition')): sk['cond_ko']=ko(sk['condition'])
+    if has_jp(c.get('req')): c['req_ko']=ko(c['req'])
+    if c.get('zone') and has_jp(c['zone'].get('condition')): c['zone']['cond_ko']=ko(c['zone']['condition'])
+    pb=c.get('party_buff') or {}
+    if has_jp(pb.get('restrict')): pb['restrict']=ko(pb['restrict'])
+    for k in ('note_kr','name_kr'):
+        if has_jp(c.get(k)): c[k]=ko(c[k])
 rules=json.load(open(P('data','buff_rules.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in rules: c['party_rules']=rules[c['id']]
 bosses=json.load(open(P('data','bosses.json'),encoding='utf-8'))+json.load(open(P('data','bosses_more.json'),encoding='utf-8'))
+for b in bosses:
+    for k in ('name_kr','phases','strategy_kr'):
+        if has_jp(b.get(k)): b[k]=ko(b[k])
+    b['mechanics']=[ko(m) for m in b.get('mechanics') or []]
 def js(o): return json.dumps(o,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
 rd=lambda n: open(P(n),encoding='utf-8').read()
 head='''<!doctype html>

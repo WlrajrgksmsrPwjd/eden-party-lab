@@ -6,6 +6,7 @@
       <button class="tab" role="tab" data-tab="roster" aria-selected="false">보유 캐릭터 <span class="num" id="tabOwnN">0</span></button>
       <button class="tab" role="tab" data-tab="perchar" aria-selected="false">캐릭터별 최적</button>
       <button class="tab" role="tab" data-tab="focus" aria-selected="false">속성·타입별</button>
+      <button class="tab" role="tab" data-tab="goal" aria-selected="false">목표 세팅 <span class="num" id="tabGoalN">0</span></button>
       <button class="tab" role="tab" data-tab="boss" aria-selected="false">보스 공략</button>
       <button class="tab" role="tab" data-tab="method" aria-selected="false">계산 방식</button>
     </nav>
@@ -187,6 +188,22 @@
     <div class="fgrid" id="fxGrid"><div class="empty">계산을 누르면 속성·타입별 상위 조합을 차례로 채웁니다. (11가지, 30초 안팎)</div></div>
   </section>
 
+  <!-- 목표 세팅 -->
+  <section class="panel" id="p-goal" role="tabpanel">
+    <div class="pcbar">
+      <div>
+        <h2 class="pch">목표 세팅</h2>
+        <p class="hint" style="margin:2px 0 0;max-width:74ch">쓰고 싶은 조합을 목표로 두면, 캐릭터마다 지금 입력과 목표 사이에 남은 것(보유·성도각성·천명치·현현·전용 글래스터·공격 글래스터)과 항목별로 화력이 얼마나 오르는지를 보여줍니다. 결과 카드의 <b>목표로 저장</b>을 누르거나 아래에서 4명을 직접 골라 만드세요. 목표 수치는 칸에서 바로 고칠 수 있습니다.</p>
+      </div>
+    </div>
+    <div class="goalnew">
+      <div class="picker" style="flex:1;min-width:220px"><input type="text" id="goalIn" placeholder="캐릭터 이름 (보유하지 않은 캐릭터도 가능)" autocomplete="off"><div class="drop" id="goalDrop" hidden></div></div>
+      <div class="chips" id="goalChips" style="margin:0"></div>
+      <button type="button" class="btn primary" id="goalAdd" disabled>목표로 추가</button>
+    </div>
+    <div id="goalList" class="goallist"><div class="empty">아직 목표가 없습니다. 편성 추천 결과에서 <b>목표로 저장</b>을 누르거나 위에서 4명을 골라 보세요.</div></div>
+  </section>
+
   <!-- 보스 공략 -->
   <section class="panel" id="p-boss" role="tabpanel">
     <div class="bossbar">
@@ -264,6 +281,11 @@
         <p>축적형 큰 한 방(핵열 20 누적 300배 등)은 평상 턴에 위력의 40%만 넣고, 25배를 넘는 몫은 다시 20%만 인정합니다. 몇 턴에 한 번 쓰는 기술이 지속 딜 점수를 독차지하지 않게 하려는 실전 보정입니다.</p>
         <h2>속성·타입 지정</h2>
         <p>속성(불 등)이나 공격 타입(참격 등)을 지정하면 그 속성·타입으로 나가는 공격 화력만 점수에 넣습니다. 지정과 다른 캐릭터도 버퍼·힐러로는 들어갈 수 있습니다. 후보는 지정에 맞는 공격자, 그 속성·타입 존 담당, 버퍼·생존 상위로 추립니다.</p>
+        <h2>턴별 운영 · 목표 세팅</h2>
+        <p>결과 카드의 <b>턴별 운영</b>은 조합 데이터로 만든 운영 순서입니다. 개전 자동 존·도발 → 1턴 존 전개·버프·디버프·기도/가창·축적 준비 → 2턴 존 각성·짧은 버프 대기 → 버프·디버프·존이 다 켜진 턴에 SB, 이어서 AF → 회복·해제·재세팅 순입니다. 보스 맞춤일 때는 보스 기믹마다 이 조합에서 맡을 캐릭터(배리어 관통, 연타, 해제, 배리어·수호, 전체 공격)를 붙입니다. 스킬 순서·행동 속도까지 따지지는 않으니 첫 판은 확인하면서 굴려 보세요.</p>
+        <p><b>목표 세팅</b>은 지금 입력값과 목표값의 차이를 캐릭터별로 보여주고, 항목 하나씩만 채웠을 때 화력이 얼마나 오르는지 계산해 높은 순으로 정렬합니다. 기본 목표는 딜 비중이 큰 캐릭터는 천명치 200(공격 글래스터 4칸)·전용 글래스터 진 이상·공격 글래스터 자동 최적, 서포터는 천명치 80, 극존 조건을 편성으로 못 채우는 존 캐릭터는 극 글래스터입니다. 현현은 무기가 있는지 데이터로 알 수 없어 직접 올려 주세요.</p>
+        <h2>한국어 표기</h2>
+        <p>스킬명·조건문·보스 기믹에 섞인 일본어는 용어집(존·상태·버프 용어)으로 바꾸고, 나머지 한자는 한국 한자음, 가타카나는 소리대로 옮겼습니다. 공식 한국어판 이름과 다를 수 있어 스킬명에 마우스를 올리면 원문이 보입니다.</p>
         <h2>후열 고정 · 캐릭터별 최적</h2>
         <p>후열 고정에 넣은 캐릭터(글래스터 연성 셔틀 등)는 전방 후보에서 빠지고 후열 자리를 먼저 차지합니다. 남은 후열 자리는 회복·수호·해제를 가장 많이 보강하는 캐릭터로 채웁니다. 캐릭터별 최적은 상위 후보 36명의 모든 4인 조합과, 그 밖의 캐릭터마다 상위 14명 중 3명을 붙인 조합을 평가해 캐릭터마다 가장 높은 조합을 고릅니다.</p>
         <h2>운용 난이도</h2>
