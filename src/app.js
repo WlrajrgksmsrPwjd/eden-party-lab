@@ -317,6 +317,14 @@ function eqBaseStats(kind, stat){ const s={str:237, int:162, spd:249, luck:150, 
 /* 캐릭터 기본 스탯(위키 Stats Index) + 천명치 보너스 → 빌더 스탯 칸 (장비 제외) */
 function wikiStats(c, fate){ const w=E.statsAt(c.stats, c.fateTbl, +fate||0); return w ? {str:w.pwr, int:w.int, spd:w.spd, luck:w.lck, mp:w.mp} : null; }
 const realSt = st => st && st.str && !E.isBuilderDefault(st) ? st : null;
+/* 속도 +n을 채우는 장비 (딩 빌더 장비 시트 기준 최대치) */
+function spdGearTip(n){
+  if(n<=20) return '속도 장신구(팔찌·목걸이·반지 +20) 또는 속도 배지(+50)·힘/지능 속도 배지(+40)';
+  if(n<=30) return '백요의 목걸이(+30)·별의 광휘 등 속도 +30 배지 또는 속도 배지(+50)·힘/지능 속도 배지(+40)';
+  if(n<=40) return '힘/지능 속도 배지(+40) 또는 속도 배지(+50)';
+  if(n<=50) return '속도 배지(+50), 또는 속도 장신구(+20~30)와 속도 +20~30 배지';
+  return '속도 배지(+50)에 속도 장신구(+20~30)까지';
+}
 /* 캐릭터 스탯 표 (레벨 최대·장비 제외): 천명치 0 / 현재 / 255 */
 const STAT_KR = {hp:'HP', mp:'MP', pwr:'힘', int:'지성', spd:'속도', end:'내구', spr:'정신', lck:'운'};
 let SPD_SORTED = null;
@@ -1036,7 +1044,7 @@ function turnPlanHtml(x, boss){
       const fastD = Math.max(0, ...att.map(sp)), slow = gv.filter(j=>sp(j) && fastD && sp(j)<=fastD);
       if(att.length && gv.length){
         if(gv.every(j=>sp(j)) && att.every(i=>sp(i)) && !slow.length) o1.push(`속도 순서 OK: 버퍼 ${gv.map(j=>nm(j)+spT(j)).join(', ')}가 딜러 ${att.map(i=>nm(i)+spT(i)).join(', ')}보다 빨라 1턴 공격에 버프·디버프가 들어감 (1턴 딜 ${fmtN(tl.t1u)})`);
-        else if(slow.length) o1.push(`속도 순서: 버퍼 ${slow.map(j=>nm(j)+spT(j)).join(', ')}가 딜러 ${att.map(i=>nm(i)+spT(i)).join(', ')}보다 느림 → 버퍼 속도 <b>+${fastD-Math.min(...slow.map(sp))+1} 이상</b>(속도 글래스터·배지)이면 1턴 딜 ${fmtN(tl.t1g)} → ${fmtN(tl.t1u)}, 아니면 딜러는 2턴부터 본격 공격`);
+        else if(slow.length) o1.push(`속도 순서: 버퍼 ${slow.map(j=>nm(j)+spT(j)).join(', ')}가 딜러 ${att.map(i=>nm(i)+spT(i)).join(', ')}보다 느림 → 버퍼 속도 <b>+${fastD-Math.min(...slow.map(sp))+1} 이상</b>(${esc(spdGearTip(fastD-Math.min(...slow.map(sp))+1))})이면 1턴 딜 ${fmtN(tl.t1g)} → ${fmtN(tl.t1u)}, 아니면 딜러는 2턴부터 본격 공격`);
         else o1.push(`속도 순서: 버퍼 ${gv.map(nm).join(', ')} → 딜러 ${att.map(nm).join(', ')} 순서여야(<b>버퍼가 더 빨라야</b>) 1턴 공격에 버프·디버프가 들어감 (1턴 딜 ${fmtN(tl.t1g)} → ${fmtN(tl.t1u)}) — 버퍼에 속도 글래스터·배지, 아니면 딜러는 2턴부터 본격 공격`);
       }
     }
@@ -1196,10 +1204,11 @@ function setupHtml(x, i){
     if((mu && mu.front||[]).includes(i)) G.push(`<li>이 캐릭터는 전열 서포터라 자기 공격 글래스터 대신 <b>잠재 연성한 P글래</b>를 달아 딜러에게 공유하는 쪽이 이득</li>`);
     if(c.manifestMax===0) G.push(`<li>현현 무기: 이 캐릭터는 없음</li>`);
     else G.push(`<li>${mark((+o.m||0)>=(c.manifestMax||1))} 현현 무기: ${c.manifestMax===2?'진현현까지 있음':c.manifestMax===1?'현현 있음':'현현 ×1.08 · 진현현 ×1.15'} <span class="hint">(현재 ${['없음','현현','진현현'][+o.m||0]})</span></li>`);
-    if(ev.afA && ev.afA.auto){ const fa=ev.afA.fast[i], kn=ev.afA.known&&ev.afA.known[i], sp=ev.afA.spd&&ev.afA.spd[i], gs=+settings().gearSpd||0;
-      const src = kn==='build'?'빌드 코드, 장비 포함':kn==='build-st'?`빌드에 넣은 스탯${gs?` + 장비 ${gs}`:''}`:kn==='wiki'?`기본 스탯·천명치 ${pr.t}${gs?` + 장비 ${gs}`:', 장비 제외'}`:'모름';
+    if(ev.afA && ev.afA.auto){ const fa=ev.afA.fast[i], kn=ev.afA.known&&ev.afA.known[i], sp=ev.afA.spd&&ev.afA.spd[i], S0=settings(), gs=E.gearSpdOf(c, S0), gAuto=S0.gearSpd==null||S0.gearSpd==='';
+      const gTxt = gs ? ` + 장비 ${gs}${gAuto?'(자동: 대미지 최적 장비 기준)':''}` : ', 장비 제외';
+      const src = kn==='build'?'빌드 코드, 장비 포함':kn==='build-st'?`빌드에 넣은 스탯${gTxt}`:kn==='wiki'?`기본 스탯·천명치 ${pr.t}${gTxt}`:'모름';
       const need = !fa && sp ? 249-sp : 0;
-      G.push(`<li>${mark(fa)} AF 중 행동 <b>${ev.afA.n[i]}회</b> (AF 약 ${ev.afA.dur.toFixed(0)}초) · 속도 ${sp?`<b>${sp}</b> (${fa?'249 이상':'249 미만'})`:(fa?'249 이상':'249 미만')} <span class="hint">${src}</span>${fa?'':need>0?` — 속도를 <b>+${need}</b>(속도 글래스터·배지) 올려 249가 되면 AF 대기 시간이 1초씩 줄어 행동이 늘어날 수 있음`:' — 속도 249를 넘기면 AF 대기 시간이 1초씩 줄어 행동이 늘어날 수 있음 (속도 글래스터·배지)'}</li>`); }
+      G.push(`<li>${mark(fa)} AF 중 행동 <b>${ev.afA.n[i]}회</b> (AF 약 ${ev.afA.dur.toFixed(0)}초) · 속도 ${sp?`<b>${sp}</b> (${fa?'249 이상':'249 미만'})`:(fa?'249 이상':'249 미만')} <span class="hint">${src}</span>${fa?'':need>0?` — 속도 <b>+${need}</b>이면 249: ${esc(spdGearTip(need))}. AF 대기 시간이 1초씩 줄어 행동이 늘 수 있지만 대미지 장비 한 칸을 내주는 셈`:' — 속도 249를 넘기면 AF 대기 시간이 1초씩 줄어 행동이 늘어날 수 있음'}</li>`); }
     const sm = ev.sim;
     if(sm){ const mi=sm.mainN[i], H=sm.H;
       G.push(`<li>${mark(!sm.out[i])} MP: 주력기 ${c.mpMain!=null?c.mpMain:'?'} · 최대 약 ${sm.mpMax[i]} → ${H}턴 중 주력기 ${mi}번${sm.out[i]?`, ${sm.out[i]}턴째부터 부족 → MP 소비 감소 글래스터·MP 회복 지원·후열 교대`:' (여유)'}</li>`); }
@@ -1714,7 +1723,7 @@ function renderConsts(){
     <div class="crow"><span>스탯 환산 계수 (1타 상한 100억 기준)</span><input type="number" step="1000" min="1000" id="cCap" value="${S.statK}"><span></span><span></span></div>
     <div class="crow"><span>AF 행동 수</span><label class="checkrow" style="align-items:center" title="게이지(초당 10% 감소, 타격으로 충전)와 속도(249 기준 대기 시간)로 캐릭터별 행동 수를 계산"><input type="checkbox" id="cAfAuto" ${S.afAuto!==false?'checked':''}> 자동(게이지·속도)</label><label style="display:flex;gap:4px;align-items:center" title="자동을 끄면 모두 이 횟수">고정 <input type="number" step="1" min="1" max="15" id="cAf" value="${S.afActions}" style="width:56px"></label><label class="checkrow" style="align-items:center" title="지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣음"><input type="checkbox" id="cAfCycle" ${S.afCycle!==false?'checked':''}> 지속 딜에 AF 주기</label></div>
     <div class="crow"><span>AF 연출 시간(초) · 속도</span><input type="number" step="0.5" min="0.5" max="5" id="cAfAnim" value="${S.afAnim}"><label class="checkrow" style="align-items:center" title="빌드 코드가 없는 캐릭터의 속도를 249 이상으로 볼지"><input type="checkbox" id="cAfFast" ${S.afFastDefault?'checked':''}> 빌드 없는 캐릭터도 속도 249 이상</label><span></span></div>
-    <div class="crow"><span>캐릭터 스탯 · 장비 속도</span><label class="checkrow" style="align-items:center" title="위키 Stats Index의 기본 스탯과 천명치 보너스로 주 스탯 대미지(힘·지성·속도), 운(물리 크리율), 속도(1턴 버프 순서·AF 행동 수)를 계산"><input type="checkbox" id="cUseStats" ${S.useStats!==false?'checked':''}> 기본 스탯 반영</label><label style="display:flex;gap:4px;align-items:center" title="빌드 코드가 없는 캐릭터의 장비·글래스터·배지 속도. 기본 스탯(장비 제외)에 더해 속도 249 판정과 행동 순서에 씀">장비 속도 + <input type="number" step="5" min="0" max="200" id="cGearSpd" value="${+S.gearSpd||0}" style="width:60px"></label><span></span></div>
+    <div class="crow"><span>캐릭터 스탯 · 장비 속도</span><label class="checkrow" style="align-items:center" title="위키 Stats Index의 기본 스탯과 천명치 보너스로 주 스탯 대미지(힘·지성·속도), 운(물리 크리율), 속도(1턴 버프 순서·AF 행동 수)를 계산"><input type="checkbox" id="cUseStats" ${S.useStats!==false?'checked':''}> 기본 스탯 반영</label><label style="display:flex;gap:4px;align-items:center" title="빌드 코드가 없는 캐릭터의 장비 속도. 비우면 자동: 딩 빌더 장비 시트로 찾은 대미지 최적 장비의 속도(지팡이 +20, 도끼·권갑 +40, 그 외 +30)">장비 속도 + <input type="number" step="5" min="0" max="200" id="cGearSpd" value="${S.gearSpd==null||S.gearSpd===''?'':S.gearSpd}" placeholder="자동" style="width:64px"></label><span></span></div>
     <div class="crow"><span>요격: 적 1체 턴당 타수 · 전체 공격 비율</span><input type="number" step="0.5" min="0.5" max="10" id="cEnHits" value="${S.enemyHits}" title="적 1체가 평상 턴에 아군에게 넣는 타수. 요격은 맞은 타수마다 1번"><input type="number" step="0.1" min="0" max="1" id="cEnAoE" value="${S.enemyAoE}" title="그중 전체 공격 비율. 전체 공격은 전열 모두가 맞고, 수세(아군 전체공격 대신 받기)면 전열 수만큼 한 캐릭터가 맞음"><span></span></div>
     <div class="crow"><span>일반 턴 MP·버프 시뮬레이션</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cSim" ${S.simOn!==false?'checked':''}> 사용</label><span></span><span></span></div>
     <div class="crow"><span>시뮬레이션 턴 수</span><input type="number" step="1" min="2" max="20" id="cSimT" value="${S.simTurns}"><span></span><span></span></div>
@@ -1736,7 +1745,7 @@ function onConst(e){
   else if(t.id==='cUseStats') S.useStats=t.checked;
   else if(t.id==='cEnHits') S.enemyHits=Math.max(0.5,Math.min(10,+t.value||2));
   else if(t.id==='cEnAoE') S.enemyAoE=Math.max(0,Math.min(1,+t.value||0));
-  else if(t.id==='cGearSpd') S.gearSpd=Math.max(0,Math.min(200,Math.round(+t.value||0)));
+  else if(t.id==='cGearSpd') S.gearSpd = t.value==='' ? null : Math.max(0,Math.min(200,Math.round(+t.value||0)));
   else if(t.id==='cAfAnim') S.afAnim=Math.max(0.5,Math.min(5,+t.value||2));
   else if(t.id==='cSim') S.simOn=t.checked;
   else if(t.id==='cMule') S.muleOn=t.checked;

@@ -40,7 +40,7 @@ const DEFAULT_SETTINGS = {
   afAnim: 2,         // AF 중 스킬 연출 시간(초) 가정
   afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
   useStats: true,    // 캐릭터 기본 스탯(위키 Stats Index)으로 주 스탯 대미지·운 크리율·속도 반영
-  gearSpd: 0,        // 빌드 코드가 없는 캐릭터의 장비·글래스터 속도 (기본 스탯에 더함)
+  gearSpd: null,     // 빌드 코드가 없는 캐릭터의 장비 속도. null이면 무기종별 자동값(GEAR_SPD_AUTO)
   enemyHits: 2,      // 요격: 적 1체가 평상 턴에 아군에게 넣는 타수 (다단은 타마다 요격 1번)
   enemyAoE: 0.4,     // 요격: 그중 전체 공격 비율 (전체 공격은 전열 모두가 1타씩 맞음)
   simOn: true,       // 일반 턴을 MP·버프 지속 턴 시뮬레이션으로 계산
@@ -429,13 +429,16 @@ function statsAt(stats, tbl, t){
 const STAT_REF = {phys:221, mag:232}, STAT_EXP = {phys:1.0, mag:1.1}, LUCK_REF = 156;
 // 빌더 기본값(사용자가 스탯을 안 넣은 빌드 코드)은 실제 스탯이 아니므로 무시
 const isBuilderDefault = st => !st || (st.spd===249 && st.luck===150 && st.mp===512 && ((st.str===237&&st.int===162)||(st.str===162&&st.int===237)));
+/* 장비 속도 자동값: 딩 빌더 장비 시트로 대미지 최적 빌드를 찾았을 때 장비가 주는 속도(무기·장신구, 천명 80·255 · 속성 4종 측정 중앙값) */
+const GEAR_SPD_AUTO = {staff:20, sword:30, katana:30, ax:40, lance:30, bow:30, fist:40, hammer:30};
+const gearSpdOf = (pc, S) => (S && S.gearSpd!=null && S.gearSpd!=='') ? (+S.gearSpd||0) : (GEAR_SPD_AUTO[pc.weapon]||30);
 function charStats(pc, own, S){
   const t = own ? (+own.t||0) : 0;
   const b = own && own.build, bst = b && !isBuilderDefault(b.st) ? b.st : null;
   const wiki = S && S.useStats===false ? null : statsAt(pc.stats, pc.fateTbl, t);
   if(!wiki && !bst) return null;
   const nk = bst ? {pwr:+bst.str, int:+bst.int, spd:+bst.spd, lck:+bst.luck, mp:+bst.mp} : wiki;
-  const spdB = b && b.spdTot ? +b.spdTot : (nk.spd + (+(S&&S.gearSpd)||0));
+  const spdB = b && b.spdTot ? +b.spdTot : (nk.spd + gearSpdOf(pc, S));
   return {naked:nk, wiki, src: bst ? 'build' : 'wiki', spd: spdB, spdSrc: b && b.spdTot ? 'build' : (bst ? 'build-st' : 'wiki')};
 }
 
@@ -1633,6 +1636,6 @@ async function perCharBest(input, onProgress){
 const API = {ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
   explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
-  statsAt, charStats, STAT_ORDER, isBuilderDefault};
+  statsAt, charStats, STAT_ORDER, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);
