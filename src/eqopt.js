@@ -216,7 +216,7 @@ const kindFor = (s, wt) => kindOf(s.clsSel || clsOfWeapon(wt), s.kindBase || bas
 function statsOf(st, s, wt) {
   const s2 = Object.assign({}, s, { kind: kindFor(s, wt) });
   const b = buildInput(itemsOf(st, s2, wt, st.wc || {}), s2, wt).inp;
-  return { str: b.D7, int: b.D8, spd: b.D9, luck: b.D10, mp: b.D4 };
+  return { str: b.D7, int: b.D8, spd: b.D9, luck: b.D10, mp: b.D4, atk: b.D5, mag: b.D6 };
 }
 function evalState(st, s, wt) {
   const s2 = Object.assign({}, s, { kind: kindFor(s, wt) });

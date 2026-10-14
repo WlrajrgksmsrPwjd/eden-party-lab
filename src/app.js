@@ -706,7 +706,7 @@ async function runPlan(){
   renderResults(r, boss, any?enemy:null, P.mode);
 }
 
-function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e8) return (v/1e8).toFixed(2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
+function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e12) return (v/1e12).toFixed(2)+'조'; if(v>=1e8) return (v/1e8).toFixed(v>=1e10?0:v>=1e9?1:2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
 const MODE_KR={opener:'개전 속공',burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
 const RES = new Map(); // 카드 키 → 결과 (추천 세팅 패널용)
 function teamWarns(x, boss, enemy, ex){
@@ -1789,7 +1789,6 @@ function renderConsts(){
     <div class="crow"><span>속성 존 (같은 속성)</span>${z('zoneElem',0)}${z('zoneElem',1)}${z('zoneElem',2)}</div>
     <div class="crow"><span>공격종 존 (같은 종류)</span>${z('zoneWeap',0)}${z('zoneWeap',1)}${z('zoneWeap',2)}</div>
     <div class="crow"><span>상극 속성 / 다른 공격종</span><input type="number" step="0.05" id="cOpp" value="${S.zoneOppElem}"><input type="number" step="0.05" id="cOff" value="${S.zoneOffWeap}"><span></span></div>
-    <div class="crow"><span>스탯 환산 계수 (1타 상한 100억 기준)</span><input type="number" step="1000" min="1000" id="cCap" value="${S.statK}"><span></span><span></span></div>
     <div class="crow"><span>AF 행동 수</span><label class="checkrow" style="align-items:center" title="게이지(초당 10% 감소, 타격으로 충전)와 속도(249 기준 대기 시간)로 캐릭터별 행동 수를 계산"><input type="checkbox" id="cAfAuto" ${S.afAuto!==false?'checked':''}> 자동(게이지·속도)</label><label style="display:flex;gap:4px;align-items:center" title="자동을 끄면 모두 이 횟수">고정 <input type="number" step="1" min="1" max="15" id="cAf" value="${S.afActions}" style="width:56px"></label><label class="checkrow" style="align-items:center" title="지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣음"><input type="checkbox" id="cAfCycle" ${S.afCycle!==false?'checked':''}> 지속 딜에 AF 주기</label></div>
     <div class="crow"><span>AF 연출 시간(초) · 속도</span><input type="number" step="0.5" min="0.5" max="5" id="cAfAnim" value="${S.afAnim}"><label class="checkrow" style="align-items:center" title="빌드 코드가 없는 캐릭터의 속도를 249 이상으로 볼지"><input type="checkbox" id="cAfFast" ${S.afFastDefault?'checked':''}> 빌드 없는 캐릭터도 속도 249 이상</label><span></span></div>
     <div class="crow"><span>개전 게이지: AF 시작 % · SB 행동당 %</span><input type="number" step="10" min="0" max="100" id="cAfStart" value="${S.afStart}" title="전투 시작 AF 게이지 (이월 최대 50%). 뮬루스(ES)·이즈나·질퍼니(AS)+피탄은 조건이 맞으면 100%"><input type="number" step="0.5" min="0" max="10" id="cSbAct" value="${S.sbPerAct}" title="SB 게이지: 아군 행동(AF 중 포함) 1회당 %"><span></span></div>
@@ -1808,7 +1807,6 @@ function onConst(e){
   const t=e.target; const S=state.settings;
   if(t.dataset.arr){ const k=t.dataset.arr; S[k]=(S[k]||E.DEFAULT_SETTINGS[k]).slice(); S[k][+t.dataset.i]=+t.value||0; }
   else if(t.id==='cOpp') S.zoneOppElem=+t.value; else if(t.id==='cOff') S.zoneOffWeap=+t.value;
-  else if(t.id==='cCap'){ S.statK=Math.max(1000,+t.value||22000); }
   else if(t.id==='cAf') S.afActions=Math.max(1,Math.min(15,+t.value||5));
   else if(t.id==='cAfCycle') S.afCycle=t.checked;
   else if(t.id==='cAfAuto') S.afAuto=t.checked;
