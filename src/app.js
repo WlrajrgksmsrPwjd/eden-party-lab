@@ -763,7 +763,7 @@ function timelineHtml(x, o){
     ${cell('1턴', tl.t1, `보장 ${fmtN(tl.t1g)} ~ 속도 맞춤 ${fmtN(tl.t1u)}<br>${esc(pTxt)}`, o.hot==='o')}
     ${cell('2턴', tl.t2, '버프 깔린 평타 턴')}
     ${cell('SB 턴', ev.sbTurn, ev.hasSB?'게이지 차면':'성도 없음')}
-    ${cell('AF 1회', ev.af, `콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
+    ${cell('AF 1회', ev.af, `${ev.afA&&ev.afA.auto?`행동 ${ev.afA.n.join('·')}회 · 약 ${ev.afA.dur.toFixed(0)}초 · `:''}콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
   </div>`;
 }
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
@@ -1145,6 +1145,8 @@ function setupHtml(x, i){
     if((mu && mu.front||[]).includes(i)) G.push(`<li>이 캐릭터는 전열 서포터라 자기 공격 글래스터 대신 <b>잠재 연성한 P글래</b>를 달아 딜러에게 공유하는 쪽이 이득</li>`);
     if(c.manifestMax===0) G.push(`<li>현현 무기: 이 캐릭터는 없음</li>`);
     else G.push(`<li>${mark((+o.m||0)>=(c.manifestMax||1))} 현현 무기: ${c.manifestMax===2?'진현현까지 있음':c.manifestMax===1?'현현 있음':'현현 ×1.08 · 진현현 ×1.15'} <span class="hint">(현재 ${['없음','현현','진현현'][+o.m||0]})</span></li>`);
+    if(ev.afA && ev.afA.auto){ const fa=ev.afA.fast[i], kn=ev.afA.known&&ev.afA.known[i];
+      G.push(`<li>${mark(fa)} AF 중 행동 <b>${ev.afA.n[i]}회</b> (AF 약 ${ev.afA.dur.toFixed(0)}초) · 속도 ${fa?'249 이상':'249 미만'}${kn?' (빌드 코드 기준)':' (가정)'}${fa?'':' — 속도 249를 넘기면 AF 대기 시간이 1초씩 줄어 행동이 늘어날 수 있음 (속도 글래스터·배지)'}</li>`); }
     const sm = ev.sim;
     if(sm){ const mi=sm.mainN[i], H=sm.H;
       G.push(`<li>${mark(!sm.out[i])} MP: 주력기 ${c.mpMain!=null?c.mpMain:'?'} · 최대 약 ${sm.mpMax[i]} → ${H}턴 중 주력기 ${mi}번${sm.out[i]?`, ${sm.out[i]}턴째부터 부족 → MP 소비 감소 글래스터·MP 회복 지원·후열 교대`:' (여유)'}</li>`); }
@@ -1656,7 +1658,8 @@ function renderConsts(){
     <div class="crow"><span>공격종 존 (같은 종류)</span>${z('zoneWeap',0)}${z('zoneWeap',1)}${z('zoneWeap',2)}</div>
     <div class="crow"><span>상극 속성 / 다른 공격종</span><input type="number" step="0.05" id="cOpp" value="${S.zoneOppElem}"><input type="number" step="0.05" id="cOff" value="${S.zoneOffWeap}"><span></span></div>
     <div class="crow"><span>스탯 환산 계수 (1타 상한 100억 기준)</span><input type="number" step="1000" min="1000" id="cCap" value="${S.statK}"><span></span><span></span></div>
-    <div class="crow"><span>AF 중 1인 행동 수</span><input type="number" step="1" min="1" max="15" id="cAf" value="${S.afActions}"><label class="checkrow" style="align-items:center" title="지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣음"><input type="checkbox" id="cAfCycle" ${S.afCycle!==false?'checked':''}> 지속 딜에 AF 주기</label><span></span></div>
+    <div class="crow"><span>AF 행동 수</span><label class="checkrow" style="align-items:center" title="게이지(초당 10% 감소, 타격으로 충전)와 속도(249 기준 대기 시간)로 캐릭터별 행동 수를 계산"><input type="checkbox" id="cAfAuto" ${S.afAuto!==false?'checked':''}> 자동(게이지·속도)</label><label style="display:flex;gap:4px;align-items:center" title="자동을 끄면 모두 이 횟수">고정 <input type="number" step="1" min="1" max="15" id="cAf" value="${S.afActions}" style="width:56px"></label><label class="checkrow" style="align-items:center" title="지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣음"><input type="checkbox" id="cAfCycle" ${S.afCycle!==false?'checked':''}> 지속 딜에 AF 주기</label></div>
+    <div class="crow"><span>AF 연출 시간(초) · 속도</span><input type="number" step="0.5" min="0.5" max="5" id="cAfAnim" value="${S.afAnim}"><label class="checkrow" style="align-items:center" title="빌드 코드가 없는 캐릭터의 속도를 249 이상으로 볼지"><input type="checkbox" id="cAfFast" ${S.afFastDefault?'checked':''}> 빌드 없는 캐릭터도 속도 249 이상</label><span></span></div>
     <div class="crow"><span>일반 턴 MP·버프 시뮬레이션</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cSim" ${S.simOn!==false?'checked':''}> 사용</label><span></span><span></span></div>
     <div class="crow"><span>시뮬레이션 턴 수</span><input type="number" step="1" min="2" max="20" id="cSimT" value="${S.simTurns}"><span></span><span></span></div>
     <div class="crow"><span>기본 MP 최대치 (천명치로 +120까지)</span><input type="number" step="10" min="200" max="900" id="cMp" value="${S.mpBase}"><span></span><span></span></div>
@@ -1672,6 +1675,9 @@ function onConst(e){
   else if(t.id==='cCap'){ S.statK=Math.max(1000,+t.value||22000); }
   else if(t.id==='cAf') S.afActions=Math.max(1,Math.min(15,+t.value||5));
   else if(t.id==='cAfCycle') S.afCycle=t.checked;
+  else if(t.id==='cAfAuto') S.afAuto=t.checked;
+  else if(t.id==='cAfFast') S.afFastDefault=t.checked;
+  else if(t.id==='cAfAnim') S.afAnim=Math.max(0.5,Math.min(5,+t.value||2));
   else if(t.id==='cSim') S.simOn=t.checked;
   else if(t.id==='cMule') S.muleOn=t.checked;
   else if(t.id==='cMuleAuto') S.muleAuto=t.checked;
@@ -1830,7 +1836,7 @@ function bind(){
   $('#bossList').addEventListener('click',e=>{ const b=e.target.closest('[data-boss]'); if(!b) return; curBoss=b.dataset.boss; renderBossList(); });
   $('#bossDetail').addEventListener('click',e=>{ if(e.target.id==='bossGo'){ applyBoss(curBoss); showTab('plan'); runPlan(); } });
   $('#constBox').addEventListener('change',onConst);
-  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','muleSlots','mulePct'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
+  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','muleSlots','mulePct'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
 function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
 

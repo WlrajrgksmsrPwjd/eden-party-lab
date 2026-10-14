@@ -735,6 +735,7 @@ a.lnk{display:inline-flex; align-items:center}
           <li><b>독·페인</b>: 독·페인 글래스터(대상이 그 상태일 때 ×1.3)는 실제로 독·페인을 거는 캐릭터가 있을 때만 켭니다. 독과 페인을 따로 보고, 주력기·패시브로 매번 거는지·지속 턴에 따라 평상 턴 가동률을 둡니다(160명 확인). 글래스터에 잠재 광석을 달면 그 캐릭터가 공격으로 직접 걸 수 있어서, 부여자가 없는 조합에는 어느 캐릭터에 달면 좋을지 알려 줍니다.</li>
           <li><b>P글래 셔틀</b>: P글래는 종류마다 계산 그룹이 다릅니다. 속성·HP 계는 공격 글래스터 속성 그룹과 더해지고, 'ZONE 전개 중'(+25%)·'○○진'(+15%)은 따로 곱해져서 존이 깔리면 섞는 쪽이 이득입니다. 칸 배분은 받는 캐릭터마다 가장 이득인 조합으로, 같은 이름 존 P글래는 셔틀 1명당 1개로 봅니다. 자동 가정에서는 후열 셔틀(인원 서약 반영)과 같은 무기 퍼스널리티의 전열 서포터(딜러 아님)도 셔틀로 셉니다.</li>
           <li><b>속성 변환</b>: 네코코(AS)처럼 아군 전체 공격 속성을 존 속성으로 바꾸는 서포터, 에니(음), 틸릴(ES)(SB 때 명 아군 결정), 자기 속성을 존·약점·옆 아군에 맞추는 캐릭터를 반영합니다.</li>
+          <li><b>AF 행동 수</b>: AF는 실시간으로 게이지가 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찹니다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%). 캐릭터는 행동 → 연출(약 2초) → 대기 순으로 움직이고, 대기는 행동할수록 늘어납니다(속도 249 이상 1·2·3…초, 미만 2·3·4…초). 게이지가 다 떨어질 때까지 각자 몇 번 행동하는지 세서 AF 화력과 콤보에 씁니다. 속도는 빌드 코드 값, 없으면 249 미만으로 봅니다(계산 방식 탭에서 바꿀 수 있음). 위키 기준이며 연출 시간은 가정값입니다.</li>
           <li><b>천명치 보너스</b>: 캐릭터별 천명치(天冥) 단계 보너스 표(5·15·30·50·75·105·140·175·215·255)에서 주력 스탯 상승분을 화력에 반영합니다(주 스탯 실효 약 500 기준). 캐릭터 기본 스탯은 공개 자료가 없어 넣지 못했습니다.</li>
           <li><b>요격</b>: 피격 시 반격하는 캐릭터(23명)는 적 1체당 턴 1.5회 공격 중 맞는 비율(스스로 도발 90%, 다른 아군이 도발 10%, 아니면 30%)만큼 반격 화력을 일반 턴에 더합니다.</li>
           <li><b>버디</b>: 보유 탭에서 체크한 버디 중 메인(오토 스킬·오라·폭딜 턴 차지 스킬)과 서브(오라)를 넣습니다. 자동이면 메인은 회복형(테트라 등), 서브는 오라형(질야·모케 등). 약점 조건 오라는 상대 약점을 모르면 반반, 환경 한정 오라는 넣지 않습니다. 결과 카드에 화력 위주 메인 버디를 따로 추천합니다.</li>
@@ -1418,7 +1419,10 @@ const DEFAULT_SETTINGS = {
   zoneOppElem: 0.5, zoneOffWeap: 0.7,
   enemyCount: 1,
   diverse: true,
-  afActions: 5,
+  afActions: 5,      // afAuto를 끄면 쓰는 고정 행동 수
+  afAuto: true,      // AF 행동 수를 게이지·속도로 계산 (위키 기준)
+  afAnim: 2,         // AF 중 스킬 연출 시간(초) 가정
+  afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
   simOn: true,       // 일반 턴을 MP·버프 지속 턴 시뮬레이션으로 계산
   simTurns: 6,       // 시뮬레이션 턴 수 (보스 한 구간)
   mpBase: 450,       // 기본 MP 최대치 (천명치로 최대 +120)
@@ -2254,6 +2258,33 @@ function buildCtx(input, ownedAll){
     .map(o=>({id:o.pc.id, name:o.pc.name, pers:o.pc.pers, slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
   return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null};
 }
+/* ---------- AF 행동 수 (위키 기준) ----------
+   AF는 실시간: 게이지 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찬다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%).
+   캐릭터마다 행동 → 연출(약 2초) → 대기. 대기는 행동할수록 늘어남: 속도 249 이상 1·2·3…초, 미만 2·3·4…초.
+   게이지가 0이 될 때까지 각자 몇 번 행동하는지 센다. 속도는 빌드 코드 값, 없으면 249 미만으로 가정. */
+function afActionsOf(team, progs, cores, z, enemy, S){
+  const n = team.length;
+  if(S.afAuto===false){ const k=Math.max(1,+S.afActions||5); return {n:team.map(()=>k), dur:null, fast:team.map(()=>null), auto:false}; }
+  const anim = Math.max(0.5, +S.afAnim||2);
+  const fast = team.map((c,i)=>{ const s=progs[i]&&progs[i].gear&&progs[i].gear.spd; return s ? s>=249 : !!S.afFastDefault; });
+  const known = team.map((c,i)=>!!(progs[i]&&progs[i].gear&&progs[i].gear.spd));
+  const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
+    const zMatch = z && z.level>0 && ((z.kind==='elem' && z.types.includes(co.el)) || (z.kind==='weap' && z.types.includes(co.wt)) || z.kind==='all');
+    if(zMatch) return 7.5;
+    const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
+    return Math.min(30, co.totHits)*(weak?3.5:1.5); });
+  const next = team.map(()=>0), cnt = team.map(()=>0);
+  let g = 100, t = 0;
+  for(let step=0; step<200; step++){
+    let i=-1, tn=Infinity; for(let k=0;k<n;k++) if(cores[k] && next[k]<tn){ tn=next[k]; i=k; }
+    if(i<0) break;
+    const gAt = g - 10*(tn - t); if(gAt <= 0){ t += g/10; g = 0; break; }
+    g = Math.min(100, gAt + refill[i]); t = tn;
+    cnt[i]++; next[i] = tn + anim + (fast[i] ? cnt[i] : cnt[i]+1);
+  }
+  if(g>0) t += g/10;
+  return {n:cnt, dur:t, fast, known, auto:true};
+}
 /* ---------- 체인 어빌리티: 다른 아군의 행동에 반응하는 추격 ----------
    턴당 발동 수 = min(최대, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치 */
 function chainActP(m, i, on, cores, sit, sim){
@@ -2486,16 +2517,17 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   }
   const afTurns = Math.max(2, Math.min(20, 100/Math.max(1, afGain)));
   const afCores = (sdep || simUse) ? coresFor('af', nz, false) : res.normal.cores;
+  const afA = afActionsOf(team, progs, afCores, nz, enemy, S);
   let gain=0;
-  afCores.forEach(co=>{ if(co) gain += S.afActions*co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); });
+  afCores.forEach((co,i)=>{ if(co) gain += afA.n[i]*co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); });
   const avgCombo = Math.min(0.75 + 0.5*gain, 4);
-  let af = sumZ(afCores, nz, avgCombo).v*S.afActions;
+  let af = sumZ(afCores, nz, avgCombo, afA.n).v;
   let afChain = null;
   if(hasChain){ const FXa = anyR ? buildBF(team,progs,'af',nz,A,posSets,null) : null; afChain = chainCalc(team, progs, A, enemy, S, 'af', cx, FXa, nz, afCores, null, cap, avgCombo, fw); if(afChain) af += afChain.total; }
   const sbTurn = res.sb.total;
   const surv = survival(team, progs, A.bud);
   const sustainAF = sustain + (S.afCycle!==false ? af/afTurns : 0); // 지속 딜: 평상 턴 + AF를 주기마다 한 번
-  const out = {sbTurn, af, afChain, sustain: sustainAF, sustainNoAF: sustain, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
+  const out = {sbTurn, af, afChain, afA, sustain: sustainAF, sustainNoAF: sustain, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A, posSets, sim, mule:A.mule};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; out.opener = tl.t1 + 0.5*tl.t2; }
   return out;
@@ -3666,7 +3698,7 @@ function timelineHtml(x, o){
     ${cell('1턴', tl.t1, `보장 ${fmtN(tl.t1g)} ~ 속도 맞춤 ${fmtN(tl.t1u)}<br>${esc(pTxt)}`, o.hot==='o')}
     ${cell('2턴', tl.t2, '버프 깔린 평타 턴')}
     ${cell('SB 턴', ev.sbTurn, ev.hasSB?'게이지 차면':'성도 없음')}
-    ${cell('AF 1회', ev.af, `콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
+    ${cell('AF 1회', ev.af, `${ev.afA&&ev.afA.auto?`행동 ${ev.afA.n.join('·')}회 · 약 ${ev.afA.dur.toFixed(0)}초 · `:''}콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
   </div>`;
 }
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
@@ -4048,6 +4080,8 @@ function setupHtml(x, i){
     if((mu && mu.front||[]).includes(i)) G.push(`<li>이 캐릭터는 전열 서포터라 자기 공격 글래스터 대신 <b>잠재 연성한 P글래</b>를 달아 딜러에게 공유하는 쪽이 이득</li>`);
     if(c.manifestMax===0) G.push(`<li>현현 무기: 이 캐릭터는 없음</li>`);
     else G.push(`<li>${mark((+o.m||0)>=(c.manifestMax||1))} 현현 무기: ${c.manifestMax===2?'진현현까지 있음':c.manifestMax===1?'현현 있음':'현현 ×1.08 · 진현현 ×1.15'} <span class="hint">(현재 ${['없음','현현','진현현'][+o.m||0]})</span></li>`);
+    if(ev.afA && ev.afA.auto){ const fa=ev.afA.fast[i], kn=ev.afA.known&&ev.afA.known[i];
+      G.push(`<li>${mark(fa)} AF 중 행동 <b>${ev.afA.n[i]}회</b> (AF 약 ${ev.afA.dur.toFixed(0)}초) · 속도 ${fa?'249 이상':'249 미만'}${kn?' (빌드 코드 기준)':' (가정)'}${fa?'':' — 속도 249를 넘기면 AF 대기 시간이 1초씩 줄어 행동이 늘어날 수 있음 (속도 글래스터·배지)'}</li>`); }
     const sm = ev.sim;
     if(sm){ const mi=sm.mainN[i], H=sm.H;
       G.push(`<li>${mark(!sm.out[i])} MP: 주력기 ${c.mpMain!=null?c.mpMain:'?'} · 최대 약 ${sm.mpMax[i]} → ${H}턴 중 주력기 ${mi}번${sm.out[i]?`, ${sm.out[i]}턴째부터 부족 → MP 소비 감소 글래스터·MP 회복 지원·후열 교대`:' (여유)'}</li>`); }
@@ -4559,7 +4593,8 @@ function renderConsts(){
     <div class="crow"><span>공격종 존 (같은 종류)</span>${z('zoneWeap',0)}${z('zoneWeap',1)}${z('zoneWeap',2)}</div>
     <div class="crow"><span>상극 속성 / 다른 공격종</span><input type="number" step="0.05" id="cOpp" value="${S.zoneOppElem}"><input type="number" step="0.05" id="cOff" value="${S.zoneOffWeap}"><span></span></div>
     <div class="crow"><span>스탯 환산 계수 (1타 상한 100억 기준)</span><input type="number" step="1000" min="1000" id="cCap" value="${S.statK}"><span></span><span></span></div>
-    <div class="crow"><span>AF 중 1인 행동 수</span><input type="number" step="1" min="1" max="15" id="cAf" value="${S.afActions}"><label class="checkrow" style="align-items:center" title="지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣음"><input type="checkbox" id="cAfCycle" ${S.afCycle!==false?'checked':''}> 지속 딜에 AF 주기</label><span></span></div>
+    <div class="crow"><span>AF 행동 수</span><label class="checkrow" style="align-items:center" title="게이지(초당 10% 감소, 타격으로 충전)와 속도(249 기준 대기 시간)로 캐릭터별 행동 수를 계산"><input type="checkbox" id="cAfAuto" ${S.afAuto!==false?'checked':''}> 자동(게이지·속도)</label><label style="display:flex;gap:4px;align-items:center" title="자동을 끄면 모두 이 횟수">고정 <input type="number" step="1" min="1" max="15" id="cAf" value="${S.afActions}" style="width:56px"></label><label class="checkrow" style="align-items:center" title="지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣음"><input type="checkbox" id="cAfCycle" ${S.afCycle!==false?'checked':''}> 지속 딜에 AF 주기</label></div>
+    <div class="crow"><span>AF 연출 시간(초) · 속도</span><input type="number" step="0.5" min="0.5" max="5" id="cAfAnim" value="${S.afAnim}"><label class="checkrow" style="align-items:center" title="빌드 코드가 없는 캐릭터의 속도를 249 이상으로 볼지"><input type="checkbox" id="cAfFast" ${S.afFastDefault?'checked':''}> 빌드 없는 캐릭터도 속도 249 이상</label><span></span></div>
     <div class="crow"><span>일반 턴 MP·버프 시뮬레이션</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cSim" ${S.simOn!==false?'checked':''}> 사용</label><span></span><span></span></div>
     <div class="crow"><span>시뮬레이션 턴 수</span><input type="number" step="1" min="2" max="20" id="cSimT" value="${S.simTurns}"><span></span><span></span></div>
     <div class="crow"><span>기본 MP 최대치 (천명치로 +120까지)</span><input type="number" step="10" min="200" max="900" id="cMp" value="${S.mpBase}"><span></span><span></span></div>
@@ -4575,6 +4610,9 @@ function onConst(e){
   else if(t.id==='cCap'){ S.statK=Math.max(1000,+t.value||22000); }
   else if(t.id==='cAf') S.afActions=Math.max(1,Math.min(15,+t.value||5));
   else if(t.id==='cAfCycle') S.afCycle=t.checked;
+  else if(t.id==='cAfAuto') S.afAuto=t.checked;
+  else if(t.id==='cAfFast') S.afFastDefault=t.checked;
+  else if(t.id==='cAfAnim') S.afAnim=Math.max(0.5,Math.min(5,+t.value||2));
   else if(t.id==='cSim') S.simOn=t.checked;
   else if(t.id==='cMule') S.muleOn=t.checked;
   else if(t.id==='cMuleAuto') S.muleAuto=t.checked;
@@ -4733,7 +4771,7 @@ function bind(){
   $('#bossList').addEventListener('click',e=>{ const b=e.target.closest('[data-boss]'); if(!b) return; curBoss=b.dataset.boss; renderBossList(); });
   $('#bossDetail').addEventListener('click',e=>{ if(e.target.id==='bossGo'){ applyBoss(curBoss); showTab('plan'); runPlan(); } });
   $('#constBox').addEventListener('change',onConst);
-  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','muleSlots','mulePct'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
+  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','muleSlots','mulePct'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
 function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
 

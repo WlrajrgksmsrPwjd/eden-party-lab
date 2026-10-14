@@ -35,7 +35,10 @@ const DEFAULT_SETTINGS = {
   zoneOppElem: 0.5, zoneOffWeap: 0.7,
   enemyCount: 1,
   diverse: true,
-  afActions: 5,
+  afActions: 5,      // afAuto를 끄면 쓰는 고정 행동 수
+  afAuto: true,      // AF 행동 수를 게이지·속도로 계산 (위키 기준)
+  afAnim: 2,         // AF 중 스킬 연출 시간(초) 가정
+  afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
   simOn: true,       // 일반 턴을 MP·버프 지속 턴 시뮬레이션으로 계산
   simTurns: 6,       // 시뮬레이션 턴 수 (보스 한 구간)
   mpBase: 450,       // 기본 MP 최대치 (천명치로 최대 +120)
@@ -871,6 +874,33 @@ function buildCtx(input, ownedAll){
     .map(o=>({id:o.pc.id, name:o.pc.name, pers:o.pc.pers, slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
   return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null};
 }
+/* ---------- AF 행동 수 (위키 기준) ----------
+   AF는 실시간: 게이지 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찬다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%).
+   캐릭터마다 행동 → 연출(약 2초) → 대기. 대기는 행동할수록 늘어남: 속도 249 이상 1·2·3…초, 미만 2·3·4…초.
+   게이지가 0이 될 때까지 각자 몇 번 행동하는지 센다. 속도는 빌드 코드 값, 없으면 249 미만으로 가정. */
+function afActionsOf(team, progs, cores, z, enemy, S){
+  const n = team.length;
+  if(S.afAuto===false){ const k=Math.max(1,+S.afActions||5); return {n:team.map(()=>k), dur:null, fast:team.map(()=>null), auto:false}; }
+  const anim = Math.max(0.5, +S.afAnim||2);
+  const fast = team.map((c,i)=>{ const s=progs[i]&&progs[i].gear&&progs[i].gear.spd; return s ? s>=249 : !!S.afFastDefault; });
+  const known = team.map((c,i)=>!!(progs[i]&&progs[i].gear&&progs[i].gear.spd));
+  const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
+    const zMatch = z && z.level>0 && ((z.kind==='elem' && z.types.includes(co.el)) || (z.kind==='weap' && z.types.includes(co.wt)) || z.kind==='all');
+    if(zMatch) return 7.5;
+    const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
+    return Math.min(30, co.totHits)*(weak?3.5:1.5); });
+  const next = team.map(()=>0), cnt = team.map(()=>0);
+  let g = 100, t = 0;
+  for(let step=0; step<200; step++){
+    let i=-1, tn=Infinity; for(let k=0;k<n;k++) if(cores[k] && next[k]<tn){ tn=next[k]; i=k; }
+    if(i<0) break;
+    const gAt = g - 10*(tn - t); if(gAt <= 0){ t += g/10; g = 0; break; }
+    g = Math.min(100, gAt + refill[i]); t = tn;
+    cnt[i]++; next[i] = tn + anim + (fast[i] ? cnt[i] : cnt[i]+1);
+  }
+  if(g>0) t += g/10;
+  return {n:cnt, dur:t, fast, known, auto:true};
+}
 /* ---------- 체인 어빌리티: 다른 아군의 행동에 반응하는 추격 ----------
    턴당 발동 수 = min(최대, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치 */
 function chainActP(m, i, on, cores, sit, sim){
@@ -1103,16 +1133,17 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   }
   const afTurns = Math.max(2, Math.min(20, 100/Math.max(1, afGain)));
   const afCores = (sdep || simUse) ? coresFor('af', nz, false) : res.normal.cores;
+  const afA = afActionsOf(team, progs, afCores, nz, enemy, S);
   let gain=0;
-  afCores.forEach(co=>{ if(co) gain += S.afActions*co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); });
+  afCores.forEach((co,i)=>{ if(co) gain += afA.n[i]*co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); });
   const avgCombo = Math.min(0.75 + 0.5*gain, 4);
-  let af = sumZ(afCores, nz, avgCombo).v*S.afActions;
+  let af = sumZ(afCores, nz, avgCombo, afA.n).v;
   let afChain = null;
   if(hasChain){ const FXa = anyR ? buildBF(team,progs,'af',nz,A,posSets,null) : null; afChain = chainCalc(team, progs, A, enemy, S, 'af', cx, FXa, nz, afCores, null, cap, avgCombo, fw); if(afChain) af += afChain.total; }
   const sbTurn = res.sb.total;
   const surv = survival(team, progs, A.bud);
   const sustainAF = sustain + (S.afCycle!==false ? af/afTurns : 0); // 지속 딜: 평상 턴 + AF를 주기마다 한 번
-  const out = {sbTurn, af, afChain, sustain: sustainAF, sustainNoAF: sustain, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
+  const out = {sbTurn, af, afChain, afA, sustain: sustainAF, sustainNoAF: sustain, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A, posSets, sim, mule:A.mule};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; out.opener = tl.t1 + 0.5*tl.t2; }
   return out;
