@@ -42,6 +42,7 @@ const DEFAULT_SETTINGS = {
   mpCostMul: 1,      // 스킬 소비 MP 배율 (MP 소비 감소 글래스터 등이면 0.85·0.75)
   muleOn: true,      // 후열 글래스터 셔틀: 잠재 광석 단 퍼스널리티 글래스터(P글래)를 후열이 들고 전열에 공유
   muleAuto: true,    // 후열 고정이 없으면 주딜과 같은 무기 퍼스널리티 셔틀 2명을 가정
+  muleFront: true,   // 자동 가정일 때 같은 퍼스널리티의 전열 서포터(딜러 아님)도 P글래 셔틀로
   muleSlots: 3,      // 셔틀 1명이 공유하는 칸 수 (천명치 200 이상 셔틀은 4칸)
   mulePct: 0.3       // 공유 1칸당 대미지 (속성 글래스터와 같은 가산 그룹)
 };
@@ -357,8 +358,13 @@ function prepChar(c){
     breakT: (d.break||'').toLowerCase(),
     weakExpose: (d.weak_expose||'').split(/[(\s]/)[0],
     pain: !!d.pain_poison,
+    // 독·페인 부여: 평상 턴 가동률(주력기·패시브로 매번 걸면 1, 따로 걸면 지속 턴에 따라)
+    inflict: (()=>{ const x=c.inflict; if(!x){ return d.pain_poison ? {poison:0.6, pain:0.6, st:false} : null; }
+      const u = x.on_main ? 1 : (x.turns>=99 ? 0.95 : x.turns>=3 ? 0.85 : x.turns>=1 ? 0.6 : 0.75);
+      return {poison: x.poison?u:0, pain: x.pain?u:0, st: x.target==='st'}; })(),
     selfDamage: (c.tags||[]).includes('self_damage'),
     chain: Array.isArray(c.chain) && c.chain.some(e=>e&&e.atk) ? c.chain.filter(e=>e&&e.atk) : null,
+    echange: c.echange || null,
     mzone: (()=>{ const L=[]; for(const sk of [c.main, c.sb]) if(sk && sk.mcond) for(const cd of [].concat(sk.mcond.need||[], ...((sk.mcond.steps||[]).map(s=>s[1]||[])))) if(cd && cd.zone) L.push(cd); return L.length?L:null; })()
   };
 }
@@ -507,6 +513,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let el = sk.element||c.elem; const kind = sk.kind==='mag'?'mag':'phys';
   const swc = ELEM_SWITCH[c.id];
   if(swc && (el===swc.yes || el===swc.no)) el = reqMet(swc.need, team, c) ? swc.yes : swc.no;
+  if(A.echg) el = echgElem(A.echg, team, idx, el, situation, zone, enemy);
   const wt = sk.weapon_type || (kind==='mag'?'magic':c.wt);
   const tgt = sk.target==='st'?'st':'aoe';
   const key = tgt+'_'+kind+'_'+(el==='none'?'no':'el');
@@ -626,12 +633,16 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   if(xh) dmg *= hits/Math.max(1,hits-1);
 
   // 장비: 공격 글래스터 (속성/HP계 가산 +30%, 페인·독 곱연산 ×1.3)
-  const gk = A.painAny?'_gq1':'_gq0';
-  let gq = pr[gk] || (pr[gk] = grastaFactor(pr, A.painAny));
-  const share = A.mule ? A.mule.k[idx] : 0;
-  if(share>0){ // 후열 셔틀이 공유하는 P글래: 공격 글래스터 가산 그룹에 더한다
-    const base = 1 + 0.3*(gq.e||0);
-    gq = Object.assign({}, gq, {f: gq.f*(base + (S.mulePct||0.3)*share)/base, share});
+  const inf = A.inf || (A.painAny ? {poison:1, pain:1} : {poison:0, pain:0});
+  const gk = '_gq'+Math.round(inf.poison*20)+'_'+Math.round(inf.pain*20);
+  let gq = pr[gk] || (pr[gk] = grastaFactor(pr, inf));
+  const share = A.mule ? A.mule.k[idx] : 0, sd = A.mule && A.mule.kd ? A.mule.kd[idx] : null;
+  if(share>0 || sd){ // 셔틀이 공유하는 P글래
+    const base = 1 + 0.3*(gq.e||0), zOn = !!(zone && zone.level>0);
+    let f, al;
+    if(sd){ f = (base + sd.e/100)/base * (zOn ? (1+sd.z/100)*(1+sd.t/100) : 1); al={e:sd.e, z:zOn?sd.z:0, t:zOn?sd.t:0, pct:true}; }
+    else { al = shareAlloc(share, base, S.mulePct||0.3, zOn, (A.mule.mules||[]).length + (A.mule.front||[]).length); f = al.f; }
+    gq = Object.assign({}, gq, {f: gq.f*f, share, alloc:al});
   }
   dmg *= gq.f * pr.f;
   if(pr.gear) dmg *= pr.gear.q; // 빌드 코드: 장비 완성도
@@ -668,7 +679,7 @@ function condP(cd, sit, team, c, A, zone, enemy, el){
   if(cd.mp) return 0.8;
   if(cd.af!=null) return (sit==='af') === !!cd.af ? 1 : 0;
   if(cd.enemy){ const e=cd.enemy;
-    if(e==='poison'||e==='pain') return A.painAny ? 1 : 0;
+    if(e==='poison'||e==='pain'){ const f=A.inf; if(!f) return A.painAny?1:0; return e==='poison' ? f.poison : Math.max(f.pain, f.poison); } // 'pain'은 '독/페인 중 하나'로 쓰인 경우가 있음
     if(e==='weak') return enemy ? (enemyRel(enemy, el)==='weak' || A.weakAdd.includes(el) ? 1 : 0) : 0.4;
     if(e==='break') return A.breaks.length ? 1 : 0.3;
     return 0.8; }
@@ -685,23 +696,29 @@ function condMult(sk, mc, sit, team, c, progs, idx, A, zone, enemy, el){
   e += (top-prev)*P(mc.need);
   return Math.max(0.1, e);
 }
-function grastaFactor(pr, teamPain){
+/* 공격 글래스터: 속성계 +30%(가산), 독·페인계 ×1.3(대상이 그 상태일 때, 곱연산).
+   inf: 이 조합의 독·페인 가동률 {poison, pain} (true/false도 받음). 잠재 광석을 달면 본인이 직접 부여(가동률 0.9) */
+function grastaFactor(pr, inf){
   const gl = pr.gl||DEFAULT_SETTINGS.grastaDefault, n = pr.slots||3;
-  const painOK = !!(gl.ore || teamPain);
-  if(gl.mode==='none') return {f:1,e:0,pa:0,po:0,painOK,n};
+  if(inf===true) inf={poison:1, pain:1}; else if(!inf) inf={poison:0, pain:0};
+  let upo = +inf.poison||0, upa = +inf.pain||0;
+  if(gl.ore){ upo=Math.max(upo,0.9); upa=Math.max(upa,0.9); }
+  const painOK = upo>0 || upa>0;
+  const mPo = 1+0.3*upo, mPa = 1+0.3*upa;
+  if(gl.mode==='none') return {f:1,e:0,pa:0,po:0,painOK,n,upo,upa};
   if(gl.mode==='auto'){
     let best={f:0};
-    for(let k=0;k<=n;k++){
-      const f=(painOK?Math.pow(1.3,k):1)*(1+0.3*(n-k));
-      if(f>best.f+1e-9) best={f,e:n-k,pa:Math.ceil(k/2),po:Math.floor(k/2)};
+    for(let pa=0;pa<=n;pa++) for(let po=0;po+pa<=n;po++){
+      const e=n-pa-po, f=(1+0.3*e)*Math.pow(mPa,pa)*Math.pow(mPo,po);
+      if(f>best.f+1e-9) best={f,e,pa,po};
     }
-    return Object.assign(best,{painOK,n,auto:true});
+    return Object.assign(best,{painOK,n,auto:true,upo,upa});
   }
   let e=Math.max(0,+gl.e||0), pa=Math.max(0,+gl.pa||0), po=Math.max(0,+gl.po||0);
   let over = e+pa+po-n;
   while(over>0){ if(po>0) po--; else if(pa>0) pa--; else e--; over--; }
-  const f=(1+0.3*e)*(painOK?Math.pow(1.3,pa+po):1);
-  return {f,e,pa,po,painOK,n};
+  const f=(1+0.3*e)*Math.pow(mPa,pa)*Math.pow(mPo,po);
+  return {f,e,pa,po,painOK,n,upo,upa};
 }
 
 function applyZoneCap(core, z, S, cap, combo){
@@ -764,31 +781,65 @@ function simTeam(team, progs, S){
 
 /* ---------- 팀 평가 ---------- */
 /* 후열 글래스터 셔틀: 공유 P글래 칸 수 (전열 캐릭터별) */
-function muleShare(team, S, ctx){
+/* 후열(·전열 서포터) 글래스터 셔틀이 공유하는 P글래.
+   P글래 종류별로 계산기 그룹이 다르다: 속성·HP 계(공격 글래스터 속성 그룹과 가산), ZONE 전개 중(별도 곱), 특정 ZONE(별도 곱).
+   자동 가정: 주딜 무기 퍼스널리티의 후열 셔틀(인원 서약 반영) + 같은 퍼스널리티의 전열 서포터(딜러 아님)의 글래스터 칸.
+   칸 배분은 받는 캐릭터마다 가장 이득인 조합(존이 깔려 있으면 존 계 P글래를 섞는 쪽이 보통 이득). */
+function muleShare(team, S, ctx, progs){
   if(S.muleOn===false) return null;
-  let mules = ctx && ctx.mules && ctx.mules.length ? ctx.mules : null, auto=false, wp=null;
+  let mules = ctx && ctx.mules && ctx.mules.length ? ctx.mules : null, auto=false, wp=null, front=[];
   if(!mules){
     if(S.muleAuto===false) return null;
     let best=null; for(const c of team) if(!best || (c.pow||0)>(best.pow||0)) best=c;
     wp = best && WEAPON_PERS[best.weapon]; if(!wp) return null;
-    const sl = S.muleSlots||3, nb = ctx && ctx.maxBack!=null ? ctx.maxBack : 2; if(nb<=0) return null;
-    mules=[{pers:new Set([wp]), slots:sl},{pers:new Set([wp]), slots:sl}].slice(0,nb); auto=true;
+    const sl = S.muleSlots||3, nb = ctx && ctx.maxBack!=null ? ctx.maxBack : 2;
+    mules=[{pers:new Set([wp]), slots:sl},{pers:new Set([wp]), slots:sl}].slice(0,Math.max(0,nb)); auto=true;
+    if(S.muleFront!==false) team.forEach((c,j)=>{ if(!(c.roles||[]).includes('dps') && c.pers && c.pers.has(wp)) front.push(j); });
+    if(!mules.length && !front.length) return null;
   }
   const per = (S.mulePct||0.3)*100;
-  const k = team.map(c=>{ const w=WEAPON_PERS[c.weapon]; return mules.reduce((a,m)=>a+(m.shares ? shareSlots(m.shares, c, per) : (m.pers.has(w)?m.slots:0)),0); });
-  return {k, auto, wp, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
+  const fsl = j => (progs && progs[j] && progs[j].slots) || 3;
+  const kd = team.map(()=>null);
+  const k = team.map((c,i)=>{
+    const w=WEAPON_PERS[c.weapon];
+    let n=0;
+    for(const m of mules){
+      if(m.shares){ const d=shareSlots(m.shares, c); kd[i]=kd[i]||{e:0,z:0,t:0}; kd[i].e+=d.e; kd[i].z+=d.z; kd[i].t+=d.t; n += d.e/per; }
+      else if(m.pers.has(w)) n += m.slots;
+    }
+    if(auto && c.pers && c.pers.has(wp)) for(const j of front) if(j!==i) n += fsl(j);
+    return n;
+  });
+  return {k, kd, auto, wp, front, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
 }
-/* 빌드 코드의 P글래 공유 효과 → 받는 캐릭터 기준 '칸' 환산 (속성 공격 +30% = 1칸) */
+/* 빌드 코드의 P글래 공유 효과 → 받는 캐릭터 기준 % (e: 속성·HP 그룹, z: ZONE 전개 중, t: 특정 ZONE) */
 const ELEM_B = {fire:'불',water:'물',earth:'땅',wind:'바람',thunder:'번개',shade:'그림자',crystal:'결정'};
-function shareSlots(shares, c, per){
+function shareSlots(shares, c){
   const wk = WEAPON_KR[c.weapon], el = (c.main&&c.main.element)||c.elem||'none';
-  let v = 0;
+  const o={e:0,z:0,t:0};
   for(const p of shares){
     if(p.wt && p.wt!==wk) continue;
-    if(p.k==='elem'){ const ok = p.e==='all' ? el!=='none' : p.e==='none' ? el==='none' : p.e===ELEM_B[el]; if(ok) v += +p.v||0; }
-    else if(p.k==='hp') v += +p.v||0; // HP 최대 조건: 개전·평상 대부분 충족
+    if(p.k==='elem'){ const ok = p.e==='all' ? el!=='none' : p.e==='none' ? el==='none' : p.e===ELEM_B[el]; if(ok) o.e += +p.v||0; }
+    else if(p.k==='hp') o.e += +p.v||0; // HP 최대·저하 조건: 대부분 충족, 속성 그룹과 가산
+    else if(p.k==='zone') o.z += +p.v||0;
+    else if(p.k==='zonet') o.t += +p.v||0;
   }
-  return v/per;
+  return o;
+}
+/* 셔틀 칸 배분: 속성(가산) · ZONE 전개 중(+25%, 별도 곱) · 특정 ZONE(+15%, 별도 곱) */
+const SHARE_Z = 0.25, SHARE_ZT = 0.15;
+const _SA = new Map();
+function shareAlloc(k, base, pct, zoneOn, carriers){
+  const key = k*1e6 + base*1e3 + pct*100 + (zoneOn?0.5:0) + (carriers||2)*1e-3;
+  let r = _SA.get(key); if(r) return r;
+  r = shareAlloc0(k, base, pct, zoneOn, carriers); if(_SA.size<5000) _SA.set(key, r); return r;
+}
+function shareAlloc0(k, base, pct, zoneOn, carriers){
+  const n = Math.max(0, Math.round(k)), cm = Math.max(1, carriers||2); // 같은 이름 P글래는 셔틀 1명당 1개로 가정
+  let best={f:(base+pct*k)/base, e:k, z:0, t:0};
+  if(!zoneOn || n<=0) return best;
+  for(let z=0;z<=Math.min(n,cm);z++) for(let tt=0;tt+z<=n && tt<=cm;tt++){ const e=n-z-tt; const f=(base+pct*e)/base*(1+SHARE_Z*z)*(1+SHARE_ZT*tt); if(f>best.f+1e-9) best={f,e,z,t:tt}; }
+  return best;
 }
 /* 계산 상황: 배리어 관통 필요 여부, 속성·타입 지정, 후열 고정 셔틀 */
 function buildCtx(input, ownedAll){
@@ -888,14 +939,48 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
   const t1 = g + Math.max(0, u-g)*p;
   return {t1, t1g:g, t1u:Math.max(g,u), t2, p, known:known===pairs && pairs>0, givers, z1:gz, actT1};
 }
+/* 속성 변환(변환자재): 아군 전체를 존 속성·특정 속성으로 바꾸는 서포터, 자기 속성을 존·약점·옆 아군에 맞추는 캐릭터 */
+function echgOf(team, progs){
+  const L=[]; team.forEach((c,i)=>{ const e=c.echange; if(!e) return; if(e.req && !reqMet(e.req, team, c)) return; L.push(Object.assign({i}, e)); });
+  return L.length ? L : null;
+}
+function echgElem(L, team, idx, el, sit, zone, enemy){
+  const zEl = zone && zone.kind==='elem' && zone.level>0 ? zone.types[0] : null;
+  const pick = (e, self)=>{
+    if(e.sb && sit!=='sb') return null;
+    if(e.zone && !(zEl===e.zone)) return null;
+    if(e.el==='zone') return zEl;
+    if(e.el==='weak'){ if(!enemy) return null; const w=ELEMS.find(x=>enemy[x]==='weak'); return w||null; }
+    if(e.el==='ally'){ if(!self) return null; const nb=team[idx+1]||team[idx-1]; return nb ? ((nb.persEl&&nb.persEl[0])||nb.elem) : null; }
+    return e.el;
+  };
+  for(const e of L){
+    if(e.to==='self'){ if(e.i!==idx) continue; const v=pick(e,true); if(v) return v; continue; }
+    if(e.to==='shadow' && team[idx].align!=='shadow') continue;
+    const v=pick(e,false); if(v) return v;
+  }
+  return el;
+}
+/* 이 조합의 독·페인 가동률: 부여 캐릭터 + 잠재 광석을 단 캐릭터(공격으로 직접 부여) */
+function inflictOf(team, progs, S){
+  const n = Math.max(1, S.enemyCount||1);
+  let po=0, pa=0; const by={poison:[], pain:[]};
+  team.forEach((c,i)=>{ const f=c.inflict; if(f){ const k = f.st && n>1 ? 0.6 : 1;
+      if(f.poison){ po=Math.max(po, f.poison*k); by.poison.push(i); } if(f.pain){ pa=Math.max(pa, f.pain*k); by.pain.push(i); } }
+    const gl = progs[i] && progs[i].gl; if(gl && gl.ore){ po=Math.max(po,0.9); pa=Math.max(pa,0.9); by.poison.push(i); by.pain.push(i); } });
+  return {poison:po, pain:pa, by};
+}
 function evalTeam(team, progs, enemy, S, cap, ctx){
   const A = teamAgg(team);
-  A.mule = muleShare(team, S, ctx);
+  A.inf = inflictOf(team, progs, S);
+  A.echg = echgOf(team, progs);
+  A.painAny = A.inf.poison>0 || A.inf.pain>0;
+  A.mule = muleShare(team, S, ctx, progs);
   const light = team.filter(c=>c.align==='light').length, shadow = team.length-light;
   const flux = light>shadow?'light':shadow>light?'shadow':'both';
   const hasSB = team.some((c,i)=>c.stellar && progs[i].sbOK);
   const cx = Object.assign({}, ctx, {flux});
-  const anyR = team.some(c=>c.rules), mz = team.some(c=>c.mzone), zdep = mz || (anyR && team.some(c=>c.rules&&c.rules.zdep)), sdep = anyR && team.some(c=>c.rules&&c.rules.sdep);
+  const anyR = team.some(c=>c.rules), ez = !!(A.echg && A.echg.some(e=>e.el==='zone'||e.zone)), mz = ez || team.some(c=>c.mzone), zdep = mz || (anyR && team.some(c=>c.rules&&c.rules.zdep)), sdep = anyR && team.some(c=>c.rules&&c.rules.sdep);
   const posSets = anyR && team.some(c=>c.rules&&c.rules.hasPos) ? computePos(team) : null;
   // 같은 상황에서 규칙 발동 상태가 같으면 계산을 재사용 (존 후보가 버프 조건을 바꾸지 않는 경우가 대부분)
   const memo = new Map();
@@ -905,7 +990,9 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     const upt = useSim && uptLow ? sim.upt : null;
     if(!zdep){ const FX = (anyR||upt) ? buildBF(team,progs,sit,z,A,posSets,upt) : null; return team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,sit,cx,FX,z)); }
     let key = (sit==='sb'?7:sit==='af'?13:3) + (upt?100:0);
-    if(mz){ let b=1; for(const c of team) if(c.mzone) for(const cd of c.mzone){ b = b*2 + (zoneMatch(cd.zone, z) && (!cd.zlv || (z&&z.level>=cd.zlv)) ? 1 : 0); } key = (key*131 + b) % 2147483629; } // 스킬 위력이 존에 따라 바뀌는 캐릭터
+    if(mz){ let b=1; for(const c of team) if(c.mzone) for(const cd of c.mzone){ b = b*2 + (zoneMatch(cd.zone, z) && (!cd.zlv || (z&&z.level>=cd.zlv)) ? 1 : 0); }
+      if(ez) b = b*17 + (z && z.kind==='elem' && z.level>0 ? ELEMS.indexOf(z.types[0])+2 : 1);
+      key = (key*131 + b) % 2147483629; } // 스킬 위력이 존에 따라 바뀌는 캐릭터
     for(let j=0;j<team.length;j++){ const R=team[j].rules; if(!R) continue;
       if(R.zel) key = (key*131 + (z&&z.kind==='elem'&&z.level>0 ? ELEMS.indexOf(z.types[0])+1+(z.types.length>1?40:0) : 0)) % 2147483629;
       for(const r of R.list) key = (key*1009 + Math.round(ruleAct(r,j,team,progs,sit,z,A)*1000)) % 2147483629; }
@@ -981,7 +1068,7 @@ function charFocusMatch(c, f){
 
 /* ---------- 결과 설명: 조건부 버프 적용 상태 + 추천 배치 ---------- */
 function explainTeam(team, progs, ev, S, ctx){
-  const A = teamAgg(team);
+  const A = ev.A || teamAgg(team);
   const posSets = ev.posSets || (team.some(c=>c.rules&&c.rules.hasPos) ? computePos(team) : null);
   const sbz = ev.sb.zone, sit = ev.sb.sit || 'sb';
   const FX = buildBF(team, progs, sit, sbz, A, posSets);
@@ -1150,13 +1237,13 @@ async function optimize(input, onProgress){
   let done=0, lastYield=Date.now();
   const recSet = new Set(recommendedIds);
   const it = need>0 ? combos(free.length, need) : [[]][Symbol.iterator]();
-  const seen = new Set();
+  const seen = new Map(); // 조합 키 → teams 인덱스
   for(const cmb of it){
     const idxs = lockIdx.concat(cmb.map(k=>free[k]));
     const team = idxs.map(i=>pool[i].pc), progs = idxs.map(i=>pool[i].prog);
     const ev = evalTeam(team, progs, enemy, S, cap, ctx);
     teams.push(idxs); raws.push(BR(ev), ev.sustain, ev.surv);
-    seen.add(idxs.map(i=>pool[i].pc.id).sort().join());
+    seen.set(idxs.map(i=>pool[i].pc.id).sort().join(), teams.length-1);
     done++;
     if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(Math.min(0.85, done/total*0.85)); await new Promise(r=>setTimeout(r,0)); }
   }
@@ -1179,8 +1266,8 @@ async function optimize(input, onProgress){
         const mem = lk.concat(cmb.map(k=>fr[k])).map(i=>fp[i]);
         const nMatch = mem.filter(o=>charFocusMatch(o.pc,F)).length; if(!nMatch) continue;
         const key = mem.map(o=>o.pc.id).sort().join();
-        if(seen.has(key)){ if(nMatch>=3){ const ti=teams.findIndex(tt=>tt.map(i=>pool[i].pc.id).sort().join()===key); if(ti>=0) (deckIdx[fi]=deckIdx[fi]||[]).push(ti); } continue; }
-        seen.add(key);
+        if(seen.has(key)){ if(nMatch>=3){ const ti=seen.get(key); if(ti>=0) (deckIdx[fi]=deckIdx[fi]||[]).push(ti); } continue; }
+        seen.set(key, teams.length);
         const team=mem.map(o=>o.pc), progs=mem.map(o=>o.prog);
         const ev = evalTeam(team, progs, enemy, S, cap, ctx);
         teams.push(mem.map(o=>posOf.get(o.pc.id))); raws.push(BR(ev), ev.sustain, ev.surv);
@@ -1211,7 +1298,7 @@ async function optimize(input, onProgress){
           for(const o of cand){
             const pi=posOf.get(o.pc.id); if(cur.includes(pi)) continue;
             const nt=cur.slice(); nt[k]=pi;
-            const key=nt.map(i=>pool[i].pc.id).sort().join(); if(seen.has(key)) continue; seen.add(key);
+            const key=nt.map(i=>pool[i].pc.id).sort().join(); if(seen.has(key)) continue; seen.set(key, teams.length);
             const tm=nt.map(i=>pool[i]); const ev=evalTeam(tm.map(x=>x.pc),tm.map(x=>x.prog),enemy,S,cap,ctx);
             teams.push(nt); raws.push(BR(ev), ev.sustain, ev.surv);
             const sc=scoreOf(BR(ev),ev.sustain,ev.surv); if(sc>curSc+1e-9 && (!best||sc>best.sc)) best={nt,sc};
@@ -1356,6 +1443,6 @@ async function perCharBest(input, onProgress){
 
 const API = {ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
-  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline};
+  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);

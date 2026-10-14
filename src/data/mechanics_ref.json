@@ -1,0 +1,1455 @@
+{
+ "meta": {
+  "researched": "2026-10-14",
+  "sources": [
+   "altema.jp (character pages, /anaden/lunatic)"
+  ],
+  "size_map": {
+   "小": "s",
+   "中": "m",
+   "大": "l",
+   "特大": "xl",
+   "極大": "xxl"
+  },
+  "notes_kr": [
+   "mult=null 은 altema 표기에 배율이 없다는 뜻(추측값 넣지 않음).",
+   "turns=0 은 '그 턴 종료 시까지(ターン終了時まで)'.",
+   "max_per_turn=null 은 페이지에 턴당 횟수 제한 표기가 없다는 뜻(기술문은 '피격 시 발동'이라 피격마다 발동으로 읽힘).",
+   "変幻自在는 대상의 공격 속성을 해당 속성으로 바꾸는 버프. altema 아르테나 해설: 変幻自在로 '属性バフやゾーンの恩恵を受けながら' 싸울 수 있다 → 바뀐 속성으로 ZONE·속성 공격 버프 매칭이 된다고 해석.",
+   "臨機応変은 무기종(공격종) 변경으로 속성 변경과 별개."
+  ]
+ },
+ "element_change": [
+  {
+   "id": "nekoko_as",
+   "name_jp": "ねここ(AS)",
+   "grants": "all",
+   "also_enemies": true,
+   "element": "zone",
+   "turns": 0,
+   "preemptive": true,
+   "skill": "霊恵虹変怪 (固有スキル 強化2, MP20)",
+   "condition": "属性ZONE展開時追加",
+   "quote": "先制で味方全体にターン終了時まで 腕力50%UP+知性50%UP+速度50%UP +全武器種装備者ダメージ50%UP+弱点時ダメージUP 【属性ZONE展開時追加】 天の味方に腕力/知性/速度/武器種バフ効果増加(1.5倍) +敵味方全体の攻撃属性を ターン終了時まで属性ZONEに応じた属性に変化",
+   "effect_kr": "선제. 속성 ZONE 전개 중이면 적·아군 전체의 공격 속성을 그 턴 종료까지 ZONE 속성으로 변경(변환자재 표기는 아님). 같은 스킬로 아군 전체 완력·지성·속도 50%, 전무기종 50%, 약점 대미지 UP(턴 종료까지). altema: '普段は相性が悪い属性キャラ同士を難なく編成できる'.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/970"
+  },
+  {
+   "id": "eni",
+   "name_jp": "エニ",
+   "grants": "all",
+   "element": "shade",
+   "turns": 0,
+   "preemptive": true,
+   "skill": "ワルプルギスの闇夜 (習得スキル サーマタージ★3, MP25)",
+   "condition": "刻陰陣展開時 (스킬 자체가 先制로 刻陰陣 전개)",
+   "quote": "先制で刻陰陣を展開する 【味方全体に以下の効果を付与する】 精神統一(5ターン) …刻陰陣展開時、ZONE覚醒を実行する +味方全体に以下の効果を付与する 変幻自在(陰)(ターン終了時まで)",
+   "effect_kr": "선제 刻陰陣 전개 → ZONE 각성 + 아군 전체 변환자재(음) 그 턴 종료까지. 아군 전체 정신통일 5턴, 血の誓約 없는 경우 자신 제외 전위에 血の誓約. 1턴째 파티 전원 음속성 공격 가능(매 턴 재사용 필요).",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1000"
+  },
+  {
+   "id": "tilril_es",
+   "name_jp": "チルリル(ES)",
+   "grants": "all_mei",
+   "element": "crystal",
+   "turns": 0,
+   "skill": "心の剣 (星導スキル)",
+   "condition": "ステラバースト時追加. 스킬 본체는 「剣持つ救世主」 상태에서만 발동",
+   "quote": "【ステラバースト時追加】 冥の味方に追加：ターン終了時まで変幻自在(晶)を付与する",
+   "effect_kr": "SB 시에만 冥(명) 아군에게 변환자재(정) 그 턴 종료까지. 1턴째 사용은 SB·상태 조건 때문에 사실상 어려움.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1061"
+  },
+  {
+   "id": "ryuze",
+   "name_jp": "リュゼ",
+   "grants": "all",
+   "element": "water",
+   "turns": null,
+   "skill": "リンクアビリティ (ドラグティア★4, 패시브)",
+   "condition": "水天陣展開時 + 前衛のアルカディアキャラ 4人以上",
+   "quote": "水天陣展開時、前衛のアルカディアキャラの数に応じて効果発生 … 4人以上：味方全体に変幻自在(水)を付与",
+   "effect_kr": "水天陣 중 전위 アルカディア 퍼스널리티 4명 이상이면 아군 전체 변환자재(수). 지속 표기 없음(조건 유지 중으로 추정). 본인 驟牙絶蜃・飛龍은 '四大属性ZONE展開時追加：展開されているZONEに応じて属性が変化'(자신 스킬만).",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1045"
+  },
+  {
+   "id": "xianhua_as",
+   "name_jp": "シェンファ(AS)",
+   "grants": "self+right_staff",
+   "element": "weakness?",
+   "turns": 3,
+   "skill": "インテグラル (固有スキル 強化2, MP65)",
+   "condition": "【追加効果】対象が弱点属性を持っていた場合",
+   "quote": "【追加効果】対象が弱点属性を持っていた場合、デバフ効果量増加(2倍)【自身と自身の前衛右枠の「杖」パーソナリティの味方に以下の効果を付与する】対応する属性の変幻自在+属性攻撃100%UP(3ターン)",
+   "effect_kr": "적 단체 마법 5히트(특대)+전속성내성 50%DOWN 3턴. 대상이 약점 속성을 가지면 자신과 전위 오른쪽 칸 '杖' 퍼스널리티 아군에게 '대응 속성'의 변환자재+그 속성 공격 100%UP 3턴. 대응 속성 = 대상 약점 속성으로 해석(페이지에 정의 없음).",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1224"
+  },
+  {
+   "id": "altena",
+   "name_jp": "アルテナ",
+   "grants": "self",
+   "element": "ally_right",
+   "turns": null,
+   "skill": "固有アビリティ (魔姫★5)",
+   "condition": "前衛で戦闘開始時",
+   "quote": "【前衛で戦闘開始時】 自身に右枠味方の属性に応じた変幻自在を付与",
+   "effect_kr": "전위 전투 시작 시 오른쪽 칸 아군 속성의 변환자재를 자신에게(지속 표기 없음, 사실상 상시). 精霊剣(MP53)은 변환자재 속성의 추가 공격. altema: 속성 버프·ZONE 혜택을 받으며 싸울 수 있음.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/763"
+  },
+  {
+   "id": "iwela_as",
+   "name_jp": "イウェラ(AS)",
+   "grants": "self",
+   "element": "ally_right",
+   "turns": "permanent",
+   "skill": "通常攻撃変化「ミニステリウム」(固有アビリティ)",
+   "condition": "右枠味方にヴィルトゥス付与",
+   "quote": "ヴィルトゥスを付与された味方の属性パーソナリティに応じて(変幻自在) / 武器種に応じて臨機応変を付与 (永続)",
+   "effect_kr": "통상공격으로 오른쪽 칸 아군에 ヴィルトゥス 부여 → 그 아군 속성 퍼스널리티의 변환자재 + 무기종의 臨機応変을 자신에게 영구. 아군 속성은 안 바뀜. オーラーティオー는 ヴィルトゥス 아군 전위 시 버프·디버프 속성도 그 속성으로 변화.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1069"
+  },
+  {
+   "id": "nona_as",
+   "name_jp": "ノーナ(AS)",
+   "grants": "self",
+   "element": "devotion_target",
+   "turns": "permanent",
+   "skill": "カスティーゴ (固有スキル 強化2, MP47)",
+   "condition": "献身を付与された味方が前衛にいる時追加",
+   "quote": "献身を付与された味方の属性パーソナリティに応じて自身に変幻自在を付与、武器種に応じて臨機応変を付与(永続)",
+   "effect_kr": "献身 대상(전투 중 1회 지정) 아군이 전위면 그 속성 변환자재+무기종 臨機応変을 자신에게 영구. 수속성 공격 30% 버프도 献身 대상 속성으로 변화. コンコルディア는 献身 대상 무기종 ZONE 전개.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1010"
+  },
+  {
+   "id": "fiene_as",
+   "name_jp": "フィーネ(AS)",
+   "grants": "self",
+   "element": "ally_left",
+   "turns": null,
+   "skill": "ジオ・アンセム (星導スキル, MP68)",
+   "condition": "ステラバースト時",
+   "quote": "【ステラバースト時】 自身に前衛左枠の味方単体の属性パーソナリティに応じた変幻自在を付与",
+   "effect_kr": "SB 시 전위 왼쪽 칸 아군 속성의 변환자재를 자신에게(지속 표기 없음). 같은 SB에서 기존 ZONE 파괴 후 星海陣 전개.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1090"
+  },
+  {
+   "id": "koukou_no_gajin",
+   "name_jp": "煌々の画人",
+   "grants": "self",
+   "element": "zone",
+   "turns": null,
+   "skill": "固有アビリティ (ファンタジスト★5)",
+   "condition": "前衛でターン開始時",
+   "quote": "【前衛でターン開始時】 展開中の属性ZONEに応じた変幻自在を自身に付与する",
+   "effect_kr": "매 턴 시작 시 전개 중 속성 ZONE의 변환자재를 자신에게. 별도로 星導 ビビッド・ワールド(MP85)는 적 전체에 変幻自在<火>(3턴, ZONE에 따라 속성 변화)+EB 5 축적(아군 아님). ラクガキジャック은 ZONE에 따라 버프·디버프 속성 변화.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1232"
+  },
+  {
+   "id": "renri",
+   "name_jp": "レンリ",
+   "grants": "self",
+   "element": "fire",
+   "turns": 3,
+   "skill": "スラッシュセイバー (習得スキル スラッシャー★3, MP20)",
+   "condition": "烈火陣展開時",
+   "quote": "【追加効果】 烈火陣展開時、自身に以下の効果を付与する 変幻自在＜火＞(3ターン) ＋バフの効果が火属性攻撃100%UPに変化",
+   "effect_kr": "烈火陣 중 사용 시 자신 변환자재(화) 3턴 + 무속성 물리 100% 버프가 화속성 공격 100%로 바뀜.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/208"
+  },
+  {
+   "id": "zilva_as",
+   "name_jp": "ジルバー(AS)",
+   "grants": "self",
+   "element": "weakness",
+   "turns": "permanent",
+   "skill": "通常攻撃変化「サウザンドフェイス」(固有アビリティ) / ステラボード強化",
+   "condition": "非AF 통상공격 / (강화 시) 前衛で戦闘開始時",
+   "quote": "敵単体に残香を蓄積 +自身の攻撃属性を対象の弱点属性に変化(永続)",
+   "effect_kr": "자신의 공격 속성을 대상(残香) 약점 속성으로 영구 변경. 스텔라보드 강화 시 전투 시작 시 자동. 변환자재 표기는 아님.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1096"
+  },
+  {
+   "id": "rabina_as",
+   "name_jp": "ラビナ(AS)",
+   "grants": "self_skill",
+   "element": "fire",
+   "turns": null,
+   "skill": "金色の舞 (星導スキル, MP88)",
+   "condition": "前衛に＜火＞キャラが2人以上の時",
+   "quote": "攻撃属性が火に変化",
+   "effect_kr": "이 스킬 공격만 풍→화로 변경 + 적 전체 물리/마법내성 40%DOWN 5턴(SB 시 아군 디버프 해제 추가). 아군 속성은 안 바뀜.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1200"
+  },
+  {
+   "id": "sekitou_no_honootsukai",
+   "name_jp": "赤套の炎使い",
+   "grants": "self_skill",
+   "element": "zone",
+   "turns": null,
+   "skill": "アンフェルドア/アンフェルフュジ/アンフェルカノン, エクスキューション 等",
+   "condition": "属性ZONE展開中",
+   "quote": "属性ZONEに応じて属性変化",
+   "effect_kr": "자신 공격 스킬 다수가 전개 중 속성 ZONE 속성으로 변화. 아군에게 부여 아님.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/904"
+  },
+  {
+   "id": "m6_cynthia",
+   "name_jp": "シンシア",
+   "grants": "self_skill",
+   "element": "zone",
+   "turns": null,
+   "skill": "トルネド・マルキス/ヘルトホ/カイザラ (固有スキル)",
+   "condition": "属性ZONE展開中",
+   "quote": "属性ZONEに応じて属性変化",
+   "effect_kr": "고유 스킬 공격(및 동반 속성 버프로 추정)이 속성 ZONE에 맞춰 변화. 어느 ZONE→어느 속성인지는 미기재.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/799"
+  },
+  {
+   "id": "m2_nekoko",
+   "name_jp": "ねここ",
+   "grants": "self_skill",
+   "element": "zone",
+   "turns": null,
+   "skill": "猫舞斬/猫舞連斬/猫神聖連斬, 精霊恵, 変妖・猫鉤一閃",
+   "condition": "属性ZONE展開中",
+   "quote": "属性ZONEに応じて属性変化",
+   "effect_kr": "자신 스킬 공격(정령恵는 버프·디버프)이 속성 ZONE(화·수·풍·지)에 맞춰 변화.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/870"
+  },
+  {
+   "id": "hyojin_no_utahime",
+   "name_jp": "氷塵の歌姫",
+   "grants": "enemy_all",
+   "element": "water",
+   "turns": 3,
+   "skill": "氷界裂華散 (星導スキル, MP77)",
+   "condition": "ステラバースト時追加",
+   "quote": "+敵全体に変幻自在(水)を付与(3ターン)",
+   "effect_kr": "적 전체에 변환자재(수) 3턴(적의 공격을 수속성으로 바꿔 아군 배리어가 '수속성 대미지 50% 경감'으로 바뀌는 것과 연동). 아군 속성 통일 용도 아님.",
+   "verified": true,
+   "src": "https://altema.jp/anaden/chara/1136"
+  }
+ ],
+ "counter": [
+  {
+   "id": "kagurame",
+   "name_jp": "カグラメ",
+   "skill": "六壬神課 (固有スキル 強化2, MP68)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 5,
+   "preemptive": true,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "element": "shade",
+    "weapon_type": "blunt",
+    "size": "xl",
+    "mult": 10,
+    "hits": null
+   },
+   "taunt": false,
+   "draw": "守勢(朱の守勢: 아군 대상 공격의 대미지·추가효과를 대신 받음, 일부 제외)",
+   "effect_kr": "선제로 자신 요격(物理か魔法攻撃を受けた際) + 朱の守勢 5턴. 요격: 적 전체 음 타격 특대 10배 + 자신 HP 5% 회복·상태이상 회복. 하위: 遁甲一式(MP25 소 3배), 遁甲二式(MP45 대 3배). 루나틱+ 捨身 중 화력↑. 守勢로 대리 피격한 경우 요격 발동 여부는 페이지에 명시 없음.",
+   "src": "https://altema.jp/anaden/chara/1132"
+  },
+  {
+   "id": "shigure_es",
+   "name_jp": "シグレ(ES)",
+   "skill": "普賢一刀流・焉 (固有スキル 強化2, MP58)",
+   "trigger": "hit_phys",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": "wind",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": 3,
+    "hits": 4
+   },
+   "taunt": true,
+   "taunt_src": "ステラボード: 前衛で戦闘開始時 敵全体に挑発(3ターン 対象の耐性無視) / 固有アビリティ: ターン開始時 嗣子の覚悟 소비→挑発(3T)+庇立て",
+   "effect_kr": "요격 3턴(물리 피격 시): 적 단체 풍 참격 4회 특대 3배 + 확정 크리 + 嗣子の覚悟 축적. 旋(MP34)/裂(MP50)도 동일 요격. 裂空阿修羅(MP59): 斬攻撃を受けた際 적 전체 풍 참격 특대 '35倍'(altema 표기 그대로, 오기 가능성) 확정 크리. 1턴 1회 요격 시 EX 레벨+1. 강화 스텔라보드: 고유스킬 사용 시 요격.",
+   "src": "https://altema.jp/anaden/chara/1108"
+  },
+  {
+   "id": "minalca_as",
+   "name_jp": "ミナルカ(AS)",
+   "skill": "ドゥーム (習得スキル エリス★5, MP58)",
+   "trigger": "hit_any?",
+   "max_per_turn": null,
+   "turns": 3,
+   "preemptive": true,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": "fire",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": null,
+    "hits": 3,
+    "mult_note": "心火50以上 시 迎撃の威力増加(15倍)"
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 先制で敵全体に挑発(3ターン, 心火50+ 時 2倍)",
+   "effect_kr": "선제 적 전체 도발 3턴 + 자신 최대HP 35% + 요격 3턴. 요격: 적 단체 화 참격 3회 특대 + 자신 HP 20%·MP 20% 회복. 心火 50 이상이면 버프·도발·요격 턴 2배, 요격 위력 15배, 회복 2배. 발동 조건 문구는 페이지에 없음.",
+   "src": "https://altema.jp/anaden/chara/1092"
+  },
+  {
+   "id": "m6_shion_as",
+   "name_jp": "シオン(AS)",
+   "skill": "臥龍の構え (固有スキル 強化2, MP42)",
+   "trigger": "hit_phys",
+   "max_per_turn": null,
+   "turns": 1,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": "fire",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": null,
+    "hits": null
+   },
+   "taunt": true,
+   "taunt_src": "同スキル +敵全体に挑発を付与",
+   "effect_kr": "자신 물리내성 70%UP + 물리 피격 시 적 단체 화 참격 특대 요격 + 修羅の心(완력 UP, 최대 3) 축적 (1턴). 적 전체 도발. 배율 미기재.",
+   "src": "https://altema.jp/anaden/chara/218"
+  },
+  {
+   "id": "mugin_no_shijin",
+   "name_jp": "夢吟の詩人",
+   "skill": "フォナゾ・シモス (固有スキル 強化2, MP74)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag?",
+    "element": "water",
+    "weapon_type": "blunt",
+    "size": "xl",
+    "mult": 16,
+    "hits": null,
+    "mult_note": "자신 지성 의존, イーコス 축적 수에 따라 최대 16배"
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 敵全体に挑発(3ターン 対象の耐性無視)",
+   "effect_kr": "자신 전속성내성 50%+요격 3턴, 적 전체 도발. 요격: 적 전체 수 타격 특대(지성 의존, イーコス 최대 16배) + 아군 전체 HP 50%·MP 50 회복. 하위 シシロス(소 7배, HP30%/MP10), トラグダオ(대 10배, HP40%/MP30). 가창(イーリアス/オデュッセイア)으로 전체공격을 혼자 받음(피격 2배).",
+   "src": "https://altema.jp/anaden/chara/1031"
+  },
+  {
+   "id": "dunarith_ac_as",
+   "name_jp": "夢吟の詩人(AS)",
+   "skill": "トラグダオ・シモス (固有スキル 強化1, MP58)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag?",
+    "element": "water",
+    "weapon_type": "blunt",
+    "size": "l",
+    "mult": 10,
+    "hits": null,
+    "mult_note": "지성 의존, イーコス 최대 10배"
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 敵全体に挑発(3ターン 対象の耐性無視)",
+   "effect_kr": "요격: 적 전체 수 타격 대(최대 10배) + 아군 HP 40%·MP 30. 강화2는 スカリカ・バリーレ(アニマ: 전체공격 대신 받기·피해 30% 경감)로 요격 아님.",
+   "src": "https://altema.jp/anaden/chara/1173"
+  },
+  {
+   "id": "hismena",
+   "name_jp": "ヒスメナ",
+   "skill": "ランサ・アズレア (星導スキル, MP102)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 5,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": "water",
+    "weapon_type": "pierce",
+    "size": "xl",
+    "mult": 10,
+    "hits": null,
+    "mult_note": "전위 아군 인원이 적을수록 최대 10배"
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 攻撃対象に挑発(5ターン)",
+   "effect_kr": "본타 적 전체 수 돌격 3회 극대 + 도발 5턴 + 자신 요격 5턴 + 최강 고유스킬 연속 실행. 요격: 적 단체 수 돌격 특대(전위 인원 적을수록 최대 10배). SB 추가 '威力増加(30倍)+デバフリバーサル(3ターン)'(본타 배율로 보임).",
+   "src": "https://altema.jp/anaden/chara/742"
+  },
+  {
+   "id": "cyrus",
+   "name_jp": "サイラス",
+   "skill": "円空自在流・蛙落 (星導スキル, MP81)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "element": "water",
+    "weapon_type": "slash",
+    "size": "xxl",
+    "mult": 3,
+    "hits": null,
+    "mult_note": "SB(真・奥義) 시 극대 5배"
+   },
+   "taunt": false,
+   "effect_kr": "奥義 상태(스킬 위력 1.2배, 내구·정신·최대HP 25%) + 요격 3턴. 요격: 적 전체 수 참격 극대 3배 + 자신 HP 20% 회복. 턴 종료 시 적 전체 수 참격 특대 3배+전속성내성 25%DOWN(3누적). SB: 본타 극대 20배, 真・奥義(1.5배, 50%), 요격 극대 5배, 턴 종료 극대 5배.",
+   "src": "https://altema.jp/anaden/chara/125"
+  },
+  {
+   "id": "philo_as",
+   "name_jp": "フィロ(AS)",
+   "skill": "力溜め (通常攻撃)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 0,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "element": "water",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": 15,
+    "hits": null,
+    "mult_note": "世界樹の力 축적 수에 따라 최대 15배"
+   },
+   "taunt": false,
+   "taunt_src": "도발은 グラスタ『庇護の呪』 필요(altema 해설)",
+   "effect_kr": "통상공격: 世界樹の力 +1, 턴 종료까지 力溜め(전투불능 안 됨) + 물리/마법 피격 시 적 전체 수 참격 특대 요격(世界樹の力에 따라 최대 15배). 世界樹の力 3 이상이면 力溜め 불가.",
+   "src": "https://altema.jp/anaden/chara/932"
+  },
+  {
+   "id": "jilfany_as",
+   "name_jp": "ジルファニー(AS)",
+   "skill": "クレッセンティア (固有スキル 強化2, MP68)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": "water",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": 10,
+    "hits": null,
+    "mult_note": "弱点時威力増加(2倍)"
+   },
+   "taunt": true,
+   "taunt_src": "クルオルエンシス(星導 MP89) 敵全体に挑発(3ターン 対象の耐性無視)",
+   "effect_kr": "水天陣 전개 시 자신 크리티컬가드+요격 3턴. 요격: 적 단체 수 참격 특대 10배 + 완력·지성 20%DOWN(3턴, 최대 5누적), 약점 시 2배. 輝晶陣 시에는 대신 ルナティック<心眼> 3턴.",
+   "src": "https://altema.jp/anaden/chara/1236"
+  },
+  {
+   "id": "hoshinoko",
+   "name_jp": "星の子",
+   "skill": "コメットビーム (固有スキル 強化2, MP52)",
+   "trigger": "hit_phys",
+   "max_per_turn": null,
+   "turns": 5,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "element": "crystal",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 2,
+    "hits": null,
+    "mult_note": "迎撃 발동 시 パワーレベル 축적 수에 따라 위력·회복 최대 2배"
+   },
+   "taunt": true,
+   "taunt_src": "同スキル +挑発",
+   "effect_kr": "적 완력·지성 30%DOWN+도발+수면(5턴), 자신 요격 5턴(물리 피격 시): 적 전체 정 마법 특대 + 아군 전체 회복(특대)·상태이상 회복. 하위 スピカ(소)/メテオ(대).",
+   "src": "https://altema.jp/anaden/chara/942"
+  },
+  {
+   "id": "alma_as",
+   "name_jp": "アルマ(AS)",
+   "skill": "リフレクトバレット (習得スキル エポックメーカー★5, MP69)",
+   "trigger": "hit_any?",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "element": "crystal",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": null,
+    "hits": null,
+    "mult_note": "アルケミーハイ 상태 시 15배(회복 2배). 완력 의존"
+   },
+   "taunt": true,
+   "taunt_src": "同スキル +挑発を付与(3ターン)",
+   "effect_kr": "적 전체 정 마법 특대 + 도발 3턴 + 자신 요격 3턴. 요격: 적 전체 정 마법 특대 + 아군 전체 HP 30%·MP 10 회복, 발동 시 アルカナ +1. アルケミーハイ 시 위력 15배. 발동 조건 문구 미기재.",
+   "src": "https://altema.jp/anaden/chara/1059"
+  },
+  {
+   "id": "anabel_es",
+   "name_jp": "アナベル(ES)",
+   "skill": "ディヴァインダスク (習得スキル 叡聖騎士★5, MP49)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": null,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "element": "fire",
+    "weapon_type": "pierce",
+    "size": "xl",
+    "mult": 10,
+    "hits": 2
+   },
+   "taunt": false,
+   "effect_kr": "冥の誘い 상태(전투 시작 시 전위 冥 3명 이상)에서만: 버프 2배 + 적 전체 완력·지성·속도 50%DOWN(1턴) + 물리/마법 피격 시 적 전체 화 돌격 2회 특대 10배. 지속 미기재. '迎撃' 표기 아님.",
+   "src": "https://altema.jp/anaden/chara/1077"
+  },
+  {
+   "id": "anabel",
+   "name_jp": "アナベル",
+   "skill": "祈りの聖剣 (固有スキル 強化2, MP44) / ホーリーセーバー (習得 聖騎士★5, MP36)",
+   "trigger": "hit_phys (祈りの聖剣) / hit_mag (ホーリーセーバー)",
+   "max_per_turn": null,
+   "turns": 5,
+   "preemptive": true,
+   "atk": {
+    "target": null,
+    "kind": null,
+    "element": null,
+    "weapon_type": null,
+    "size": null,
+    "mult": null,
+    "hits": null,
+    "mult_note": "요격 공격 내용 페이지 미기재"
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 挑発(5ターン 対象の耐性無視)",
+   "effect_kr": "선제 적 단체 참격 특대 2배 + 도발 5턴(내성 무시) + 자신 요격 5턴. 祈りの聖剣은 물리 피격, ホーリーセーバー는 마법 피격 시 발동. 탱커용(화력 아님).",
+   "src": "https://altema.jp/anaden/chara/132"
+  },
+  {
+   "id": "hanasaki_no_himegimi_as",
+   "name_jp": "花咲の姫君(AS)",
+   "skill": "火遁・不知火隠れ (習得スキル マリシテン★5, MP60)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 5,
+   "preemptive": true,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "element": "fire",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": null,
+    "hits": null
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 挑発(5ターン 対象の耐性無視) + 庇立て(5ターン)",
+   "effect_kr": "선제 적 전체 화 돌격 2회 특대 + 도발 5턴 + 자신 요격·화속성 대미지 50% 회피(속도차로 최대 90%)·庇立て 5턴. 요격: 적 전체 화 참격 특대(배율 미기재).",
+   "src": "https://altema.jp/anaden/chara/1215"
+  },
+  {
+   "id": "nonold",
+   "name_jp": "ノノルド",
+   "skill": "ヴィルレントボム (固有スキル 強化2, MP58)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "st",
+    "kind": "mag",
+    "element": null,
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 5,
+    "hits": null,
+    "mult_note": "요격 = トキシックブラスト 실행: 대상 디버프 종류 수에 따라 최대 5배(8종)"
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 挑発を付与(3ターン) + 庇立て",
+   "effect_kr": "적 전체 마법 특대+맹독(내성무시)+도발 3턴, 자신 요격·庇立て·魔力励起(3턴). 요격 시 トキシックブラスト(적 단체 마법 특대, 정신·내구·전속성내성 30%DOWN 5턴 3누적, MP 15% 회복) 실행. 요격 지속은 미기재(같은 블록 3턴).",
+   "src": "https://altema.jp/anaden/chara/1135"
+  },
+  {
+   "id": "m3_nona",
+   "name_jp": "ノーナ",
+   "skill": "サンツィオーネ (習得スキル ミューソティス★5, MP57)",
+   "trigger": "hit_phys_or_mag + turn_end",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "element": "shade",
+    "weapon_type": "pierce",
+    "size": "xl",
+    "mult": 9,
+    "hits": null,
+    "mult_note": "소비한 セニャーレ 수에 따라 최대 9배"
+   },
+   "taunt": false,
+   "effect_kr": "본타 적 전체 음 돌격 특대 + セニャーレ 전소비(3 소비 시 버티기) + アタッカンテ 4. 3턴간 자신 물리/마법 피격 시와 턴 종료 시 적 전체 음 돌격 특대(최대 9배) 발동. プレギエーラ(피격·턴 종료 시 아군 회복)와 비중복. '迎撃' 표기 아님.",
+   "src": "https://altema.jp/anaden/chara/934"
+  },
+  {
+   "id": "m2_azami",
+   "name_jp": "アザミ",
+   "skill": "飛天の舞 (★5 스킬, 真・顕現 강화판, MP39)",
+   "trigger": "hit_phys",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": "wind",
+    "weapon_type": "slash",
+    "size": "xl",
+    "mult": 1.8,
+    "hits": 4,
+    "mult_note": "HP80%以上時 迎撃の威力増加(1.8倍); 기본 배율 미기재"
+   },
+   "taunt": false,
+   "effect_kr": "본타 적 단체 풍 참격 4회 특대 + 완력 30%DOWN/자신 완력 30%UP(3누적) + 자신 물리 요격 3턴. 요격: 적 단체 풍 참격 4회 특대, HP 80% 이상 시 1.8배. 강화 전(MP47)은 요격 없음.",
+   "src": "https://altema.jp/anaden/chara/135"
+  },
+  {
+   "id": "m5_premaya",
+   "name_jp": "プレメア",
+   "skill": "ガードオーダー (習得スキル アーチャー★3, MP35)",
+   "trigger": "hit_phys",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "random",
+    "kind": "phys",
+    "element": "earth",
+    "weapon_type": "pierce",
+    "size": "xl",
+    "mult": null,
+    "hits": 4
+   },
+   "taunt": false,
+   "effect_kr": "아군 전체 수속성내성 50%UP(3턴) + 자신 물리 피격 시 무작위 적에게 지 돌격 4회 특대 요격(3턴). 요격은 자신만.",
+   "src": "https://altema.jp/anaden/chara/764"
+  },
+  {
+   "id": "m6_saki",
+   "name_jp": "サキ(★5)",
+   "skill": "ヨトゥンエフェクト (固有スキル 強化2, MP37)",
+   "trigger": "hit_fire",
+   "max_per_turn": null,
+   "turns": 1,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "element": "water",
+    "weapon_type": "magic",
+    "size": "l",
+    "mult": null,
+    "hits": null
+   },
+   "taunt": false,
+   "effect_kr": "아군 전체 화속성내성 50%UP + 자신이 화속성 공격을 받으면 적 전체 수 마법(대) 요격(1턴). ★5(altema 202) 기준. 로스터 매핑표는 196(★4 페이지)을 가리키니 주의.",
+   "src": "https://altema.jp/anaden/chara/202"
+  },
+  {
+   "id": "roberta",
+   "name_jp": "ロベーラ",
+   "skill": "インフィルトレート (習得スキル スペシャルオプス★5, MP64)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 0,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": "water",
+    "weapon_type": "blunt+pierce",
+    "size": "xl",
+    "mult": 5,
+    "hits": 2,
+    "mult_note": "打 특대 5배 + 突 특대 5배 각 1회"
+   },
+   "taunt": false,
+   "effect_kr": "パワーユニット 1 소비 시 자신 오버크리티컬 5턴 + 요격(턴 종료까지) + ステルス. 요격: 적 단체 수 타격 특대 5배 + 수 돌격 특대 5배. 고유: 턴 시작 시 스텔스면 요격(턴 종료까지) 부여, 단 피격 시 스텔스 해제. 강화 스텔라보드: 전위 전투 시작 시 요격+스텔스.",
+   "src": "https://altema.jp/anaden/chara/63"
+  },
+  {
+   "id": "m2_terry_bogard",
+   "name_jp": "テリー・ボガード",
+   "skill": "挑発 (習得スキル マーシャルアーツ★3, MP17)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": null,
+    "weapon_type": "blunt",
+    "size": "l",
+    "mult": null,
+    "hits": null
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 敵単体に腕力25%UP+挑発(3ターン)",
+   "effect_kr": "적 단체 완력 25%UP+도발 3턴, 자신 요격 3턴: 적 단체 타격(대, 속성 미기재). クーラ·不知火舞도 같은 클래스 스킬.",
+   "src": "https://altema.jp/anaden/chara/1100"
+  },
+  {
+   "id": "m3_kula",
+   "name_jp": "クーラ・ダイアモンド",
+   "skill": "挑発 (習得スキル マーシャルアーツ★3, MP17)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": null,
+    "weapon_type": "blunt",
+    "size": "l",
+    "mult": null,
+    "hits": null
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 挑発(3ターン)",
+   "effect_kr": "テリー와 동일한 클래스 스킬(적 단체 완력 25%UP+도발, 자신 요격 타격 대).",
+   "src": "https://altema.jp/anaden/chara/1101"
+  },
+  {
+   "id": "m3_mai_shiranui",
+   "name_jp": "不知火舞",
+   "skill": "挑発 (習得スキル マーシャルアーツ★3, MP17)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 3,
+   "atk": {
+    "target": "st",
+    "kind": "phys",
+    "element": null,
+    "weapon_type": "blunt",
+    "size": "l",
+    "mult": null,
+    "hits": null
+   },
+   "taunt": true,
+   "taunt_src": "同スキル 挑発(3ターン)",
+   "effect_kr": "テリー와 동일한 클래스 스킬.",
+   "src": "https://altema.jp/anaden/chara/1099"
+  },
+  {
+   "id": "lovely_as",
+   "name_jp": "ラブリ(AS)",
+   "skill": "通常攻撃変化「本日の日替わり！」(固有アビリティ)",
+   "trigger": "hit_phys_or_mag",
+   "max_per_turn": null,
+   "turns": 2,
+   "once_per_battle": true,
+   "atk": null,
+   "taunt": false,
+   "draw": "先制で守護(2ターン)",
+   "effect_kr": "전투 1회. 선제 자신 守護 2턴 + 2턴간 물리/마법 피격 시 적 전체 전속성내성 50%DOWN(5턴, 최대 3누적)+맹독+AF 게이지 회복. 대미지 요격 아님(디버프형).",
+   "src": "https://altema.jp/anaden/chara/1008"
+  }
+ ],
+ "taunt_only": [
+  {
+   "id": "galliard",
+   "name_jp": "ガリアード",
+   "skill": "スプリームゴッド (MP57)",
+   "quote": "先制で敵全体に挑発を付与(1ターン 対象の耐性無視)",
+   "src": "https://altema.jp/anaden/chara/236"
+  },
+  {
+   "id": "bertrand",
+   "name_jp": "ベルトラン",
+   "skill": "デコイランス(MP17)/プロボークランス(MP37)/ガーディアンランス(MP47)",
+   "quote": "敵全体に突攻撃(小/大/特大)+挑発を付与(3ターン)",
+   "src": "https://altema.jp/anaden/chara/188"
+  }
+ ],
+ "lunatic": {
+  "general_kr": "ルナティック(루나틱)은 altema 기준 '雷·陰·晶 속성 스킬을 가진 캐릭터만' 쓰는 특수 능력. 해당 캐릭터는 통상공격이 [ルナティック]으로 대체되어(발동 전엔 통상공격 불가) 전투 중 1회, MP 0으로 발동하며 3턴간 루나틱 상태가 된다. 발동 시 캐릭터별로 정해진 변형(帯電·挺身·複写·捨身·心眼·放電) 효과를 3턴 자신에게 부여하고, 스킬 설명의 '【ルナティック時追加】' 효과(위력 N배, 공격 횟수 증가, 버프 2배 등)가 활성화된다. VC(예: チルリル(AS) VC 첫 사용 시)나 스킬(黒衣の刀使い, 赤套の炎使い 등 자신이 ZONE 각성 시)로 발동하는 캐릭터는 통상공격 발동과 합쳐 1전투 2회 사용 가능. ルナティック+는 일부 캐릭터의 고유 어빌리티 이름으로, 루나틱 발동(3턴)+변형 부여에 추가 효과(존 전개·HP/MP 회복·상태 변화 등)를 묶은 강화판(대부분 전투 중 1회, MP0; アルマ(AS) エリクシル・レイ/ヴィクト 再臨처럼 재사용 수단이 있는 경우도 있음). 최근 캐릭터는 아군에게 'ルナティック(心眼)' 등을 부여하기도 함(이 경우 대상의 루나틱 사용과 별개로 해당 변형 효과가 붙음). 변형 기본 효과의 수치(%)는 altema·게임 내 설명 모두 비공개.",
+  "src": "https://altema.jp/anaden/lunatic",
+  "variants": [
+   {
+    "name": "ルナティック<帯電>",
+    "kr": "대전",
+    "effect_jp": "自身の攻撃1ヒットにつき、雷属性の追加ダメージを1回与える",
+    "effect_kr": "자신 공격 1히트마다 뇌속성 추가 대미지 1회.",
+    "numbers": "추가 대미지 위력 비공개"
+   },
+   {
+    "name": "ルナティック<挺身>",
+    "kr": "정신",
+    "effect_jp": "自身の防御値の一部を攻撃に、魔防値の一部を魔力に変換する",
+    "effect_kr": "방어 일부를 공격으로, 마방 일부를 마력으로 변환.",
+    "numbers": "변환 비율 비공개"
+   },
+   {
+    "name": "ルナティック<複写>",
+    "kr": "복사",
+    "effect_jp": "選択したスキルを2回連続で実行する。2回目のスキルは消費MPが0になり、アナザーフォースゲージが溜まらない",
+    "effect_kr": "선택 스킬을 2회 연속 실행(2회째 MP 0, AF 게이지 증가 없음).",
+    "numbers": "실행 2회 (사실상 스킬 대미지 2배)"
+   },
+   {
+    "name": "ルナティック<捨身>",
+    "kr": "사신",
+    "effect_jp": "攻撃するたびにダメージを受ける。敵に与えるダメージが大きくアップする",
+    "effect_kr": "공격할 때마다 자해 대미지, 주는 대미지 대폭 UP.",
+    "numbers": "자해량·상승률 비공개(ツキハ 千燈万火 등 저HP 조건 충족에 활용)"
+   },
+   {
+    "name": "ルナティック<心眼>",
+    "kr": "심안",
+    "effect_jp": "スキル威力がアップする。弱点時に与えるダメージがアップする",
+    "effect_kr": "스킬 위력 UP + 약점 시 주는 대미지 UP.",
+    "numbers": "altema 실측(赤套の炎使い): 心眼 단독 약 220%, 弱点ダメUP 단독 약 150%, 둘 다 약 275%(곱셈 아님, '効果は加算せず'). クラルテ(AS) 해설: '通常の約3倍'"
+   },
+   {
+    "name": "ルナティック<放電>",
+    "kr": "방전",
+    "effect_jp": "自身の速度がアップする。敵を感電させ、コンボ倍率を溜まりやすくする",
+    "effect_kr": "자신 속도 UP, 적 감전으로 AF 콤보 배율 증가 가속.",
+    "numbers": "속도 상승량·감전 효과 비공개"
+   }
+  ],
+  "chars": [
+   {
+    "id": "milsha_as",
+    "name_jp": "ミルシャ(AS)",
+    "variant": "捨身/挺身(아군 부여) · 자신 捨身",
+    "grants": "all",
+    "activation": "アーデインアスピダ(固有 強化2, MP50)·トラグディスパスィ(習得, MP50) 歌唱 3턴",
+    "effect_kr": "アーデインアスピダ: 가창 3턴, 아군 전체에 ルナティック(捨身) + 1,000 이하 대미지 무효 + 받는 대미지 50%DOWN. トラグディスパスィ: 가창 3턴, 아군 전체에 ルナティック(挺身) + 주는 대미지 50%UP(HP 최대 시 버티기). 자신 고유 ルナティック = 捨身 3턴.",
+    "src": "https://altema.jp/anaden/chara/930"
+   },
+   {
+    "id": "zilva",
+    "name_jp": "ジルファニー",
+    "variant": "心眼(아군 부여) · 자신 心眼",
+    "grants": "all",
+    "activation": "ペルトランシーレ(星導, MP85) 先制 祈祷 3턴",
+    "effect_kr": "祈祷 효과: 아군 전체에 ルナティック(心眼) + 받는 대미지 30%DOWN. 본타 적 단체 수 마법 3회 극대(완력 의존) 후 イリデッセンス 연속(습득 시). SB: 마법내성 50%DOWN·30배·배리어 관통·極・水天陣.",
+    "src": "https://altema.jp/anaden/chara/1088"
+   },
+   {
+    "id": "elseal_as",
+    "name_jp": "エルシール(AS)",
+    "variant": "心眼(아군 부여)",
+    "grants": "all_non_lunatic",
+    "activation": "グラディウスイベル(星導, MP82) 先制",
+    "effect_kr": "선제 적 단체 수 참격 3회 극대 + '非ルナティック状態のキャラ'에게 ルナティック(心眼) 5턴. SB: 전위 水 캐릭터 스킬 연격수 +1(5턴), アンティック 5, 아군 전체 버티기.",
+    "src": "https://altema.jp/anaden/chara/1126"
+   },
+   {
+    "id": "dalnis_as",
+    "name_jp": "ダルニス(AS)",
+    "variant": "挺身(아군 부여)",
+    "grants": "right",
+    "activation": "トラストソウル(星導, MP89) 極(강화) 버전",
+    "effect_kr": "極 버전: 적 전체 풍 돌격 2회 극대 30배 + 痺れ毒 3 + 矜持 5, 전위 오른쪽 칸 아군에 ルナティック<挺身>+연계(3턴; 아군 공격 시 풍 돌격 극대, 痺れ毒 수에 따라 최대 10/15배). 일반 버전은 연계만.",
+    "src": "https://altema.jp/anaden/chara/1240"
+   },
+   {
+    "id": "shisou_no_yaritsukai_as",
+    "name_jp": "紫装の槍使い(AS)",
+    "variant": "心眼(아군 효과) · 자신 心眼",
+    "grants": "all (絶ZONE 중)",
+    "activation": "레조넌스(共鳴<心眼>) 패시브 / 裂光・乱舞槍(星導, MP99) SB",
+    "effect_kr": "共鳴<心眼>: 축적 수에 따라 속도 UP(최대 10/50), 絶ZONE 전개 시 '味方全体にルナティック＜心眼＞効果'. SB: 極・地裂陣 + 자신 ルナティック＜心眼＞(턴 종료까지) 후 적 전체 지 돌격 3회 극대 16배(방어 무시), 共鳴 2 소비마다 추가 공격(최대 8/4회).",
+    "src": "https://altema.jp/anaden/chara/1204"
+   },
+   {
+    "id": "eni",
+    "name_jp": "エニ",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "ルナティック+(固有) 先制",
+    "effect_kr": "선제 루나틱 발동+자신 捨身 3턴. 아군 단체에 고정 99,999 대미지; 血の誓約 소비 시 그 아군에 배리어 관통(3회 행동)+자신 MP 50% 회복(血の誓約 없으면 불발).",
+    "src": "https://altema.jp/anaden/chara/1000"
+   },
+   {
+    "id": "kagurame",
+    "name_jp": "カグラメ",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "ルナティック+(固有, 전투 1회, MP0)",
+    "effect_kr": "루나틱 3턴+捨身 3턴 + 전후열 전체 HP/MP 100% 회복·전투불능 회복. 요격(六壬神課) 화력과 조합.",
+    "src": "https://altema.jp/anaden/chara/1132"
+   },
+   {
+    "id": "tsukiha",
+    "name_jp": "ツキハ",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "ステラボード 획득 어빌리티(전투 시작 시) / 星導 妖刀開眼 SB",
+    "effect_kr": "전투 시작 시 자신 ルナティック(捨身) 3턴+버티기. SB 시 真・妖刀開眼+捨身 3턴+버티기. 捨身 자해로 千燈万火(HP 낮을수록 최대 9배) 조건 충족.",
+    "src": "https://altema.jp/anaden/chara/200"
+   },
+   {
+    "id": "m2_tilril_as",
+    "name_jp": "チルリル(AS)",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "고유 ルナティック(MP0, 1회) + VC 첫 사용 시 ルナティック 발동(합계 2회)",
+    "effect_kr": "ヘレヴ・メサイア(MP62): 적 전체 음 참격 특대, HP 50% 이하 3.4배, 【ルナティック時追加】 공격 횟수 2배. VC: 아군 음속성 공격 10/20/30%(1턴).",
+    "src": "https://altema.jp/anaden/chara/862"
+   },
+   {
+    "id": "tuva_es",
+    "name_jp": "トゥーヴァ(ES)",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "リング・ア・ナイト(MP76) 【ルナティック時追加】 威力増加(2倍)+자신 최대HP 25% 실드(3턴). 루나틱 중 EX 레벨 +2.",
+    "src": "https://altema.jp/anaden/chara/1014"
+   },
+   {
+    "id": "yakumo",
+    "name_jp": "ヤクモ",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "デリート: 【ルナティック時追加】 크리티컬 시 대미지 7배. レトリビューション(MP60): 버프·디버프 2배.",
+    "src": "https://altema.jp/anaden/chara/1002"
+   },
+   {
+    "id": "yakumo_as",
+    "name_jp": "ヤクモ(AS)",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "고유 ルナティック(MP0, 1회)",
+    "effect_kr": "ディスオーダー/ディスペア: 【ルナティック時追加】 크리티컬 시 주는 대미지 7배.",
+    "src": "https://altema.jp/anaden/chara/1081"
+   },
+   {
+    "id": "zilva_as",
+    "name_jp": "ジルバー(AS)",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "前衛で戦闘開始時 자동 / ブレイドストーム(星導, MP89)",
+    "effect_kr": "전투 시작 시 絶影+ルナティック(捨身) 3턴. 공격 속성을 대상 약점으로 영구 변경(サウザンドフェイス).",
+    "src": "https://altema.jp/anaden/chara/1096"
+   },
+   {
+    "id": "komachi_as",
+    "name_jp": "コマチ(AS)",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "舞姫流槍・大桜嵐(星導, MP95)",
+    "effect_kr": "공격 전 자신 ルナティック(捨身) 3턴, 지 돌격 3회 극대(적 2체 이상 턴 시작 시 전체화+기절). SB 40배+優美の舞+1,000 이하 무효 3턴+디버프 해제.",
+    "src": "https://altema.jp/anaden/chara/1138"
+   },
+   {
+    "id": "yorna",
+    "name_jp": "ヨルナ",
+    "variant": "挺身(+) · 조건부 捨身",
+    "grants": "self",
+    "activation": "ルナティック+(固有, 1회) / 前衛でターン開始時 패시브",
+    "effect_kr": "ルナティック+: 루나틱 3턴+挺身 3턴+기존 ZONE 파괴 후 極・刻陰陣. 전위 양옆이 '陰' 퍼스널리티면 매 턴 자신 ルナティック(捨身)(턴 종료까지).",
+    "src": "https://altema.jp/anaden/chara/1234"
+   },
+   {
+    "id": "nekoko_ac",
+    "name_jp": "高踏の妖猫",
+    "variant": "帯電 · SB 시 捨身",
+    "grants": "self",
+    "activation": "고유 ルナティック / 猫又陰陽撃(星導, MP95) SB",
+    "effect_kr": "고유: 루나틱+帯電 3턴. SB: 極・幻魔陣 + 자신 ルナティック(捨身)(턴 종료까지) + 적 전체 뇌 마법 극대 16배(珠 4/4 시 5회).",
+    "src": "https://altema.jp/anaden/chara/1202"
+   },
+   {
+    "id": "konshoku_no_muma",
+    "name_jp": "昏蝕の夢魔",
+    "variant": "捨身 · SB 시 心眼",
+    "grants": "self (+ 아군 전체 마법 오버크리)",
+    "activation": "ドリームバイツ(통상공격 변화) 첫 사용 / 終焉の安寧(星導, MP67) SB",
+    "effect_kr": "첫 ドリームバイツ 시 루나틱+捨身 3턴. SB: 자신 음공 100%·디버프 리버설·ルナティック＜心眼＞ 3턴·スイートメア 3 + 아군 전체 魔法オーバークリティカル 3턴, 본타 음 마법 3회 극대 40배.",
+    "src": "https://altema.jp/anaden/chara/1207"
+   },
+   {
+    "id": "celies_as",
+    "name_jp": "セリエス(AS)",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "白貫閃(星導, MP80)",
+    "effect_kr": "자신 ルナティック＜心眼＞(1턴) 후 적 전체 지 돌격 3회 극대. 鎧通 상태 天貫ノ一閃 = 극대 60배+배리어 관통+방어 무시. SB: 적 전체 弱点看破(突) 턴 종료까지.",
+    "src": "https://altema.jp/anaden/chara/1196"
+   },
+   {
+    "id": "aldo_as",
+    "name_jp": "アルド(AS)",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "レジェクション(星導, MP85)",
+    "effect_kr": "자신 HP/MP 100% 회복·상태이상·디버프 해제 + 心技一体 + ルナティック(心眼 3턴). SB: 時空超越 3턴.",
+    "src": "https://altema.jp/anaden/chara/1148"
+   },
+   {
+    "id": "ryuze",
+    "name_jp": "リュゼ",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "ドラゴンスレイヤー(星導, MP66) (SB 추가로 보임)",
+    "effect_kr": "자신 ルナティック(心眼) 3턴 + 수 돌격 3회 극대.",
+    "src": "https://altema.jp/anaden/chara/1045"
+   },
+   {
+    "id": "jilfany_as",
+    "name_jp": "ジルファニー(AS)",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック / クレッセンティア 輝晶陣 시",
+    "effect_kr": "クレッセンティア(MP68): 輝晶陣 전개 시 자신 ルナティック＜心眼＞ 3턴(水天陣이면 대신 요격).",
+    "src": "https://altema.jp/anaden/chara/1236"
+   },
+   {
+    "id": "iwela_as",
+    "name_jp": "イウェラ(AS)",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック / 스텔라보드: 전투 시작 시 ルナティック+",
+    "effect_kr": "ニテンスフィデース(MP53) 루나틱 시 위력 3배. オーラーティオー(MP34) 버프·디버프 1.5배. ※ altema 루나틱 일람은 複写로 분류하나 캐릭터 페이지 고유 어빌리티는 心眼.",
+    "src": "https://altema.jp/anaden/chara/1069"
+   },
+   {
+    "id": "iwera",
+    "name_jp": "イウェラ",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック / セムペル・テークム(星導 MP95) SB 시 ルナティック＜複写＞ 3턴",
+    "effect_kr": "アエテル・アモル(MP50): 루나틱 시 크리율 UP 횟수 2배 + クリスサナティオ 연속 실행. セーヴァフローレム(MP57): 루나틱 시 3히트·インサニア 축적·전속성내성 DOWN 6누적·크리 대미지 2배·インサニア에 따라 위력 증가.",
+    "src": "https://altema.jp/anaden/chara/840"
+   },
+   {
+    "id": "alma_as",
+    "name_jp": "アルマ(AS)",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック(MP0, 1회) / VC Lv2·3 첫 사용 시 ルナティック＋ / エリクシル・レイ로 ルナティック+ 재사용",
+    "effect_kr": "비 アルケミーハイ 시 アルカナ 5 축적. 요격 リフレクトバレット 보유.",
+    "src": "https://altema.jp/anaden/chara/1059"
+   },
+   {
+    "id": "victor",
+    "name_jp": "ヴィクト",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "ルナティック+(固有) / 再臨 7 축적 시 재사용",
+    "effect_kr": "루나틱 3턴+HP 100% 회복+帯電 3턴+歴戦 5턴(속도 100UP·HP 최대 100%). 歴戦 중 雷ノ刃 3배, 神鳴/電光 4배, 각종 스킬 강화.",
+    "src": "https://altema.jp/anaden/chara/811"
+   },
+   {
+    "id": "skull",
+    "name_jp": "スカル",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(1회, MP0)",
+    "effect_kr": "ゴッドハンド(MP40): 루나틱 시 AF 콤보 배율 증가량 UP+위력 증가. チャージ(MP25): 버프량 증가(수치 미기재).",
+    "src": "https://altema.jp/anaden/chara/834"
+   },
+   {
+    "id": "m3_melina_es",
+    "name_jp": "メリナ(ES)",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "オール・ホシア(MP55): 【ルナティック時追加】 위력 증가 + 아군 전체 크리 시 위력 50%UP(3턴). セラフ・メサイア: 버프량 증가.",
+    "src": "https://altema.jp/anaden/chara/857"
+   },
+   {
+    "id": "silver_thunder",
+    "name_jp": "銀織の雷使い",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック / ZONE 각성 자발 시 발동",
+    "effect_kr": "デリンジャー: 【ルナティック時追加】 공격 횟수 +2 + AF 콤보 배율에 따라 최대 5.5배.",
+    "src": "https://altema.jp/anaden/chara/916"
+   },
+   {
+    "id": "m4_mirsha",
+    "name_jp": "ミルシャ",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック(1회, MP0)+ZONE 각성",
+    "effect_kr": "アディス・トライナ(MP45): 루나틱 시 위력 증가+デルフィニ 증가+40% 경감 배리어(6회/3턴). タラサ・イファロス(MP60): 위력 증가.",
+    "src": "https://altema.jp/anaden/chara/831"
+   },
+   {
+    "id": "black_katana",
+    "name_jp": "黒衣の刀使い",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック + 스킬(アラネアツェペシュ ZONE 각성)로 발동 = 1전투 2회",
+    "effect_kr": "シャングリ・ラ(MP57): 【ルナティック時追加】 위력·회복량 4배(全ZONE 시 추가 2배).",
+    "src": "https://altema.jp/anaden/chara/902"
+   },
+   {
+    "id": "m3_curio",
+    "name_jp": "キュリオ",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "有為転変(MP49): 루나틱 시 아군 전체 크리율 100%(1회 행동).",
+    "src": "https://altema.jp/anaden/chara/898"
+   },
+   {
+    "id": "mistrea",
+    "name_jp": "ミストレア",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "マシアフ・ケシェト(MP54): 루나틱 시 위력 5배(複写로 2연속).",
+    "src": "https://altema.jp/anaden/chara/813"
+   },
+   {
+    "id": "mariel_es",
+    "name_jp": "マリエル(ES)",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "アウレア・アクィラ(MP50): 루나틱 시 회복량 2배+아군 전체 상태이상 회복.",
+    "src": "https://altema.jp/anaden/chara/990"
+   },
+   {
+    "id": "eva",
+    "name_jp": "エヴァ",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "アイシクルゾーク(MP52): 위력 4배 + 자신 지성·속도 30%UP(3턴, 4누적). グレイシャーベール(MP30): 버프·회복 2배 + MP 최대치 비례 마법 대미지 UP(5턴).",
+    "src": "https://altema.jp/anaden/chara/926"
+   },
+   {
+    "id": "nina",
+    "name_jp": "ニナ",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック / SB 시 ルナティック<複写> 3턴",
+    "effect_kr": "インスピレーション(MP40): 루나틱 시 コーディネイト 연속 실행(습득 시).",
+    "src": "https://altema.jp/anaden/chara/1171"
+   },
+   {
+    "id": "m4_clarte_as",
+    "name_jp": "クラルテ(AS)",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(1회, MP0)",
+    "effect_kr": "マーナガルム(MP62)/ヴェズルフェルニル(MP65): 루나틱 시 위력 증가+확정 크리. altema: 心眼으로 '通常の約3倍'.",
+    "src": "https://altema.jp/anaden/chara/864"
+   },
+   {
+    "id": "m2_nagi_es",
+    "name_jp": "ナギ(ES)",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "ヴァルヴァドス(MP57): 루나틱 시 위력 2배.",
+    "src": "https://altema.jp/anaden/chara/883"
+   },
+   {
+    "id": "sekitou_no_honootsukai",
+    "name_jp": "赤套の炎使い",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(1회, MP0) + 자신이 ZONE 각성 시 ルナティック 발동",
+    "effect_kr": "エクスキューション(MP55): 루나틱 시 위력 3배. altema 실측 心眼 약 220%, +약점 UP 약 275%.",
+    "src": "https://altema.jp/anaden/chara/904"
+   },
+   {
+    "id": "victor_as",
+    "name_jp": "ヴィクト(AS)",
+    "variant": "放電",
+    "grants": "self",
+    "activation": "고유 ルナティック",
+    "effect_kr": "ドブレランパーゴ(MP54): 루나틱 시 공격 횟수 2배+확정 크리. オスクロ・カーパ(MP62): 버프/디버프 턴 연장+확정 크리.",
+    "src": "https://altema.jp/anaden/chara/877"
+   },
+   {
+    "id": "hoshinoko",
+    "name_jp": "星の子",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(1회, MP0)",
+    "effect_kr": "고유 루나틱으로 心眼 3턴.",
+    "src": "https://altema.jp/anaden/chara/942"
+   },
+   {
+    "id": "tilril_es",
+    "name_jp": "チルリル(ES)",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(1회, MP0) / モケ 바디 효과",
+    "effect_kr": "心眼 3턴. 수치 미기재.",
+    "src": "https://altema.jp/anaden/chara/1061"
+   },
+   {
+    "id": "m3_nona",
+    "name_jp": "ノーナ",
+    "variant": null,
+    "grants": "self",
+    "activation": "(루나틱 보유; 변형 미확인)",
+    "effect_kr": "カルテロ계(선제 아군 전체 경감 배리어 턴 1회 + 전속성 공격 1회 행동): ストーリャ 30/20%→루나틱 40/30%, ズウォルタ 40/25%→50/35%, パラディゾ 50/30%→60/40%.",
+    "src": "https://altema.jp/anaden/chara/934"
+   },
+   {
+    "id": "kamlanage",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1037"
+   },
+   {
+    "id": "velette",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1035"
+   },
+   {
+    "id": "orleya_as",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1041"
+   },
+   {
+    "id": "oboro",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1049"
+   },
+   {
+    "id": "denei_no_myojo",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1079"
+   },
+   {
+    "id": "utsuhara",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1086"
+   },
+   {
+    "id": "izuna",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1116"
+   },
+   {
+    "id": "shion_es",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1144"
+   },
+   {
+    "id": "velette_as",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1150"
+   },
+   {
+    "id": "silver_thunder_as",
+    "variant": "帯電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1179"
+   },
+   {
+    "id": "cerrine",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/805"
+   },
+   {
+    "id": "m2_isuka_es",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/896"
+   },
+   {
+    "id": "black_katana_as",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1165"
+   },
+   {
+    "id": "craghorn",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1177"
+   },
+   {
+    "id": "elina_as",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1228"
+   },
+   {
+    "id": "senya",
+    "variant": "挺身",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1106"
+   },
+   {
+    "id": "m6_clarte",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/807"
+   },
+   {
+    "id": "melissa",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/860"
+   },
+   {
+    "id": "mildy",
+    "variant": "複写",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1175"
+   },
+   {
+    "id": "tsukuyomi",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/910"
+   },
+   {
+    "id": "venefica",
+    "variant": "捨身",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1057"
+   },
+   {
+    "id": "mistrea_as",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/911"
+   },
+   {
+    "id": "alma",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/952"
+   },
+   {
+    "id": "nilya",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1146"
+   },
+   {
+    "id": "dewey_ac_as",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1152"
+   },
+   {
+    "id": "eleanor",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1210"
+   },
+   {
+    "id": "havoc",
+    "variant": "心眼",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/1221"
+   },
+   {
+    "id": "orleya",
+    "variant": "放電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/936"
+   },
+   {
+    "id": "miyu_es",
+    "variant": "放電",
+    "grants": "self",
+    "activation": "고유 ルナティック(altema 일람 분류)",
+    "effect_kr": "altema 루나틱 일람 기준 변형만 확인(루나틱 전용 추가효과 미조사/없음)",
+    "src": "https://altema.jp/anaden/chara/938"
+   }
+  ]
+ }
+}

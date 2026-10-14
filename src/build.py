@@ -37,6 +37,13 @@ for c in chars:
 # 디버프 조건 규칙(지속·단일 대상 등), 체인 어빌리티
 drules=json.load(open(P('data','debuff_rules.json'),encoding='utf-8'))
 chain=json.load(open(P('data','chain.json'),encoding='utf-8'))
+echg=json.load(open(P('data','elem_change.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in echg and c['id']!='_doc': c['echange']={k:v for k,v in echg[c['id']].items() if k!='note'}
+inflict=json.load(open(P('data','inflict.json'),encoding='utf-8'))
+for c in chars:
+    x=inflict.get(c['id'])
+    if x: c['inflict']={k:x[k] for k in ('poison','pain','target','turns','on_main') if k in x}
 scond=json.load(open(P('data','skill_cond.json'),encoding='utf-8'))
 for c in chars:
     for k,v in (scond.get(c['id']) or {}).items():
