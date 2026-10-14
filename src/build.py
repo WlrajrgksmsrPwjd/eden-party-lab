@@ -40,9 +40,19 @@ chain=json.load(open(P('data','chain.json'),encoding='utf-8'))
 fate=json.load(open(P('data','fate.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in fate and c['id']!='_doc': c['fate_tbl']=fate[c['id']]
+# 기본 스탯(레벨 최대·천명치 0·장비 없음, 위키 Stats Index): [hp,mp,pwr,int,spd,end,spr,lck]
+stats=json.load(open(P('data','stats.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in stats and not c['id'].startswith('_'): c['stats']=stats[c['id']]
+# AF 중 스킬 연출 시간(초) 캐릭터별 값
+afan=json.load(open(P('data','af_anim.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in afan and not c['id'].startswith('_'): c['af_anim']=afan[c['id']]
 ctr=json.load(open(P('data','counter.json'),encoding='utf-8'))
 for c in chars:
-    if c['id'] in ctr and c['id']!='_doc': c['counter']=ctr[c['id']]
+    if c['id'] in ctr and not c['id'].startswith('_'): c['counter']=ctr[c['id']]
+    cv=(ctr.get('_cover') or {}).get(c['id'])
+    if cv: c['cover']=cv
 echg=json.load(open(P('data','elem_change.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in echg and c['id']!='_doc': c['echange']={k:v for k,v in echg[c['id']].items() if k!='note'}

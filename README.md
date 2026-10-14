@@ -18,7 +18,7 @@
 1. 새 캐릭터는 `src/data/chars_*.json`에 `src/data/SCHEMA.md` 형식으로 추가합니다. (`id`가 겹치지 않게)
 2. 조건부 버프(속성·무기·위치·존·SB 한정 등)가 있으면 `src/data/buff_rules.json`에 그 캐릭터 규칙을 추가합니다.
 3. MP·지속 턴·퍼스널리티·현현·한국어 스킬명은 `src/data/extra/*.json`에 `src/data/EXTRA_BRIEF.md` 형식으로 보강합니다.
-   - 디버프 지속·조건은 `debuff_rules.json`, 체인 어빌리티는 `chain.json`, 조건부 스킬 배율은 `skill_cond.json`, 결실 현현 보스·서약은 `bosses_kesshitsu.json` (형식은 SCHEMA.md)
+   - 디버프 지속·조건은 `debuff_rules.json`, 체인 어빌리티는 `chain.json`, 조건부 스킬 배율은 `skill_cond.json`, 결실 현현 보스·서약은 `bosses_kesshitsu.json`, 기본 스탯은 `stats.json`(위키 Stats Index) (형식은 SCHEMA.md)
 4. `src/data/meta.json`의 `updated` 날짜를 갱신합니다. (화면의 "데이터 기준" 표시에 쓰입니다)
 5. `python3 -I src/build.py`로 `index.html`을 다시 만듭니다.
 6. 페이지를 열어 새 캐릭터가 보유 목록·편성 결과에 제대로 나오는지 확인한 뒤 push 합니다.

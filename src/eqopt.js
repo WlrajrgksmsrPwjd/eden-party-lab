@@ -211,6 +211,12 @@ function itemsOf(st, s, wt, sel) {
   return out;
 }
 const kindFor = (s, wt) => kindOf(s.clsSel || clsOfWeapon(wt), s.kindBase || baseOfWeapon(wt));
+/* 장비 포함 스탯 (빌더의 D7~D10: 힘·지능·속도·운) — 조건부 스탯 장비는 이 조건 기준 */
+function statsOf(st, s, wt) {
+  const s2 = Object.assign({}, s, { kind: kindFor(s, wt) });
+  const b = buildInput(itemsOf(st, s2, wt, st.wc || {}), s2, wt).inp;
+  return { str: b.D7, int: b.D8, spd: b.D9, luck: b.D10, mp: b.D4 };
+}
 function evalState(st, s, wt) {
   const s2 = Object.assign({}, s, { kind: kindFor(s, wt) });
   // 선택형 장비: 코드에 정해진 줄은 그대로, 나머지는 대미지가 가장 높은 옵션 (빌더의 자동 선택과 같음)
@@ -396,6 +402,6 @@ function pShares(equip, ore) {
 }
 const slotLabel = k => (SLOTS.find(x => x[0] === k) || [k, k])[1];
 
-const API = { init, isReady: () => ready, makeS, optimize, evalState, buildCode, parseCode, pShares, oreName, nameOf, slotLabel, itemsOf, lockOf, TYPES, ARMOR_OF, OPT_ALL, GS, ITEMS: () => ITEMS, ORES: () => ORES, DEFAULT_S };
+const API = { init, isReady: () => ready, makeS, optimize, evalState, statsOf, buildCode, parseCode, pShares, oreName, nameOf, slotLabel, itemsOf, lockOf, TYPES, ARMOR_OF, OPT_ALL, GS, ITEMS: () => ITEMS, ORES: () => ORES, DEFAULT_S };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.AEEq = API;
 })(typeof window !== 'undefined' ? window : globalThis);

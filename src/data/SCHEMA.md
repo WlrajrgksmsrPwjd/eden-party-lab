@@ -126,7 +126,7 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 # 체인 어빌리티 (`chain.json`)
 
 키 = 캐릭터 id, 값 = 배열. `on`(발동 조건: `by` other/any, `act` attack/skill/buff/debuff/heal/any, `elem`·`wt`·`kind`·`tgt` 필터, `rand` 턴마다 무작위 조건 목록), `max`(턴당 최대), `atk`(추격: target kind stat element weapon_type size mult hits, 선택 `mult_seq`·`mult_max`), `every`(N회마다 공격), `when`(규칙 when 형식), `af`(AF 중 발동 여부, 모르면 null).
-턴당 발동 수 = min(max, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치.
+턴당 발동 수 = min(max, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회. AF 중에는 발동하지 않는다(사용자 확인).
 
 # 스킬 위력 조건 (`skill_cond.json`)
 
@@ -136,3 +136,22 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 # 결실 현현 보스 (`bosses_kesshitsu.json`)
 
 보스 스키마 + `required`(필수 캐릭터 id), `required_alt`(AS 등 대체 가능 후보), `enemies`(적 구성), `pledges`(페이지에 실린 서약 예시: `as_of`, `list[].conds[]` — kind `nokill` `size` `comp`(elem·weap·n, `gender`) `turns` `all` `other`). 서약은 매주 화요일 12:00(JST) 바뀌고 모든 보스가 같은 서약을 쓴다.
+
+# 캐릭터 기본 스탯 (`stats.json`)
+
+키 = 캐릭터 id, 값 = `[hp, mp, pwr, int, spd, end, spr, lck]` — 레벨 최대·천명치 0·장비 없음(영문 위키 Stats Index, 2026-10 사용자 제공 PDF). 빌드 때 캐릭터 `stats`로 들어간다.
+천명치 t의 값 = 기본 + `fate.json` 단계 보너스 합(t 이하) + t≥255이면 힘·지성·속도·내구·정신·운 +10 (엔진 `statsAt`). 위키 영문 이름 ↔ id 대응은 천명 보너스 순서로 검증했다.
+엔진 사용: 주 스탯 대미지 (스탯/기준)^지수(물리 기준 221·지수 1.0, 마법 232·1.1, 빌더 계산식에서 잰 값), 물리 크리율 +(운−156)/1600, 속도(1턴 버프 순서·AF 249 판정, 빌드 코드가 있으면 장비 포함 속도).
+
+# 천명치 보너스 (`fate.json`)
+
+키 = 캐릭터 id, 값 = `[[단계, {스탯: 값}], …]` (단계 5·15·30·50·75·105·140·175·215·255, 스탯 키 hp mp pwr int spd end spr luck). altema 표에 위키 Stats Index로 어긋난 표를 바로잡았다.
+
+# AF 연출 시간 (`af_anim.json`)
+
+키 = 캐릭터 id, 값 = AF 중 스킬 연출 시간(초). 없으면 계산 방식 탭의 기본값(2초). 재행동·연속 실행 스킬은 엔진이 실행 횟수만큼 곱한다.
+
+# 요격 (`counter.json`)
+
+키 = 캐릭터 id, 값 = `{trig, taunt, copy?, atk}`. 맞은 타수마다 1번 반격(`copy`: 루나틱<복사>면 2번), 행동불능 상태이상이면 발동 안 함.
+`_cover` = `{id: "aoe"|"sb"}` 아군 대신 맞기(수세·전체공격 대신 받기). aoe면 적 전체공격 1번이 전열 수만큼 그 캐릭터에게 들어온다. 빌드 때 캐릭터 `cover`로 들어간다.

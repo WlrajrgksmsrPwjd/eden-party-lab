@@ -201,11 +201,12 @@ function jobSnap(){
   return {ids, own:JSON.parse(JSON.stringify(own)), S:settings(), cap};
 }
 const progJ = (J,id) => E.charProg(byId.get(id), J.own[id], J.S);
-const ctxOf = (inp, J) => E.buildCtx(inp, J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)})));
+const ctxOf = (inp, J) => E.buildCtx(Object.assign({pgl: pglInput()}, inp), J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)})));
 const ownedJ = J => J.ids.filter(id=>byId.has(id)).map(id=>({pc:byId.get(id), prog:progJ(J,id)}));
 /* E.optimize와 같은 모양의 결과를 돌려준다. 새 계산에 밀려 버려지면 null */
 async function calcOptimize(chan, inp, onProgress, J){
   J = J || jobSnap();
+  if(inp && inp.pgl===undefined) inp = Object.assign({pgl: pglInput()}, inp);
   const lr = await viaWorker(chan, {type:'optimize', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp}, onProgress);
   if(lr===CANCELED) return null;
   if(lr===FALLBACK){ calcStat('main'); return E.optimize(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap}), onProgress); }
@@ -230,6 +231,7 @@ async function calcOptimize(chan, inp, onProgress, J){
 }
 async function calcPerChar(inp, onProgress){
   const J = jobSnap();
+  if(inp && inp.pgl===undefined) inp = Object.assign({pgl: pglInput()}, inp);
   const lr = await viaWorker('pc', {type:'perChar', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp}, onProgress);
   if(lr===CANCELED) return null;
   if(lr===FALLBACK){ calcStat('main'); return E.perCharBest(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap}), onProgress); }
@@ -312,6 +314,22 @@ const clampP = v => Math.max(-100, Math.min(100, Math.round(+v||0)));
 const baseName = n => String(n||'').replace(/\s*\(.*\)\s*$/,'').trim();
 /* 빌더 기본 스탯(물리 캐릭터 기준)을 주 스탯에 맞게 */
 function eqBaseStats(kind, stat){ const s={str:237, int:162, spd:249, luck:150, mp:512}; if(kind==='mag' && stat!=='pwr'){ s.str=162; s.int=237; } return s; }
+/* 캐릭터 기본 스탯(위키 Stats Index) + 천명치 보너스 → 빌더 스탯 칸 (장비 제외) */
+function wikiStats(c, fate){ const w=E.statsAt(c.stats, c.fateTbl, +fate||0); return w ? {str:w.pwr, int:w.int, spd:w.spd, luck:w.lck, mp:w.mp} : null; }
+const realSt = st => st && st.str && !E.isBuilderDefault(st) ? st : null;
+/* 캐릭터 스탯 표 (레벨 최대·장비 제외): 천명치 0 / 현재 / 255 */
+const STAT_KR = {hp:'HP', mp:'MP', pwr:'힘', int:'지성', spd:'속도', end:'내구', spr:'정신', lck:'운'};
+let SPD_SORTED = null;
+function spdRank(v){ if(!SPD_SORTED) SPD_SORTED = prepped.filter(p=>p.stats).map(p=>p.stats[4]).sort((a,b)=>b-a); let n=0; for(const x of SPD_SORTED) if(x>v) n++; return {n:n+1, of:SPD_SORTED.length}; }
+function statBoxHtml(c, t){
+  if(!c.stats) return `<div class="statbox"><p class="hint">기본 스탯 자료가 없습니다 (위키 Stats Index에 없는 캐릭터). 천명 보너스만 계산에 씁니다.</p></div>`;
+  const cols = [0].concat(t>0 && t<255 ? [t] : [], [255]);
+  const V = cols.map(v=>E.statsAt(c.stats, c.fateTbl, v));
+  const ms = c.mainStat, rk = spdRank(c.stats[4]);
+  return `<div class="statbox"><table class="sttbl"><thead><tr><th scope="col">스탯</th>${cols.map(v=>`<th scope="col">천명 ${v}${v===t?' (지금)':''}</th>`).join('')}</tr></thead><tbody>
+    ${E.STAT_ORDER.map(k=>`<tr${k===ms?' class="main"':''}><th scope="row">${STAT_KR[k]}${k===ms?' <span class="hint">주 스탯</span>':''}</th>${V.map(o=>`<td class="num">${o[k].toLocaleString()}</td>`).join('')}</tr>`).join('')}</tbody></table>
+    <p class="hint">레벨 최대·장비 제외(위키 Stats Index). 천명치 255에서 힘~운 +10. 기본 속도 ${rk.n}위 / ${rk.of}명 — AF 대기 단축 기준 249는 장비 포함 속도.</p></div>`;
+}
 /* 조합 결과의 한 캐릭터 → 빌더 계산 조건 (평상 주력기 · 이 조합의 버프·존·약점) */
 function eqCondFromTeam(x, i){
   const c=x.team[i], ev=x.ev, S=settings();
@@ -320,9 +338,10 @@ function eqCondFromTeam(x, i){
   const o = (x.owns&&x.owns[i]) || state.owned[c.id] || null;
   const others = x.team.filter((_,k)=>k!==i).concat(x.reserves||[]);
   const share = ev.mule ? (ev.mule.k[i]||0) : 0;
-  const st = (o && o.build && o.build.st) || eqBaseStats(co.kind, co.stat);
+  const fate = o ? (+o.t||0) : 80;
+  const st = realSt(o && o.build && o.build.st) || wikiStats(c, fate) || eqBaseStats(co.kind, co.stat);
   const s = {
-    str:st.str, int:st.int, spd:st.spd, luck:st.luck, mp:st.mp, who: baseName(c.name), fate: o ? (+o.t||0) : 80, tlv:140,
+    str:st.str, int:st.int, spd:st.spd, luck:st.luck, mp:st.mp, who: baseName(c.name), fate, tlv:140,
     atkCls: co.kind==='mag'?'마법':'물리', kind: STAT_B[co.stat]||'', atkType: co.kind==='mag'?'':(WT_B[co.wt]||''),
     elem: EL_B[co.el]||'무속성', range: co.tgt==='st'?'단일':'전체',
     power: Math.max(10, Math.round(co.sizeV*100*co.mult/(co.baseHits||1))), hits: Math.max(1, Math.round(co.totHits)),
@@ -352,7 +371,7 @@ function eqCondNeutral(c, st, fate, v){
   const T = E.SIZE_TABLE[tgt+'_'+kind+'_'+(el==='none'?'no':'el')] || E.SIZE_TABLE.aoe_phys_el;
   const sizeV = T[E.SIZE_IDX[sk.size]??3]/100, hits = Math.max(1, sk.hits||1), stat = sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
   const wt = kind==='mag' ? 'magic' : (sk.weapon_type||c.wt);
-  const b = st || eqBaseStats(kind, stat);
+  const b = realSt(st) || wikiStats(c, fate) || eqBaseStats(kind, stat);
   return {str:b.str, int:b.int, spd:b.spd, luck:b.luck, mp:b.mp, who: baseName(c.name), fate: +fate||0, tlv:140,
     atkCls: kind==='mag'?'마법':'물리', kind: STAT_B[stat], atkType: kind==='mag'?'':(WT_B[wt]||''),
     elem: EL_B[el]||'무속성', range: tgt==='st'?'단일':'전체', power: Math.max(10, Math.round(sizeV*100*Math.max(1, sk.mult||1)/hits)), hits,
@@ -426,7 +445,8 @@ async function eqApplyCode(id, text, onMsg){
   const wt=E.WEAPON_KR[c.weapon];
   if(R.wt && R.wt!==wt) throw new Error(`${c.name}은(는) ${wt} 캐릭터인데 이 빌드는 ${R.wt} 빌드입니다.`);
   if(!R.equip.weapon) throw new Error('빌드에 무기가 없습니다.');
-  const st = R.st && R.st.str ? {str:+R.st.str, int:+R.st.int, spd:+R.st.spd, luck:+R.st.luck, mp:+R.st.mp} : null;
+  // 빌드에 캐릭터 스탯이 들어 있으면 그 값(빌더 기본값이면 무시하고 위키 기본 스탯)
+  const st = realSt(R.st && R.st.str ? {str:+R.st.str, int:+R.st.int, spd:+R.st.spd, luck:+R.st.luck, mp:+R.st.mp} : null);
   const fate = R.st && R.st.fate!=null ? +R.st.fate : (+o.t||0);
   const from={equip:R.equip, ore:R.ore};
   // 장비 완성도: 파티 상황 유형 4가지에서 같은 조건의 최적 장비 대비 비율을 재고, 이 빌드에 가장 맞는 상황의 값을 쓴다
@@ -442,7 +462,9 @@ async function eqApplyCode(id, text, onMsg){
   }
   const qi=r.indexOf(Math.max(...r));
   const ps=EQ.pShares(R.equip, R.ore);
-  o.build={code:R.code, wt, equip:R.equip, ore:R.ore, wc:R.wc||{}, st, fate, q:r[qi], qn:V[qi].n, r, ps, spd:st?st.spd:0,
+  // 장비 포함 속도·운 (속도 순서·AF 행동 수에 씀)
+  let tot=null; try{ tot=EQ.statsOf({equip:R.equip, ore:R.ore, wc:R.wc||{}}, EQ.makeS(eqCondNeutral(c, st, fate, V[qi])), wt); }catch(e){}
+  o.build={code:R.code, wt, equip:R.equip, ore:R.ore, wc:R.wc||{}, st, fate, q:r[qi], qn:V[qi].n, r, ps, spdTot: tot?Math.round(tot.spd):0, lckTot: tot?Math.round(tot.luck):0,
     weapon:EQ.nameOf(R.equip.weapon), miss:R.miss||[], at:new Date().toISOString().slice(0,10)};
   touchRoster();
   return o.build;
@@ -513,6 +535,21 @@ function renderBudGrid(){
   const g=$('#budGrid'); if(!g) return;
   g.innerHTML = Object.entries(BUDDIES).map(([k,b])=>`<label><input type="checkbox" data-bud="${esc(k)}" ${state.buddies&&state.buddies[k]?'checked':''}><span>${esc(b.kr)}<span class="hint">${esc(b.jp)}</span></span></label>`).join('');
   $('#budN').textContent = ownBud().length;
+}
+
+/* ---------- 연성 P글래 보유 (무기 퍼스널리티 × 대미지 P글래, 딩 님 빌더 목록 기준) ---------- */
+const PGL_WEAP = ['검','도','도끼','창','활','권갑','망치','지팡이'];
+const PGL_COLS = [['fire','폭염의 힘','불'],['water','격류의 힘','물'],['earth','격진의 힘','땅'],['wind','열풍의 힘','바람'],['thunder','분뇌의 힘','번개'],['shade','검은 그림자의 힘','그림자'],['crystal','결정의 힘','결정'],['none','허공의 힘','무속성'],['hp','HP 최대 시 강화','HP 최대'],['zone','각성의 힘','각성(존)']];
+const pglState = () => (state.pgl = state.pgl || {});
+function pglCount(){ let n=0; for(const w in (state.pgl||{})) for(const k in state.pgl[w]) if(state.pgl[w][k]>0) n++; return n; }
+/* 엔진 입력: 표시가 하나도 없으면 null(전부 있다고 가정). '2개 이상'은 셔틀 최대 수(4)로 */
+function pglInput(){ if(!pglCount()) return null; const o={}; for(const w of PGL_WEAP){ const r=(state.pgl||{})[w]||{}; o[w]={}; for(const [k] of PGL_COLS) o[w][k]= r[k]>=2 ? 4 : (r[k]||0); } return o; }
+function renderPglTbl(){
+  const t=$('#pglTbl'); if(!t) return;
+  const P=state.pgl||{}, lab=['없음','1개','2개 이상'];
+  t.innerHTML = `<thead><tr><th scope="col">퍼스널리티</th>${PGL_COLS.map(([k,n,s])=>`<th scope="col" title="${esc(n)}">${esc(s)}</th>`).join('')}</tr></thead><tbody>`
+    + PGL_WEAP.map(w=>`<tr><th scope="row">${esc(w)}</th>${PGL_COLS.map(([k,n])=>{ const v=(P[w]&&P[w][k])||0; return `<td><button type="button" class="pgc v${v}" data-pw="${esc(w)}" data-pk="${k}" aria-label="${esc(n)} <${esc(w)}>: ${lab[v]}">${v===0?'–':v===1?'1':'2+'}</button></td>`; }).join('')}</tr>`).join('') + '</tbody>';
+  const n=pglCount(); $('#pglN').textContent = n ? `${n}종 표시` : '전부 있다고 가정';
 }
 
 /* ---------- 결현현(결실 현현) 서약 ---------- */
@@ -907,17 +944,18 @@ function closeShare(){
 const slotTxt = v => Number.isInteger(v) ? String(v) : v.toFixed(1);
 function muleBadge(x, c){ const mu=x.ev.mule; if(!mu) return ''; const w=mu.auto?mu.wp:null; return w && c.pers && c.pers.has(w) ? ' <span class="fixed">셔틀</span>' : ''; }
 function allocTxt(al){ if(!al) return ''; if(al.pct) return [al.e?`속성·HP +${al.e}%`:'', al.z?`존 +${al.z}%`:'', al.t?`특정 존 +${al.t}%`:''].filter(Boolean).join(' · ');
-  return (al.z||al.t) ? [`속성 ${al.e}`, al.z?`존 ${al.z}`:'', al.t?`특정 존 ${al.t}`:''].filter(Boolean).join(' · ') : ''; }
+  if(al.el==null) return '';
+  return [al.el?`${al.el>1?al.el+'×':''}속성 P`:'', al.hp?`${al.hp>1?al.hp+'×':''}HP 최대 P`:'', al.z?`${al.z>1?al.z+'×':''}각성의 힘`:''].filter(Boolean).join(' · ')+` (+${al.ev}%${al.z?` · 존 중 ×${(1+0.25*al.z).toFixed(2)}`:''})`; }
 function muleGot(x){
   const mu=x.ev.mule; if(!mu) return [];
   return x.team.map((c,i)=>{ if(!(mu.k[i]>0) && !(mu.kd&&mu.kd[i])) return null; const co=x.ev.sb.cores[i], al=co&&co.gq&&co.gq.alloc, at=allocTxt(al);
-    return `${esc(c.name)} ${al&&al.pct?'':'+'+slotTxt(mu.k[i])+'칸'}${at?` (${esc(at)})`:''}`; }).filter(Boolean);
+    return `${esc(c.name)} ${al&&al.pct?'':al&&al.el!=null?`P글래 ${al.e+al.z}개`:'+'+slotTxt(mu.k[i])+'칸'}${at?` (${esc(at)})`:''}`; }).filter(Boolean);
 }
 function muleLine(x){
   const mu=x.ev.mule; if(!mu) return '';
   const got = muleGot(x);
   const fr = (mu.front||[]).map(j=>esc(x.team[j].name));
-  const zoneTip = x.ev.sb.zone && x.ev.sb.zone.level ? ' · 존이 깔리면 ZONE 전개 중(+25%)·○○진(+15%) P글래를 섞는 게 이득 (속성 P글래와 다른 그룹이라 곱해짐)' : '';
+  const zoneTip = x.ev.sb.zone && x.ev.sb.zone.level ? ' · 존이 깔리면 셔틀마다 각성의 힘(ZONE 전개 중 +25%)을 섞는 게 이득 (속성 P글래와 다른 그룹이라 곱해짐)' : '';
   if(mu.auto) return `<div class="hint">P글래 셔틀 가정: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 ${mu.mules.length?`후열 ${mu.mules.length}명`:''}${mu.mules.length&&fr.length?' + ':''}${fr.length?`전열 서포터 ${fr.join(', ')}`:''}이 잠재 연성한 P글래를 공유 → ${got.join(', ')||'—'}${zoneTip}</div>`;
   return `<div class="hint">후열 고정 셔틀의 P글래 공유: ${got.join(', ')||'<span class="ng">무기 퍼스널리티가 맞는 전열 캐릭터 없음</span>'}</div>`;
 }
@@ -994,7 +1032,13 @@ function turnPlanHtml(x, boss){
     if(tl && tl.givers && tl.givers.length && tl.t1u > tl.t1g*1.05){
       const att = team.map((c,i)=>i).filter(i=>tl.actT1[i] && (shN[i]>=0.25||shSB[i]>=0.3));
       const gv = tl.givers.filter(j=>!att.includes(j));
-      if(att.length && gv.length) o1.push(`속도 순서: 버퍼 ${gv.map(nm).join(', ')} → 딜러 ${att.map(nm).join(', ')} 순서여야(<b>버퍼가 더 빨라야</b>) 1턴 공격에 버프·디버프가 들어감 (1턴 딜 ${fmtN(tl.t1g)} → ${fmtN(tl.t1u)}) — 버퍼에 속도 글래스터·배지, 아니면 딜러는 2턴부터 본격 공격`);
+      const sp = i=>(x.progs[i]&&x.progs[i].spd)||0, spT = i=>sp(i)?` (속도 ${sp(i)})`:'';
+      const fastD = Math.max(0, ...att.map(sp)), slow = gv.filter(j=>sp(j) && fastD && sp(j)<=fastD);
+      if(att.length && gv.length){
+        if(gv.every(j=>sp(j)) && att.every(i=>sp(i)) && !slow.length) o1.push(`속도 순서 OK: 버퍼 ${gv.map(j=>nm(j)+spT(j)).join(', ')}가 딜러 ${att.map(i=>nm(i)+spT(i)).join(', ')}보다 빨라 1턴 공격에 버프·디버프가 들어감 (1턴 딜 ${fmtN(tl.t1u)})`);
+        else if(slow.length) o1.push(`속도 순서: 버퍼 ${slow.map(j=>nm(j)+spT(j)).join(', ')}가 딜러 ${att.map(i=>nm(i)+spT(i)).join(', ')}보다 느림 → 버퍼 속도 <b>+${fastD-Math.min(...slow.map(sp))+1} 이상</b>(속도 글래스터·배지)이면 1턴 딜 ${fmtN(tl.t1g)} → ${fmtN(tl.t1u)}, 아니면 딜러는 2턴부터 본격 공격`);
+        else o1.push(`속도 순서: 버퍼 ${gv.map(nm).join(', ')} → 딜러 ${att.map(nm).join(', ')} 순서여야(<b>버퍼가 더 빨라야</b>) 1턴 공격에 버프·디버프가 들어감 (1턴 딜 ${fmtN(tl.t1g)} → ${fmtN(tl.t1u)}) — 버퍼에 속도 글래스터·배지, 아니면 딜러는 2턴부터 본격 공격`);
+      }
     }
     o1.push('AF 중에는 누르는 순서대로 바로 행동하므로 버프 → 딜 순서를 직접 맞출 수 있음'); }
   if(!o1.length) o1.push('특별한 준비 없이 바로 공격');
@@ -1091,6 +1135,9 @@ function setupHtml(x, i){
   const L = []; // 이 조합에서
   if(x.shared && !x.mine[i]) L.push(x.real ? '<li><span class="ng">미보유</span> — 아래 값은 천명치 80·성도각성으로 가정한 것</li>' : '<li class="hint">보유 정보가 없어 천명치 80·성도각성으로 가정한 값입니다</li>');
   L.push(`<li>${role} · SB 턴 비중 <span class="num">${(sSB*100).toFixed(0)}%</span> · 평상 턴 <span class="num">${(sN*100).toFixed(0)}%</span></li>`);
+  { const st = c.stats ? E.statsAt(c.stats, c.fateTbl, pr.t||0) : null;
+    if(st) L.push(`<li>스탯 <span class="hint">(천명치 ${pr.t||0}, 장비 제외)</span>: ${E.STAT_ORDER.map(k=>`${k===c.mainStat?'<b>':''}${STAT_KR[k]} ${st[k].toLocaleString()}${k===c.mainStat?'</b>':''}`).join(' · ')}${pr.spdSrc==='build'?` · <span class="hint">빌드 장비 포함 속도 ${pr.spd}</span>`:''}</li>`);
+    else L.push(`<li class="hint">스탯: 기본 스탯 자료 없음 (위키에 없는 캐릭터)</li>`); }
   L.push(`<li>전방 <b>왼쪽에서 ${slot}번째</b>${ex.posTotal?'':' (위치 조건 없음 · 아무 자리나)'}</li>`);
   for(const rl of ex.rel){
     if(rl.j===i) L.push(`<li>위치 버프 대상 <b>${nm(rl.i)}</b>을(를) 바로 ${rl.side==='r'?'오른쪽':rl.side==='l'?'왼쪽':'옆'}에</li>`);
@@ -1138,15 +1185,21 @@ function setupHtml(x, i){
     if(ore.f>best.f*1.02) txt += ` · <b>잠재 광석</b>을 글래스터 1개에 달면 이 캐릭터가 공격으로 독·페인을 직접 걸어 <b>${esc(glText(ore))}</b> (×${ore.f.toFixed(2)})`;
     const nmL = L=>[...new Set(L)].map(k=>x.team[k].name).join(', ');
     txt += `<div class="hint">이 조합의 독: ${inf.poison>0?esc(nmL(inf.by.poison))+` (평상 가동 ${Math.round(inf.poison*100)}%)`:'없음'} · 페인: ${inf.pain>0?esc(nmL(inf.by.pain))+` (${Math.round(inf.pain*100)}%)`:'없음'} — 독·페인 글래스터는 대상이 그 상태일 때만 ×1.3</div>`;
-    G.push(`<li>${mark(cur && (cur.f/(cur.share? (1+0.3*(cur.e||0)+settings().mulePct*cur.share)/(1+0.3*(cur.e||0)) : 1))>=best.f-1e-6)} 공격 글래스터: ${txt} <span class="hint">(현재 ${cur?esc(glText(cur)):'—'}, ${pr.slots}칸)</span></li>`);
+    G.push(`<li>${mark(cur && (cur.f/(cur.alloc&&cur.alloc.f ? cur.alloc.f : 1))>=best.f-1e-6)} 공격 글래스터: ${txt} <span class="hint">(현재 ${cur?esc(glText(cur)):'—'}, ${pr.slots}칸)</span></li>`);
     const mu=ev.mule; const wpk=E.WEAPON_PERS[c.weapon];
     if(mu){ const al = cur && cur.alloc, at = allocTxt(al);
-      G.push(`<li>${mark(mu.k[i]>0 || (mu.kd&&mu.kd[i]))} 셔틀 P글래 공유: ${mu.k[i]>0||(mu.kd&&mu.kd[i])?`${al&&al.pct?'':'+'+slotTxt(mu.k[i])+'칸 '}(${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티)${at?` — 배분 ${esc(at)}`:''}`:`없음 — ${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티 셔틀이 있으면 +${settings().muleSlots}칸씩`}</li>`); }
+      G.push(`<li>${mark(mu.k[i]>0 || (mu.kd&&mu.kd[i]))} 셔틀 P글래 공유: ${mu.k[i]>0||(mu.kd&&mu.kd[i])?`${al&&al.pct?'':al&&al.el!=null?`P글래 ${al.e+al.z}개 `:'+'+slotTxt(mu.k[i])+'칸 '}(${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티)${at?` — ${esc(at)}`:''}`:`없음 — ${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티 셔틀이 있으면 1명당 속성 P글래·HP 최대 P글래(존이 깔리면 각성의 힘까지)`}</li>`); }
+    if(mu && pglCount()){ // 연성 P글래 보유를 표시했으면 이 캐릭터에게 빠진 것
+      const r=(state.pgl||{})[E.WEAPON_KR[c.weapon]]||{}, el=(co0=>co0?co0.el:(c.elem||'none'))(ev.sb.cores[i]||ev.normal.cores[i]);
+      const want=[[el, (PGL_COLS.find(x=>x[0]===el)||[])[1]], ['hp','HP 최대 시 강화'], ...(ev.sb.zone&&ev.sb.zone.level||ev.normal.zone&&ev.normal.zone.level?[['zone','각성의 힘']]:[])].filter(([k,n])=>n && !(r[k]>0));
+      if(want.length) G.push(`<li>! 연성하면 좋은 P글래: ${want.map(([k,n])=>`<b>${esc(n)}</b>&lt;${esc(E.WEAPON_KR[c.weapon])}&gt;`).join(', ')} <span class="hint">(보유 탭 '연성 P글래 보유' 기준, 셔틀이 달면 이 캐릭터에게 공유)</span></li>`); }
     if((mu && mu.front||[]).includes(i)) G.push(`<li>이 캐릭터는 전열 서포터라 자기 공격 글래스터 대신 <b>잠재 연성한 P글래</b>를 달아 딜러에게 공유하는 쪽이 이득</li>`);
     if(c.manifestMax===0) G.push(`<li>현현 무기: 이 캐릭터는 없음</li>`);
     else G.push(`<li>${mark((+o.m||0)>=(c.manifestMax||1))} 현현 무기: ${c.manifestMax===2?'진현현까지 있음':c.manifestMax===1?'현현 있음':'현현 ×1.08 · 진현현 ×1.15'} <span class="hint">(현재 ${['없음','현현','진현현'][+o.m||0]})</span></li>`);
-    if(ev.afA && ev.afA.auto){ const fa=ev.afA.fast[i], kn=ev.afA.known&&ev.afA.known[i];
-      G.push(`<li>${mark(fa)} AF 중 행동 <b>${ev.afA.n[i]}회</b> (AF 약 ${ev.afA.dur.toFixed(0)}초) · 속도 ${fa?'249 이상':'249 미만'}${kn?' (빌드 코드 기준)':' (가정)'}${fa?'':' — 속도 249를 넘기면 AF 대기 시간이 1초씩 줄어 행동이 늘어날 수 있음 (속도 글래스터·배지)'}</li>`); }
+    if(ev.afA && ev.afA.auto){ const fa=ev.afA.fast[i], kn=ev.afA.known&&ev.afA.known[i], sp=ev.afA.spd&&ev.afA.spd[i], gs=+settings().gearSpd||0;
+      const src = kn==='build'?'빌드 코드, 장비 포함':kn==='build-st'?`빌드에 넣은 스탯${gs?` + 장비 ${gs}`:''}`:kn==='wiki'?`기본 스탯·천명치 ${pr.t}${gs?` + 장비 ${gs}`:', 장비 제외'}`:'모름';
+      const need = !fa && sp ? 249-sp : 0;
+      G.push(`<li>${mark(fa)} AF 중 행동 <b>${ev.afA.n[i]}회</b> (AF 약 ${ev.afA.dur.toFixed(0)}초) · 속도 ${sp?`<b>${sp}</b> (${fa?'249 이상':'249 미만'})`:(fa?'249 이상':'249 미만')} <span class="hint">${src}</span>${fa?'':need>0?` — 속도를 <b>+${need}</b>(속도 글래스터·배지) 올려 249가 되면 AF 대기 시간이 1초씩 줄어 행동이 늘어날 수 있음`:' — 속도 249를 넘기면 AF 대기 시간이 1초씩 줄어 행동이 늘어날 수 있음 (속도 글래스터·배지)'}</li>`); }
     const sm = ev.sim;
     if(sm){ const mi=sm.mainN[i], H=sm.H;
       G.push(`<li>${mark(!sm.out[i])} MP: 주력기 ${c.mpMain!=null?c.mpMain:'?'} · 최대 약 ${sm.mpMax[i]} → ${H}턴 중 주력기 ${mi}번${sm.out[i]?`, ${sm.out[i]}턴째부터 부족 → MP 소비 감소 글래스터·MP 회복 지원·후열 교대`:' (여유)'}</li>`); }
@@ -1478,7 +1531,8 @@ function rowHtml(c){
   const head=`<input type="checkbox" id="own-${esc(c.id)}" data-own="${esc(c.id)}" ${o?'checked':''} aria-label="${esc(c.name)} 보유">
     <label class="who" for="own-${esc(c.id)}"><span class="n">${esc(c.name)}${r._custom?' <span class="badge">직접 추가</span>':''}</span>
     <span class="m">${(c.elems.length?c.elems:['none']).map(elChip).join('')} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)}${c.align==='light'?'천':'명'} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span></label>`;
-  if(!o) return `<div class="row off" data-id="${esc(c.id)}">${head}<div class="ctl"><span class="hint">${esc((r.note_kr||'').slice(0,70))}${(r.note_kr||'').length>70?'…':''}</span></div></div>`;
+  const stBtn = `<button type="button" class="lnk" data-stat aria-expanded="false" title="기본 스탯과 천명치별 값">스탯</button>`;
+  if(!o) return `<div class="row off" data-id="${esc(c.id)}">${head}<div class="ctl">${stBtn}<span class="hint">${esc((r.note_kr||'').slice(0,70))}${(r.note_kr||'').length>70?'…':''}</span></div><div class="stwrap" hidden></div></div>`;
   const t=+o.t||0;
   const warn = c.stellar && o.s && t<15 ? `<span class="badge warn">15 미만: 성도 스킬 잠김</span>` : '';
   const gk = glKey(o.gl);
@@ -1492,8 +1546,8 @@ function rowHtml(c){
       <label>공격 글래 <select data-f="gl">${Object.entries(GL_PRESETS).map(([k,p])=>`<option value="${k}"${gk===k?' selected':''}>${p.label}</option>`).join('')}</select></label>
       <label title="잠재 광석: 장착 캐릭터가 공격으로 독·페인을 직접 부여"><input type="checkbox" data-f="ore" ${o.gl&&o.gl.ore?'checked':''} ${o.gl?'':'disabled'}> 잠재 광석</label>
       <span class="badge">${t>=200?'글래 4칸':'글래 3칸'}</span>${warn}
-      ${buildCtlHtml(c, o)}
-    </div></div>`;
+      ${buildCtlHtml(c, o)} ${stBtn}
+    </div><div class="stwrap" hidden></div></div>`;
 }
 function onRosterChange(e){
   const t=e.target;
@@ -1660,11 +1714,13 @@ function renderConsts(){
     <div class="crow"><span>스탯 환산 계수 (1타 상한 100억 기준)</span><input type="number" step="1000" min="1000" id="cCap" value="${S.statK}"><span></span><span></span></div>
     <div class="crow"><span>AF 행동 수</span><label class="checkrow" style="align-items:center" title="게이지(초당 10% 감소, 타격으로 충전)와 속도(249 기준 대기 시간)로 캐릭터별 행동 수를 계산"><input type="checkbox" id="cAfAuto" ${S.afAuto!==false?'checked':''}> 자동(게이지·속도)</label><label style="display:flex;gap:4px;align-items:center" title="자동을 끄면 모두 이 횟수">고정 <input type="number" step="1" min="1" max="15" id="cAf" value="${S.afActions}" style="width:56px"></label><label class="checkrow" style="align-items:center" title="지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣음"><input type="checkbox" id="cAfCycle" ${S.afCycle!==false?'checked':''}> 지속 딜에 AF 주기</label></div>
     <div class="crow"><span>AF 연출 시간(초) · 속도</span><input type="number" step="0.5" min="0.5" max="5" id="cAfAnim" value="${S.afAnim}"><label class="checkrow" style="align-items:center" title="빌드 코드가 없는 캐릭터의 속도를 249 이상으로 볼지"><input type="checkbox" id="cAfFast" ${S.afFastDefault?'checked':''}> 빌드 없는 캐릭터도 속도 249 이상</label><span></span></div>
+    <div class="crow"><span>캐릭터 스탯 · 장비 속도</span><label class="checkrow" style="align-items:center" title="위키 Stats Index의 기본 스탯과 천명치 보너스로 주 스탯 대미지(힘·지성·속도), 운(물리 크리율), 속도(1턴 버프 순서·AF 행동 수)를 계산"><input type="checkbox" id="cUseStats" ${S.useStats!==false?'checked':''}> 기본 스탯 반영</label><label style="display:flex;gap:4px;align-items:center" title="빌드 코드가 없는 캐릭터의 장비·글래스터·배지 속도. 기본 스탯(장비 제외)에 더해 속도 249 판정과 행동 순서에 씀">장비 속도 + <input type="number" step="5" min="0" max="200" id="cGearSpd" value="${+S.gearSpd||0}" style="width:60px"></label><span></span></div>
+    <div class="crow"><span>요격: 적 1체 턴당 타수 · 전체 공격 비율</span><input type="number" step="0.5" min="0.5" max="10" id="cEnHits" value="${S.enemyHits}" title="적 1체가 평상 턴에 아군에게 넣는 타수. 요격은 맞은 타수마다 1번"><input type="number" step="0.1" min="0" max="1" id="cEnAoE" value="${S.enemyAoE}" title="그중 전체 공격 비율. 전체 공격은 전열 모두가 맞고, 수세(아군 전체공격 대신 받기)면 전열 수만큼 한 캐릭터가 맞음"><span></span></div>
     <div class="crow"><span>일반 턴 MP·버프 시뮬레이션</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cSim" ${S.simOn!==false?'checked':''}> 사용</label><span></span><span></span></div>
     <div class="crow"><span>시뮬레이션 턴 수</span><input type="number" step="1" min="2" max="20" id="cSimT" value="${S.simTurns}"><span></span><span></span></div>
     <div class="crow"><span>기본 MP 최대치 (천명치로 +120까지)</span><input type="number" step="10" min="200" max="900" id="cMp" value="${S.mpBase}"><span></span><span></span></div>
     <div class="crow"><span>후열 P글래 셔틀 반영</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cMule" ${S.muleOn!==false?'checked':''}> 사용</label><label class="checkrow" style="align-items:center" title="후열 고정이 없을 때 주딜 무기 퍼스널리티 셔틀 2명 가정"><input type="checkbox" id="cMuleAuto" ${S.muleAuto!==false?'checked':''}> 자동 가정</label><label class="checkrow" style="align-items:center" title="자동 가정일 때 같은 퍼스널리티의 전열 서포터도 셔틀로"><input type="checkbox" id="cMuleFront" ${S.muleFront!==false?'checked':''}> 전열 서포터도</label></div>
-    <div class="crow"><span>셔틀 1명 공유 칸 / 칸당 대미지</span><input type="number" step="1" min="1" max="4" id="cMuleSl" value="${S.muleSlots}"><input type="number" step="0.05" min="0" max="1" id="cMulePct" value="${S.mulePct}"><span></span></div>
+    <div class="crow"><span>셔틀 1명 글래스터 칸 / 속성·HP P글래 1개 수치</span><input type="number" step="1" min="1" max="4" id="cMuleSl" value="${S.muleSlots}"><input type="number" step="0.05" min="0" max="1" id="cMulePct" value="${S.mulePct}"><span></span></div>
     <div class="crow"><span>소비 MP 배율 (MP 감소 글래스터면 0.85·0.75)</span><input type="number" step="0.05" min="0.3" max="1.5" id="cMpMul" value="${S.mpCostMul}"><span></span><span></span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn small" id="constReset">기본값으로</button><span class="hint">바꾸면 다음 계산부터 반영됩니다. 절존 배율은 극존과 같습니다.</span></div>`;
 }
@@ -1677,6 +1733,10 @@ function onConst(e){
   else if(t.id==='cAfCycle') S.afCycle=t.checked;
   else if(t.id==='cAfAuto') S.afAuto=t.checked;
   else if(t.id==='cAfFast') S.afFastDefault=t.checked;
+  else if(t.id==='cUseStats') S.useStats=t.checked;
+  else if(t.id==='cEnHits') S.enemyHits=Math.max(0.5,Math.min(10,+t.value||2));
+  else if(t.id==='cEnAoE') S.enemyAoE=Math.max(0,Math.min(1,+t.value||0));
+  else if(t.id==='cGearSpd') S.gearSpd=Math.max(0,Math.min(200,Math.round(+t.value||0)));
   else if(t.id==='cAfAnim') S.afAnim=Math.max(0.5,Math.min(5,+t.value||2));
   else if(t.id==='cSim') S.simOn=t.checked;
   else if(t.id==='cMule') S.muleOn=t.checked;
@@ -1692,13 +1752,13 @@ function onConst(e){
 }
 
 /* ---------- 내보내기/불러오기 ---------- */
-const exportObj = ()=>({owned:state.owned, custom:state.custom, settings:state.settings, goals:state.goals||[]});
+const exportObj = ()=>({owned:state.owned, custom:state.custom, settings:state.settings, goals:state.goals||[], buddies:state.buddies||{}, pgl:state.pgl||{}});
 function exportState(){ const ta=$('#ioText'); ta.value=JSON.stringify(exportObj()); ta.select();
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(()=>{$('#ioMsg').textContent='복사했습니다. 메모장 등에 붙여 두세요.';},()=>{$('#ioMsg').textContent='선택된 텍스트를 직접 복사하세요.';});
   else $('#ioMsg').textContent='선택된 텍스트를 직접 복사하세요.'; }
 function applyImport(text, okMsg, badMsg){
   try{ const d=JSON.parse(text); if(!d||!d.owned||typeof d.owned!=='object') throw 0;
-    state.owned=d.owned; state.custom=Array.isArray(d.custom)?d.custom:[]; state.settings=d.settings||{}; state.sample=false; if(Array.isArray(d.goals)) state.goals=d.goals;
+    state.owned=d.owned; state.custom=Array.isArray(d.custom)?d.custom:[]; state.settings=d.settings||{}; state.sample=false; if(Array.isArray(d.goals)) state.goals=d.goals; if(d.buddies&&typeof d.buddies==='object') state.buddies=d.buddies; if(d.pgl&&typeof d.pgl==='object') state.pgl=d.pgl;
     save(); rebuildChars(); renderAll(); $('#ioMsg').textContent=okMsg||'불러왔습니다.'; return true; }
   catch(e){ $('#ioMsg').textContent=badMsg||'형식이 맞지 않습니다. 내보내기로 만든 텍스트 전체를 붙여 넣으세요.'; return false; }
 }
@@ -1741,8 +1801,12 @@ function bind(){
   // 버디
   $('#budMain').addEventListener('change',e=>{ state.plan.buddy.main=e.target.value; save(); renderPlanControls(); runPlan(); });
   $('#budSub').addEventListener('change',e=>{ state.plan.buddy.sub=e.target.value; save(); renderPlanControls(); runPlan(); });
+  $('#pglTbl').addEventListener('click',e=>{ const b=e.target.closest('[data-pw]'); if(!b) return; const P=pglState(), w=b.dataset.pw, k=b.dataset.pk;
+    P[w]=P[w]||{}; P[w][k]=(((P[w][k]||0)+1)%3); if(!P[w][k]) delete P[w][k]; if(!Object.keys(P[w]).length) delete P[w];
+    touchRoster(); renderPglTbl(); const nb=$(`#pglTbl [data-pw="${w}"][data-pk="${k}"]`); if(nb) nb.focus(); });
+  $('#pglClear').addEventListener('click',()=>{ state.pgl={}; touchRoster(); renderPglTbl(); });
   $('#budGrid').addEventListener('change',e=>{ const k=e.target.dataset.bud; if(!k) return; state.buddies=state.buddies||{}; if(e.target.checked) state.buddies[k]=true; else delete state.buddies[k]; touchRoster(); renderBudGrid(); renderPlanControls(); });
-  renderBudGrid();
+  renderBudGrid(); renderPglTbl();
   // 성향 직접 조절
   $('#weightRow').addEventListener('input',e=>{ const k=e.target.dataset.w; if(!k) return; state.plan.weights[k]=+e.target.value; $('#'+e.target.id+'v').textContent=e.target.value; });
   $('#weightRow').addEventListener('change',e=>{ if(!e.target.dataset.w) return; save(); runPlan(); });
@@ -1799,7 +1863,10 @@ function bind(){
   ['#rq','#rel','#rwp','#ral','#rtier','#rown'].forEach(s=>$(s).addEventListener('input',renderRoster));
   $('#roster').addEventListener('change',onRosterChange);
   $('#bulkTop').addEventListener('click',()=>{ for(const c of prepped) if((c.tier==='SS'||c.tier==='S')&&!state.owned[c.id]) state.owned[c.id]={t:0,s:!!c.stellar,m:0,g:'none',gl:null}; touchRoster(); renderRoster(); });
-  $('#roster').addEventListener('click',e=>{ const b=e.target.closest('[data-bact]'); if(b) onBuildAct(b); });
+  $('#roster').addEventListener('click',e=>{ const b=e.target.closest('[data-bact]'); if(b) onBuildAct(b);
+    const sb=e.target.closest('[data-stat]'); if(sb){ const row=sb.closest('.row'), w=row&&row.querySelector('.stwrap'); if(!w) return;
+      const open = w.hidden; if(open){ const o=state.owned[row.dataset.id]; w.innerHTML=statBoxHtml(byId.get(row.dataset.id), o?(+o.t||0):0); }
+      w.hidden=!open; sb.setAttribute('aria-expanded', String(open)); } });
   $('#roster').addEventListener('keydown',e=>{ if(e.key==='Enter' && e.target.closest('.bldin input')){ e.preventDefault(); const b=e.target.closest('.bldin').querySelector('[data-bact="apply"]'); if(b) onBuildAct(b); } });
   document.addEventListener('click',e=>{ const b=e.target.closest('button[data-eqrec]'); if(b){ runEqRec(b); return; }
     const s=e.target.closest('button[data-eqsave]'); if(s){ const out=s.closest('.eqout'), msg=s.parentNode.querySelector('[role=status]'); s.disabled=true;
@@ -1836,9 +1903,9 @@ function bind(){
   $('#bossList').addEventListener('click',e=>{ const b=e.target.closest('[data-boss]'); if(!b) return; curBoss=b.dataset.boss; renderBossList(); });
   $('#bossDetail').addEventListener('click',e=>{ if(e.target.id==='bossGo'){ applyBoss(curBoss); showTab('plan'); runPlan(); } });
   $('#constBox').addEventListener('change',onConst);
-  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','muleSlots','mulePct'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
+  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','useStats','gearSpd','enemyHits','enemyAoE','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','muleSlots','mulePct'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
-function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
+function renderAll(){ renderPlanControls(); renderRoster(); renderBudGrid(); renderPglTbl(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
 
 /* ---------- 시작 ---------- */
 (async function init(){

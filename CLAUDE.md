@@ -7,4 +7,4 @@
 - 커밋 작성자는 Claude <noreply@anthropic.com> 로 둔다. 회사·개인 이메일이 기록에 남지 않게 한다.
 - 엔진 확인: `node -e "const E=require('./src/engine.js')"` 로 로드한 뒤 optimize/perCharBest 를 돌려 본다.
 - 계산 규칙(사용자 확인값): 절존 배율 = 극존, 오버크리티컬 = 크리율 100% 초과분÷10 확률로 대미지 2배, 1타 상한 9,999,999,999.
-- 추가 데이터: `src/data/debuff_rules.json`(디버프 지속·조건), `chain.json`(체인 어빌리티), `skill_cond.json`(조건부 스킬 배율), `bosses_kesshitsu.json`(결실 현현·서약). 장비 계산은 `src/eqopt.js` + `vendor/ae-builder`(출처: 딩).
+- 추가 데이터: `src/data/debuff_rules.json`(디버프 지속·조건), `chain.json`(체인 어빌리티), `skill_cond.json`(조건부 스킬 배율), `bosses_kesshitsu.json`(결실 현현·서약), `stats.json`(기본 스탯, 위키 Stats Index), `fate.json`(천명 보너스), `af_anim.json`(AF 연출 시간), `counter.json`(요격·`_cover` 수세). 장비 계산은 `src/eqopt.js` + `vendor/ae-builder`(출처: 딩).

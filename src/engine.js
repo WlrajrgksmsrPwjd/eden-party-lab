@@ -39,6 +39,10 @@ const DEFAULT_SETTINGS = {
   afAuto: true,      // AF 행동 수를 게이지·속도로 계산 (위키 기준)
   afAnim: 2,         // AF 중 스킬 연출 시간(초) 가정
   afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
+  useStats: true,    // 캐릭터 기본 스탯(위키 Stats Index)으로 주 스탯 대미지·운 크리율·속도 반영
+  gearSpd: 0,        // 빌드 코드가 없는 캐릭터의 장비·글래스터 속도 (기본 스탯에 더함)
+  enemyHits: 2,      // 요격: 적 1체가 평상 턴에 아군에게 넣는 타수 (다단은 타마다 요격 1번)
+  enemyAoE: 0.4,     // 요격: 그중 전체 공격 비율 (전체 공격은 전열 모두가 1타씩 맞음)
   simOn: true,       // 일반 턴을 MP·버프 지속 턴 시뮬레이션으로 계산
   simTurns: 6,       // 시뮬레이션 턴 수 (보스 한 구간)
   mpBase: 450,       // 기본 MP 최대치 (천명치로 최대 +120)
@@ -372,7 +376,11 @@ function prepChar(c){
     chain: Array.isArray(c.chain) && c.chain.some(e=>e&&e.atk) ? c.chain.filter(e=>e&&e.atk) : null,
     echange: c.echange || null,
     counter: c.counter || null,
+    afAnim: +c.af_anim > 0 ? +c.af_anim : null, // AF 중 스킬 연출 시간(초), 데이터 없으면 설정값
+    cover: c.cover || null, // 아군 대신 맞기: 'aoe'(수세·전체공격 대신 받기) | 'sb'(SB 턴만)
     fateTbl: Array.isArray(c.fate_tbl) && c.fate_tbl.length ? c.fate_tbl : null,
+    stats: Array.isArray(c.stats) && c.stats.length===8 ? c.stats : null,
+    mainStat: (m0.stat==='int'||m0.stat==='spd') ? m0.stat : 'pwr',
     mzone: (()=>{ const L=[]; for(const sk of [c.main, c.sb]) if(sk && sk.mcond) for(const cd of [].concat(sk.mcond.need||[], ...((sk.mcond.steps||[]).map(s=>s[1]||[])))) if(cd && cd.zone) L.push(cd); return L.length?L:null; })()
   };
 }
@@ -402,6 +410,35 @@ function teamDifficulty(team){
   return {v, lv, kr:DIFF_LV[lv-1].kr, noHeal};
 }
 
+/* ---------- 캐릭터 스탯 ----------
+   stats: 레벨 최대·천명치 0·장비 없음 [hp,mp,pwr,int,spd,end,spr,lck] (위키 Stats Index)
+   천명치 t: 단계 보너스(fate_tbl) 합 + 255에서 힘·지성·속도·내구·정신·운 +10 */
+const STAT_ORDER = ['hp','mp','pwr','int','spd','end','spr','lck'];
+const STAT_FATE_KEY = {lck:'luck'};
+function statsAt(stats, tbl, t){
+  if(!Array.isArray(stats) || stats.length!==8) return null;
+  const o = {};
+  STAT_ORDER.forEach((k,i)=>{ let v = stats[i];
+    if(tbl) for(const [lv,d] of tbl) if(t>=lv) v += (d[STAT_FATE_KEY[k]||k]||0);
+    if(t>=255 && i>=2) v += 10;
+    o[k] = v; });
+  return o;
+}
+/* 주 스탯 → 대미지: 빌더 계산식(최적 장비)에서 주 스탯 +50 ≈ 물리 ×1.23 · 마법 ×1.27 → (스탯/기준)^지수
+   기준은 같은 공격 종류 캐릭터의 기본값 중앙값(물리 힘 221, 마법 지성 232) */
+const STAT_REF = {phys:221, mag:232}, STAT_EXP = {phys:1.0, mag:1.1}, LUCK_REF = 156;
+// 빌더 기본값(사용자가 스탯을 안 넣은 빌드 코드)은 실제 스탯이 아니므로 무시
+const isBuilderDefault = st => !st || (st.spd===249 && st.luck===150 && st.mp===512 && ((st.str===237&&st.int===162)||(st.str===162&&st.int===237)));
+function charStats(pc, own, S){
+  const t = own ? (+own.t||0) : 0;
+  const b = own && own.build, bst = b && !isBuilderDefault(b.st) ? b.st : null;
+  const wiki = S && S.useStats===false ? null : statsAt(pc.stats, pc.fateTbl, t);
+  if(!wiki && !bst) return null;
+  const nk = bst ? {pwr:+bst.str, int:+bst.int, spd:+bst.spd, lck:+bst.luck, mp:+bst.mp} : wiki;
+  const spdB = b && b.spdTot ? +b.spdTot : (nk.spd + (+(S&&S.gearSpd)||0));
+  return {naked:nk, wiki, src: bst ? 'build' : 'wiki', spd: spdB, spdSrc: b && b.spdTot ? 'build' : (bst ? 'build-st' : 'wiki')};
+}
+
 /* ---------- 계정 상태(보유/육성) 반영 ---------- */
 function charProg(pc, own, S){
   // own: {t:천명치, s:성도각성, m:현현 0/1/2, g:'none'|'vc'|'shin'|'goku', gl:공격 글래스터 배치|null}
@@ -413,10 +450,13 @@ function charProg(pc, own, S){
     if(t>=15){ sbOK=true; sbMul = t>=30?1:0.8; }
     if(t>=80) f*=1.15; else if(t>=50) f*=1.08; else if(t>=30) f*=1.04;
   }
-  // 천명치(天冥) 보너스: 캐릭터별 표가 있으면 주력 스탯 합계로(주 스탯 실효 약 500 기준), 없으면 일반값
-  if(pc.fateTbl){ const st = (pc.main&&pc.main.stat)==='int'?'int':(pc.main&&pc.main.stat)==='spd'?'spd':'pwr'; let add=0;
-    for(const [lv,d] of pc.fateTbl){ if(t>=lv) add += (d[st]||0) + (st==='spd' ? 0 : 0.3*(d.spd||0)); }
-    f *= 1 + 0.8*add/500; }
+  // 주 스탯(천명치 보너스 포함): 기본 스탯이 있으면 실제 값, 없으면 기준값 + 천명 표의 주 스탯 보너스
+  const kind = pc.atkKind==='mag' ? 'mag' : 'phys', ms = pc.mainStat || 'pwr';
+  const cs = charStats(pc, own, S);
+  let msV = null, lck = null;
+  if(cs){ msV = cs.naked[ms]; lck = cs.naked.lck; }
+  else if(pc.fateTbl){ let add = t>=255 ? 10 : 0; for(const [lv,d] of pc.fateTbl) if(t>=lv) add += (d[ms]||0); msV = STAT_REF[kind] + add; }
+  if(msV) f *= Math.pow(Math.max(60, msV)/STAT_REF[kind], STAT_EXP[kind]);
   else { if(t>=120) f*=1.02; if(t>=255) f*=1.03; }
   f *= MANIFEST[own?(+own.m||0):0]||1;
   const g = own&&own.g ? own.g : 'none';
@@ -425,8 +465,10 @@ function charProg(pc, own, S){
   let gear = null, glx = gl;
   const b = own && own.build;
   // q: 장비 완성도 (이 빌드에 맞는 파티 상황에서 최적 장비 대비 화력 비율)
-  if(b && b.q>0){ gear = {q:Math.max(0.2, Math.min(1.1, +b.q)), ps:Array.isArray(b.ps)?b.ps:[], spd:+b.spd||0}; glx = {mode:'auto'}; }
-  return {f, sbOK, sbMul, goku: g==='goku', t, slots, gl:glx, gear};
+  if(b && b.q>0){ gear = {q:Math.max(0.2, Math.min(1.1, +b.q)), ps:Array.isArray(b.ps)?b.ps:[]}; glx = {mode:'auto'}; }
+  // 속도: 빌드 코드의 장비 포함 속도 > 빌드에 넣은 캐릭터 스탯 > 위키 기본 스탯(+장비 속도 설정)
+  return {f, sbOK, sbMul, goku: g==='goku', t, slots, gl:glx, gear,
+    spd: cs ? cs.spd : 0, spdSrc: cs ? cs.spdSrc : null, lck, msV, ms};
 }
 
 /* ---------- 적 프로필 ---------- */
@@ -583,7 +625,8 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     if(p.weapon_atk && p.weapon_atk[c.weapon]) wv.push(pct(p.weapon_atk[c.weapon])*f);
     if(p.wt_dmg && p.wt_dmg[wt]) wv.push(pct(p.wt_dmg[wt])*f);
     critA += pct(p.crit_rate)*f; critD += pct(p.crit_dmg)*f; budDmg += pct(p.dmg)*f; }
-  let critR = (kind==='phys'?0.2:0) + pct(c.self.crit_rate) + critA;
+  // 물리 기본 크리율 20%(운·장비 포함 평균) + 운 차이 ÷16 % (빌더 계산식: 크리율 += 운/16)
+  let critR = (kind==='phys' ? 0.2 + (pr.lck ? (pr.lck-LUCK_REF)/1600 : 0) : 0) + pct(c.self.crit_rate) + critA;
   const statB = dimin(sv,1), elB = dimin(ev,1), wB = dimin(wv,1);
   let specB = dimin(spv, 3.5);
   dmg *= (1+statB)*(stat==='spd'?(1+statB*0.6):1)*(1+elB)*(1+wB)*(1+specB);
@@ -663,8 +706,13 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   if(share>0 || sd){ // 셔틀이 공유하는 P글래
     const base = 1 + 0.3*(gq.e||0), zOn = !!(zone && zone.level>0);
     let f, al;
-    if(sd){ f = (base + sd.e/100)/base * (zOn ? (1+sd.z/100)*(1+sd.t/100) : 1); al={e:sd.e, z:zOn?sd.z:0, t:zOn?sd.t:0, pct:true}; }
-    else { al = shareAlloc(share, base, S.mulePct||0.3, zOn, (A.mule.mules||[]).length + (A.mule.front||[]).length); f = al.f; }
+    const cs = A.mule.cs ? A.mule.cs[idx] : [];
+    if(sd){ // 빌드 코드 셔틀은 실제 P글래 %, 나머지 셔틀은 가정 배분과 합산 (속성·HP 그룹 가산, ZONE 그룹 가산)
+      const a2 = cs.length ? shareAlloc(cs, base + sd.e/100, S.mulePct||0.3, zOn, el==='none', pglInv(A.mule.inv, c.weapon, el)) : null;
+      const eP = sd.e + (a2 ? a2.ev : 0), zP = (zOn ? sd.z : 0) + (a2 ? 25*a2.z : 0);
+      f = (base + eP/100)/base * (1+zP/100) * (zOn ? 1+sd.t/100 : 1);
+      al = {e:eP, z:zP, t:zOn?sd.t:0, pct:true, f}; }
+    else { al = shareAlloc(cs, base, S.mulePct||0.3, zOn, el==='none', pglInv(A.mule.inv, c.weapon, el)); f = al.f; }
     gq = Object.assign({}, gq, {f: gq.f*f, share, alloc:al});
   }
   dmg *= gq.f * pr.f;
@@ -686,7 +734,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 
   const total = dmg*(1+rep);
   return {perHit: total/totHits, totHits, nT, el, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
-    afx: sk.af_combo_x||1, hitsPerAct: totHits, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1)};
+    afx: sk.af_combo_x||1, hitsPerAct: totHits, rep, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1)};
 }
 
 /* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
@@ -824,18 +872,18 @@ function muleShare(team, S, ctx, progs){
   }
   const per = (S.mulePct||0.3)*100;
   const fsl = j => (progs && progs[j] && progs[j].slots) || 3;
-  const kd = team.map(()=>null);
+  const kd = team.map(()=>null), cs = team.map(()=>[]);
   const k = team.map((c,i)=>{
     const w=WEAPON_PERS[c.weapon];
     let n=0;
     for(const m of mules){
       if(m.shares){ const d=shareSlots(m.shares, c); kd[i]=kd[i]||{e:0,z:0,t:0}; kd[i].e+=d.e; kd[i].z+=d.z; kd[i].t+=d.t; n += d.e/per; }
-      else if(m.pers.has(w)) n += m.slots;
+      else if(m.pers.has(w)){ n += m.slots; cs[i].push(m.slots); }
     }
-    if(auto && c.pers && c.pers.has(wp)) for(const j of front) if(j!==i) n += fsl(j);
+    if(auto && c.pers && c.pers.has(wp)) for(const j of front) if(j!==i){ n += fsl(j); cs[i].push(fsl(j)); }
     return n;
   });
-  return {k, kd, auto, wp, front, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
+  return {k, kd, cs, inv: (ctx && ctx.pgl) || null, auto, wp, front, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
 }
 /* 빌드 코드의 P글래 공유 효과 → 받는 캐릭터 기준 % (e: 속성·HP 그룹, z: ZONE 전개 중, t: 특정 ZONE) */
 const ELEM_B = {fire:'불',water:'물',earth:'땅',wind:'바람',thunder:'번개',shade:'그림자',crystal:'결정'};
@@ -851,44 +899,75 @@ function shareSlots(shares, c){
   }
   return o;
 }
-/* 셔틀 칸 배분: 속성(가산) · ZONE 전개 중(+25%, 별도 곱) · 특정 ZONE(+15%, 별도 곱) */
-const SHARE_Z = 0.25, SHARE_ZT = 0.15;
+/* 셔틀 P글래 배분 (딩 빌더 글래스터 목록 기준)
+   무기 퍼스널리티마다 공유되는 대미지 P글래는 사실상 셋뿐: ○○의 힘(그 속성 +30%, 무속성은 허공의 힘 +40%),
+   HP 최대 시 강화(+30%, 속성과 같은 가산 그룹), 각성의 힘(ZONE 전개 중 +25%, 별도 그룹). 특정 ZONE P글래는 없음.
+   셔틀 1명은 같은 글래스터를 두 개 못 다니 위 셋 중에서 칸 수만큼, 여러 셔틀의 같은 이름 P글래는 중첩 */
+const SHARE_Z = 0.25;
+/* 연성 P글래 보유(무기 퍼스널리티별 개수) → 받는 캐릭터 기준 {e: 그 속성의 힘(무속성은 허공), h: HP 최대, z: 각성의 힘}. 없으면 null(전부 있다고 가정) */
+function pglInv(inv, weapon, el){
+  if(!inv) return null;
+  const r = inv[WEAPON_KR[weapon]] || {};
+  return {e: +r[el||'none']||0, h: +r.hp||0, z: +r.zone||0};
+}
 const _SA = new Map();
-function shareAlloc(k, base, pct, zoneOn, carriers){
-  const key = k*1e6 + base*1e3 + pct*100 + (zoneOn?0.5:0) + (carriers||2)*1e-3;
+function shareAlloc(cs, base, pct, zoneOn, noEl, inv){
+  const key = (cs||[]).join(',')+'|'+base.toFixed(3)+'|'+pct+'|'+(zoneOn?1:0)+(noEl?1:0)+'|'+(inv?inv.e+','+inv.h+','+inv.z:'-');
   let r = _SA.get(key); if(r) return r;
-  r = shareAlloc0(k, base, pct, zoneOn, carriers); if(_SA.size<5000) _SA.set(key, r); return r;
+  r = shareAlloc0(cs||[], base, pct, zoneOn, noEl, inv); if(_SA.size<5000) _SA.set(key, r); return r;
 }
-function shareAlloc0(k, base, pct, zoneOn, carriers){
-  const n = Math.max(0, Math.round(k)), cm = Math.max(1, carriers||2); // 같은 이름 P글래는 셔틀 1명당 1개로 가정
-  let best={f:(base+pct*k)/base, e:k, z:0, t:0};
-  if(!zoneOn || n<=0) return best;
-  for(let z=0;z<=Math.min(n,cm);z++) for(let tt=0;tt+z<=n && tt<=cm;tt++){ const e=n-z-tt; const f=(base+pct*e)/base*(1+SHARE_Z*z)*(1+SHARE_ZT*tt); if(f>best.f+1e-9) best={f,e,z,t:tt}; }
-  return best;
+function shareAlloc0(cs, base, pct, zoneOn, noEl, inv){
+  const pe = noEl ? pct+0.1 : pct; // 허공의 힘 +40%
+  let rE = inv ? inv.e : 99, rH = inv ? inv.h : 99, rZ = inv ? inv.z : 99;
+  let nE=0, nH=0, nZ=0;
+  // 셔틀마다 같은 글래스터는 하나: 칸 수만큼 이득이 큰 것부터 (속성·HP 최대는 가산, 각성의 힘은 곱)
+  for(const s of cs){
+    const used = {E:false, H:false, Z:false};
+    for(let k=0;k<s;k++){
+      const eNow = base + pe*nE + pct*nH, opts=[];
+      if(!used.E && rE>0) opts.push(['E', (eNow+pe)/eNow]);
+      if(!used.H && rH>0) opts.push(['H', (eNow+pct)/eNow]);
+      if(zoneOn && !used.Z && rZ>0) opts.push(['Z', (1+SHARE_Z*(nZ+1))/(1+SHARE_Z*nZ)]);
+      if(!opts.length) break;
+      opts.sort((a,b)=>b[1]-a[1]); const t=opts[0][0]; used[t]=true;
+      if(t==='E'){ nE++; rE--; } else if(t==='H'){ nH++; rH--; } else { nZ++; rZ--; }
+    }
+  }
+  const ev = pe*nE + pct*nH;
+  const f = (base+ev)/base * (1+SHARE_Z*nZ);
+  return {f, e:nE+nH, el:nE, hp:nH, z:nZ, t:0, ev:Math.round(ev*100), inv:!!inv};
 }
+/* 보스가 행동불능 상태이상(기절·수면·마비·석화·빙결·혼란·매료·공포)을 거는지 — 걸리면 요격이 안 나감 */
+const CC_RE = /기절|스턴|수면|마비|석화|빙결|혼란|매료|공포|행동 ?불능|睡眠|麻痺|気絶|石化|凍結|混乱|魅了|恐怖|スタン/;
+function enemyCCOf(boss){ if(!boss) return null; return !!((boss.needs&&boss.needs.status_immune) || (boss.mechanics||[]).some(m=>CC_RE.test(m)) || CC_RE.test(boss.strategy_kr||'')); }
 /* 계산 상황: 배리어 관통 필요 여부, 속성·타입 지정, 후열 고정 셔틀 */
 function buildCtx(input, ownedAll){
   const boss=input.boss;
   const maxBack = input.pledge && input.pledge.size ? Math.max(0, Math.min(2, input.pledge.size-4)) : 2;
   const mules = (input.backLocked||[]).slice(0,maxBack).map(id=>(ownedAll||[]).find(o=>o.pc.id===id)).filter(Boolean)
     .map(o=>({id:o.pc.id, name:o.pc.name, pers:o.pc.pers, slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
-  return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null};
+  return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null};
 }
 /* ---------- AF 행동 수 (위키 기준) ----------
    AF는 실시간: 게이지 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찬다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%).
-   캐릭터마다 행동 → 연출(약 2초) → 대기. 대기는 행동할수록 늘어남: 속도 249 이상 1·2·3…초, 미만 2·3·4…초.
-   게이지가 0이 될 때까지 각자 몇 번 행동하는지 센다. 속도는 빌드 코드 값, 없으면 249 미만으로 가정. */
+   캐릭터마다 행동 → 연출(기본 2초, 캐릭터별 값이 있으면 그 값, 재행동은 실행 횟수만큼) → 대기. 대기는 행동할수록 늘어남: 속도 249 이상 1·2·3…초, 미만 2·3·4…초.
+   게이지가 0이 될 때까지 각자 몇 번 행동하는지 센다. 속도는 빌드 코드(장비 포함) → 기본 스탯(+장비 속도 설정) 순. */
 function afActionsOf(team, progs, cores, z, enemy, S){
   const n = team.length;
   if(S.afAuto===false){ const k=Math.max(1,+S.afActions||5); return {n:team.map(()=>k), dur:null, fast:team.map(()=>null), auto:false}; }
   const anim = Math.max(0.5, +S.afAnim||2);
-  const fast = team.map((c,i)=>{ const s=progs[i]&&progs[i].gear&&progs[i].gear.spd; return s ? s>=249 : !!S.afFastDefault; });
-  const known = team.map((c,i)=>!!(progs[i]&&progs[i].gear&&progs[i].gear.spd));
+  // 속도: 빌드 코드(장비 포함) 그대로, 아니면 기본 스탯(+장비 속도 설정). '빌드 없는 캐릭터도 249 이상'을 켜면 빌드 없는 캐릭터는 빠른 쪽
+  const spdOf = i=>{ const p=progs[i]; return p && p.spd ? p.spd : 0; };
+  const fromBuild = i=>{ const p=progs[i]; return !!(p && (p.spdSrc==='build'||p.spdSrc==='build-st')); };
+  const fast = team.map((c,i)=> !fromBuild(i) && S.afFastDefault ? true : (spdOf(i) ? spdOf(i)>=249 : false));
+  const known = team.map((c,i)=> progs[i] && progs[i].spdSrc ? progs[i].spdSrc : null);
   const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
     const zMatch = z && z.level>0 && ((z.kind==='elem' && z.types.includes(co.el)) || (z.kind==='weap' && z.types.includes(co.wt)) || z.kind==='all');
     if(zMatch) return 7.5;
     const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
     return Math.min(30, co.totHits)*(weak?3.5:1.5); });
+  // 연출 시간: 캐릭터별 값(af_anim)이 있으면 그 값, 재행동·연속 실행 스킬은 실행 횟수만큼 (게이지도 실행마다 참 — refill은 총 타수 기준)
+  const animOf = team.map((c,i)=>(c.afAnim||anim) * (1 + Math.max(0, (cores[i]&&cores[i].rep)||0)));
   const next = team.map(()=>0), cnt = team.map(()=>0);
   let g = 100, t = 0;
   for(let step=0; step<200; step++){
@@ -896,10 +975,10 @@ function afActionsOf(team, progs, cores, z, enemy, S){
     if(i<0) break;
     const gAt = g - 10*(tn - t); if(gAt <= 0){ t += g/10; g = 0; break; }
     g = Math.min(100, gAt + refill[i]); t = tn;
-    cnt[i]++; next[i] = tn + anim + (fast[i] ? cnt[i] : cnt[i]+1);
+    cnt[i]++; next[i] = tn + animOf[i] + (fast[i] ? cnt[i] : cnt[i]+1);
   }
   if(g>0) t += g/10;
-  return {n:cnt, dur:t, fast, known, auto:true};
+  return {n:cnt, dur:t, fast, known, spd:team.map((c,i)=>spdOf(i)), auto:true};
 }
 /* ---------- 체인 어빌리티: 다른 아군의 행동에 반응하는 추격 ----------
    턴당 발동 수 = min(최대, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치 */
@@ -983,10 +1062,10 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
   const u = sumCores(coresN, nz, actT1);
   const t2 = sumCores(coresN, nz, null);
   // 속도 순서 확률: (버프를 주는 캐릭터 → 공격하는 캐릭터) 쌍 중 버퍼가 빠른 비율
-  const spd = progs.map(p=>p&&p.gear&&p.gear.spd ? p.gear.spd : 0);
+  const spd = progs.map(p=>p&&p.spd ? p.spd : 0); // 장비 포함 속도(빌드 코드) 또는 기본 스탯
   const givers = team.map((c,i)=>i).filter(i=>!(team[i].buffHow==='passive'||team[i].buffHow==='auto') && (team[i].party&&team[i].party.scope!=='none' || Object.keys(team[i].deb||{}).length));
   let pairs=0, fast=0, known=0;
-  for(const j of givers) for(let i=0;i<team.length;i++){ if(i===j || !actT1[i]) continue; pairs++; if(spd[j] && spd[i]){ known++; if(spd[j]>spd[i]) fast++; } else fast+=0.5; }
+  for(const j of givers) for(let i=0;i<team.length;i++){ if(i===j || !actT1[i]) continue; pairs++; if(spd[j] && spd[i]){ known++; if(spd[j]>spd[i]) fast++; else if(spd[j]===spd[i]) fast+=0.5; } else fast+=0.5; }
   const p = pairs ? fast/pairs : 1;
   const t1 = g + Math.max(0, u-g)*p;
   return {t1, t1g:g, t1u:Math.max(g,u), t2, p, known:known===pairs && pairs>0, givers, z1:gz, actT1};
@@ -1034,14 +1113,24 @@ function inflictOf(team, progs, S){
   return {poison:po, pain:pa, by};
 }
 /* 요격: 피격 시 반격. 적 공격 수(적 1체당 턴 1.5회) 중 이 캐릭터가 맞는 비율 — 스스로 도발 0.9, 다른 아군이 도발 0.1, 아니면 0.3 */
+/* 요격: 맞은 타수마다 1번 반격(루나틱<복사>면 2번). 적 1체가 턴당 enemyHits 타를 넣고 그중 enemyAoE 비율이 전체 공격.
+   전체 공격은 전열 모두가 1타씩, 수세(아군 전체공격 대신 받기)면 전열 수만큼 이 캐릭터가 맞음. 단일 공격은 도발이면 90%, 다른 도발·수세 아군이 있으면 10%, 아니면 1/전열 수.
+   행동불능 상태이상에 걸리면 요격이 안 나가므로, 보스가 그런 상태이상을 쓰고 상태이상 무효가 없으면 ×0.6 */
 function counterCalc(team, progs, A, enemy, S, cx, FX, z, cap, fw){
   const per=team.map(()=>0), trig=team.map(()=>0); let any=false;
-  const atkN = 1.5*Math.min(4, Math.max(1, S.enemyCount||1));
+  const nE = Math.min(4, Math.max(1, S.enemyCount||1)), front = Math.max(1, Math.min(4, team.length));
+  const H = Math.max(0.5, +S.enemyHits||2), pA = Math.min(1, Math.max(0, S.enemyAoE!=null ? +S.enemyAoE : 0.4));
+  const coverAoE = team.map(m=>m.cover==='aoe');
+  const immuneAll = team.some(m=>m.sup && m.sup.status_immune>=2);
   for(let i=0;i<team.length;i++){
     const c=team[i], ct=c.counter; if(!ct || !ct.atk) continue;
-    const selfT = ct.taunt || (c.sup&&c.sup.taunt>=2), otherT = team.some((m,j)=>j!==i && m.sup && m.sup.taunt>=2);
-    let n = atkN * (selfT ? 0.9 : otherT ? 0.1 : 0.3);
+    const selfT = ct.taunt || (c.sup&&c.sup.taunt>=2), otherT = team.some((m,j)=>j!==i && ((m.sup && m.sup.taunt>=2) || coverAoE[j]));
+    const aoeHits = coverAoE[i] ? front : team.some((m,j)=>j!==i && coverAoE[j]) ? 0 : 1;
+    const stShare = coverAoE[i] || selfT ? 0.9 : otherT ? 0.1 : 1/front;
+    let n = nE * H * (pA*aoeHits + (1-pA)*stShare);
     if(ct.trig==='phys') n*=0.7; else if(ct.trig==='fire') n*=0.3;
+    if(ct.copy) n*=2;
+    if(cx && cx.enemyCC && !immuneAll && !(c.sup && c.sup.status_immune>=1)) n*=0.6;
     if(n<=0.01) continue;
     const a=ct.atk, sk={skill:'요격', target:a.target, kind:a.kind, stat:a.stat, element:a.element||'none', weapon_type:a.weapon_type, size:a.size||'xl', mult:+a.mult||1, hits:Math.max(1,a.hits||1), repeat:0, crit_sure:false, def_ignore:false, barrier_pierce:false, af_combo_x:1, condition:''};
     const t2=team.slice(); t2[i]=Object.assign({}, c, {main:sk, sb:null});
@@ -1139,7 +1228,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   const avgCombo = Math.min(0.75 + 0.5*gain, 4);
   let af = sumZ(afCores, nz, avgCombo, afA.n).v;
   let afChain = null;
-  if(hasChain){ const FXa = anyR ? buildBF(team,progs,'af',nz,A,posSets,null) : null; afChain = chainCalc(team, progs, A, enemy, S, 'af', cx, FXa, nz, afCores, null, cap, avgCombo, fw); if(afChain) af += afChain.total; }
+  // 체인 어빌리티는 AF 밖(평상·SB 턴)에서만 발동 (사용자 확인)
   const sbTurn = res.sb.total;
   const surv = survival(team, progs, A.bud);
   const sustainAF = sustain + (S.afCycle!==false ? af/afTurns : 0); // 지속 딜: 평상 턴 + AF를 주기마다 한 번
@@ -1543,6 +1632,7 @@ async function perCharBest(input, onProgress){
 
 const API = {ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
-  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf};
+  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
+  statsAt, charStats, STAT_ORDER, isBuilderDefault};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);
