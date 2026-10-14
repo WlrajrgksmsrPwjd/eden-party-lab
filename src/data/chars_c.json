@@ -1156,36 +1156,11 @@
   "tier": "S",
   "score": 97,
   "roles": ["support", "dps"],
-  "main": {
-    "skill": "セーヴァフローレム",
-    "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "pierce",
-    "mult": 2, "size": "xl", "hits": 3, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "루나틱(복사) 시 3히트·인사니아 축적·전속성 내성 DOWN(6누적), 크리티컬 시 대미지 2배. 복사로 선택 스킬 2회 연속 실행(2회차 MP 0)"
-  },
-  "sb": {
-    "skill": "セムペル・テークム",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "pierce",
-    "mult": 15, "size": "xxl", "hits": 3, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "SB 시 극대 15배, 루나틱<복사> 부여 후 クリスサナティオ 연속 실행. 자신 심기일체·プラーガ·ジェンマ 1, 전열 좌측 아군 심기일체·정신통일(3턴)"
-  },
-  "self_buff": {
-    "pwr": 150, "int": 150, "spd": 50, "elem_atk": 0, "weapon_atk": 0,
-    "crit_rate": 100, "crit_dmg": 40, "over_crit": false, "singular_focus": true, "mental_focus": false,
-    "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "심기일체·정신통일·アムレートゥム 축적은 전열 좌측 아군",
-    "pwr": 150, "int": 150, "spd": 50, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 100, "crit_dmg": 40, "over_crit": false, "singular_focus": true, "mental_focus": true,
-    "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 0, "int": 0, "spd": 0, "all_elem_res": 60, "elem_res": {"water": 30, "crystal": 30}, "phys_res": 30, "mag_res": 30,
-    "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "セーヴァフローレム", "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "pierce", "mult": 12, "size": "xl", "hits": 3, "repeat": 1, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "루나틱(복사) 시 3히트·인사니아 축적·전속성 내성 DOWN(6누적), 크리티컬 시 대미지 2배. 복사로 선택 스킬 2회 연속 실행(2회차 MP 0) [알테마 대조(2026-10): 루나틱 중 인사니아 10누적 6배 × 크리 대미지 2배]"},
+  "sb": {"skill": "セムペル・テークム", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "pierce", "mult": 15, "size": "xxl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "SB 시 극대 15배, 루나틱<복사> 부여 후 クリスサナティオ 연속 실행. 자신 심기일체·プラーガ·ジェンマ 1, 전열 좌측 아군 심기일체·정신통일(3턴) [알테마 대조(2026-10): クリスサナティオ 연속 실행은 재공격 아님]"},
+  "self_buff": {"pwr": 150, "int": 150, "spd": 50, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 40, "over_crit": false, "singular_focus": true, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "심기일체·정신통일·アムレートゥム 축적은 전열 좌측 아군", "pwr": 150, "int": 150, "spd": 50, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 40, "over_crit": false, "singular_focus": true, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 60, "elem_res": {"water": 30, "crystal": 30}, "phys_res": 30, "mag_res": 30, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": null,
   "support": {"heal": 2, "barrier": 2, "cleanse": 1, "revive": false, "guard": 0, "taunt": 2, "mp_recover": 1, "af_gauge": 0, "status_immune": 2},
   "req": "루나틱<복사>, 좌측 아군 배치(아물레툼 스택)",
@@ -1205,36 +1180,11 @@
   "tier": "A",
   "score": 97,
   "roles": ["dps", "debuffer"],
-  "main": {
-    "skill": "アストラ・ドラゴ",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic",
-    "mult": 5, "size": "xl", "hits": 1, "repeat": 2,
-    "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "확정 크리. 적 수가 적을수록 위력 증가(1체 5배). 대상 HP 50% 이상이면 재공격(현현 후 幻魔陣 시 무조건 재공격). 루나틱<복사>로 2회 연속 실행"
-  },
-  "sb": {
-    "skill": "フィニス・ドラコ",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic",
-    "mult": 50, "size": "xxl", "hits": 3, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": true, "af_combo_x": 1,
-    "condition": "약점 보유 적이 있으면 50배. 속도 50%·전속성 내성 50% DOWN(3턴). 水天陣 시 수속성. SB 시 적 버프 해제, 도펠 4 축적"
-  },
-  "self_buff": {
-    "pwr": 0, "int": 120, "spd": 120, "elem_atk": 50, "weapon_atk": 0,
-    "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true,
-    "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "",
-    "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"crystal": 50, "water": 50}, "weapon_atk": {},
-    "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false,
-    "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 30, "int": 30, "spd": 50, "all_elem_res": 50, "elem_res": {"crystal": 100, "water": 100}, "phys_res": 0, "mag_res": 0,
-    "weapon_res": {}, "break": "break", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "アストラ・ドラゴ", "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "mult": 5, "size": "xl", "hits": 1, "repeat": 1, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "확정 크리. 적 수가 적을수록 위력 증가(1체 5배). 대상 HP 50% 이상이면 재공격(현현 후 幻魔陣 시 무조건 재공격). 루나틱<복사>로 2회 연속 실행 [알테마 대조(2026-10): 재공격은 HP 50% 이상(幻魔陣이면 무조건) 1회, 複写 때만 더]"},
+  "sb": {"skill": "フィニス・ドラコ", "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "mult": 50, "size": "xxl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": true, "af_combo_x": 1, "condition": "약점 보유 적이 있으면 50배. 속도 50%·전속성 내성 50% DOWN(3턴). 水天陣 시 수속성. SB 시 적 버프 해제, 도펠 4 축적"},
+  "self_buff": {"pwr": 0, "int": 120, "spd": 120, "elem_atk": 50, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"crystal": 50, "water": 50}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 30, "int": 30, "spd": 50, "all_elem_res": 50, "elem_res": {"crystal": 100, "water": 100}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "break", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "magic", "awakened": false, "condition": "VC로 幻魔陣 전개"},
   "support": {"heal": 1, "barrier": 1, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 0},
   "req": "幻魔陣, 루나틱<복사>/도펠 축적, 적 HP 50% 이상",

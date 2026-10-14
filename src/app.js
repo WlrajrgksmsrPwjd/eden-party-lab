@@ -7,6 +7,7 @@ const CHARS_TEXT = document.getElementById('db-chars').textContent;
 const CHARS_BASE = JSON.parse(CHARS_TEXT);
 const BOSSES = JSON.parse(document.getElementById('db-bosses').textContent);
 const BUDDIES = (()=>{ try{ return JSON.parse((document.getElementById('db-buddies')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
+const DECKS = (()=>{ try{ return JSON.parse((document.getElementById('db-decks')||{}).textContent||'[]')||[]; }catch(e){ return []; } })();
 const META = (()=>{ try{ return JSON.parse((document.getElementById('db-meta')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
 const ROLE_KR = {dps:'딜러',support:'버퍼',debuffer:'디버퍼',healer:'힐러',tank:'탱커',zone:'존',breaker:'브레이커'};
 const STYLE_KR = {NS:'노멀',AS:'어나더',ES:'엑스트라',AC:'이시층'};
@@ -24,7 +25,7 @@ const GL_PRESETS = {
 };
 function glKey(gl){ if(!gl) return 'def'; if(gl.mode==='auto') return 'auto'; if(gl.mode==='none') return 'none';
   for(const [k,p] of Object.entries(GL_PRESETS)) if(p.v&&p.v.mode==='preset'&&p.v.e===gl.e&&p.v.pa===gl.pa&&p.v.po===gl.po) return k; return 'e3'; }
-function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'; const p=[]; if(g.e) p.push('속성'+g.e); if(g.pa) p.push('페인'+g.pa); if(g.po) p.push('독'+g.po); return p.join('·')||'—'; }
+function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'; const p=[]; if(g.e) p.push('속성'+g.e); if(g.pa) p.push('페인'+g.pa); if(g.po) p.push('독'+g.po); if(g.z) p.push('각성의 힘'); return p.join('·')||'—'; }
 
 /* ---------- 상태 ---------- */
 let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
@@ -201,7 +202,7 @@ function jobSnap(){
   return {ids, own:JSON.parse(JSON.stringify(own)), S:settings(), cap};
 }
 const progJ = (J,id) => E.charProg(byId.get(id), J.own[id], J.S);
-// timeline: 최고점(N턴 총딜)의 1턴을 속도·선제 순서로 — 화면에 되살리는 팀도 엔진 탐색과 같은 값이 되게
+// timeline: 실전(N턴 총딜)의 1턴을 속도·선제 순서로 — 화면에 되살리는 팀도 엔진 탐색과 같은 값이 되게
 const ctxOf = (inp, J) => Object.assign(E.buildCtx(Object.assign({pgl: pglInput()}, inp), J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)}))), {timeline:true});
 const ownedJ = J => J.ids.filter(id=>byId.has(id)).map(id=>({pc:byId.get(id), prog:progJ(J,id)}));
 /* E.optimize와 같은 모양의 결과를 돌려준다. 새 계산에 밀려 버려지면 null */
@@ -599,7 +600,7 @@ function renderPlanControls(){
   const P=state.plan;
   $$('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.mode===P.mode?'true':'false'));
   $('#bossRow').hidden = P.mode!=='boss';
-  { const nb=$('#burstN'); if(nb) nb.value = String(settings().burstTurns||3); $('#nturnRow').hidden = !['burst','weak','boss','custom'].includes(P.mode); }
+  { const nb=$('#burstN'); if(nb) nb.value = String(settings().burstTurns||3); $('#nturnRow').hidden = !['weak','boss','custom'].includes(P.mode); }
   $('#weightRow').hidden = P.mode!=='custom';
   $('#kesRow').hidden = P.mode!=='kesshitsu';
   const sel=$('#bossSel');
@@ -786,10 +787,11 @@ function budLine(x, o){
   const cur=buddyInput(); const cm=cur&&cur.main?cur.main.id:null, cs=cur&&cur.sub?cur.sub.id:null;
   let tip='';
   try{
-    if(!x._budBest){ let best=null; const base=x.ev.burst;
+    const BV = ev => state.plan.mode==='burst' ? ev.dummyT : ev.burst;
+    if(!x._budBest){ let best=null; const base=BV(x.ev);
       for(const k of own){ if(k===cs) continue; const bd={main:Object.assign({id:k},BUDDIES[k]), sub:cur&&cur.sub||null};
         const ev=E.evalTeam(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, {focus:o&&o.focus||null, buddy:bd});
-        if(!best || ev.burst>best.v) best={k, v:ev.burst}; }
+        if(!best || BV(ev)>best.v) best={k, v:BV(ev)}; }
       x._budBest = best && best.k!==cm && best.v>base*1.03 ? {k:best.k, g:best.v/base-1} : null; }
     if(x._budBest) tip = ` · 화력 위주면 메인 버디 <b>${esc(budName(x._budBest.k))}</b> (세팅 후 폭딜 +${(x._budBest.g*100).toFixed(0)}%)`;
   }catch(e){}
@@ -807,10 +809,18 @@ function bsimHtml(ev){
   const b=ev.bsim; if(!b || !b.turns || !b.turns.length) return '';
   const st=b.afStart||{g:50,why:[]};
   const turn = r=>`<li><b>${r.t}턴</b> <span class="hint">AF ${Math.round(r.g)}% · SB ${ev.hasSB?Math.round(r.s)+'%':'—'}</span> ${r.af?`<span class="tag">AF${r.af<100?` ${r.af}%`:''}</span> `:''}${r.sb==='af'?`<span class="tag">AF 끝에 SB ×${r.combo.toFixed(1)}</span> `:r.sb==='turn'?'<span class="tag">SB</span> ':''}<span class="num">${fmtN(r.d)}</span></li>`;
-  return `<div class="bsim"><div class="hint">최고점 = ${b.N}턴 총 <b class="num">${fmtN(b.total)}</b> · 시작 AF ${st.g}%${st.why&&st.why.length?` (${esc(st.why.join(', '))})`:''} · 시작 SB ${ev.hasSB?Math.round(b.s0)+'%':'성도 없음'}</div><ol>${b.turns.map(turn).join('')}</ol></div>`;
+  return `<div class="bsim"><div class="hint">실전 참고: 개전부터 ${b.N}턴 총 <b class="num">${fmtN(b.total)}</b> · 시작 AF ${st.g}%${st.why&&st.why.length?` (${esc(st.why.join(', '))})`:''} · 시작 SB ${ev.hasSB?Math.round(b.s0)+'%':'성도 없음'}</div><ol>${b.turns.map(turn).join('')}</ol></div>`;
+}
+/* 최고점 = 허수아비 어포딜 한 줄: AF 행동 딜 + AF 끝 SB(콤보 배율) */
+function dummyHtml(x){
+  const d=x.ev.dummy; if(!d) return '';
+  const nm=i=>esc(x.team[i].name), tot=d.per.reduce((a,b)=>a+b,0)||1;
+  const top=d.per.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).filter(p=>p[0]/tot>=0.05).map(([v,i])=>`${nm(i)} ${Math.round(v/tot*100)}%`).join(' · ');
+  const ord=(x.ex&&x.ex.order)||d.n.map((_,i)=>i);
+  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 평균 콤보 ×${d.avg.toFixed(2)}${d.lv>=2?', 극존':''})</span>${d.sbWhen?` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(${d.sbWhen==='before'?'AF 직전에 SB로 극존을 열고':`AF 끝 콤보 ×${d.fin.toFixed(2)}`})</span>`:' <span class="hint">· 성도 없음</span>'}</div><div class="hint">버프·디버프·ZONE을 다 깐 뒤 게이지 100% AF 한 번 · 딜 비중 ${top}</div></div>`;
 }
 function timelineHtml(x, o){
-  const tl=tlOf(x,o), ev=x.ev; if(!tl) return bsimHtml(ev);
+  const tl=tlOf(x,o), ev=x.ev; if(!tl) return dummyHtml(x)+bsimHtml(ev);
   const pTxt = tl.known ? (tl.p>=0.99?'버퍼가 모두 빠름':tl.p<=0.01?'버퍼가 모두 느림':`버퍼가 빠른 쌍 ${Math.round(tl.p*100)}%`) : '속도 모름 → 반반';
   const cell=(k,v,sub,hot)=>`<div class="tlc${hot?' hot':''}"><div class="k">${k}</div><div class="v">${fmtN(v)}</div>${sub?`<div class="s">${sub}</div>`:''}</div>`;
   return `<div class="tline" aria-label="턴별 화력">
@@ -818,7 +828,7 @@ function timelineHtml(x, o){
     ${cell('2턴', tl.t2, '버프 깔린 평타 턴')}
     ${cell('SB 턴', ev.sbTurn, ev.hasSB?'게이지 차면':'성도 없음')}
     ${cell('AF 1회', ev.af, `${ev.afA&&ev.afA.auto?`행동 ${ev.afA.n.join('·')}회 · 약 ${ev.afA.dur.toFixed(0)}초 · `:''}콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
-  </div>${bsimHtml(ev)}`;
+  </div>${dummyHtml(x)}${bsimHtml(ev)}`;
 }
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
 function cardHtml(x, key, o){
@@ -829,7 +839,7 @@ function cardHtml(x, key, o){
   const co = ev.sb.cores[top];
   const tSum = x.progs.reduce((a,p)=>a+(p.t||0),0);
   const warns = teamWarns(x, boss, enemy, ex);
-  const order = ex.posTotal ? ex.order : x.team.map((_,i)=>i);
+  const order = ex.order;
   const rel = k => ref ? ev[k]/(ref[k]||1) : null;
   return `<section class="card${x.rank===1?' first':''}${shared?' shared':''}">
       ${o.head||''}
@@ -842,14 +852,15 @@ function cardHtml(x, key, o){
         <span class="cbtns"><button type="button" class="btn small" data-goalsave="${key}">${shared?'내 목표로 저장':'목표로 저장'}</button>${shared?'':`<button type="button" class="btn small" data-share="${key}">링크 복사</button>`}</span>
       </div>
       ${o.basis?`<div class="basis">${o.basis}</div>`:''}
-      ${ex.posTotal?`<div class="order">전방 배치 <span class="hint">왼쪽 → 오른쪽 · 위치 버프 ${ex.posOk}/${ex.posTotal} 성립</span></div>`:''}
+      <div class="order">전방 배치 <span class="hint">왼쪽 → 오른쪽${ex.posTotal?` · 위치 버프 ${ex.posOk}/${ex.posTotal} 성립`:''} · 버퍼·서포터 왼쪽, 주 딜러 오른쪽 (AF는 왼쪽부터 자동 선택)</span></div>
       <div class="members">${order.map(i=>memHtml(x,i,key,o.focus,o.lockSet)).join('')}</div>
       <div class="setup" data-for="${key}" hidden></div>
       ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${budLine(x, o)}${muleLine(x)}</div>`}
       ${timelineHtml(x, o)}
       <div class="metrics">
-        ${metric('SB 턴 화력', ev.sbTurn, rel('sbTurn'), hot==='b')}
-        ${metric('AF 1회 화력', ev.af, rel('af'), hot==='b')}
+        ${metric('최고점 (허수아비 어포딜)', ev.dummyT, rel('dummyT'), hot==='b')}
+        ${metric('SB 턴 화력', ev.sbTurn, rel('sbTurn'), false)}
+        ${metric('AF 1회 화력', ev.af, rel('af'), false)}
         ${metric('지속 (평상+AF 주기)', ev.sustain, rel('sustain'), hot==='s')}
         ${metric('생존력', ev.surv, rel('surv'), hot==='t', true)}
       </div>
@@ -924,7 +935,7 @@ function renderShare(){
   const boss = sh.mode==='boss' ? BOSSES.find(b=>b.id===sh.bossId)||null : null;
   const mode = sh.mode==='boss'&&!boss ? 'burst' : sh.mode;
   const cond = [MODE_KR[mode]].concat(boss?[boss.name_kr]:[], sh.focus?[focusLabel(sh.focus)+' 화력만']:[]).join(' · ');
-  const head = `<div class="sharehead"><b>공유받은 조합</b><span class="hint">${esc(cond)}</span><button type="button" class="btn small" data-shareclose="1">닫기</button></div>`;
+  const head = `<div class="sharehead"><b>${esc(sh.label||'공유받은 조합')}</b><span class="hint">${esc(cond)}</span><button type="button" class="btn small" data-shareclose="1">닫기</button></div>`;
   const team = sh.ids.map(id=>byId.get(id));
   box.hidden=false;
   if(team.length!==4 || team.some(c=>!c)){
@@ -955,6 +966,55 @@ function revealShare(){ // 좁은 화면에선 조건 패널 아래에 있으므
 function closeShare(){
   SHARE=null; renderShare();
   try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){ try{ location.hash=''; }catch(e2){} }
+}
+
+/* ---------- 보편 추천 덱 (커뮤니티) ---------- */
+const ZJP_KR = {'水天陣':'수천진','烈火陣':'열화진','地裂陣':'지열진','風王陣':'풍왕진','招雷陣':'초뢰진','刻陰陣':'각음진','輝晶陣':'휘정진','煌斬陣':'황참진','瞬突陣':'순돌진','轟打陣':'굉타진','幻魔陣':'환마진','双撃陣・斬突':'쌍격진·참돌','双撃陣・斬魔':'쌍격진·참마','月光陣':'월광진','閃撃陣':'섬격진'};
+const BASIS_KR = {non_af:'비어포 기준', af:'어포 기준', both:'기준 미기재'};
+let mdSort='zone', mdCache=null, mdKey='';
+function mdEval(){
+  const key = JSON.stringify([state.sample, state.owned, settings(), pglInput()]);
+  if(mdCache && mdKey===key) return mdCache;
+  const S = Object.assign({}, settings(), {enemyCount:1}), real = !state.sample;
+  mdCache = DECKS.map((d,k)=>{
+    const team = d.members.map(id=>byId.get(id));
+    if(team.some(c=>!c)) return {d, k, team, mine:[], ev:null};
+    const mine = team.map(c=>!!(real && state.owned[c.id]));
+    const progs = team.map((c,i)=>E.charProg(c, mine[i] ? Object.assign(BASE_OWN(), state.owned[c.id]) : {t:80, s:!!c.stellar, m:0, g:'none', gl:null}, S));
+    let ev=null; try{ ev = E.evalTeam(team, progs, null, S, cap, ctxOf({backLocked:[]})); }catch(e){}
+    return {d, k, team, mine, ev};
+  });
+  mdKey = key; return mdCache;
+}
+function renderMetaDecks(){
+  const box=$('#mdList'); if(!box) return;
+  $$('#mdSort button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.k===mdSort?'true':'false'));
+  const L = mdEval().filter(r=>r.ev);
+  if(!L.length){ box.innerHTML='<div class="empty">추천 덱 자료가 없습니다.</div>'; return; }
+  const mxN = Math.max(...L.map(r=>r.ev.sustainNoAF))||1, mxD = Math.max(...L.map(r=>r.ev.dummyT))||1;
+  const ZO = Object.keys(ZJP_KR), zi = r=>{ const i=ZO.indexOf(r.d.zone); return i<0?99:i; };
+  const arr = L.slice().sort(mdSort==='normal' ? (a,b)=>b.ev.sustainNoAF-a.ev.sustainNoAF : mdSort==='dummy' ? (a,b)=>b.ev.dummyT-a.ev.dummyT : (a,b)=>(zi(a)-zi(b))||(a.k-b.k));
+  const real = !state.sample;
+  const nameOf = id=>esc((byId.get(id)||{name:id}).name);
+  const num = (k,v,mx)=>`<div class="mdm"><div class="k">${k}</div><div class="v num">${fmtN(v)}</div><div class="bar"><i style="width:${Math.max(2,Math.round(v/mx*100))}%"></i></div></div>`;
+  box.innerHTML = arr.map(r=>{
+    const d=r.d, miss=r.team.filter((c,i)=>real && !r.mine[i]).length;
+    const alts = Object.entries(d.alts||{}).filter(([,v])=>v&&v.length).map(([slot,v])=>`${+slot+1}번 ${v.map(nameOf).join('·')}`).join(' / ');
+    const src = d.source ? `<a href="${esc(d.source)}" target="_blank" rel="noopener">${esc(d.source_name||'출처')}${d.date?' '+esc(d.date):''} ↗</a>` : esc(d.source_name||'출처 미상');
+    return `<div class="mdrow">
+      <div class="mdhead"><span class="zonebadge">${esc(ZJP_KR[d.zone]||'ZONE 미기재')}</span> <b>${esc(d.name)}</b> <span class="mdtag b-${esc(d.basis)}">${esc(BASIS_KR[d.basis]||d.basis)}</span> <span class="hint">${esc(d.use||'')}</span></div>
+      <div class="mdmem">${r.team.map((c,i)=>`<span class="${real&&!r.mine[i]?'miss':''}">${esc(c.name)}${real&&!r.mine[i]?' <small>미보유</small>':''}</span>`).join('<span class="sep">/</span>')}${d.back&&d.back.length?` <span class="hint">· 후열 ${d.back.map(nameOf).join(', ')}</span>`:''}</div>
+      ${alts?`<div class="hint">대체 후보: ${alts}</div>`:''}
+      <div class="mdnums">${num('비어포 평상 턴', r.ev.sustainNoAF, mxN)}${num('SB 턴', r.ev.sbTurn, Math.max(...L.map(q=>q.ev.sbTurn))||1)}${num('최고점(어포딜)', r.ev.dummyT, mxD)}</div>
+      <div class="hint">${d.note?esc(d.note)+' · ':''}출처 ${src}${real&&miss?` · 미보유 ${miss}명`:''}</div>
+      <div><button type="button" class="btn small" data-mdopen="${r.k}">카드로 자세히</button></div>
+    </div>`;
+  }).join('');
+}
+function openMetaDeck(k){
+  const d=DECKS[k]; if(!d) return;
+  SHARE = {ids:d.members.slice(), mode: d.basis==='non_af' ? 'sustain' : 'burst', bossId:'', focus:null, label:'추천 덱 · '+d.name};
+  renderShare(); revealShare();
 }
 
 /* ---------- 후열 글래스터 셔틀 ---------- */
@@ -1011,7 +1071,7 @@ function turnPlanHtml(x, boss){
   const shSB=ev.sb.per.map(v=>v/sum(ev.sb.per)), shN=ev.normal.per.map(v=>v/sum(ev.normal.per));
   const mainI = shSB.indexOf(Math.max(...shSB)), mainN = shN.indexOf(Math.max(...shN));
   const dealers = team.map((c,i)=>i).filter(i=>shSB[i]>=0.2 || shN[i]>=0.2);
-  const order = ex.posTotal ? ex.order : team.map((_,i)=>i);
+  const order = ex.order;
   const nm = i=>`<b>${esc(team[i].name)}</b>`;
   const T = [];
   // 개전
@@ -1146,7 +1206,7 @@ function setupHtml(x, i){
   const sSB=ev.sb.per[i]/sum(ev.sb.per), sN=ev.normal.per[i]/sum(ev.normal.per), share=Math.max(sSB,sN);
   const role = share>=0.35?'주 딜러':share>=0.12?'보조 딜러':'서포터';
   const dealer = share>=0.12;
-  const order = ex.posTotal ? ex.order : x.team.map((_,k)=>k);
+  const order = ex.order;
   const slot = order.indexOf(i)+1;
   const nm = k=>esc(x.team[k].name);
   const L = []; // 이 조합에서
@@ -1155,7 +1215,7 @@ function setupHtml(x, i){
   { const st = c.stats ? E.statsAt(c.stats, c.fateTbl, pr.t||0) : null;
     if(st) L.push(`<li>스탯 <span class="hint">(천명치 ${pr.t||0}, 장비 제외)</span>: ${E.STAT_ORDER.map(k=>`${k===c.mainStat?'<b>':''}${STAT_KR[k]} ${st[k].toLocaleString()}${k===c.mainStat?'</b>':''}`).join(' · ')}${pr.spdSrc==='build'?` · <span class="hint">빌드 장비 포함 속도 ${pr.spd}</span>`:''}</li>`);
     else L.push(`<li class="hint">스탯: 기본 스탯 자료 없음 (위키에 없는 캐릭터)</li>`); }
-  L.push(`<li>전방 <b>왼쪽에서 ${slot}번째</b>${ex.posTotal?'':' (위치 조건 없음 · 아무 자리나)'}</li>`);
+  L.push(`<li>전방 <b>왼쪽에서 ${slot}번째</b>${ex.posTotal?'':' (위치 버프 없음 · 버퍼는 왼쪽, 딜러는 오른쪽: AF가 왼쪽부터 자동 선택돼 버프가 먼저 깔림)'}</li>`);
   for(const rl of ex.rel){
     if(rl.j===i) L.push(`<li>위치 버프 대상 <b>${nm(rl.i)}</b>을(를) 바로 ${rl.side==='r'?'오른쪽':rl.side==='l'?'왼쪽':'옆'}에</li>`);
     else if(rl.i===i) L.push(`<li><b>${nm(rl.j)}</b>의 위치 버프를 받음 → ${nm(rl.j)} 바로 ${rl.side==='r'?'오른쪽':rl.side==='l'?'왼쪽':'옆'}에 서기</li>`);
@@ -1324,7 +1384,7 @@ function fcardHtml(f, k, r, cond){
   const rows = r.results.map(x=>{
     const key=`f${k}-${x.rank}`; RES.set(key,{x, focus:f, mode:cond.mode, bossId:cond.bossId});
     const ex = x.ex = E.explainTeam(x.team, x.progs, x.ev, settings(), {});
-    const order = ex.posTotal ? ex.order : x.team.map((_,i)=>i);
+    const order = ex.order;
     const z=x.ev.sb.zone, bad=ex.notes.filter(n=>n.lvl==='off').length;
     const sbTot=x.ev.sb.per.reduce((a,b)=>a+b,0)||1;
     return `<div class="frow">
@@ -1852,6 +1912,10 @@ function bind(){
   $('#enemyClear').addEventListener('click',()=>{ state.plan.enemy={}; save(); renderPlanControls(); });
   $('#countSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-n]'); if(!b) return; state.plan.enemyCount=+b.dataset.n; save(); renderPlanControls(); });
   document.addEventListener('click',e=>{ const b=e.target.closest('button[data-rm]'); if(!b) return; const L=state.plan[b.dataset.key]; const i=L.indexOf(b.dataset.rm); if(i>=0) L.splice(i,1); save(); renderPlanControls(); });
+  { const md=$('#metaDecks'); if(md){
+      md.addEventListener('toggle',()=>{ if(md.open){ $('#mdList').innerHTML='<div class="empty">계산 중…</div>'; setTimeout(renderMetaDecks, 30); } });
+      $('#mdSort').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(!b) return; mdSort=b.dataset.k; renderMetaDecks(); });
+      $('#mdList').addEventListener('click',e=>{ const b=e.target.closest('button[data-mdopen]'); if(b) openMetaDeck(+b.dataset.mdopen); }); } }
   $('#diffSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-lv]'); if(!b) return; state.plan.maxDiff=+b.dataset.lv; save(); renderPlanControls(); runPlan(); });
   $('#optDiverse').addEventListener('change',e=>{ state.settings.diverse=e.target.checked; save(); });
   $('#optCap').addEventListener('change',e=>{ state.settings.capOn=e.target.checked; save(); });

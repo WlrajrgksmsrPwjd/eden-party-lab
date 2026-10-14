@@ -103,6 +103,13 @@ out=head+rd('app.css')+'\n</style></head><body>\n'+rd('body.html')
 out+='<script type="application/json" id="db-chars">'+js(chars)+'</script>\n'
 out+='<script type="application/json" id="db-bosses">'+js(bosses)+'</script>\n'
 out+='<script type="application/json" id="db-meta">'+js(meta)+'</script>\n'
+# 보편 추천 덱(커뮤니티): 없는 캐릭터 id가 있으면 빌드를 멈춘다
+mdk=json.load(open(P('data','meta_decks.json'),encoding='utf-8'))['decks']
+_ids={c['id'] for c in chars}
+for dk in mdk:
+    _bad=[i for i in dk['members']+dk.get('back',[])+[a for v in (dk.get('alts') or {}).values() for a in v] if i not in _ids]
+    if _bad: raise SystemExit('meta_decks.json: 없는 캐릭터 id %s (%s)'%(_bad, dk['name']))
+out+='<script type="application/json" id="db-decks">'+js(mdk)+'</script>\n'
 bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); bfx.pop('_doc',None)
 out+='<script type="application/json" id="db-buddies">'+js(bfx)+'</script>\n'
 # 엔진 코드는 app.js가 textContent를 읽어 Web Worker로도 띄운다
@@ -117,6 +124,9 @@ print('index.html',len(out.encode())//1024,'KB · 캐릭터',len(chars),'· 보�
 VB=os.path.join(here,'..','vendor','ae-builder','어나더에덴_빌더.html')
 if os.path.exists(VB):
     b=open(VB,encoding='utf-8').read()
+    # 약점 대미지 강화(포박의 공격 등)는 약점 배율(26행)이 아니라 대미지에 바로 곱한다 (사용자 확인값, eqopt.js와 같게)
+    _wk='if (uniq.weak) R[26] = one(uniq.weak.v);'
+    if b.count(_wk)==1: b=b.replace(_wk, 'if (uniq.weak) R[43] = (R[43] || []).concat([uniq.weak.v]);')
     pre='<!doctype html>\n<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n'
     hook='''<script>
 /* 에덴 편성 연구실 연결 (builder.html#who=캐릭터&wt=무기종&id=캐릭터id&s=조건JSON&code=AEB1.…)

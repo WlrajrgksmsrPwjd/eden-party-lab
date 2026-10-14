@@ -12,33 +12,11 @@
   "tier": "SS",
   "score": 92,
   "roles": ["dps"],
-  "main": {
-    "skill": "炎獄(真顕現)",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "fire", "weapon_type": "magic",
-    "mult": 2, "size": "xl", "hits": 3, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "선제. HP 최대 시 위력 2배·공격횟수+2(기본 1히트→3히트), 기절 부여, 자신 HP 회복"
-  },
-  "sb": null,
-  "self_buff": {
-    "pwr": 0, "int": 150, "spd": 0, "elem_atk": 0, "weapon_atk": 0,
-    "crit_rate": 0, "crit_dmg": 0, "over_crit": false,
-    "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "",
-    "pwr": 0, "int": 75, "spd": 0, "all_elem_atk": 0,
-    "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 15, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {"fire": 30},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {},
-    "break": "", "weak_expose": "", "pain_poison": true
-  },
+  "main": {"skill": "炎獄(真顕現)", "target": "aoe", "kind": "mag", "stat": "int", "element": "fire", "weapon_type": "magic", "mult": 2, "size": "xl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. HP 최대 시 위력 2배·공격횟수+2(기본 1히트→3히트), 기절 부여, 자신 HP 회복"},
+  "sb": {"skill": "焔撃・ヴァシュタル", "target": "aoe", "kind": "mag", "stat": "int", "element": "fire", "weapon_type": "magic", "mult": 20, "size": "xxl", "hits": 2, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "SB 시 20배(평시 5배), 炎帝로 변화 후 極・炎獄 연속 실행 [알테마 대조(2026-10): 星導 스킬 누락분 추가]"},
+  "self_buff": {"pwr": 0, "int": 150, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "", "pwr": 0, "int": 75, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 15, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {"fire": 30}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": true},
   "zone": null,
   "support": {"heal": 1, "barrier": 1, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
   "req": "HP 최대 유지",
@@ -58,39 +36,11 @@
   "tier": "SS",
   "score": 98,
   "roles": ["healer", "support", "debuffer"],
-  "main": {
-    "skill": "神威依代",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "none", "weapon_type": "magic",
-    "mult": 1, "size": "xxl", "hits": 2, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "독·페인 상태 적에게 대미지 증가, 일부 버프 반전, 闇祓·回護 부여"
-  },
-  "sb": {
-    "skill": "神威依代(SB)",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "none", "weapon_type": "magic",
-    "mult": 2, "size": "xxl", "hits": 2, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "SB 시 위력 2배 + 아군 전체 전투불능 회복·HP 전회복·100% 경감 배리어 1회"
-  },
-  "self_buff": {
-    "pwr": 50, "int": 50, "spd": 0, "elem_atk": 0, "weapon_atk": 0,
-    "crit_rate": 0, "crit_dmg": 0, "over_crit": false,
-    "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "",
-    "pwr": 50, "int": 50, "spd": 0, "all_elem_atk": 0,
-    "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 50, "int": 50, "spd": 0, "all_elem_res": 50, "elem_res": {},
-    "phys_res": 50, "mag_res": 0, "weapon_res": {},
-    "break": "water", "weak_expose": "", "pain_poison": true
-  },
+  "main": {"skill": "神威依代", "target": "aoe", "kind": "mag", "stat": "int", "element": "none", "weapon_type": "magic", "mult": 16, "size": "xxl", "hits": 2, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "독·페인 상태 적에게 대미지 증가, 일부 버프 반전, 闇祓·回護 부여 [알테마 대조(2026-10): 독·페인 대상 최대 16배(式神이 맹독·페인 영구 부여)]"},
+  "sb": {"skill": "神威依代(SB)", "target": "aoe", "kind": "mag", "stat": "int", "element": "none", "weapon_type": "magic", "mult": 32, "size": "xxl", "hits": 2, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "SB 시 위력 2배 + 아군 전체 전투불능 회복·HP 전회복·100% 경감 배리어 1회 [알테마 대조(2026-10): SB 2배 × 독·페인 16배]"},
+  "self_buff": {"pwr": 50, "int": 50, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "", "pwr": 50, "int": 50, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 50, "int": 50, "spd": 0, "all_elem_res": 50, "elem_res": {}, "phys_res": 50, "mag_res": 0, "weapon_res": {}, "break": "water", "weak_expose": "", "pain_poison": true},
   "zone": null,
   "support": {"heal": 3, "barrier": 2, "cleanse": 3, "revive": true, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 2},
   "req": "",
@@ -411,39 +361,11 @@
   "tier": "S",
   "score": 98,
   "roles": ["support", "dps", "zone"],
-  "main": {
-    "skill": "ソテリア・フォラス(連携追撃)",
-    "target": "st", "kind": "mag", "stat": "pwr", "element": "water", "weapon_type": "magic",
-    "mult": 15, "size": "xl", "hits": 1, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "본체는 선제 단일 수마법(특대, 완력 의존)+消魂 부여. 오른쪽 아군에 魂の力(스탯 최대 200)+연계: 단일 공격 시 수속성 추가공격 특대 15배(공격 종별은 해당 아군 무기)"
-  },
-  "sb": {
-    "skill": "エレオス・キディア",
-    "target": "st", "kind": "mag", "stat": "pwr", "element": "water", "weapon_type": "magic",
-    "mult": 8, "size": "xxl", "hits": 1, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "消魂 적에게 6배+수 EB 3, SB 시 8배. 아군 크리율·마크리율 100%(3회행동). 턴 종료 시 夢心地(행동불능 대신 守護)"
-  },
-  "self_buff": {
-    "pwr": 50, "int": 50, "spd": 50, "elem_atk": 0, "weapon_atk": 35,
-    "crit_rate": 0, "crit_dmg": 30, "over_crit": false,
-    "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "魂の力 보유 아군(오른쪽 1명)은 효과량·지속 2배. 비보유 아군은 50%/30%",
-    "pwr": 100, "int": 100, "spd": 100, "all_elem_atk": 0,
-    "elem_atk": {}, "weapon_atk": {"all": 35},
-    "crit_rate": 100, "crit_dmg": 60,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false, "link": true, "barrier_pierce": true, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 60, "int": 60, "spd": 60, "all_elem_res": 60, "elem_res": {},
-    "phys_res": 60, "mag_res": 0, "weapon_res": {},
-    "break": "water", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "ソテリア・フォラス(連携追撃)", "target": "st", "kind": "mag", "stat": "pwr", "element": "water", "weapon_type": "magic", "mult": 15, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "본체는 선제 단일 수마법(특대, 완력 의존)+消魂 부여. 오른쪽 아군에 魂の力(스탯 최대 200)+연계: 단일 공격 시 수속성 추가공격 특대 15배(공격 종별은 해당 아군 무기)"},
+  "sb": {"skill": "エレオス・キディア", "target": "st", "kind": "mag", "stat": "pwr", "element": "water", "weapon_type": "magic", "mult": 48, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "消魂 적에게 6배+수 EB 3, SB 시 8배. 아군 크리율·마크리율 100%(3회행동). 턴 종료 시 夢心地(행동불능 대신 守護) [알테마 대조(2026-10): 消魂 6배 × SB さらに 8배]"},
+  "self_buff": {"pwr": 50, "int": 50, "spd": 50, "elem_atk": 0, "weapon_atk": 35, "crit_rate": 0, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "魂の力 보유 아군(오른쪽 1명)은 효과량·지속 2배. 비보유 아군은 50%/30%", "pwr": 100, "int": 100, "spd": 100, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"all": 35}, "crit_rate": 100, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": true, "barrier_pierce": true, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 60, "int": 60, "spd": 60, "all_elem_res": 60, "elem_res": {}, "phys_res": 60, "mag_res": 0, "weapon_res": {}, "break": "water", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "water", "awakened": true, "condition": "ヴロヒー・プシュケ: 수천진 전개 중 ZONE 각성"},
   "support": {"heal": 2, "barrier": 2, "cleanse": 0, "revive": false, "guard": 1, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 1},
   "req": "消魂 적 + 오른쪽 아군에 魂の力(단일 공격 딜러)",

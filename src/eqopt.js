@@ -153,7 +153,8 @@ function buildInput(items, s, wt) {
   const R = {}; for (const r in rows) R[r] = rows[r].slice();
   if (R[52]) R[52] = R[52].slice(0, 2);
   if (R[55]) R[55] = one(Math.max(...R[55]));
-  if (uniq.weak) R[26] = one(uniq.weak.v);
+  // 약점 대미지 강화(포박의 공격·시련 광석 등, 중복 불가 → 최대값 하나): 약점 배율(26행)에 더하지 않고 대미지에 바로 곱함 (사용자 확인값)
+  if (uniq.weak) R[43] = (R[43] || []).concat([uniq.weak.v]);
   if (uniq.aim) R[48] = one(uniq.aim.v);
   if (elemE.length) R[35] = elemE.slice();
   const cpX = phys ? s.bCpow : s.bMcpow; const cp = cpow.concat(cpX ? [cpX] : []); if (cp.length) R[46] = cp;
@@ -402,6 +403,6 @@ function pShares(equip, ore) {
 }
 const slotLabel = k => (SLOTS.find(x => x[0] === k) || [k, k])[1];
 
-const API = { init, isReady: () => ready, makeS, optimize, evalState, statsOf, buildCode, parseCode, pShares, oreName, nameOf, slotLabel, itemsOf, lockOf, TYPES, ARMOR_OF, OPT_ALL, GS, ITEMS: () => ITEMS, ORES: () => ORES, DEFAULT_S };
+const API = { init, isReady: () => ready, makeS, optimize, evalState, evalBuild, statsOf, buildCode, parseCode, pShares, oreName, nameOf, slotLabel, itemsOf, lockOf, TYPES, ARMOR_OF, OPT_ALL, GS, ITEMS: () => ITEMS, ORES: () => ORES, DEFAULT_S };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.AEEq = API;
 })(typeof window !== 'undefined' ? window : globalThis);

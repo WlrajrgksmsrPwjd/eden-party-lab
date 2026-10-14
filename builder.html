@@ -1442,7 +1442,7 @@ function buildInput(items, s) {
   for (const r in rows) R[r] = rows[r].slice();
   if (R[52]) R[52] = R[52].slice(0, 2);
   if (R[55]) R[55] = one(Math.max(...R[55]));
-  if (uniq.weak) R[26] = one(uniq.weak.v);
+  if (uniq.weak) R[43] = (R[43] || []).concat([uniq.weak.v]);
   if (uniq.aim) R[48] = one(uniq.aim.v);
   if (elemE.length) R[35] = elemE.slice();
   const cpX = phys ? s.bCpow : s.bMcpow;   // 기타 보정: 물리는 크리티컬 위력, 마법은 마법 크리티컬 위력

@@ -411,3 +411,22 @@ a.lnk{display:inline-flex; align-items:center}
 .bsim li{display:flex; gap:6px; align-items:baseline; flex-wrap:wrap}
 .bsim .tag{display:inline-block; padding:0 6px; border-radius:6px; background:var(--accent-soft); font-size:11.5px}
 .bsim .num{margin-left:auto}
+/* 최고점 = 허수아비 어포딜 */
+.dummy{margin-top:8px; padding:8px 10px; border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:8px; background:var(--surface-2); font-size:13px; line-height:1.55}
+.dummy .num{font-variant-numeric:tabular-nums}
+/* 보편 추천 덱 */
+.metadecks{margin-top:14px; border:1px solid var(--line); border-radius:var(--r); background:var(--surface); padding:10px 14px}
+.metadecks>summary{cursor:pointer; padding:4px 0; line-height:1.5}
+.metadecks>summary .hint{display:inline}
+.mdbar{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0}
+.mdrow{padding:12px 0; border-top:1px solid var(--line); display:grid; gap:5px; font-size:13px}
+.mdhead{display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+.mdtag{font-size:11.5px; padding:1px 7px; border-radius:6px; border:1px solid var(--line); color:var(--muted)}
+.mdtag.b-non_af{background:var(--accent-soft); color:var(--ink); border-color:transparent}
+.mdmem{display:flex; flex-wrap:wrap; gap:4px 6px; align-items:baseline}
+.mdmem .sep{color:var(--muted)}
+.mdmem .miss{color:var(--muted)} .mdmem .miss small{font-size:11px; color:var(--warn)}
+.mdnums{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.mdm .k{font-size:11.5px; color:var(--muted)} .mdm .v{font-weight:700}
+.mdm .bar{height:5px; background:var(--surface-2); border-radius:5px; overflow:hidden; margin-top:3px}
+.mdm .bar i{display:block; height:100%; background:var(--accent)}

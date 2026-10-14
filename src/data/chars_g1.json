@@ -60,41 +60,11 @@
   "tier": "B",
   "score": 95,
   "roles": ["tank", "support", "debuffer"],
-  "main": {
-    "skill": "次元爆弾",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "blunt",
-    "mult": 20, "size": "xl", "hits": 1, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "턴 종료 시 잔존 차원폭탄 수에 따라 위력 증가(최대 20배). 참내성 90%/마법내성 90% DOWN(2턴)"
-  },
-  "sb": {
-    "skill": "コズミックフレア",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "none", "weapon_type": "blunt",
-    "mult": 0, "size": "", "hits": 3, "repeat": 0,
-    "crit_sure": false, "def_ignore": true, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "고정 대미지 60,000,000×3회(통상 시 10,000,000×3). 머티리얼 4소비 시 대미지 10배. SB 시 전투불능 회복+HP/MP 100% 회복"
-  },
-  "self_buff": {
-    "pwr": 50, "int": 50, "spd": 0, "elem_atk": 0, "weapon_atk": 0,
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "크리티컬 관련은 머티리얼 4 이상 시",
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 30, "int": 30, "spd": 0,
-    "all_elem_res": 30, "elem_res": {},
-    "phys_res": 0, "mag_res": 90, "weapon_res": {"slash": 90},
-    "break": "", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "次元爆弾", "target": "aoe", "kind": "mag", "stat": "pwr", "element": "fire", "weapon_type": "blunt", "mult": 20, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "턴 종료 시 잔존 차원폭탄 수에 따라 위력 증가(최대 20배). 참내성 90%/마법내성 90% DOWN(2턴) [알테마 대조(2026-10): 마법 공격(완력 의존), 사용 시 차원폭탄 50 즉시 부여·아군 타격마다 감소]"},
+  "sb": {"skill": "コズミックフレア", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "none", "weapon_type": "blunt", "mult": 0, "size": "", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": true, "barrier_pierce": false, "af_combo_x": 1, "condition": "고정 대미지 60,000,000×3회(통상 시 10,000,000×3). 머티리얼 4소비 시 대미지 10배. SB 시 전투불능 회복+HP/MP 100% 회복"},
+  "self_buff": {"pwr": 50, "int": 50, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "크리티컬 관련은 머티리얼 4 이상 시", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 30, "int": 30, "spd": 0, "all_elem_res": 30, "elem_res": {}, "phys_res": 0, "mag_res": 90, "weapon_res": {"slash": 90}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "堅守陣", "awakened": false, "condition": "전투 개시 시 / 가드포스 계열 사용 시 자동 전개"},
   "support": {"heal": 2, "barrier": 3, "cleanse": 3, "revive": true, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 2, "status_immune": 2},
   "req": "머티리얼 4 이상 누적",
@@ -279,35 +249,11 @@
   "tier": "C",
   "score": 95,
   "roles": ["dps", "debuffer"],
-  "main": {
-    "skill": "普通の一撃",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "none", "weapon_type": "slash",
-    "mult": 1.25, "size": "xxl", "hits": 1, "repeat": 0,
-    "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "자신의 완력에 따라 위력 증가(완력의 3배 가산, 완력 상한 999)"
-  },
+  "main": {"skill": "普通の一撃", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "none", "weapon_type": "slash", "mult": 1, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "자신의 완력에 따라 위력 증가(완력의 3배 가산, 완력 상한 999) [알테마 대조(2026-10): 극대 크기에 이미 반영, 腕力 3배 가산은 배율 아님]"},
   "sb": null,
-  "self_buff": {
-    "pwr": 35, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0,
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "VC 1턴",
-    "pwr": 35, "int": 0, "spd": 0,
-    "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_res": 0, "elem_res": {},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {"slash": 70},
-    "break": "slash", "weak_expose": "", "pain_poison": true
-  },
+  "self_buff": {"pwr": 35, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "VC 1턴", "pwr": 35, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {"slash": 70}, "break": "slash", "weak_expose": "", "pain_poison": true},
   "zone": null,
   "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
   "req": "턴 경과(완력 고정치 +50/턴, 최대 +500)",
@@ -327,41 +273,11 @@
   "tier": "C",
   "score": 95,
   "roles": ["dps", "zone"],
-  "main": {
-    "skill": "イレクトテラス",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "thunder", "weapon_type": "magic",
-    "mult": 15, "size": "xxl", "hits": 2, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "극대 5배×속도에 따른 위력 증가(속도 600에서 최대 3배). 뇌제 상태 시 공격 횟수 2배(4회). 뇌속성내성 50% DOWN(3턴, 최대 5누적)"
-  },
-  "sb": {
-    "skill": "クロノ・レイ",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "thunder", "weapon_type": "magic",
-    "mult": 30, "size": "xxl", "hits": 3, "repeat": 0,
-    "crit_sure": false, "def_ignore": true, "barrier_pierce": true, "af_combo_x": 1,
-    "condition": "전위 雷·陰·晶 퍼스널리티 수에 따라 위력 증가(통상 최대 15배, SB 시 최대 30배). 뇌제 시 횟수 2배. 배리어 관통은 스텔라보드 SB 강화(3회 행동)"
-  },
-  "self_buff": {
-    "pwr": 0, "int": 75, "spd": 75, "elem_atk": 75, "weapon_atk": 0,
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "none", "restrict": "",
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 0, "int": 0, "spd": 30,
-    "all_elem_res": 0, "elem_res": {"thunder": 250},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {},
-    "break": "", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "イレクトテラス", "target": "aoe", "kind": "mag", "stat": "int", "element": "thunder", "weapon_type": "magic", "mult": 15, "size": "xxl", "hits": 4, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "극대 5배×속도에 따른 위력 증가(속도 600에서 최대 3배). 뇌제 상태 시 공격 횟수 2배(4회). 뇌속성내성 50% DOWN(3턴, 최대 5누적) [알테마 대조(2026-10): 雷帝(極・招雷陣 턴 종료 진입) 중 공격 횟수 2배]"},
+  "sb": {"skill": "クロノ・レイ", "target": "aoe", "kind": "mag", "stat": "int", "element": "thunder", "weapon_type": "magic", "mult": 30, "size": "xxl", "hits": 6, "repeat": 0, "crit_sure": false, "def_ignore": true, "barrier_pierce": true, "af_combo_x": 1, "condition": "전위 雷·陰·晶 퍼스널리티 수에 따라 위력 증가(통상 최대 15배, SB 시 최대 30배). 뇌제 시 횟수 2배. 배리어 관통은 스텔라보드 SB 강화(3회 행동) [알테마 대조(2026-10): 雷帝 중 6회]"},
+  "self_buff": {"pwr": 0, "int": 75, "spd": 75, "elem_atk": 75, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "none", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 0, "int": 0, "spd": 30, "all_elem_res": 0, "elem_res": {"thunder": 250}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "thunder", "awakened": true, "condition": "プネウマフィプニス/VC로 초뢰진 전개. 전위 陰·晶 2인 이상이면 월광진으로 변화. 전개 시 ZONE 각성 실행"},
   "support": {"heal": 0, "barrier": 1, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
   "req": "극·초뢰진 또는 극·월광진 전개 중(뇌제 상태), 속도 600 이상",
@@ -519,41 +435,11 @@
   "tier": "A",
   "score": 96,
   "roles": ["dps", "support", "zone"],
-  "main": {
-    "skill": "麒麟裂破斬",
-    "target": "st", "kind": "phys", "stat": "pwr", "element": "earth", "weapon_type": "slash",
-    "mult": 10, "size": "xl", "hits": 3, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "전위에 번성기원 보유 아군이 있으면 위력 10배. 아군 전체 전속성공격 50% UP+크리율/마크리율 100% UP(3회 행동)"
-  },
-  "sb": {
-    "skill": "プライドオブフゲン",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "earth", "weapon_type": "slash",
-    "mult": 1, "size": "xl", "hits": 1, "repeat": 0,
-    "crit_sure": true, "def_ignore": true, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "크리티컬 대미지 증가 통상 10배, SB 시 확정 크리+크리티컬 대미지 40배. 황참진 전개 중이면 공격 전 극·황참진 전개"
-  },
-  "self_buff": {
-    "pwr": 0, "int": 0, "spd": 0, "elem_atk": 50, "weapon_atk": 0,
-    "crit_rate": 100, "crit_dmg": 30,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "크리대미지 30%·연격수+1·임기응변(참)·배리어관통은 전위 왼쪽 아군(퍼스널리티 3종 이상 시)",
-    "pwr": 15, "int": 0, "spd": 0,
-    "all_elem_atk": 50, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 100, "crit_dmg": 30,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": true, "extra_hit": true, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_res": 0, "elem_res": {},
-    "phys_res": 30, "mag_res": 30, "weapon_res": {},
-    "break": "", "weak_expose": "", "pain_poison": true
-  },
+  "main": {"skill": "麒麟裂破斬", "target": "st", "kind": "phys", "stat": "pwr", "element": "earth", "weapon_type": "slash", "mult": 10, "size": "xl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "전위에 번성기원 보유 아군이 있으면 위력 10배. 아군 전체 전속성공격 50% UP+크리율/마크리율 100% UP(3회 행동)"},
+  "sb": {"skill": "プライドオブフゲン", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "earth", "weapon_type": "slash", "mult": 40, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": true, "def_ignore": true, "barrier_pierce": false, "af_combo_x": 1, "condition": "크리티컬 대미지 증가 통상 10배, SB 시 확정 크리+크리티컬 대미지 40배. 황참진 전개 중이면 공격 전 극·황참진 전개 [알테마 대조(2026-10): 극대, SB 시 확정 크리+크리 시 40배]"},
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 50, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "크리대미지 30%·연격수+1·임기응변(참)·배리어관통은 전위 왼쪽 아군(퍼스널리티 3종 이상 시)", "pwr": 15, "int": 0, "spd": 0, "all_elem_atk": 50, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": true, "extra_hit": true, "mp_cost_zero": false},
+  "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 30, "mag_res": 30, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": true},
   "zone": {"type": "slash", "awakened": true, "condition": "師範の旗本/VC로 황참진 선제 전개. 성도스킬로 극·황참진"},
   "support": {"heal": 2, "barrier": 1, "cleanse": 1, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 2},
   "req": "참 ZONE(황참진), 전위 퍼스널리티 3종 이상, 번성기원 보유 아군",
@@ -735,41 +621,11 @@
   "tier": "B",
   "score": 94,
   "roles": ["dps"],
-  "main": {
-    "skill": "ブラストヘヴン",
-    "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "blunt",
-    "mult": 2, "size": "xl", "hits": 1, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 2,
-    "condition": "크리티컬 시 대미지 4배. AF 배율에 따라 위력 증가(최대 300%/2배). AF 시 트리플다운(특대 3회, 크리 시 6배, AF배율 증가량 2배) 연속 실행. AF 배율 1000% 이상 시 통상공격이 슈퍼콤보(트리플다운 5배×3회)"
-  },
-  "sb": {
-    "skill": "ゲイルクラッシャー",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "blunt",
-    "mult": 10, "size": "xxl", "hits": 1, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "통상 극대 3배, SB 시 10배. 비AF 시 재공격. SB 시 버스트부스터 10누적+재공격, 비AF 시 AF 게이지 5% 회복"
-  },
-  "self_buff": {
-    "pwr": 150, "int": 0, "spd": 150, "elem_atk": 50, "weapon_atk": 0,
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "초회 사용 시 2배(50%)",
-    "pwr": 50, "int": 0, "spd": 50,
-    "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 20, "int": 20, "spd": 0,
-    "all_elem_res": 0, "elem_res": {"wind": 35},
-    "phys_res": 35, "mag_res": 0, "weapon_res": {"blunt": 50},
-    "break": "", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "ブラストヘヴン", "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "blunt", "mult": 8, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 2, "condition": "크리티컬 시 대미지 4배. AF 배율에 따라 위력 증가(최대 300%/2배). AF 시 트리플다운(특대 3회, 크리 시 6배, AF배율 증가량 2배) 연속 실행. AF 배율 1000% 이상 시 통상공격이 슈퍼콤보(트리플다운 5배×3회) [알테마 대조(2026-10): 자기 크리율 100%라 크리 4배 상시, AF 콤보 300%에서 2배 더. 트리플다운 연속 실행은 재공격 아님]"},
+  "sb": {"skill": "ゲイルクラッシャー", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "blunt", "mult": 10, "size": "xxl", "hits": 1, "repeat": 1, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "통상 극대 3배, SB 시 10배. 비AF 시 재공격. SB 시 버스트부스터 10누적+재공격, 비AF 시 AF 게이지 5% 회복"},
+  "self_buff": {"pwr": 150, "int": 0, "spd": 150, "elem_atk": 50, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "초회 사용 시 2배(50%)", "pwr": 50, "int": 0, "spd": 50, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 20, "int": 20, "spd": 0, "all_elem_res": 0, "elem_res": {"wind": 35}, "phys_res": 35, "mag_res": 0, "weapon_res": {"blunt": 50}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": null,
   "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 1, "status_immune": 0},
   "req": "AF 중(배율 1000% 이상), 버스트부스터 10누적",
@@ -789,41 +645,11 @@
   "tier": "C",
   "score": 94,
   "roles": ["debuffer", "support", "dps"],
-  "main": {
-    "skill": "グランフェネラル",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic",
-    "mult": 8, "size": "xl", "hits": 1, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "연속 사용 시 위력 증가(최대 8배). 지속성내성 50% DOWN(3턴, 최대 3누적)"
-  },
-  "sb": {
-    "skill": "コメットテイル",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic",
-    "mult": 6, "size": "xxl", "hits": 1, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "엘리멘탈 브레이크(지) 3누적. 저녁샛별(宵の明星) 상태 시 위력 3배·버프 2배. SB 시 적 디버프 종류 수에 따라 위력 증가(최대 6배)+지 ZONE 전개+그랑페네랄 최대 위력으로 재실행"
-  },
-  "self_buff": {
-    "pwr": 50, "int": 50, "spd": 50, "elem_atk": 50, "weapon_atk": 0,
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "완력/지성/속도 50%는 저녁샛별 상태 시(기본 25%)",
-    "pwr": 50, "int": 50, "spd": 50,
-    "all_elem_atk": 0, "elem_atk": {"earth": 50}, "weapon_atk": {},
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 25, "int": 25, "spd": 30,
-    "all_elem_res": 35, "elem_res": {"earth": 150},
-    "phys_res": 35, "mag_res": 0, "weapon_res": {"pierce": 30},
-    "break": "earth", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "グランフェネラル", "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic", "mult": 8, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "연속 사용 시 위력 증가(최대 8배). 지속성내성 50% DOWN(3턴, 최대 3누적)"},
+  "sb": {"skill": "コメットテイル", "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic", "mult": 6, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "엘리멘탈 브레이크(지) 3누적. 저녁샛별(宵の明星) 상태 시 위력 3배·버프 2배. SB 시 적 디버프 종류 수에 따라 위력 증가(최대 6배)+지 ZONE 전개+그랑페네랄 최대 위력으로 재실행 [알테마 대조(2026-10): グランフェネラル 연속 실행은 재공격 아님]"},
+  "self_buff": {"pwr": 50, "int": 50, "spd": 50, "elem_atk": 50, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "완력/지성/속도 50%는 저녁샛별 상태 시(기본 25%)", "pwr": 50, "int": 50, "spd": 50, "all_elem_atk": 0, "elem_atk": {"earth": 50}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 25, "int": 25, "spd": 30, "all_elem_res": 35, "elem_res": {"earth": 150}, "phys_res": 35, "mag_res": 0, "weapon_res": {"pierce": 30}, "break": "earth", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "earth", "awakened": false, "condition": "SB 시 코멧테일로 지 ZONE 전개"},
   "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
   "req": "저녁샛별 상태(전투 개시 3~7턴, 전위 인조인간 2인 이상 시 연장)",
