@@ -1,0 +1,200 @@
+{
+  "gariyu": {
+    "src": "https://altema.jp/anaden/chara/146",
+    "personality": ["杖", "竜", "火"],
+    "mp": {"main": 39, "sb": null, "buff": 37},
+    "turns": {"buff": 3, "debuff": 1},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 2
+  },
+  "yuna": {
+    "src": "https://altema.jp/anaden/chara/148",
+    "personality": ["東方", "杖", "聖職者", "人見知り"],
+    "mp": {"main": 102, "sb": 102, "buff": 21},
+    "turns": {"buff": 3, "debuff": 3},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 2
+  },
+  "victor": {
+    "src": "https://altema.jp/anaden/chara/811",
+    "personality": ["刀", "バルオキー", "呪い", "風", "雷"],
+    "mp": {"main": 52, "sb": 127, "buff": 18},
+    "turns": {"buff": 3, "debuff": 3},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "elseal": {
+    "src": "https://altema.jp/anaden/chara/1023",
+    "personality": ["剣", "武具", "読書家", "水"],
+    "mp": {"main": 62, "sb": null, "buff": 25},
+    "turns": {"buff": 6, "debuff": 3},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "melpiphia": {
+    "src": "https://altema.jp/anaden/chara/1065",
+    "personality": ["エルフ", "剣", "ニックネーマー", "アルカディア", "風"],
+    "mp": {"main": 61, "sb": null, "buff": 55},
+    "turns": {"buff": 5, "debuff": 5},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "kuchinawa": {
+    "src": "https://altema.jp/anaden/chara/1073",
+    "personality": ["杖", "地", "アルカディア"],
+    "mp": {"main": 57, "sb": 79, "buff": 47},
+    "turns": {"buff": 5, "debuff": 5},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "yakumo_as": {
+    "src": "https://altema.jp/anaden/chara/1081",
+    "personality": ["メガネ", "杖", "KMS社", "人見知り", "陰"],
+    "mp": {"main": 100, "sb": 100, "buff": 60},
+    "turns": {"buff": 5, "debuff": 5},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "matsurika": {
+    "src": "https://altema.jp/anaden/chara/1084",
+    "personality": ["甘党", "斧", "お昼寝", "フード", "煉獄界", "水"],
+    "mp": {"main": 54, "sb": 76, "buff": 42},
+    "turns": {"buff": 3, "debuff": 6},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "zilva": {
+    "src": "https://altema.jp/anaden/chara/1088",
+    "personality": ["ねこ好き", "剣", "フード", "記憶喪失", "水", "晶"],
+    "mp": {"main": 57, "sb": 85, "buff": 57},
+    "turns": {"buff": 3, "debuff": 1},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "tsubame_ac": {
+    "src": "https://altema.jp/anaden/chara/1112",
+    "personality": ["ねこ好き", "東方", "忍び", "大食い", "巳の国", "風"],
+    "mp": {"main": 58, "sb": 97, "buff": 58},
+    "turns": {"buff": 3, "debuff": 3},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "izuna": {
+    "src": "https://altema.jp/anaden/chara/1116",
+    "personality": ["東方", "仮面", "杖", "人見知り", "雷"],
+    "mp": {"main": 54, "sb": 97, "buff": 47},
+    "turns": {"buff": 3, "debuff": 1},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "id": {
+    "src": "https://altema.jp/anaden/chara/1121",
+    "personality": ["拳", "地", "煉獄界"],
+    "mp": {"main": 34, "sb": 85, "buff": null},
+    "turns": {"buff": null, "debuff": 1},
+    "buff_how": "none",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "elseal_as": {
+    "src": "https://altema.jp/anaden/chara/1126",
+    "personality": ["剣", "武具", "読書家", "水"],
+    "mp": {"main": 53, "sb": 82, "buff": 57},
+    "turns": {"buff": 3, "debuff": 3},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "green_scythe_as": {
+    "src": "https://altema.jp/anaden/chara/1158",
+    "personality": ["甘党", "斧", "美食", "ロストラボ", "風"],
+    "mp": {"main": 67, "sb": null, "buff": 0},
+    "turns": {"buff": 1, "debuff": 3},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "black_katana_as": {
+    "src": "https://altema.jp/anaden/chara/1165",
+    "personality": ["刀", "ロストラボ", "万能の支配者", "地", "陰"],
+    "mp": {"main": 34, "sb": 93, "buff": 0},
+    "turns": {"buff": 99, "debuff": 5},
+    "buff_how": "passive",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "myrus_es": {
+    "src": "https://altema.jp/anaden/chara/1167",
+    "personality": ["魔獣", "斧", "水"],
+    "mp": {"main": 56, "sb": 68, "buff": 36},
+    "turns": {"buff": 5, "debuff": 3},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "nina": {
+    "src": "https://altema.jp/anaden/chara/1171",
+    "personality": ["ねこ好き", "杖", "美術", "お昼寝", "人見知り", "晶"],
+    "mp": {"main": 52, "sb": 48, "buff": 0},
+    "turns": {"buff": 3, "debuff": 5},
+    "buff_how": "chain",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "craghorn": {
+    "src": "https://altema.jp/anaden/chara/1177",
+    "personality": null,
+    "mp": {"main": 52, "sb": 250, "buff": null},
+    "turns": {"buff": null, "debuff": 3},
+    "buff_how": "none",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "silver_thunder_as": {
+    "src": "https://altema.jp/anaden/chara/1179",
+    "personality": ["弓", "マシナリー", "ロストラボ", "水", "雷"],
+    "mp": {"main": 55, "sb": 72, "buff": 35},
+    "turns": {"buff": 5, "debuff": 3},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "white_porcelain_as": {
+    "src": "https://altema.jp/anaden/chara/1191",
+    "personality": ["東方", "杖", "封印", "辰の国", "地"],
+    "mp": {"main": 0, "sb": 152, "buff": 166},
+    "turns": {"buff": 3, "debuff": 5},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "rabina_as": {
+    "src": "https://altema.jp/anaden/chara/1200",
+    "personality": ["ねこ好き", "吟遊詩人", "弓", "精霊対話", "火", "風"],
+    "mp": {"main": 88, "sb": 88, "buff": 70},
+    "turns": {"buff": 3, "debuff": 5},
+    "buff_how": "skill",
+    "mp_max": null,
+    "manifest": 0
+  },
+  "nekoko_ac": {
+    "src": "https://altema.jp/anaden/chara/1202",
+    "personality": ["ねこ好き", "東方", "杖", "精霊対話", "動物対話", "妖し", "雷"],
+    "mp": {"main": 64, "sb": 95, "buff": 0},
+    "turns": {"buff": 99, "debuff": 5},
+    "buff_how": "passive",
+    "mp_max": null,
+    "manifest": 0
+  }
+}

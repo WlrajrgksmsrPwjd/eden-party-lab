@@ -1,0 +1,557 @@
+{
+ "m3_partitio": {
+  "src": "https://altema.jp/anaden/chara/1051",
+  "personality": [
+   "弓",
+   "導きのトラベラー",
+   "火"
+  ],
+  "mp": {
+   "main": 0,
+   "sb": 84,
+   "buff": null
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": 5
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_tithi": {
+  "src": "https://altema.jp/anaden/chara/1055",
+  "personality": [
+   "拳",
+   "導きのトラベラー",
+   "雷"
+  ],
+  "mp": {
+   "main": 0,
+   "sb": 93,
+   "buff": 47
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_garnet": {
+  "src": "https://altema.jp/anaden/chara/1183",
+  "personality": [
+   "杖",
+   "王族",
+   "記憶喪失",
+   "FFIX"
+  ],
+  "mp": {
+   "main": 66,
+   "sb": 102,
+   "buff": 66
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 99
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_tsubame": {
+  "src": "https://altema.jp/anaden/chara/239",
+  "personality": [
+   "東方",
+   "拳",
+   "忍び",
+   "大食い",
+   "巳の国",
+   "地"
+  ],
+  "mp": {
+   "main": 39,
+   "sb": null,
+   "buff": 29
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 5
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m3_melina_es": {
+  "src": "https://altema.jp/anaden/chara/857",
+  "personality": [
+   "聖職者",
+   "採掘",
+   "槌",
+   "甘党",
+   "吟遊詩人",
+   "西方",
+   "王族",
+   "水",
+   "雷"
+  ],
+  "mp": {
+   "main": 55,
+   "sb": null,
+   "buff": 50
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_mighah_as": {
+  "src": "https://altema.jp/anaden/chara/875",
+  "personality": [
+   "東方",
+   "槌",
+   "恋わずらい",
+   "封印",
+   "辰の国",
+   "地"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 59
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_zevilo_as": {
+  "src": "https://altema.jp/anaden/chara/894",
+  "personality": [
+   "魔獣",
+   "斧",
+   "フード",
+   "煉獄界",
+   "水"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 40
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_seven": {
+  "src": "https://altema.jp/anaden/chara/929",
+  "personality": [
+   "メガネ",
+   "杖",
+   "IDAスクール",
+   "精霊対話",
+   "ロストラボ",
+   "風"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 57
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_cyrus_ot": {
+  "src": "https://altema.jp/anaden/chara/1053",
+  "personality": [
+   "杖",
+   "読書家",
+   "導きのトラベラー",
+   "火",
+   "水",
+   "雷"
+  ],
+  "mp": {
+   "main": 42,
+   "sb": 100,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_kula": {
+  "src": "https://altema.jp/anaden/chara/1101",
+  "personality": [
+   "甘党",
+   "拳",
+   "KOF",
+   "格闘技",
+   "水"
+  ],
+  "mp": {
+   "main": 70,
+   "sb": 58,
+   "buff": 58
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_steiner": {
+  "src": "https://altema.jp/anaden/chara/1184",
+  "personality": [
+   "剣",
+   "武具",
+   "FFIX"
+  ],
+  "mp": {
+   "main": 55,
+   "sb": 72,
+   "buff": 72
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_raclaire": {
+  "src": "https://altema.jp/anaden/chara/136",
+  "personality": [
+   "弓",
+   "復讐者",
+   "ドラゴンキラー",
+   "いぬ好き",
+   "水"
+  ],
+  "mp": {
+   "main": 39,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 3
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 2
+ },
+ "m3_isuka_as": {
+  "src": "https://altema.jp/anaden/chara/203",
+  "personality": [
+   "IDAスクール",
+   "剣",
+   "読書家",
+   "ロストラボ",
+   "万能の支配者",
+   "COA",
+   "風"
+  ],
+  "mp": {
+   "main": 35,
+   "sb": null,
+   "buff": 18
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m3_myrus_as": {
+  "src": "https://altema.jp/anaden/chara/785",
+  "personality": [
+   "杖",
+   "魔獣",
+   "地"
+  ],
+  "mp": {
+   "main": 47,
+   "sb": null,
+   "buff": 55
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_levia_as": {
+  "src": "https://altema.jp/anaden/chara/893",
+  "personality": [
+   "竜宮",
+   "杖",
+   "記憶喪失",
+   "魚人",
+   "封印",
+   "水"
+  ],
+  "mp": {
+   "main": 73,
+   "sb": null,
+   "buff": 56
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_riica": {
+  "src": "https://altema.jp/anaden/chara/119",
+  "personality": [
+   "ねこ好き",
+   "槌",
+   "採掘",
+   "KMS社",
+   "マシナリー",
+   "地"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": 72,
+   "buff": 52
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_lokido_as": {
+  "src": "https://altema.jp/anaden/chara/738",
+  "personality": [
+   "拳",
+   "魔獣",
+   "復讐者",
+   "地"
+  ],
+  "mp": {
+   "main": 44,
+   "sb": null,
+   "buff": 20
+  },
+  "turns": {
+   "buff": 6,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m3_ruina_as": {
+  "src": "https://altema.jp/anaden/chara/744",
+  "personality": [
+   "剣",
+   "エルフ",
+   "IDAスクール",
+   "読書家",
+   "風"
+  ],
+  "mp": {
+   "main": 39,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 3
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m3_radica_as": {
+  "src": "https://altema.jp/anaden/chara/838",
+  "personality": [
+   "エルフ",
+   "杖",
+   "恋わずらい",
+   "火"
+  ],
+  "mp": {
+   "main": 65,
+   "sb": null,
+   "buff": 65
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_curio": {
+  "src": "https://altema.jp/anaden/chara/898",
+  "personality": [
+   "甘党",
+   "IDAスクール",
+   "刀",
+   "読書家",
+   "ロストラボ",
+   "万能の支配者",
+   "風",
+   "陰"
+  ],
+  "mp": {
+   "main": 49,
+   "sb": null,
+   "buff": 55
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_nona": {
+  "src": "https://altema.jp/anaden/chara/934",
+  "personality": [
+   "弓",
+   "フード",
+   "記憶喪失",
+   "水",
+   "陰"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_mai_shiranui": {
+  "src": "https://altema.jp/anaden/chara/1099",
+  "personality": [
+   "拳",
+   "恋わずらい",
+   "忍び",
+   "KOF",
+   "格闘技",
+   "火"
+  ],
+  "mp": {
+   "main": 70,
+   "sb": 58,
+   "buff": 46
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_cetie_as": {
+  "src": "https://altema.jp/anaden/chara/768",
+  "personality": [
+   "槍",
+   "騎乗",
+   "COA",
+   "メガネ",
+   "火"
+  ],
+  "mp": {
+   "main": 42,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 3
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m3_rosetta_as": {
+  "src": "https://altema.jp/anaden/chara/820",
+  "personality": [
+   "ねこ好き",
+   "聖職者",
+   "杖",
+   "西方",
+   "地獄耳",
+   "火"
+  ],
+  "mp": {
+   "main": 64,
+   "sb": null,
+   "buff": 33
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m3_lloyd": {
+  "src": "https://altema.jp/anaden/chara/986",
+  "personality": [
+   "刀",
+   "テイルズオブ",
+   "コンチェルトアーツ",
+   "火"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 55
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ }
+}

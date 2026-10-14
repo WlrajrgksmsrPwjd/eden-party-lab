@@ -1,0 +1,489 @@
+{
+ "mistrea": {
+  "src": "https://altema.jp/anaden/chara/813",
+  "personality": [
+   "弓",
+   "吟遊詩人",
+   "西方",
+   "ニックネーマー",
+   "読書家",
+   "風",
+   "晶"
+  ],
+  "mp": {
+   "main": 55,
+   "sb": 59,
+   "buff": 55
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "mistrea_as": {
+  "src": "https://altema.jp/anaden/chara/911",
+  "personality": [
+   "弓",
+   "吟遊詩人",
+   "西方",
+   "ニックネーマー",
+   "読書家",
+   "風",
+   "晶"
+  ],
+  "mp": {
+   "main": 90,
+   "sb": null,
+   "buff": 90
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "claude_es": {
+  "src": "https://altema.jp/anaden/chara/964",
+  "personality": [
+   "剣",
+   "IDAスクール",
+   "王族",
+   "読書家",
+   "竜",
+   "地"
+  ],
+  "mp": {
+   "main": 58,
+   "sb": null,
+   "buff": 45
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 5
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "nekoko_as": {
+  "src": "https://altema.jp/anaden/chara/970",
+  "personality": [
+   "ねこ好き",
+   "東方",
+   "斧",
+   "動物対話",
+   "妖し",
+   "巳の国",
+   "地"
+  ],
+  "mp": {
+   "main": 47,
+   "sb": null,
+   "buff": 20
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "minalca": {
+  "src": "https://altema.jp/anaden/chara/974",
+  "personality": [
+   "剣",
+   "ミリタリー",
+   "大食い",
+   "時間帝国",
+   "火"
+  ],
+  "mp": {
+   "main": 51,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": null
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "mariel_es": {
+  "src": "https://altema.jp/anaden/chara/990",
+  "personality": [
+   "ねこ好き",
+   "聖職者",
+   "拳",
+   "晶"
+  ],
+  "mp": {
+   "main": 50,
+   "sb": null,
+   "buff": 40
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "dewey_as": {
+  "src": "https://altema.jp/anaden/chara/994",
+  "personality": [
+   "メガネ",
+   "拳",
+   "恋わずらい",
+   "読書家",
+   "銃",
+   "ロストラボ",
+   "水"
+  ],
+  "mp": {
+   "main": null,
+   "sb": null,
+   "buff": 20
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "zanei_no_kajin": {
+  "src": "https://altema.jp/anaden/chara/1004",
+  "personality": [
+   "剣",
+   "KMS社",
+   "いぬ好き",
+   "地"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 6
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "sesta": {
+  "src": "https://altema.jp/anaden/chara/1012",
+  "personality": [
+   "刀",
+   "復讐者",
+   "風"
+  ],
+  "mp": {
+   "main": 49,
+   "sb": null,
+   "buff": 51
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "tuva_es": {
+  "src": "https://altema.jp/anaden/chara/1014",
+  "personality": [
+   "槌",
+   "霊媒体質",
+   "ニックネーマー",
+   "フューネラル",
+   "水",
+   "陰"
+  ],
+  "mp": {
+   "main": 76,
+   "sb": null,
+   "buff": 25
+  },
+  "turns": {
+   "buff": 6,
+   "debuff": 99
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "shinpi_no_karibito": {
+  "src": "https://altema.jp/anaden/chara/1018",
+  "personality": [
+   "仮面",
+   "斧",
+   "煉獄界",
+   "水"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 48
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "felmina_es": {
+  "src": "https://altema.jp/anaden/chara/1025",
+  "personality": [
+   "斧",
+   "ミグランス王宮",
+   "アウトロー",
+   "フード",
+   "忍び",
+   "水"
+  ],
+  "mp": {
+   "main": 0,
+   "sb": null,
+   "buff": 62
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "melody_as": {
+  "src": "https://altema.jp/anaden/chara/1029",
+  "personality": [
+   "IDAスクール",
+   "杖",
+   "人見知り",
+   "風"
+  ],
+  "mp": {
+   "main": 54,
+   "sb": null,
+   "buff": 49
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "mugin_no_shijin": {
+  "src": "https://altema.jp/anaden/chara/1031",
+  "personality": [
+   "魔獣",
+   "吟遊詩人",
+   "杖",
+   "辛党",
+   "水"
+  ],
+  "mp": {
+   "main": 74,
+   "sb": null,
+   "buff": 39
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "parisa_as": {
+  "src": "https://altema.jp/anaden/chara/1033",
+  "personality": [
+   "吟遊詩人",
+   "弓",
+   "呪い",
+   "火"
+  ],
+  "mp": {
+   "main": 61,
+   "sb": null,
+   "buff": 61
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "velette": {
+  "src": "https://altema.jp/anaden/chara/1035",
+  "personality": [
+   "採掘",
+   "槌",
+   "時間帝国",
+   "雷"
+  ],
+  "mp": {
+   "main": 62,
+   "sb": null,
+   "buff": 40
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "pom_as": {
+  "src": "https://altema.jp/anaden/chara/1043",
+  "personality": [
+   "杖",
+   "採集",
+   "科学者",
+   "銃",
+   "火"
+  ],
+  "mp": {
+   "main": 66,
+   "sb": null,
+   "buff": 30
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "series": {
+  "src": "https://altema.jp/anaden/chara/1047",
+  "personality": [
+   "弓",
+   "ドラゴンキラー",
+   "辛党",
+   "アルカディア",
+   "地"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": 104,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 99,
+   "debuff": 3
+  },
+  "buff_how": "passive",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "kikka_no_kenkaku": {
+  "src": "https://altema.jp/anaden/chara/1063",
+  "personality": [
+   "東方",
+   "刀",
+   "普賢一刀流",
+   "巳の国",
+   "地"
+  ],
+  "mp": {
+   "main": 49,
+   "sb": 72,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 99,
+   "debuff": 3
+  },
+  "buff_how": "passive",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "iwela_as": {
+  "src": "https://altema.jp/anaden/chara/1069",
+  "personality": [
+   "エルフ",
+   "槍",
+   "水",
+   "晶"
+  ],
+  "mp": {
+   "main": 53,
+   "sb": 82,
+   "buff": 53
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 5
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "hinagiku_as": {
+  "src": "https://altema.jp/anaden/chara/1071",
+  "personality": [
+   "槌",
+   "辛党",
+   "いぬ好き",
+   "煉獄界",
+   "地"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": 70,
+   "buff": 57
+  },
+  "turns": {
+   "buff": 2,
+   "debuff": 2
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "denei_no_myojo": {
+  "src": "https://altema.jp/anaden/chara/1079",
+  "personality": [
+   "仮面",
+   "甘党",
+   "槌",
+   "フード",
+   "地",
+   "雷"
+  ],
+  "mp": {
+   "main": 67,
+   "sb": 85,
+   "buff": 50
+  },
+  "turns": {
+   "buff": 6,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ }
+}

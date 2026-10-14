@@ -3,8 +3,10 @@
 const E = window.AEOpt;
 const $ = (s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const CHARS_BASE = JSON.parse(document.getElementById('db-chars').textContent);
+const CHARS_TEXT = document.getElementById('db-chars').textContent;
+const CHARS_BASE = JSON.parse(CHARS_TEXT);
 const BOSSES = JSON.parse(document.getElementById('db-bosses').textContent);
+const META = (()=>{ try{ return JSON.parse((document.getElementById('db-meta')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
 const ROLE_KR = {dps:'딜러',support:'버퍼',debuffer:'디버퍼',healer:'힐러',tank:'탱커',zone:'존',breaker:'브레이커'};
 const STYLE_KR = {NS:'노멀',AS:'어나더',ES:'엑스트라',AC:'이시층'};
 const CONTENT_KR = c => (c||'').replace('星詠みの書架','성영의 서가').replace(/^廻生$/,'회생(과거와의 결투)').replace(/^顕現/,'현현').replace(/^外史/,'외사');
@@ -36,6 +38,7 @@ function rebuildChars(){
   prepped = chars.map(E.prepChar);
   byId = new Map(prepped.map(p=>[p.id,p]));
   cap = E.computeCap(prepped, settings());
+  WK.dbKey = JSON.stringify(state.custom||[]);
 }
 function sampleOwned(){
   const o={};
@@ -86,13 +89,15 @@ function save(){
     } else setSaveText('이 기기에만 저장됨');
   }, 1200);
 }
-function touchRoster(){ if(state.sample){ state.sample=false; } save(); }
+function touchRoster(){ if(state.sample){ state.sample=false; } shareDirty=true; save(); }
 
 /* ---------- 탭 ---------- */
+const TABS=['plan','roster','perchar','focus','goal','boss','method'];
 function showTab(name){
-  $$('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.tab===name?'true':'false'));
+  $$('.tab[data-tab]').forEach(t=>t.setAttribute('aria-selected', t.dataset.tab===name?'true':'false'));
   $$('.panel').forEach(p=>p.classList.toggle('on', p.id==='p-'+name));
   try{ localStorage.setItem('aeopt_tab', name); }catch(e){}
+  if(name==='plan' && SHARE && shareDirty) renderShare(); // 보유가 바뀌었으면 공유 카드 다시 계산
 }
 
 /* ---------- 공용 렌더 조각 ---------- */
@@ -100,6 +105,139 @@ const elChip = e => `<span class="el ${esc(e)}">${esc(E.ELEM_KR[e]||e)}</span>`;
 const alDot = a => `<span class="al ${a==='light'?'light':'shadow'}" title="${a==='light'?'천':'명'}"></span>`;
 function ownedList(){ return Object.keys(state.owned).filter(id=>byId.has(id)); }
 function progOf(id){ return E.charProg(byId.get(id), state.owned[id], settings()); }
+
+/* ---------- 백그라운드 계산 (Web Worker) ----------
+   엔진 <script id="engine-js">의 코드 + 아래 workerMain을 Blob 워커로 띄운다.
+   워커는 가벼운 결과(id 목록·점수)만 돌려주고, 화면 쪽에서 팀을 되살려 ev·diff를 다시 계산한다.
+   워커를 못 쓰면 지금처럼 메인 스레드에서 엔진을 직접 돌린다. */
+function workerMain(){
+  'use strict';
+  /* 이 함수는 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
+  const E = self.AEOpt;
+  let byId = new Map();
+  const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
+    results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
+      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])]})),
+    evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, focus:r.focus||null};
+  const litePc = r => r.error ? {error:r.error} : {
+    list: r.list.map(x=>x.none ? {id:x.pc.id, none:true} : {id:x.pc.id, teamIds:x.team.map(c=>c.id), score:x.score, rel:x.rel}),
+    evaluated:r.evaluated, poolSize:r.poolSize};
+  self.onmessage = async e=>{
+    const m = e.data;
+    if(m.type==='init'){
+      const chars = JSON.parse(m.base).concat(m.custom||[]);
+      byId = new Map(chars.map(c=>{ const p=E.prepChar(c); return [p.id,p]; }));
+      self.postMessage({type:'ready', n:byId.size});
+      return;
+    }
+    const id = m.id;
+    try{
+      const owned = m.ids.filter(k=>byId.has(k)).map(k=>({pc:byId.get(k), prog:E.charProg(byId.get(k), m.own[k], m.S)}));
+      const input = Object.assign({}, m.input, {owned, settings:m.S, cap:m.cap});
+      const prog = f=>self.postMessage({type:'progress', id, f});
+      let r;
+      if(m.type==='optimize') r = liteOpt(await E.optimize(input, prog));
+      else if(m.type==='perChar') r = litePc(await E.perCharBest(input, prog));
+      else throw new Error('알 수 없는 요청');
+      self.postMessage({type:'done', id, r});
+    }catch(err){ self.postMessage({type:'error', id, msg:String(err&&err.message||err)}); }
+  };
+}
+const WK = {ok:null, url:null, chans:{}, seq:0, dbKey:'[]'};
+const CALC = window.__edenCalc = {worker:0, main:0, last:''}; // 어느 경로로 계산했는지 (확인용)
+const CANCELED = {canceled:true}, FALLBACK = {fallback:true};
+function calcStat(k){ CALC[k]++; CALC.last=k; }
+function makeWorker(){
+  if(WK.ok===false || typeof Worker==='undefined' || typeof Blob==='undefined' || !window.URL || !URL.createObjectURL){ WK.ok=false; return null; }
+  try{
+    if(!WK.url){
+      const eng=document.getElementById('engine-js'); if(!eng) throw new Error('engine-js 없음');
+      WK.url = URL.createObjectURL(new Blob([eng.textContent, '\n;(', workerMain.toString(), ')();\n'], {type:'text/javascript'}));
+    }
+    const w = new Worker(WK.url);
+    w.postMessage({type:'init', base:CHARS_TEXT, custom:state.custom||[]});
+    return w;
+  }catch(e){ WK.ok=false; return null; }
+}
+function dropChan(chan, c, result){
+  clearTimeout(c.timer);
+  try{ c.w.terminate(); }catch(e){}
+  if(WK.chans[chan]===c) delete WK.chans[chan];
+  const j=c.job; c.job=null; if(j) j.resolve(result);
+}
+/* 채널(plan·pc·fx)마다 워커 하나. 같은 채널에 새 계산이 오면 하던 계산은 버린다. */
+function viaWorker(chan, msg, onProgress){
+  if(WK.ok===false) return Promise.resolve(FALLBACK);
+  let c = WK.chans[chan];
+  if(c && c.job) { dropChan(chan, c, CANCELED); c=null; }
+  if(c && c.db!==WK.dbKey) { dropChan(chan, c, CANCELED); c=null; }
+  if(!c){
+    const w = makeWorker(); if(!w) return Promise.resolve(FALLBACK);
+    c = WK.chans[chan] = {w, db:WK.dbKey, ready:false, job:null, timer:0};
+    // 처음 뜰 때 응답이 없으면(차단 등) 메인 스레드로
+    c.timer = setTimeout(()=>{ if(!c.ready){ WK.ok=false; dropChan(chan, c, FALLBACK); } }, 10000);
+    w.onmessage = e=>{
+      const m=e.data;
+      if(m.type==='ready'){ c.ready=true; WK.ok=true; clearTimeout(c.timer); return; }
+      const j=c.job; if(!j || m.id!==j.id) return;
+      if(m.type==='progress'){ if(j.onProgress) j.onProgress(m.f); return; }
+      c.job=null;
+      if(m.type==='done') j.resolve(m.r);
+      else { console.warn('[편성 계산] 워커 오류, 메인 스레드로 다시 계산:', m.msg); j.resolve(FALLBACK); }
+    };
+    w.onerror = e=>{ if(e && e.preventDefault) e.preventDefault(); if(!c.ready) WK.ok=false; dropChan(chan, c, FALLBACK); };
+  }
+  return new Promise(resolve=>{
+    const id = ++WK.seq;
+    c.job = {id, resolve, onProgress};
+    try{ c.w.postMessage(Object.assign({id}, msg)); }catch(e){ c.job=null; resolve(FALLBACK); }
+  });
+}
+function jobSnap(){
+  const ids=ownedList(), own={};
+  for(const id of ids) own[id]=state.owned[id];
+  return {ids, own:JSON.parse(JSON.stringify(own)), S:settings(), cap};
+}
+const progJ = (J,id) => E.charProg(byId.get(id), J.own[id], J.S);
+const ctxOf = (inp, J) => E.buildCtx(inp, J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)})));
+const ownedJ = J => J.ids.filter(id=>byId.has(id)).map(id=>({pc:byId.get(id), prog:progJ(J,id)}));
+/* E.optimize와 같은 모양의 결과를 돌려준다. 새 계산에 밀려 버려지면 null */
+async function calcOptimize(chan, inp, onProgress, J){
+  J = J || jobSnap();
+  const lr = await viaWorker(chan, {type:'optimize', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp}, onProgress);
+  if(lr===CANCELED) return null;
+  if(lr===FALLBACK){ calcStat('main'); return E.optimize(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap}), onProgress); }
+  calcStat('worker');
+  const ctx = ctxOf(Object.assign({}, inp, {focus: lr.focus||inp.focus||null}), J);
+  const results = [];
+  for(const y of lr.results||[]){
+    if(y.ids.some(id=>!byId.has(id))) continue;
+    const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
+    results.push({rank:y.rank, team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx),
+      reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[],
+      recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])});
+  }
+  return Object.assign({}, lr, {results});
+}
+async function calcPerChar(inp, onProgress){
+  const J = jobSnap();
+  const lr = await viaWorker('pc', {type:'perChar', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp}, onProgress);
+  if(lr===CANCELED) return null;
+  if(lr===FALLBACK){ calcStat('main'); return E.perCharBest(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap}), onProgress); }
+  calcStat('worker');
+  if(lr.error) return lr;
+  const ctx = ctxOf(inp, J), memo = new Map(), list = [];
+  for(const y of lr.list){
+    const pc=byId.get(y.id); if(!pc) continue;
+    if(y.none || y.teamIds.some(id=>!byId.has(id))){ list.push({pc, none:true}); continue; }
+    const k=y.teamIds.join();
+    let t=memo.get(k);
+    if(!t){ const team=y.teamIds.map(id=>byId.get(id)), progs=y.teamIds.map(id=>progJ(J,id));
+      t={team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx), diff:E.teamDifficulty(team)}; memo.set(k,t); }
+    list.push({pc, score:y.score, rel:y.rel, team:t.team, progs:t.progs, ev:t.ev, diff:t.diff});
+  }
+  return {list, evaluated:lr.evaluated, poolSize:lr.poolSize};
+}
 
 /* ---------- 편성 탭 ---------- */
 function renderPlanControls(){
@@ -169,15 +307,15 @@ async function runPlan(){
   if(ids.length<4){ out.innerHTML=`<div class="empty">보유 캐릭터가 4명 이상이어야 편성을 짤 수 있습니다. <b>보유 캐릭터</b> 탭에서 체크해 주세요.</div>`; return; }
   const enemy={}; let any=false;
   for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
-  const owned=ids.map(id=>({pc:byId.get(id), prog:progOf(id)}));
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
+  const mode=P.mode;
   $('#runBtn').disabled=true; $('#prog').hidden=false; $('#prog i').style.width='0%';
-  const r = await E.optimize({owned, locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode, enemy:any?enemy:null, boss, settings:settings(), cap, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null},
+  const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null},
     f=>{ if(my===runToken) $('#prog i').style.width=Math.round(f*100)+'%'; });
-  if(my!==runToken) return;
+  if(my!==runToken || !r) return;
   $('#runBtn').disabled=false; $('#prog').hidden=true;
   if(r.error){ out.innerHTML=`<div class="empty">${esc(r.error)}</div>`; return; }
-  renderResults(r, boss, any?enemy:null);
+  renderResults(r, boss, any?enemy:null, mode);
 }
 
 function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e8) return (v/1e8).toFixed(2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
@@ -207,8 +345,9 @@ function memHtml(x, i, key, focus, lockSet){
   const c=x.team[i], ev=x.ev, cs=ev.sb.cores[i], sbTot=ev.sb.per.reduce((a,b)=>a+b,0)||1, share=ev.sb.per[i]/sbTot;
   const gq = cs&&cs.gq;
   const off = focus && !E.charFocusMatch(c, focus);
+  const notMine = x.shared && x.real && !x.mine[i];
   return `<div class="mem${lockSet&&lockSet.has(c.id)?' locked':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="눌러서 추천 세팅 보기">
-    <div class="nm">${esc(c.name)}</div>
+    <div class="nm">${esc(c.name)}${notMine?' <span class="badge warn">미보유</span>':''}</div>
     <div class="meta">${elChip(c.elem)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
     <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}</div>
     <div class="sk">${gq?'글래 '+esc(glText(gq))+(gq.painOK||!(gq.pa||gq.po)?'':' (독·페 미부여)'):''}</div>
@@ -217,46 +356,59 @@ function memHtml(x, i, key, focus, lockSet){
     <div class="tap">추천 세팅 ▾</div>
   </div>`;
 }
-function renderResults(r, boss, enemy){
+const HOT = {burst:'b',sustain:'s',stability:'t',weak:'s',boss:''};
+function renderResults(r, boss, enemy, mode){
   const P=state.plan, out=$('#results');
-  const hot = {burst:'b',sustain:'s',stability:'t',weak:'s',boss:''}[P.mode];
+  mode = mode||P.mode;
   for(const k of [...RES.keys()]) if(k[0]==='p') RES.delete(k);
   let h='';
   if(state.sample) h+=`<div class="notice">예시 보유 목록(SS·S 티어 전원, 천명치 80, 성도각성 완료 가정)으로 계산한 결과입니다. <b>보유 캐릭터</b> 탭에서 실제 보유·천명치·글래스터를 입력하면 그 기준으로 다시 짭니다.</div>`;
   const enemyTxt = enemy ? Object.entries(enemy).map(([k,v])=>(E.ELEM_KR[k]||E.WT_KR[k])+' '+REL_KR[v]).join(', ') : '중립(약점·내성 없음)';
-  h+=`<div class="runmeta">${esc(MODE_KR[P.mode])}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
+  h+=`<div class="runmeta">${esc(MODE_KR[mode])}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
   if(!r.results.length) h+=`<div class="empty">조건을 만족하는 조합이 없습니다. 난이도 상한을 올리거나 고정·제외 캐릭터를 줄여 보세요.</div>`;
-  for(const x of r.results){
-    const key='p'+x.rank; RES.set(key, {x, focus:r.focus});
-    const ev=x.ev, sbz=ev.sb.zone, nz=ev.normal.zone;
-    const ex = x.ex = E.explainTeam(x.team, x.progs, ev, settings(), {});
-    const lockSet=new Set(P.locked);
-    const top = ev.sb.per.indexOf(Math.max(...ev.sb.per));
-    const co = ev.sb.cores[top];
-    const tSum = x.progs.reduce((a,p)=>a+(p.t||0),0);
-    const warns = teamWarns(x, boss, enemy, ex);
-    const order = ex.posTotal ? ex.order : x.team.map((_,i)=>i);
-    h+=`<section class="card${x.rank===1?' first':''}">
+  const all=r.results, mx=k=>Math.max(...all.map(y=>y.ev[k]));
+  const ref = all.length ? {sbTurn:all[0].ev.sbTurn, af:mx('af'), sustain:mx('sustain'), surv:mx('surv')} : null;
+  const lockSet=new Set(P.locked);
+  for(const x of all){
+    const key='p'+x.rank; RES.set(key, {x, focus:r.focus, mode, bossId:boss?boss.id:''});
+    h+=cardHtml(x, key, {boss, enemy, focus:r.focus, ref, hot:HOT[mode], lockSet});
+  }
+  out.innerHTML=h;
+}
+/* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
+function cardHtml(x, key, o){
+  const boss=o.boss, enemy=o.enemy, ref=o.ref, hot=o.hot, shared=!!x.shared;
+  const ev=x.ev, sbz=ev.sb.zone, nz=ev.normal.zone;
+  const ex = x.ex = E.explainTeam(x.team, x.progs, ev, x.S||settings(), {});
+  const top = ev.sb.per.indexOf(Math.max(...ev.sb.per));
+  const co = ev.sb.cores[top];
+  const tSum = x.progs.reduce((a,p)=>a+(p.t||0),0);
+  const warns = teamWarns(x, boss, enemy, ex);
+  const order = ex.posTotal ? ex.order : x.team.map((_,i)=>i);
+  const rel = k => ref ? ev[k]/(ref[k]||1) : null;
+  return `<section class="card${x.rank===1?' first':''}${shared?' shared':''}">
+      ${o.head||''}
       <div class="card-head">
-        <div class="rank">${x.rank}<small>위</small></div>
+        <div class="rank">${shared?'<span class="rk-s">공유</span>':`${x.rank}<small>위</small>`}</div>
         <span class="diff lv${x.diff.lv}" title="운용 난이도 점수 ${x.diff.v.toFixed(1)}">Lv${x.diff.lv} ${esc(x.diff.kr)}</span>
         <span class="zonebadge" title="스텔라 버스트 턴 기준 존">${esc(sbz&&sbz.level?sbz.label:'존 없음')}${sbz&&sbz.byName&&sbz.level?` <span class="hint">· ${esc(sbz.byName)}${sbz.how?' · '+esc(sbz.how):''}</span>`:''}</span>
         <span class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span></span>
-        <div class="scorebar"><span>종합 ${(x.rel*100).toFixed(0)}</span><div class="bar"><i style="width:${(x.rel*100).toFixed(0)}%"></i></div></div>
-        <button type="button" class="btn small" data-goalsave="${key}">목표로 저장</button>
+        ${shared?'':`<div class="scorebar"><span>종합 ${(x.rel*100).toFixed(0)}</span><div class="bar"><i style="width:${(x.rel*100).toFixed(0)}%"></i></div></div>`}
+        <span class="cbtns"><button type="button" class="btn small" data-goalsave="${key}">${shared?'내 목표로 저장':'목표로 저장'}</button>${shared?'':`<button type="button" class="btn small" data-share="${key}">링크 복사</button>`}</span>
       </div>
+      ${o.basis?`<div class="basis">${o.basis}</div>`:''}
       ${ex.posTotal?`<div class="order">전방 배치 <span class="hint">왼쪽 → 오른쪽 · 위치 버프 ${ex.posOk}/${ex.posTotal} 성립</span></div>`:''}
-      <div class="members">${order.map(i=>memHtml(x,i,key,r.focus,lockSet)).join('')}</div>
+      <div class="members">${order.map(i=>memHtml(x,i,key,o.focus,o.lockSet)).join('')}</div>
       <div class="setup" data-for="${key}" hidden></div>
-      <div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}`).join(', '):'—'} <span class="hint">(남는 자리는 회복·수호·해제 보강 기준)</span></div>
+      ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${muleLine(x)}</div>`}
       <div class="metrics">
-        ${metric('SB 턴 화력', ev.sbTurn, ev.sbTurn/ (r.results[0].ev.sbTurn||1), hot==='b')}
-        ${metric('AF 1회 화력', ev.af, ev.af/(Math.max(...r.results.map(y=>y.ev.af))||1), hot==='b')}
-        ${metric('일반 턴 평균', ev.sustain, ev.sustain/(Math.max(...r.results.map(y=>y.ev.sustain))||1), hot==='s')}
-        ${metric('생존력', ev.surv, ev.surv/(Math.max(...r.results.map(y=>y.ev.surv))||1), hot==='t', true)}
+        ${metric('SB 턴 화력', ev.sbTurn, rel('sbTurn'), hot==='b')}
+        ${metric('AF 1회 화력', ev.af, rel('af'), hot==='b')}
+        ${metric('일반 턴 평균', ev.sustain, rel('sustain'), hot==='s')}
+        ${metric('생존력', ev.surv, rel('surv'), hot==='t', true)}
       </div>
       ${warns.length?`<div class="warns">${warns.map(w=>`<span class="warn"${w.full?` title="${esc(w.full)}"`:''}>${esc(w.t)}</span>`).join('')}</div>`:''}
-      <details class="why turns"${boss&&x.rank===1?' open':''}><summary>턴별 운영${boss?' · '+esc(boss.name_kr)+' 기믹 대응':''}</summary>${turnPlanHtml(x, boss)}</details>
+      <details class="why turns"${boss&&(x.rank===1||shared)?' open':''}><summary>턴별 운영${boss?' · '+esc(boss.name_kr)+' 기믹 대응':''}</summary>${turnPlanHtml(x, boss)}</details>
       <details class="why"><summary>계산 근거·운용 포인트 보기 (주딜 ${esc(x.team[top].name)} 기준)</summary>
         <div class="grid">
           <div><span>스탯 버프</span><span class="num">+${pctTxt(co&&co.statB)}</span></div>
@@ -276,10 +428,97 @@ function renderResults(r, boss, enemy){
         <ul class="ops">${x.team.filter(c=>c.cxWhy&&c.cxWhy.length).map(c=>`<li><b>${esc(c.name)}</b>: ${esc(c.cxWhy.join(' · '))}</li>`).join('')}${x.diff.noHeal?'<li>회복 수단이 없어 피격 관리 부담 +</li>':''}${x.team.every(c=>!(c.cxWhy&&c.cxWhy.length))?'<li>특별히 신경 쓸 조작 요소가 적습니다.</li>':''}</ul>
       </details>
     </section>`;
-  }
-  out.innerHTML=h;
 }
 
+/* ---------- 조합 공유 링크 ---------- */
+let SHARE = null, shareDirty = false; // SHARE: {ids, mode, bossId, focus}
+function parseShare(hash){
+  const h=String(hash||'').replace(/^#/,''); if(!/^share=/.test(h)) return null;
+  let q; try{ q=new URLSearchParams(h); }catch(e){ return null; }
+  const ids=(q.get('share')||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,4);
+  let mode=q.get('m')||'burst'; if(!MODE_KR[mode]) mode='burst';
+  const fp=(q.get('f')||'').split(':');
+  const f=FOCUS_LIST.find(x=>x.kind===fp[0]&&x.v===fp[1]);
+  return {ids, mode, bossId:q.get('b')||'', focus:f?Object.assign({},f):null};
+}
+function shareUrl(rec){
+  const base = location.origin && location.origin!=='null' ? location.origin+location.pathname : location.href.split('#')[0];
+  let u = base+'#share='+rec.x.team.map(c=>encodeURIComponent(c.id)).join(',')+'&m='+encodeURIComponent(rec.mode||'burst');
+  if(rec.mode==='boss' && rec.bossId) u+='&b='+encodeURIComponent(rec.bossId);
+  if(rec.focus) u+='&f='+rec.focus.kind+':'+rec.focus.v;
+  return u;
+}
+function copyShare(key, btn){
+  const rec=RES.get(key); if(!rec) return;
+  const url=shareUrl(rec);
+  const fallback=()=>showLinkBox(btn, url);
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(()=>flash('링크를 복사했습니다'), fallback);
+    else fallback();
+  }catch(e){ fallback(); }
+}
+function showLinkBox(btn, url){
+  const row=btn.closest('.frow'), host = row ? row.querySelector('.fmain') : btn.closest('.card'); if(!host) return;
+  let box=[...host.children].find(el=>el.classList.contains('sharelink'));
+  if(!box){
+    box=document.createElement('div'); box.className='sharelink';
+    const anchor = row ? host.querySelector('.fmeta') : host.querySelector('.card-head');
+    anchor.insertAdjacentElement('afterend', box);
+  }
+  box.innerHTML=`<input type="text" readonly value="${esc(url)}" aria-label="공유 링크"><button type="button" class="btn small" data-linkclose="1">닫기</button><span class="hint">자동 복사가 막혀 있습니다. 링크를 선택해 복사하세요.</span>`;
+  const inp=box.querySelector('input'); inp.focus(); inp.select();
+  let ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+  if(ok){ flash('링크를 복사했습니다'); box.querySelector('.hint').textContent='복사했습니다.'; }
+}
+function renderShare(){
+  const box=$('#shareBox'); if(!box) return;
+  RES.delete('s0'); shareDirty=false;
+  if(!SHARE){ box.hidden=true; box.innerHTML=''; return; }
+  const sh=SHARE;
+  const boss = sh.mode==='boss' ? BOSSES.find(b=>b.id===sh.bossId)||null : null;
+  const mode = sh.mode==='boss'&&!boss ? 'burst' : sh.mode;
+  const cond = [MODE_KR[mode]].concat(boss?[boss.name_kr]:[], sh.focus?[focusLabel(sh.focus)+' 화력만']:[]).join(' · ');
+  const head = `<div class="sharehead"><b>공유받은 조합</b><span class="hint">${esc(cond)}</span><button type="button" class="btn small" data-shareclose="1">닫기</button></div>`;
+  const team = sh.ids.map(id=>byId.get(id));
+  box.hidden=false;
+  if(team.length!==4 || team.some(c=>!c)){
+    box.innerHTML=`<section class="card shared">${head}<div class="hint">링크에 든 캐릭터 일부를 이 페이지 데이터에서 찾을 수 없습니다. 데이터 기준일이 다르거나 직접 추가한 캐릭터일 수 있습니다.</div></section>`;
+    return;
+  }
+  const S = Object.assign({}, settings(), {enemyCount: boss&&boss.needs&&boss.needs.multi_target&&!boss.needs.single_target?3:1});
+  const enemy = boss ? bossToEnemy(boss) : null;
+  const real = !state.sample;
+  const mine = team.map(c=>!!(real && state.owned[c.id]));
+  const owns = team.map((c,i)=>mine[i] ? Object.assign(BASE_OWN(), state.owned[c.id]) : {t:80, s:!!c.stellar, m:0, g:'none', gl:null});
+  const progs = team.map((c,i)=>E.charProg(c, owns[i], S));
+  const ev = E.evalTeam(team, progs, enemy, S, cap, ctxOf({boss, focus:sh.focus, backLocked:state.plan.backLocked||[]}));
+  const x = {rank:'공유', team, progs, ev, reserves:[], miss:[], diff:E.teamDifficulty(team), rel:1, fixedBack:new Set(), shared:true, real, mine, owns, S};
+  RES.set('s0', {x, focus:sh.focus, mode, bossId:boss?boss.id:''});
+  const n=mine.filter(Boolean).length;
+  const basis = !real ? '기준: 내 보유 정보가 아직 없어 4명 모두 천명치 80·성도각성으로 가정했습니다.'
+    : n===4 ? '기준: 내 보유 정보(천명치·현현·글래스터)로 계산했습니다.'
+    : n===0 ? '기준: 4명 모두 미보유라 천명치 80·성도각성으로 가정했습니다.'
+    : `기준: 보유한 ${n}명은 내 보유 정보로, 미보유 ${4-n}명은 천명치 80·성도각성으로 가정했습니다.`;
+  box.innerHTML = cardHtml(x, 's0', {boss, enemy, focus:sh.focus, ref:null, hot:HOT[mode], lockSet:null, head, basis:esc(basis)});
+}
+function revealShare(){ // 좁은 화면에선 조건 패널 아래에 있으므로 카드가 보이게 내려 준다
+  const box=$('#shareBox'); if(!box||box.hidden) return;
+  const top=box.getBoundingClientRect().top, head=($('.top')||{}).offsetHeight||0;
+  if(top<head || top>innerHeight*0.6) window.scrollTo({top:Math.max(0, top+scrollY-head-12)});
+}
+function closeShare(){
+  SHARE=null; renderShare();
+  try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){ try{ location.hash=''; }catch(e2){} }
+}
+
+/* ---------- 후열 글래스터 셔틀 ---------- */
+function muleBadge(x, c){ const mu=x.ev.mule; if(!mu) return ''; const w=mu.auto?mu.wp:null; return w && c.pers && c.pers.has(w) ? ' <span class="fixed">셔틀</span>' : ''; }
+function muleLine(x){
+  const mu=x.ev.mule; if(!mu) return '';
+  const got = x.team.map((c,i)=>mu.k[i]>0?`${esc(c.name)} +${mu.k[i]}칸`:null).filter(Boolean);
+  if(mu.auto) return `<div class="hint">P글래 셔틀 가정: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 2명이 잠재 광석 단 P글래를 공유 → ${got.join(', ')||'—'}</div>`;
+  return `<div class="hint">후열 고정 셔틀의 P글래 공유: ${got.join(', ')||'<span class="ng">무기 퍼스널리티가 맞는 전열 캐릭터 없음</span>'}</div>`;
+}
 
 /* ---------- 턴별 운영 ---------- */
 const PCT = v => Math.round(v)+'%';
@@ -320,6 +559,8 @@ function turnPlanHtml(x, boss){
   const T = [];
   // 개전
   const o0 = [`전방 배치(왼→오): ${order.map(nm).join(' · ')}${x.reserves&&x.reserves.length?` / 후열 ${x.reserves.map(c=>esc(c.name)).join(', ')}`:''}`];
+  if(ev.mule){ const mu=ev.mule, got=team.map((c,i)=>mu.k[i]>0?esc(c.name):null).filter(Boolean);
+    if(got.length) o0.push(mu.auto ? `후열 셔틀: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 캐릭터 2명에게 잠재 광석 단 P글래 장착 → ${got.join(', ')} 대미지 증가` : `후열 셔틀(${mu.mules.map(m=>esc(m.name||'')).join(', ')})의 P글래가 ${got.join(', ')}에게 공유`); }
   if(sbz && sbz.level && sbz.how==='개전 자동') o0.push(`${esc(sbz.byName)}: 전투 시작과 함께 <b>${esc(sbz.label)}</b> 자동 전개`);
   team.forEach((c,i)=>{ const ts=c.raw.tags||[]; if(ts.includes('taunt')||c.sup.taunt>=2) o0.push(`${nm(i)}: 도발로 공격 받아내기`); });
   if(boss) (boss.mechanics||[]).filter(m=>/개시|시작|개전|선제|첫 턴/.test(m)).slice(0,2).forEach(m=>o0.push(`<span class="hint">보스: ${esc(m)}</span>`));
@@ -358,6 +599,13 @@ function turnPlanHtml(x, boss){
   for(const k of ['heal','barrier','cleanse','guard','status_immune']){ const w=whoHas(team,c=>(c.sup[k]||0)>=2); if(w.length) o4.push(`${SUP_KR[k]}: ${w.map(esc).join(', ')}`); }
   if(team.some(c=>c.sup.revive)) o4.push(`부활: ${whoHas(team,c=>c.sup.revive).map(esc).join(', ')}`);
   if(!o4.length) o4.push('<span class="ng">회복·배리어 담당이 약함 → 후열 교대로 보강</span>');
+  const sim = ev.sim;
+  if(sim){
+    team.forEach((c,i)=>{
+      if(c.buffAct && sim.buffN[i]) o4.push(`${nm(i)}: 파티 버프 ${c.buffTurns>=99?'상시':c.buffTurns+'턴'}마다 다시 걸기 (MP ${sim.costMain&&c.mpBuff!=null?c.mpBuff:'?'}${sim.upt[i]<0.99?` · ${sim.H}턴 중 ${Math.round(sim.upt[i]*100)}%만 유지 — MP 부족`:''})`);
+      if(sim.out[i] && (shN[i]>=0.15 || shSB[i]>=0.2)) o4.push(`<span class="ng">${esc(team[i].name)}: MP ${sim.costMain[i]}짜리 주력기를 ${sim.mainN[i]}번 쓰면 ${sim.out[i]}턴째 MP 부족</span> → 그 전에 후열과 교대(후열은 턴당 MP 10% 회복), MP 회복 지원·MP 소비 감소 글래스터로 늦추기`);
+    });
+  }
   o4.push('버프 지속이 끝나는 턴에 다시 걸고, 존이 꺼지면 바로 재전개');
   T.push(['유지 · 생존', o4]);
   // 보스 기믹
@@ -402,7 +650,7 @@ function skillLine(sk){
   return `<b${sk.skill_jp?` title="원문: ${esc(sk.skill_jp)}"`:''}>${esc(sk.skill||'')}</b> <span class="hint">${esc(TGT_KR[sk.target]||'')} ${esc(el)}${esc(wt||KIND_KR[sk.kind]||'')} ${esc(SIZE_KR[sk.size]||'')} ${sk.mult>1?esc(sk.mult)+'배 ':''}${sk.hits>1?esc(sk.hits)+'타':''}${sk.repeat?` · 재공격 ${esc(sk.repeat)}`:''}${sk.crit_sure?' · 확정 크리':''}${sk.barrier_pierce?' · 배리어 관통':''}</span>${(sk.cond_ko||sk.condition)?`<div class="hint">${esc(sk.cond_ko||sk.condition)}</div>`:''}`;
 }
 function setupHtml(x, i){
-  const c=x.team[i], pr=x.progs[i], o=state.owned[c.id]||{}, ev=x.ev, r=c.raw;
+  const c=x.team[i], pr=x.progs[i], o=(x.owns&&x.owns[i])||state.owned[c.id]||{}, ev=x.ev, r=c.raw;
   const ex = x.ex || (x.ex=E.explainTeam(x.team,x.progs,ev,settings(),{}));
   const sum=a=>a.reduce((s,v)=>s+v,0)||1;
   const sSB=ev.sb.per[i]/sum(ev.sb.per), sN=ev.normal.per[i]/sum(ev.normal.per), share=Math.max(sSB,sN);
@@ -412,6 +660,7 @@ function setupHtml(x, i){
   const slot = order.indexOf(i)+1;
   const nm = k=>esc(x.team[k].name);
   const L = []; // 이 조합에서
+  if(x.shared && !x.mine[i]) L.push(x.real ? '<li><span class="ng">미보유</span> — 아래 값은 천명치 80·성도각성으로 가정한 것</li>' : '<li class="hint">보유 정보가 없어 천명치 80·성도각성으로 가정한 값입니다</li>');
   L.push(`<li>${role} · SB 턴 비중 <span class="num">${(sSB*100).toFixed(0)}%</span> · 평상 턴 <span class="num">${(sN*100).toFixed(0)}%</span></li>`);
   L.push(`<li>전방 <b>왼쪽에서 ${slot}번째</b>${ex.posTotal?'':' (위치 조건 없음 · 아무 자리나)'}</li>`);
   for(const rl of ex.rel){
@@ -452,8 +701,14 @@ function setupHtml(x, i){
     let txt = `<b>${esc(glText(best))}</b> (×${best.f.toFixed(2)})`;
     if(!painAny){ const ore = E.grastaFactor({gl:{mode:'auto',ore:true}, slots:pr.slots}, false); if(ore.f>best.f+1e-6) txt += ` · 잠재 광석을 끼우면 <b>${esc(glText(ore))}</b> (×${ore.f.toFixed(2)})`; }
     else txt += ' · 파티에 독·페인 부여자 있음';
-    G.push(`<li>${mark(cur && cur.f>=best.f-1e-6)} 공격 글래스터: ${txt} <span class="hint">(현재 ${cur?esc(glText(cur))+' ×'+cur.f.toFixed(2):'—'}, ${pr.slots}칸)</span></li>`);
-    G.push(`<li>${mark((+o.m||0)>=1)} 현현 무기: 현현 ×1.08 · 진현현 ×1.15 <span class="hint">(현재 ${['없음','현현','진현현'][+o.m||0]})</span></li>`);
+    G.push(`<li>${mark(cur && (cur.f/(cur.share? (1+0.3*(cur.e||0)+settings().mulePct*cur.share)/(1+0.3*(cur.e||0)) : 1))>=best.f-1e-6)} 공격 글래스터: ${txt} <span class="hint">(현재 ${cur?esc(glText(cur)):'—'}, ${pr.slots}칸)</span></li>`);
+    const mu=ev.mule; const wpk=E.WEAPON_PERS[c.weapon];
+    if(mu) G.push(`<li>${mark(mu.k[i]>0)} 후열 P글래 공유: ${mu.k[i]>0?`+${mu.k[i]}칸 (${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티)`:`없음 — ${esc(E.PERS_KR[wpk]||wpk)} 퍼스널리티 셔틀이 있으면 +${settings().muleSlots}칸씩`}</li>`);
+    if(c.manifestMax===0) G.push(`<li>현현 무기: 이 캐릭터는 없음</li>`);
+    else G.push(`<li>${mark((+o.m||0)>=(c.manifestMax||1))} 현현 무기: ${c.manifestMax===2?'진현현까지 있음':c.manifestMax===1?'현현 있음':'현현 ×1.08 · 진현현 ×1.15'} <span class="hint">(현재 ${['없음','현현','진현현'][+o.m||0]})</span></li>`);
+    const sm = ev.sim;
+    if(sm){ const mi=sm.mainN[i], H=sm.H;
+      G.push(`<li>${mark(!sm.out[i])} MP: 주력기 ${c.mpMain!=null?c.mpMain:'?'} · 최대 약 ${sm.mpMax[i]} → ${H}턴 중 주력기 ${mi}번${sm.out[i]?`, ${sm.out[i]}턴째부터 부족 → MP 소비 감소 글래스터·MP 회복 지원·후열 교대`:' (여유)'}</li>`); }
   } else {
     G.push(`<li>공격 글래스터: 딜 비중이 낮아 생존·MP 회복 계열 권장</li>`);
   }
@@ -462,10 +717,11 @@ function setupHtml(x, i){
   if(c.main) S2.push(`<li>평상: ${skillLine(c.main)}</li>`);
   if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req_ko||r.req)}</span></li>`);
   const O = (c.cxWhy||[]).map(w=>`<li>${esc(w)}</li>`);
-  return `<div class="shead"><b>${esc(c.name)}</b> ${(c.elems.length?c.elems:['none']).map(elChip).join('')} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> <span class="hint">${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span><button type="button" class="btn small sclose" data-sclose="1">닫기</button></div>
+  return `<div class="shead"><b>${esc(c.name)}</b> ${(c.elems.length?c.elems:['none']).map(elChip).join('')} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> <span class="hint">${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}${(r.ex&&r.ex.pers_ko&&r.ex.pers_ko.length)?' · 퍼스널리티 '+esc(r.ex.pers_ko.join('·')):''}</span><button type="button" class="btn small sclose" data-sclose="1">닫기</button></div>
     <div><h4>이 조합에서</h4><ul>${L.join('')}</ul></div>
     <div><h4>추천 육성·장비</h4><ul>${G.join('')}</ul></div>
     <div><h4>주력 스킬</h4><ul>${S2.join('')||'<li class="hint">—</li>'}</ul></div>
+    <div><h4>장비</h4><ul><li><a href="builder.html#who=${encodeURIComponent(c.name.replace(/\(.*\)$/,''))}&wt=${encodeURIComponent(E.WEAPON_KR[c.weapon]||'')}" target="_blank" rel="noopener">장비 빌더에서 무기·방어구·글래스터 비교 ↗</a> <span class="hint">(${esc(E.WEAPON_KR[c.weapon]||'')} · 출처: 딩)</span></li></ul></div>
     <div><h4>운용 포인트</h4><ul>${O.join('')}${r.note_kr?`<li class="hint">${esc(r.note_kr)}</li>`:''}</ul></div>`;
 }
 function toggleSetup(memEl){
@@ -478,21 +734,23 @@ function toggleSetup(memEl){
   box.innerHTML = setupHtml(rec.x, i); box.hidden=false;
 }
 function pctTxt(v){ return v==null?'0%':Math.round(v*100)+'%'; }
-function metric(k,v,rel,hot,isSurv){ rel=Math.max(0,Math.min(1,rel||0)); return `<div class="metric${hot?' hot':''}"><div class="k">${k}</div><div class="v">${isSurv?v.toFixed(0)+'점':fmtN(v)}</div><div class="bar"><i style="width:${(rel*100).toFixed(0)}%"></i></div></div>`; }
+function metric(k,v,rel,hot,isSurv){ // rel이 null이면 비교 막대 없이 값만
+  const bar = rel===null ? '' : `<div class="bar"><i style="width:${(Math.max(0,Math.min(1,rel||0))*100).toFixed(0)}%"></i></div>`;
+  return `<div class="metric${hot?' hot':''}"><div class="k">${k}</div><div class="v">${isSurv?v.toFixed(0)+'점':fmtN(v)}</div>${bar}</div>`; }
 
 /* ---------- 캐릭터별 최적 ---------- */
-let pcResult=null;
+let pcResult=null, pcToken=0;
 async function runPerChar(){
-  const P=state.plan;
+  const P=state.plan, my=++pcToken;
   const boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
   const ids=ownedList();
   if(ids.length<4){ $('#pcTable').innerHTML='<div class="empty">보유 캐릭터가 4명 이상이어야 합니다.</div>'; return; }
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
-  const owned=ids.map(id=>({pc:byId.get(id), prog:progOf(id)}));
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   $('#pcRun').disabled=true; $('#pcProg').hidden=false; $('#pcProg i').style.width='0%';
-  const r = await E.perCharBest({owned, excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='boss'&&!boss?'burst':P.mode, enemy:any?enemy:null, boss, settings:settings(), cap, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null},
-    f=>{ $('#pcProg i').style.width=Math.round(f*100)+'%'; });
+  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='boss'&&!boss?'burst':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null},
+    f=>{ if(my===pcToken) $('#pcProg i').style.width=Math.round(f*100)+'%'; });
+  if(my!==pcToken || !r) return;
   $('#pcRun').disabled=false; $('#pcProg').hidden=true;
   if(r.error){ $('#pcTable').innerHTML=`<div class="empty">${esc(r.error)}</div>`; return; }
   pcResult=r;
@@ -526,27 +784,27 @@ async function runFocusAll(){
   const ids=ownedList(), grid=$('#fxGrid');
   if(ids.length<4){ grid.innerHTML='<div class="empty">보유 캐릭터가 4명 이상이어야 합니다.</div>'; return; }
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
-  const owned=ids.map(id=>({pc:byId.get(id), prog:progOf(id)}));
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
+  const mode = P.mode==='boss'&&!boss?'burst':P.mode, J = jobSnap(), cond = {mode, bossId:boss?boss.id:''};
   for(const k of [...RES.keys()]) if(k[0]==='f') RES.delete(k);
   grid.innerHTML = FOCUS_LIST.map((f,k)=>`<section class="fcard" id="fx-${k}"><div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><span class="hint">대기 중…</span></div></section>`).join('');
   $('#fxRun').disabled=true; $('#fxProg').hidden=false; $('#fxProg i').style.width='0%';
   $('#fxMeta').textContent = `${MODE_KR[P.mode]==='보스 맞춤'&&!boss?'최고점 딜':MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''}`;
   for(let k=0;k<FOCUS_LIST.length;k++){
     const f=FOCUS_LIST[k];
-    const r = await E.optimize({owned, locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='boss'&&!boss?'burst':P.mode, enemy:any?enemy:null, boss, settings:settings(), cap, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:f, maxPool:28, topN:3},
-      v=>{ if(my===fxToken) $('#fxProg i').style.width=Math.round((k+v)/FOCUS_LIST.length*100)+'%'; });
-    if(my!==fxToken) return;
-    $('#fx-'+k).outerHTML = fcardHtml(f, k, r);
+    const r = await calcOptimize('fx', {locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:f, maxPool:28, topN:3},
+      v=>{ if(my===fxToken) $('#fxProg i').style.width=Math.round((k+v)/FOCUS_LIST.length*100)+'%'; }, J);
+    if(my!==fxToken || !r) return;
+    $('#fx-'+k).outerHTML = fcardHtml(f, k, r, cond);
   }
   $('#fxRun').disabled=false; $('#fxProg').hidden=true;
 }
-function fcardHtml(f, k, r){
+function fcardHtml(f, k, r, cond){
   const head = `<div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><button type="button" class="btn small" data-fgo="${k}">1~5위 자세히</button></div>`;
   if(r.error || !r.results || !r.results.length) return `<section class="fcard" id="fx-${k}">${head}<div class="hint">${esc(r.error||'조건에 맞는 조합이 없습니다.')}</div></section>`;
   const top = r.results[0].ev;
   const rows = r.results.map(x=>{
-    const key=`f${k}-${x.rank}`; RES.set(key,{x, focus:f});
+    const key=`f${k}-${x.rank}`; RES.set(key,{x, focus:f, mode:cond.mode, bossId:cond.bossId});
     const ex = x.ex = E.explainTeam(x.team, x.progs, x.ev, settings(), {});
     const order = ex.posTotal ? ex.order : x.team.map((_,i)=>i);
     const z=x.ev.sb.zone, bad=ex.notes.filter(n=>n.lvl==='off').length;
@@ -555,7 +813,7 @@ function fcardHtml(f, k, r){
       <div class="frank">${x.rank}</div>
       <div class="fmain">
         <div class="fmem">${order.map(i=>{ const c=x.team[i], sh=x.ev.sb.per[i]/sbTot; return `<span class="mchip${sh>=0.35?' main':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="추천 세팅 보기">${elChip(c.elem)} ${esc(c.name)}</span>`; }).join('')}</div>
-        <div class="fmeta"><span>${esc(z&&z.level?z.label:'존 없음')}</span> · <span class="diff lv${x.diff.lv}">Lv${x.diff.lv}</span> · SB 턴 <span class="num">${fmtN(x.ev.sbTurn)}</span> · 평상 <span class="num">${fmtN(x.ev.sustain)}</span>${bad?` · <span class="ng">버프 조건 미충족 ${bad}</span>`:''} · <button type="button" class="linkbtn" data-goalsave="${key}">목표로 저장</button></div>
+        <div class="fmeta"><span>${esc(z&&z.level?z.label:'존 없음')}</span> · <span class="diff lv${x.diff.lv}">Lv${x.diff.lv}</span> · SB 턴 <span class="num">${fmtN(x.ev.sbTurn)}</span> · 평상 <span class="num">${fmtN(x.ev.sustain)}</span>${bad?` · <span class="ng">버프 조건 미충족 ${bad}</span>`:''} · <button type="button" class="linkbtn" data-goalsave="${key}">목표로 저장</button> · <button type="button" class="linkbtn" data-share="${key}">링크 복사</button></div>
         <div class="setup" data-for="${key}" hidden></div>
       </div></div>`;
   }).join('');
@@ -569,7 +827,7 @@ const BASE_OWN = ()=>({t:0,s:false,m:0,g:'none',gl:null});
 function planCtx(){
   const P=state.plan, boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
-  return {boss, enemy:any?enemy:null, ctx:{needPierce:!!(boss&&boss.needs&&boss.needs.barrier_pierce)}, mode:P.mode};
+  return {boss, enemy:any?enemy:null, ctx:ctxOf({boss, backLocked:P.backLocked||[]}), mode:P.mode};
 }
 function evalWith(team, owns){
   const S=settings(), pc=planCtx();
@@ -581,10 +839,10 @@ function defaultTarget(c, dealer, needGoku){
   const cur = state.owned[c.id] || BASE_OWN();
   const t = Math.max(+cur.t||0, c.stellar ? (dealer?200:80) : (dealer?200:0));
   const g = needGoku ? 'goku' : (dealer && G_RANK[cur.g||'none']<2 ? 'shin' : (cur.g||'none'));
-  return {t, s: !!c.stellar || !!cur.s, m: +cur.m||0, g: G_RANK[g]>=G_RANK[cur.g||'none']?g:(cur.g||'none'),
+  return {t, s: !!c.stellar || !!cur.s, m: Math.max(+cur.m||0, dealer && c.manifestMax>0 ? c.manifestMax : 0), g: G_RANK[g]>=G_RANK[cur.g||'none']?g:(cur.g||'none'),
     gl: dealer ? {mode:'auto', ore: !!(cur.gl&&cur.gl.ore)} : (cur.gl||null)};
 }
-function makeGoal(ids, x){
+function makeGoal(ids, x, mode){
   const team = ids.map(id=>byId.get(id)).filter(Boolean); if(team.length!==4) return null;
   const ev = x ? x.ev : evalWith(team, team.map(c=>Object.assign(BASE_OWN(), state.owned[c.id]||{}, {t:Math.max(80,+(state.owned[c.id]||{}).t||0), s:!!c.stellar})));
   const sum=a=>a.reduce((q,v)=>q+v,0)||1;
@@ -595,14 +853,14 @@ function makeGoal(ids, x){
     const needGoku = !!(c.zone && c.zoneAwak && zc && zc.unmet && zc.unmet.length);
     tgt[c.id]=defaultTarget(c, sh[i]>=0.12, needGoku);
   });
-  return {id:'g'+Date.now().toString(36), members:ids, tgt, mode:state.plan.mode, ts:Date.now()};
+  return {id:'g'+Date.now().toString(36), members:ids, tgt, mode:mode||state.plan.mode, ts:Date.now()};
 }
 function saveGoalFromResult(key){
   const rec=RES.get(key); if(!rec) return;
   const ids=rec.x.team.map(c=>c.id);
   state.goals = state.goals||[];
   if(state.goals.some(g=>g.members.slice().sort().join()===ids.slice().sort().join())){ flash('이미 같은 조합이 목표에 있습니다.'); return; }
-  const g=makeGoal(ids, rec.x); if(!g) return;
+  const g=makeGoal(ids, rec.x, rec.mode); if(!g) return;
   state.goals.unshift(g); save(); renderGoals(); flash('목표 세팅 탭에 저장했습니다.');
 }
 function flash(t){ let el=$('#flash'); if(!el){ el=document.createElement('div'); el.id='flash'; el.className='flash'; el.setAttribute('role','status'); document.body.appendChild(el); } el.textContent=t; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2200); }
@@ -661,7 +919,7 @@ function goalHtml(g){
       <div class="gh"><b>${esc(c.name)}</b> ${elChip(c.elem)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${o?'':'<span class="badge warn">미보유</span>'}</div>
       <div class="grow"><span>천명치</span><span class="num">${cu.t||0}</span><span>→</span><input type="number" min="0" max="255" data-gf="t" value="${tg.t||0}" aria-label="${esc(c.name)} 목표 천명치">${st((cu.t||0)>=(tg.t||0))}</div>
       ${c.stellar?`<div class="grow"><span>성도각성</span><span>${cu.s?'완료':'안 함'}</span><span>→</span><label><input type="checkbox" data-gf="s" ${tg.s?'checked':''}> 목표</label>${st(!tg.s||cu.s)}</div>`:''}
-      <div class="grow"><span>현현</span><span>${M_KR[+cu.m||0]}</span><span>→</span><select data-gf="m">${M_KR.map((l,k)=>`<option value="${k}"${(+tg.m||0)===k?' selected':''}>${l}</option>`).join('')}</select>${st((+cu.m||0)>=(+tg.m||0))}</div>
+      <div class="grow"><span>현현</span><span>${M_KR[+cu.m||0]}</span><span>→</span>${c.manifestMax===0?'<span class="hint">현현 무기 없음</span>':`<select data-gf="m">${M_KR.slice(0,(c.manifestMax||2)+1).map((l,k)=>`<option value="${k}"${(+tg.m||0)===k?' selected':''}>${l}</option>`).join('')}</select>`}${st((+cu.m||0)>=(+tg.m||0))}</div>
       <div class="grow"><span>전용 글래</span><span>${G_KR[cu.g||'none']}</span><span>→</span><select data-gf="g">${Object.entries(G_KR).map(([k,l])=>`<option value="${k}"${(tg.g||'none')===k?' selected':''}>${l}</option>`).join('')}</select>${st(G_RANK[cu.g||'none']>=G_RANK[tg.g||'none'])}</div>
       <div class="grow"><span>공격 글래</span><span>${esc({def:'기본',auto:'자동',none:'없음'}[glKey(cu.gl)]||GL_PRESETS[glKey(cu.gl)].label)}</span><span>→</span><select data-gf="gl">${Object.entries(GL_PRESETS).map(([k,p])=>`<option value="${k}"${gk===k?' selected':''}>${p.label}</option>`).join('')}</select><label title="잠재 광석"><input type="checkbox" data-gf="ore" ${tg.gl&&tg.gl.ore?'checked':''} ${tg.gl?'':'disabled'}> 광석</label></div>
     </div>`;
@@ -795,6 +1053,68 @@ function renderDefGl(){
   $('#defOre').checked=!!g.ore;
 }
 
+/* ---------- 이름으로 한 번에 체크 ---------- */
+// 공백·괄호·전각 차이 무시: "질퍼니 AS" = "질퍼니(AS)" = "질퍼니（AS）"
+const normName = s => String(s||'').normalize('NFKC').toLowerCase().replace(/[\s()\[\]{}【】「」『』〈〉《》<>·・]/g,'');
+function nameIndex(){
+  const m=new Map(), put=(n,id)=>{ const k=normName(n); if(k && !m.has(k)) m.set(k,id); };
+  for(const c of prepped) put(c.name, c.id);           // 한국어 이름 우선
+  for(const c of prepped){ put(c.raw.name_jp, c.id); put(c.id, c.id); }
+  return m;
+}
+function matchName(tok, idx){
+  const k=normName(tok);
+  if(idx.has(k)) return {id:idx.get(k), t:null, name:tok};
+  const m=tok.match(/^(.*?)[\s:：=]*(\d{1,3})\s*$/); // 이름 뒤 숫자 = 천명치
+  if(m && normName(m[1])){
+    const t=Math.min(255, parseInt(m[2],10));
+    const k2=normName(m[1]); return {id:idx.get(k2)||null, t, name:m[1].trim()};
+  }
+  return {id:null, t:null, name:tok};
+}
+function editDist(a,b){
+  if(a===b) return 0; if(!a.length) return b.length; if(!b.length) return a.length;
+  let prev=Array.from({length:b.length+1},(_,j)=>j);
+  for(let i=1;i<=a.length;i++){
+    const cur=[i];
+    for(let j=1;j<=b.length;j++) cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    prev=cur;
+  }
+  return prev[b.length];
+}
+function suggestName(q){
+  const k=normName(q); if(!k) return null;
+  let best=null, bd=Infinity;
+  for(const c of prepped) for(const n of [c.name, c.raw.name_jp]){
+    const kn=normName(n); if(!kn) continue;
+    const d = (kn.includes(k)||k.includes(kn)) ? Math.abs(kn.length-k.length)*0.3 : editDist(k,kn);
+    if(d<bd){ bd=d; best=c; }
+  }
+  return best && bd<=Math.max(1, Math.ceil(k.length/2)) ? best.name : null;
+}
+function quickCheck(){
+  const toks=String($('#quickText').value||'').split(/[\n\r,;\t，、；]+/).map(t=>t.trim()).filter(Boolean);
+  const msg=$('#quickMsg');
+  if(!toks.length){ msg.textContent='이름을 줄바꿈이나 쉼표로 나눠 넣어 주세요.'; return; }
+  const idx=nameIndex(), found=new Map(), miss=[];
+  for(const tok of toks){
+    const r=matchName(tok, idx);
+    if(!r.id){ if(!miss.includes(r.name)) miss.push(r.name); continue; }
+    if(r.t!=null || !found.has(r.id)) found.set(r.id, r.t);
+  }
+  let added=0, upd=0;
+  if(found.size && $('#quickReset').checked) state.owned={};
+  for(const [id,t] of found){
+    const o=state.owned[id];
+    if(!o){ state.owned[id]={t:t!=null?t:0, s:!!byId.get(id).stellar, m:0, g:'none', gl:null}; added++; }
+    else if(t!=null && (+o.t||0)!==t){ o.t=t; upd++; }
+  }
+  if(found.size){ touchRoster(); renderRoster(); $('#quickReset').checked=false; }
+  const detail = [added?`새로 ${added}명`:'', upd?`천명치 갱신 ${upd}명`:''].filter(Boolean).join(' · ');
+  msg.innerHTML = `<b>${found.size}명 체크</b>${detail?` (${detail})`:''}`
+    + (miss.length ? `, 못 찾은 이름: ${miss.map(n=>{ const sg=suggestName(n); return `<span class="miss">${esc(n)}</span>${sg?` <span class="hint">(혹시: ${esc(sg)}?)</span>`:''}`; }).join(', ')}` : '');
+}
+
 /* ---------- 직접 추가 ---------- */
 function addCustom(e){
   e.preventDefault();
@@ -867,6 +1187,12 @@ function renderConsts(){
     <div class="crow"><span>상극 속성 / 다른 공격종</span><input type="number" step="0.05" id="cOpp" value="${S.zoneOppElem}"><input type="number" step="0.05" id="cOff" value="${S.zoneOffWeap}"><span></span></div>
     <div class="crow"><span>스탯 환산 계수 (1타 상한 100억 기준)</span><input type="number" step="1000" min="1000" id="cCap" value="${S.statK}"><span></span><span></span></div>
     <div class="crow"><span>AF 중 1인 행동 수</span><input type="number" step="1" min="1" max="15" id="cAf" value="${S.afActions}"><span></span><span></span></div>
+    <div class="crow"><span>일반 턴 MP·버프 시뮬레이션</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cSim" ${S.simOn!==false?'checked':''}> 사용</label><span></span><span></span></div>
+    <div class="crow"><span>시뮬레이션 턴 수</span><input type="number" step="1" min="2" max="20" id="cSimT" value="${S.simTurns}"><span></span><span></span></div>
+    <div class="crow"><span>기본 MP 최대치 (천명치로 +120까지)</span><input type="number" step="10" min="200" max="900" id="cMp" value="${S.mpBase}"><span></span><span></span></div>
+    <div class="crow"><span>후열 P글래 셔틀 반영</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cMule" ${S.muleOn!==false?'checked':''}> 사용</label><label class="checkrow" style="align-items:center" title="후열 고정이 없을 때 주딜 무기 퍼스널리티 셔틀 2명 가정"><input type="checkbox" id="cMuleAuto" ${S.muleAuto!==false?'checked':''}> 자동 가정</label><span></span></div>
+    <div class="crow"><span>셔틀 1명 공유 칸 / 칸당 대미지</span><input type="number" step="1" min="1" max="4" id="cMuleSl" value="${S.muleSlots}"><input type="number" step="0.05" min="0" max="1" id="cMulePct" value="${S.mulePct}"><span></span></div>
+    <div class="crow"><span>소비 MP 배율 (MP 감소 글래스터면 0.85·0.75)</span><input type="number" step="0.05" min="0.3" max="1.5" id="cMpMul" value="${S.mpCostMul}"><span></span><span></span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn small" id="constReset">기본값으로</button><span class="hint">바꾸면 다음 계산부터 반영됩니다. 절존 배율은 극존과 같습니다.</span></div>`;
 }
 function onConst(e){
@@ -875,24 +1201,64 @@ function onConst(e){
   else if(t.id==='cOpp') S.zoneOppElem=+t.value; else if(t.id==='cOff') S.zoneOffWeap=+t.value;
   else if(t.id==='cCap'){ S.statK=Math.max(1000,+t.value||22000); }
   else if(t.id==='cAf') S.afActions=Math.max(1,Math.min(15,+t.value||5));
+  else if(t.id==='cSim') S.simOn=t.checked;
+  else if(t.id==='cMule') S.muleOn=t.checked;
+  else if(t.id==='cMuleAuto') S.muleAuto=t.checked;
+  else if(t.id==='cMuleSl') S.muleSlots=Math.max(1,Math.min(4,+t.value||3));
+  else if(t.id==='cMulePct') S.mulePct=Math.max(0,Math.min(1,+t.value||0.3));
+  else if(t.id==='cSimT') S.simTurns=Math.max(2,Math.min(20,+t.value||6));
+  else if(t.id==='cMp') S.mpBase=Math.max(200,Math.min(900,+t.value||450));
+  else if(t.id==='cMpMul') S.mpCostMul=Math.max(0.3,Math.min(1.5,+t.value||1));
   else return;
   cap=E.computeCap(prepped, settings()); save();
 }
 
 /* ---------- 내보내기/불러오기 ---------- */
-function exportState(){ const ta=$('#ioText'); ta.value=JSON.stringify({owned:state.owned, custom:state.custom, settings:state.settings, goals:state.goals||[]}); ta.select();
+const exportObj = ()=>({owned:state.owned, custom:state.custom, settings:state.settings, goals:state.goals||[]});
+function exportState(){ const ta=$('#ioText'); ta.value=JSON.stringify(exportObj()); ta.select();
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(()=>{$('#ioMsg').textContent='복사했습니다. 메모장 등에 붙여 두세요.';},()=>{$('#ioMsg').textContent='선택된 텍스트를 직접 복사하세요.';});
   else $('#ioMsg').textContent='선택된 텍스트를 직접 복사하세요.'; }
-function importState(){
-  try{ const d=JSON.parse($('#ioText').value); if(!d||typeof d.owned!=='object') throw 0;
+function applyImport(text, okMsg, badMsg){
+  try{ const d=JSON.parse(text); if(!d||!d.owned||typeof d.owned!=='object') throw 0;
     state.owned=d.owned; state.custom=Array.isArray(d.custom)?d.custom:[]; state.settings=d.settings||{}; state.sample=false; if(Array.isArray(d.goals)) state.goals=d.goals;
-    save(); rebuildChars(); renderAll(); $('#ioMsg').textContent='불러왔습니다.'; }
-  catch(e){ $('#ioMsg').textContent='형식이 맞지 않습니다. 내보내기로 만든 텍스트 전체를 붙여 넣으세요.'; }
+    save(); rebuildChars(); renderAll(); $('#ioMsg').textContent=okMsg||'불러왔습니다.'; return true; }
+  catch(e){ $('#ioMsg').textContent=badMsg||'형식이 맞지 않습니다. 내보내기로 만든 텍스트 전체를 붙여 넣으세요.'; return false; }
+}
+function importState(){ applyImport($('#ioText').value); }
+function saveFile(){
+  const d=new Date(), ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const name=`eden-party-lab-백업-${ymd}.json`;
+  try{
+    const url=URL.createObjectURL(new Blob([JSON.stringify(exportObj())], {type:'application/json'}));
+    const a=document.createElement('a'); a.href=url; a.download=name; a.hidden=true;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+    $('#ioMsg').textContent=`${name} 파일로 내려받았습니다.`;
+  }catch(e){ $('#ioMsg').textContent='이 화면에서는 파일 저장이 막혀 있습니다. 내보내기(복사)를 쓰세요.'; }
+}
+async function openFile(e){
+  const inp=e.target, f=inp.files&&inp.files[0]; if(!f) return;
+  try{
+    if(f.size>5*1024*1024) throw new Error('big');
+    const text = f.text ? await f.text() : await new Promise((ok,ng)=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.onerror=ng; r.readAsText(f); });
+    applyImport(text, `${f.name}에서 불러왔습니다.`, '백업 파일 형식이 아닙니다. "파일로 저장"으로 만든 .json 파일을 고르세요.');
+  }catch(err){ $('#ioMsg').textContent='파일을 읽지 못했습니다.'; }
+  inp.value='';
+}
+
+/* ---------- 데이터 기준일 ---------- */
+function renderMeta(){
+  const n=CHARS_BASE.length, m=BOSSES.length, d=META.updated||'';
+  const el=$('#dbMeta'); if(el) el.innerHTML=`데이터 기준 <span class="num">${esc(d||'—')}</span> · 캐릭터 <span class="num">${n}</span> · 보스 <span class="num">${m}</span>`;
+  const dm=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+  $$('[data-meta]').forEach(s=>{ const k=s.dataset.meta;
+    if(k==='chars') s.textContent=n; else if(k==='bosses') s.textContent=m;
+    else if(k==='date' && dm) s.textContent=`${+dm[1]}년 ${+dm[2]}월 ${+dm[3]}일`; });
 }
 
 /* ---------- 이벤트 ---------- */
 function bind(){
-  $$('.tab').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
+  $$('.tab[data-tab]').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
   $('#modeSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-mode]'); if(!b) return; state.plan.mode=b.dataset.mode; save(); renderPlanControls(); if(b.dataset.mode!=='boss') runPlan(); else if(state.plan.bossId) runPlan(); else runPlan(); });
   $('#bossSel').addEventListener('change',e=>{ if(e.target.value) applyBoss(e.target.value); else { state.plan.bossId=''; save(); renderPlanControls(); } runPlan(); });
   $('#enemyGrid').addEventListener('click',e=>{ const b=e.target.closest('.etype'); if(!b) return; const t=b.dataset.t; const cur=state.plan.enemy[t]||null; const nx=REL_CYCLE[(REL_CYCLE.indexOf(cur)+1)%REL_CYCLE.length]; if(nx) state.plan.enemy[t]=nx; else delete state.plan.enemy[t]; save(); renderPlanControls(); });
@@ -906,13 +1272,23 @@ function bind(){
   $('#focusSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-fi]'); if(!b) return; const k=+b.dataset.fi; state.plan.focus = k<0?null:Object.assign({},FOCUS_LIST[k]); save(); renderPlanControls(); runPlan(); });
   $('#fxRun').addEventListener('click', runFocusAll);
   document.addEventListener('click',e=>{ const b=e.target.closest('button[data-goalsave]'); if(b) saveGoalFromResult(b.dataset.goalsave); });
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('button[data-share]'); if(b){ copyShare(b.dataset.share, b); return; }
+    const c=e.target.closest('button[data-linkclose]'); if(c){ c.closest('.sharelink').remove(); return; }
+    if(e.target.closest('button[data-shareclose]')) closeShare();
+  });
+  window.addEventListener('hashchange',()=>{
+    const sh=parseShare(location.hash);
+    if(sh){ SHARE=sh; renderShare(); showTab('plan'); revealShare(); return; }
+    const h=(location.hash||'').slice(1); if(TABS.includes(h)) showTab(h);
+  });
   $('#goalList').addEventListener('change', onGoalInput);
   $('#goalList').addEventListener('click',e=>{ const b=e.target.closest('button[data-gdel]'); if(!b) return; state.goals=(state.goals||[]).filter(g=>g.id!==b.dataset.gdel); save(); renderGoals(); });
   setupGoalPicker();
   $('#fxGrid').addEventListener('click',e=>{ const b=e.target.closest('button[data-fgo]'); if(!b) return; state.plan.focus=Object.assign({},FOCUS_LIST[+b.dataset.fgo]); state.plan.locked=[]; save(); renderPlanControls(); showTab('plan'); runPlan(); });
   const onMem = e=>{ if(e.target.closest('[data-sclose]')){ const box=e.target.closest('.setup'); const key=box.dataset.for; $$(`[data-sk="${key}"]`).forEach(m=>m.setAttribute('aria-expanded','false')); box.hidden=true; return; }
     const m=e.target.closest('[data-sk]'); if(!m) return; if(e.type==='keydown'){ if(e.key!=='Enter'&&e.key!==' ') return; e.preventDefault(); } toggleSetup(m); };
-  ['#results','#fxGrid'].forEach(sel=>{ $(sel).addEventListener('click',onMem); $(sel).addEventListener('keydown',onMem); });
+  ['#results','#fxGrid','#shareBox'].forEach(sel=>{ $(sel).addEventListener('click',onMem); $(sel).addEventListener('keydown',onMem); });
   setupPicker('#lockIn','#lockDrop','locked',3);
   setupPicker('#exIn','#exDrop','excluded',20);
   setupPicker('#backIn','#backDrop','backLocked',2);
@@ -933,23 +1309,30 @@ function bind(){
   $('#customList').addEventListener('click',e=>{ const b=e.target.closest('button[data-delc]'); if(!b) return; const id=b.dataset.delc; state.custom=state.custom.filter(c=>c.id!==id); delete state.owned[id]; save(); rebuildChars(); renderRoster(); renderCustomList(); });
   $('#ioExport').addEventListener('click',exportState);
   $('#ioImport').addEventListener('click',importState);
+  $('#ioSave').addEventListener('click',saveFile);
+  $('#ioOpen').addEventListener('click',()=>$('#ioFile').click());
+  $('#ioFile').addEventListener('change',openFile);
+  $('#quickGo').addEventListener('click',quickCheck);
   $('#bossFilter').addEventListener('change',renderBossList); $('#bossQ').addEventListener('input',renderBossList);
   $('#bossList').addEventListener('click',e=>{ const b=e.target.closest('[data-boss]'); if(!b) return; curBoss=b.dataset.boss; renderBossList(); });
   $('#bossDetail').addEventListener('click',e=>{ if(e.target.id==='bossGo'){ applyBoss(curBoss); showTab('plan'); runPlan(); } });
   $('#constBox').addEventListener('change',onConst);
-  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
+  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleSlots','mulePct'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
-function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); }
+function renderAll(){ renderPlanControls(); renderRoster(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
 
 /* ---------- 시작 ---------- */
 (async function init(){
   await loadState();
   rebuildChars();
   bind();
-  renderAll();
+  SHARE = parseShare(location.hash);
+  renderAll(); renderMeta();
   let tab='plan'; try{ tab=localStorage.getItem('aeopt_tab')||'plan'; }catch(e){}
-  const h=(location.hash||'').slice(1); if(['plan','roster','perchar','focus','goal','boss','method'].includes(h)) tab=h;
+  const h=(location.hash||'').slice(1); if(TABS.includes(h)) tab=h;
+  if(SHARE) tab='plan';
   showTab(tab);
+  if(SHARE) requestAnimationFrame(revealShare);
   setSaveText(state.sample?'예시 데이터 · 아직 저장 안 함':'이 기기에 저장됨');
   runPlan();
   connectDb();

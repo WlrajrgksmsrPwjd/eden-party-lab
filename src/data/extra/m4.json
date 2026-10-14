@@ -1,0 +1,556 @@
+{
+ "m4_radias": {
+  "src": "https://altema.jp/anaden/chara/787",
+  "personality": [
+   "ミグランス王宮",
+   "剣",
+   "盾",
+   "火"
+  ],
+  "mp": {
+   "main": 51,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 99,
+   "debuff": 3
+  },
+  "buff_how": "passive",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_foran_as": {
+  "src": "https://altema.jp/anaden/chara/809",
+  "personality": [
+   "槍",
+   "IDAスクール",
+   "ねこ嫌い",
+   "水"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 99,
+   "debuff": 3
+  },
+  "buff_how": "passive",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_yuin_as": {
+  "src": "https://altema.jp/anaden/chara/829",
+  "personality": [
+   "メガネ",
+   "甘党",
+   "採掘",
+   "槌",
+   "武具",
+   "呪い",
+   "火"
+  ],
+  "mp": {
+   "main": 65,
+   "sb": null,
+   "buff": 42
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_mirsha": {
+  "src": "https://altema.jp/anaden/chara/831",
+  "personality": [
+   "吟遊詩人",
+   "西方",
+   "槍",
+   "魚人",
+   "地",
+   "陰"
+  ],
+  "mp": {
+   "main": 45,
+   "sb": null,
+   "buff": 60
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_shigure_as": {
+  "src": "https://altema.jp/anaden/chara/849",
+  "personality": [
+   "ねこ好き",
+   "東方",
+   "刀",
+   "騎乗",
+   "辛党",
+   "竹馬の友",
+   "普賢一刀流",
+   "巳の国",
+   "水"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 99,
+   "debuff": 3
+  },
+  "buff_how": "passive",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_shiela_as": {
+  "src": "https://altema.jp/anaden/chara/879",
+  "personality": [
+   "竜宮",
+   "槍",
+   "王族",
+   "魚人",
+   "水"
+  ],
+  "mp": {
+   "main": 58,
+   "sb": null,
+   "buff": 30
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_mayu": {
+  "src": "https://altema.jp/anaden/chara/928",
+  "personality": [
+   "IDAスクール",
+   "杖",
+   "水"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 24
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_ilulu": {
+  "src": "https://altema.jp/anaden/chara/226",
+  "personality": [
+   "仮面",
+   "斧",
+   "フード",
+   "煉獄界",
+   "風"
+  ],
+  "mp": {
+   "main": 41,
+   "sb": null,
+   "buff": 42
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m4_hiina": {
+  "src": "https://altema.jp/anaden/chara/818",
+  "personality": [
+   "刀",
+   "東方",
+   "マシナリー",
+   "呂の国",
+   "風"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 3
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_hoozuki_as": {
+  "src": "https://altema.jp/anaden/chara/825",
+  "personality": [
+   "東方",
+   "弓",
+   "料理",
+   "辛党",
+   "妖し",
+   "辰の国",
+   "火"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 36
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_dunarith_as": {
+  "src": "https://altema.jp/anaden/chara/847",
+  "personality": [
+   "杖",
+   "魔獣",
+   "フューネラル",
+   "動物対話",
+   "煉獄界",
+   "風"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 58
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_noxis": {
+  "src": "https://altema.jp/anaden/chara/940",
+  "personality": [
+   "科学者",
+   "槌",
+   "風"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": 6
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_suzette_as": {
+  "src": "https://altema.jp/anaden/chara/184",
+  "personality": [
+   "甘党",
+   "槍",
+   "美食",
+   "ロストラボ",
+   "風"
+  ],
+  "mp": {
+   "main": 42,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": null
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m4_mana": {
+  "src": "https://altema.jp/anaden/chara/746",
+  "personality": [
+   "IDAスクール",
+   "弓"
+  ],
+  "mp": {
+   "main": 25,
+   "sb": null,
+   "buff": 34
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_clarte_as": {
+  "src": "https://altema.jp/anaden/chara/864",
+  "personality": [
+   "杖",
+   "西方",
+   "記憶喪失",
+   "ジオ",
+   "地",
+   "晶"
+  ],
+  "mp": {
+   "main": 62,
+   "sb": null,
+   "buff": 42
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_toova_as": {
+  "src": "https://altema.jp/anaden/chara/210",
+  "personality": [
+   "杖",
+   "霊媒体質",
+   "ニックネーマー",
+   "フューネラル",
+   "地"
+  ],
+  "mp": {
+   "main": 42,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": null
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m4_laclair_as": {
+  "src": "https://altema.jp/anaden/chara/228",
+  "personality": [
+   "弓",
+   "復讐者",
+   "ドラゴンキラー",
+   "いぬ好き",
+   "水"
+  ],
+  "mp": {
+   "main": 49,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m4_philo": {
+  "src": "https://altema.jp/anaden/chara/733",
+  "personality": [
+   "斧",
+   "木こり",
+   "水"
+  ],
+  "mp": {
+   "main": 42,
+   "sb": null,
+   "buff": 42
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "m4_yuna_as": {
+  "src": "https://altema.jp/anaden/chara/752",
+  "personality": [
+   "東方",
+   "杖",
+   "聖職者",
+   "人見知り",
+   "水"
+  ],
+  "mp": {
+   "main": 47,
+   "sb": null,
+   "buff": 30
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_yukino": {
+  "src": "https://altema.jp/anaden/chara/816",
+  "personality": [
+   "弓",
+   "東方",
+   "妖し",
+   "水"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 54
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_colette": {
+  "src": "https://altema.jp/anaden/chara/987",
+  "personality": [
+   "杖",
+   "いぬ好き",
+   "テイルズオブ",
+   "コンチェルトアーツ"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 40
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_claude_as": {
+  "src": "https://altema.jp/anaden/chara/756",
+  "personality": [
+   "弓",
+   "IDAスクール",
+   "王族",
+   "読書家",
+   "竜",
+   "風"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 52
+  },
+  "turns": {
+   "buff": 2,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_hardy": {
+  "src": "https://altema.jp/anaden/chara/802",
+  "personality": [
+   "拳",
+   "武具",
+   "生物",
+   "アウトロー",
+   "いぬ好き",
+   "銃",
+   "甘党",
+   "火"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 99,
+   "debuff": 3
+  },
+  "buff_how": "passive",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_ifa": {
+  "src": "https://altema.jp/anaden/chara/823",
+  "personality": [
+   "槌",
+   "聖職者",
+   "恋わずらい",
+   "ニックネーマー",
+   "辛党",
+   "風"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 99,
+   "debuff": 3
+  },
+  "buff_how": "passive",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "m4_violet": {
+  "src": "https://altema.jp/anaden/chara/833",
+  "personality": [
+   "仮面",
+   "剣",
+   "心の怪盗団",
+   "大食い",
+   "銃",
+   "地"
+  ],
+  "mp": {
+   "main": 47,
+   "sb": null,
+   "buff": 33
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ }
+}

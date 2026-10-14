@@ -1,0 +1,489 @@
+{
+ "melito": {
+  "src": "https://altema.jp/anaden/chara/1198",
+  "personality": [
+   "ねこ好き",
+   "拳",
+   "王族",
+   "火"
+  ],
+  "mp": {
+   "main": 58,
+   "sb": 119,
+   "buff": 47
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "yuin": {
+  "src": "https://altema.jp/anaden/chara/164",
+  "personality": [
+   "メガネ",
+   "甘党",
+   "採掘",
+   "槌",
+   "武具",
+   "呪い",
+   "火"
+  ],
+  "mp": {
+   "main": 37,
+   "sb": 76,
+   "buff": 38
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 2
+ },
+ "fermina": {
+  "src": "https://altema.jp/anaden/chara/191",
+  "personality": [
+   "拳",
+   "ミグランス王宮",
+   "アウトロー",
+   "忍び",
+   "風"
+  ],
+  "mp": {
+   "main": 41,
+   "sb": 82,
+   "buff": 32
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "eni": {
+  "src": "https://altema.jp/anaden/chara/1000",
+  "personality": [
+   "杖",
+   "辛党",
+   "銃",
+   "火",
+   "陰"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": 160,
+   "buff": 32
+  },
+  "turns": {
+   "buff": 6,
+   "debuff": 8
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "hakuji_no_majin": {
+  "src": "https://altema.jp/anaden/chara/1039",
+  "personality": [
+   "東方",
+   "杖",
+   "封印",
+   "辰の国",
+   "地"
+  ],
+  "mp": {
+   "main": 0,
+   "sb": null,
+   "buff": 67
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "alma_as": {
+  "src": "https://altema.jp/anaden/chara/1059",
+  "personality": [
+   "ねこ好き",
+   "メガネ",
+   "弓",
+   "銃",
+   "錬金術師",
+   "晶"
+  ],
+  "mp": {
+   "main": 62,
+   "sb": null,
+   "buff": 62
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "tilril_es": {
+  "src": "https://altema.jp/anaden/chara/1061",
+  "personality": [
+   "甘党",
+   "聖職者",
+   "西方",
+   "剣",
+   "晶"
+  ],
+  "mp": {
+   "main": 76,
+   "sb": 0,
+   "buff": 35
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "shenfa": {
+  "src": "https://altema.jp/anaden/chara/1075",
+  "personality": [
+   "東方",
+   "科学者",
+   "杖",
+   "KMS社"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": 68,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "auto",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "minalca_as": {
+  "src": "https://altema.jp/anaden/chara/1092",
+  "personality": [
+   "剣",
+   "ミリタリー",
+   "大食い",
+   "時間帝国",
+   "火"
+  ],
+  "mp": {
+   "main": 62,
+   "sb": 0,
+   "buff": 62
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "tokai_no_ute": {
+  "src": "https://altema.jp/anaden/chara/1094",
+  "personality": [
+   "拳",
+   "辛党",
+   "アウトロー",
+   "読書家",
+   "銃",
+   "火"
+  ],
+  "mp": {
+   "main": 49,
+   "sb": 102,
+   "buff": 47
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 6
+  },
+  "buff_how": "auto",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "shigure_es": {
+  "src": "https://altema.jp/anaden/chara/1108",
+  "personality": [
+   "ねこ好き",
+   "東方",
+   "竹馬の友",
+   "刀",
+   "騎乗",
+   "辛党",
+   "普賢一刀流",
+   "巳の国",
+   "風"
+  ],
+  "mp": {
+   "main": 59,
+   "sb": 119,
+   "buff": 119
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "sesta_as": {
+  "src": "https://altema.jp/anaden/chara/1110",
+  "personality": [
+   "刀",
+   "復讐者",
+   "風"
+  ],
+  "mp": {
+   "main": 54,
+   "sb": 100,
+   "buff": 43
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "nekoko_es": {
+  "src": "https://altema.jp/anaden/chara/1128",
+  "personality": [
+   "東方",
+   "弓",
+   "妖し",
+   "ねこ好き",
+   "動物対話",
+   "巳の国",
+   "風"
+  ],
+  "mp": {
+   "main": 85,
+   "sb": 85,
+   "buff": 45
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "shion_es": {
+  "src": "https://altema.jp/anaden/chara/1144",
+  "personality": [
+   "ねこ好き",
+   "東方",
+   "竹馬の友",
+   "刀",
+   "騎乗",
+   "普賢一刀流",
+   "巳の国",
+   "雷"
+  ],
+  "mp": {
+   "main": 58,
+   "sb": 73,
+   "buff": 58
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "velette_as": {
+  "src": "https://altema.jp/anaden/chara/1150",
+  "personality": [
+   "メガネ",
+   "採掘",
+   "槌",
+   "時間帝国",
+   "雷"
+  ],
+  "mp": {
+   "main": 47,
+   "sb": 93,
+   "buff": 40
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "linaria": {
+  "src": "https://altema.jp/anaden/chara/1156",
+  "personality": [
+   "IDAスクール",
+   "剣",
+   "COA",
+   "火"
+  ],
+  "mp": {
+   "main": 77,
+   "sb": 80,
+   "buff": 120
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "verdanta": {
+  "src": "https://altema.jp/anaden/chara/1185",
+  "personality": [
+   "剣",
+   "美食",
+   "辛党",
+   "水"
+  ],
+  "mp": {
+   "main": 60,
+   "sb": 150,
+   "buff": 25
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "hismena_es": {
+  "src": "https://altema.jp/anaden/chara/1193",
+  "personality": [
+   "IDAスクール",
+   "剣",
+   "火"
+  ],
+  "mp": {
+   "main": 58,
+   "sb": 190,
+   "buff": 58
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "flammelapis_es": {
+  "src": "https://altema.jp/anaden/chara/1212",
+  "personality": [
+   "聖職者",
+   "剣",
+   "大食い",
+   "タイタン",
+   "魔剣",
+   "水"
+  ],
+  "mp": {
+   "main": 62,
+   "sb": 102,
+   "buff": 67
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 5
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "theodoros": {
+  "src": "https://altema.jp/anaden/chara/1230",
+  "personality": [
+   "甘党",
+   "拳",
+   "格闘技",
+   "地"
+  ],
+  "mp": {
+   "main": null,
+   "sb": 114,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 3
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "dalnis_as": {
+  "src": "https://altema.jp/anaden/chara/1240",
+  "personality": [
+   "弓",
+   "採集",
+   "バルオキー",
+   "風"
+  ],
+  "mp": {
+   "main": 35,
+   "sb": null,
+   "buff": 143
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "radica": {
+  "src": "https://altema.jp/anaden/chara/223",
+  "personality": [
+   "エルフ",
+   "杖",
+   "恋わずらい",
+   "火"
+  ],
+  "mp": {
+   "main": 48,
+   "sb": 112,
+   "buff": 25
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ }
+}

@@ -1,0 +1,552 @@
+{
+ "senya": {
+  "src": "https://altema.jp/anaden/chara/1106",
+  "personality": [
+   "東方",
+   "刀",
+   "復讐者",
+   "呪い",
+   "フード",
+   "妖し",
+   "巳の国",
+   "火",
+   "陰"
+  ],
+  "mp": {
+   "main": null,
+   "sb": 73,
+   "buff": 73
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "senya_as": {
+  "src": "https://altema.jp/anaden/chara/1140",
+  "personality": [
+   "東方",
+   "刀",
+   "呪い",
+   "フード",
+   "妖し",
+   "普賢一刀流",
+   "巳の国",
+   "火",
+   "陰"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": 90,
+   "buff": 52
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "nagi": {
+  "src": "https://altema.jp/anaden/chara/157",
+  "personality": [
+   "竜宮",
+   "斧",
+   "大食い",
+   "地"
+  ],
+  "mp": {
+   "main": 37,
+   "sb": null,
+   "buff": 42
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 2
+ },
+ "bertrand": {
+  "src": "https://altema.jp/anaden/chara/188",
+  "personality": [
+   "ミグランス王宮",
+   "槍",
+   "盾",
+   "地"
+  ],
+  "mp": {
+   "main": 37,
+   "sb": 76,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 3
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 2
+ },
+ "shigure": {
+  "src": "https://altema.jp/anaden/chara/241",
+  "personality": [
+   "ねこ好き",
+   "東方",
+   "刀",
+   "騎乗",
+   "辛党",
+   "竹馬の友",
+   "普賢一刀流",
+   "巳の国",
+   "水"
+  ],
+  "mp": {
+   "main": 39,
+   "sb": null,
+   "buff": 46
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "tsubame_as": {
+  "src": "https://altema.jp/anaden/chara/865",
+  "personality": [
+   "東方",
+   "拳",
+   "忍び",
+   "大食い",
+   "巳の国",
+   "地"
+  ],
+  "mp": {
+   "main": 67,
+   "sb": null,
+   "buff": 29
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "serge": {
+  "src": "https://altema.jp/anaden/chara/908",
+  "personality": [
+   "剣",
+   "新時空超限流派",
+   "時の傷痕の輪舞",
+   "新夢想過激団"
+  ],
+  "mp": {
+   "main": 55,
+   "sb": 72,
+   "buff": 72
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "philo_as": {
+  "src": "https://altema.jp/anaden/chara/932",
+  "personality": [
+   "斧",
+   "木こり",
+   "水"
+  ],
+  "mp": {
+   "main": 47,
+   "sb": null,
+   "buff": 32
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 1
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "flammelapis_as": {
+  "src": "https://altema.jp/anaden/chara/978",
+  "personality": [
+   "聖職者",
+   "杖",
+   "大食い",
+   "タイタン",
+   "魔剣",
+   "水"
+  ],
+  "mp": {
+   "main": 72,
+   "sb": null,
+   "buff": 30
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "nona_as": {
+  "src": "https://altema.jp/anaden/chara/1010",
+  "personality": [
+   "弓",
+   "フード",
+   "記憶喪失",
+   "王族",
+   "水",
+   "陰"
+  ],
+  "mp": {
+   "main": 47,
+   "sb": null,
+   "buff": 25
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "pizzica_as": {
+  "src": "https://altema.jp/anaden/chara/1016",
+  "personality": [
+   "吟遊詩人",
+   "北方",
+   "弓",
+   "火"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": null,
+   "buff": 47
+  },
+  "turns": {
+   "buff": 6,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "victor_as": {
+  "src": "https://altema.jp/anaden/chara/877",
+  "personality": [
+   "刀",
+   "バルオキー",
+   "呪い",
+   "風",
+   "雷"
+  ],
+  "mp": {
+   "main": 54,
+   "sb": null,
+   "buff": 18
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "black_katana": {
+  "src": "https://altema.jp/anaden/chara/902",
+  "personality": [
+   "刀",
+   "ロストラボ",
+   "万能の支配者",
+   "地",
+   "陰"
+  ],
+  "mp": {
+   "main": 57,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 99,
+   "debuff": 3
+  },
+  "buff_how": "passive",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "silver_thunder": {
+  "src": "https://altema.jp/anaden/chara/916",
+  "personality": [
+   "弓",
+   "マシナリー",
+   "ロストラボ",
+   "水",
+   "雷"
+  ],
+  "mp": {
+   "main": 66,
+   "sb": null,
+   "buff": 35
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "otoha_as": {
+  "src": "https://altema.jp/anaden/chara/920",
+  "personality": [
+   "ねこ好き",
+   "東方",
+   "刀",
+   "生物",
+   "巳の国",
+   "地"
+  ],
+  "mp": {
+   "main": 70,
+   "sb": null,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "milsha_as": {
+  "src": "https://altema.jp/anaden/chara/930",
+  "personality": [
+   "吟遊詩人",
+   "西方",
+   "槍",
+   "魚人",
+   "地",
+   "陰"
+  ],
+  "mp": {
+   "main": 45,
+   "sb": null,
+   "buff": 28
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "hoshinoko": {
+  "src": "https://altema.jp/anaden/chara/942",
+  "personality": [
+   "杖",
+   "時の傷痕の輪舞"
+  ],
+  "mp": {
+   "main": 52,
+   "sb": 78,
+   "buff": 0
+  },
+  "turns": {
+   "buff": 1,
+   "debuff": 5
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "ukuaji": {
+  "src": "https://altema.jp/anaden/chara/956",
+  "personality": [
+   "拳"
+  ],
+  "mp": {
+   "main": 45,
+   "sb": null,
+   "buff": 26
+  },
+  "turns": {
+   "buff": 10,
+   "debuff": 10
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "viacca_as": {
+  "src": "https://altema.jp/anaden/chara/968",
+  "personality": [
+   "槌",
+   "ミリタリー",
+   "銃",
+   "仮面",
+   "アウトロー",
+   "風"
+  ],
+  "mp": {
+   "main": 51,
+   "sb": null,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 5
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "ryza": {
+  "src": "https://altema.jp/anaden/chara/1118",
+  "personality": [
+   "採集",
+   "採掘",
+   "杖",
+   "アトリエ",
+   "火"
+  ],
+  "mp": {
+   "main": 70,
+   "sb": 73,
+   "buff": null
+  },
+  "turns": {
+   "buff": null,
+   "debuff": 99
+  },
+  "buff_how": "none",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "nonold": {
+  "src": "https://altema.jp/anaden/chara/1135",
+  "personality": [
+   "杖",
+   "採集",
+   "科学者",
+   "KMS社"
+  ],
+  "mp": {
+   "main": 62,
+   "sb": 93,
+   "buff": 26
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 5
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "ampel": {
+  "src": "https://altema.jp/anaden/chara/1120",
+  "personality": [
+   "メガネ",
+   "杖",
+   "読書家",
+   "アトリエ"
+  ],
+  "mp": {
+   "main": 70,
+   "sb": 73,
+   "buff": 42
+  },
+  "turns": {
+   "buff": 10,
+   "debuff": 6
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "mariel_as": {
+  "src": "https://altema.jp/anaden/chara/740",
+  "personality": [
+   "ねこ好き",
+   "聖職者",
+   "杖"
+  ],
+  "mp": {
+   "main": 10,
+   "sb": null,
+   "buff": 55
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": null
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 1
+ },
+ "altena": {
+  "src": "https://altema.jp/anaden/chara/763",
+  "personality": [
+   "魔獣",
+   "弓",
+   "精霊対話",
+   "王族",
+   "魔剣"
+  ],
+  "mp": {
+   "main": 53,
+   "sb": null,
+   "buff": 20
+  },
+  "turns": {
+   "buff": 5,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ },
+ "miyu_as": {
+  "src": "https://altema.jp/anaden/chara/841",
+  "personality": [
+   "ミグランス王宮",
+   "剣",
+   "王族",
+   "火"
+  ],
+  "mp": {
+   "main": 47,
+   "sb": null,
+   "buff": 25
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
+ }
+}

@@ -291,3 +291,31 @@ details.why summary{cursor:pointer; font-size:12.5px; color:var(--muted)}
 .flash.on{opacity:1; transform:translateX(-50%) translateY(0)}
 .linkbtn{border:0; background:none; padding:0; color:var(--accent); font:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:2px}
 .gmem .grow select{width:100%}
+
+/* 공유 링크 · 공유받은 조합 */
+.rcol{display:flex; flex-direction:column; gap:14px; min-width:0}
+.card.shared{border-color:color-mix(in srgb, var(--light-c) 55%, var(--line)); box-shadow:inset 3px 0 0 var(--light-c)}
+.sharehead{display:flex; align-items:center; gap:4px 10px; flex-wrap:wrap}
+.sharehead b{font-family:var(--f-display); font-size:16px}
+.sharehead button{margin-left:auto}
+.rank .rk-s{font-size:17px; color:var(--light-c)}
+.cbtns{display:inline-flex; gap:6px; flex-wrap:wrap}
+.card.shared .cbtns{margin-left:auto}
+.basis{font-size:12.5px; color:var(--muted); margin-top:-4px}
+.sharelink{display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-width:0}
+.sharelink input{flex:1 1 220px; min-width:0; font-family:var(--f-mono); font-size:12px}
+.sharelink .hint{flex-basis:100%}
+
+/* 보유 탭: 이름으로 체크 · 백업 */
+.fold .hint{max-width:72ch}
+.quick textarea{min-height:84px}
+.quickbar,.iobar{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; margin-top:8px}
+.iobar{gap:8px}
+.quickmsg{margin-top:6px; overflow-wrap:anywhere}
+.quickmsg b{color:var(--ink)}
+.quickmsg .miss{color:var(--warn); font-weight:700}
+
+/* 계산 방식: 데이터 기준 */
+.dbmeta{margin:0 0 12px; font-size:12.5px; color:var(--muted)}
+.dbmeta .num{color:var(--ink)}
+.tablink{text-decoration:none; display:inline-flex; align-items:center}

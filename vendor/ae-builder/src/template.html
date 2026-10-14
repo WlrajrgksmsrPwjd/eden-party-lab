@@ -1,0 +1,659 @@
+<title>어나더에덴 빌더</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 왼쪽 고정 설정 패널(시트 입력부) + 오른쪽 순위표(결과부). 좁은 화면은 위아래로 쌓음 */
+:root {
+  --bg: #f3f4f7;
+  --panel: #ffffff;
+  --ink: #1b2030;
+  --muted: #5d6478;
+  --line: #dfe2ea;
+  --soft: #eceef4;
+  --accent: #2b5fd9;        /* 시공(時空)의 청색 */
+  --accent-soft: #e3eafb;
+  --gold: #9a6a12;          /* 크리티컬 */
+  --gold-soft: #f6ecd6;
+  --good: #1f7a4d;
+  --bad: #b23a3a;
+  --bar: #c9d6f6;
+  --display: "Gowun Batang", "Nanum Myeongjo", serif;
+  --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11141c; --panel: #181c27; --ink: #e6e9f2; --muted: #9aa2b8; --line: #2a3040; --soft: #1f2431;
+  --accent: #7ea2ff; --accent-soft: #1f2a48; --gold: #e2b357; --gold-soft: #3a2f17; --good: #5ccf93; --bad: #f08080; --bar: #2c3c6b; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #11141c; --panel: #181c27; --ink: #e6e9f2; --muted: #9aa2b8; --line: #2a3040; --soft: #1f2431;
+  --accent: #7ea2ff; --accent-soft: #1f2a48; --gold: #e2b357; --gold-soft: #3a2f17; --good: #5ccf93; --bad: #f08080; --bar: #2c3c6b; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 20px 16px 48px; display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 20px; align-items: start; }
+header.top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+h1 { font-family: var(--display); font-size: 26px; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 13px; }
+
+/* 설정 패널 */
+aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+aside section { padding: 14px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+aside section:last-child { border-bottom: 0; }
+.pow-sum { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12.5px; }
+.pow-sum .tag { margin: 0; font-size: 12px; padding: 1px 7px; }
+.sub-h { font-size: 12px; font-weight: 600; color: var(--ink); margin: 6px 0 -2px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.sec-h { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; align-items: end; }
+.grid2 > .chk { justify-self: start; margin-bottom: 4px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 10px; }
+label.f { display: grid; gap: 3px; font-size: 12px; color: var(--muted); min-width: 0; }
+input[type=number], input[type=text], input[type=search], select {
+  width: 100%; min-width: 0; font: 500 14px var(--mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+select, input[type=text], input[type=search] { font-family: var(--body); }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible, tr:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.chk { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; user-select: none; background: var(--bg); }
+.chk input { margin: 0; accent-color: var(--accent); }
+.chk:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
+details > summary { cursor: pointer; list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary .sec-h::after { content: "펼치기"; font-weight: 500; letter-spacing: 0; }
+details[open] > summary .sec-h::after { content: "접기"; }
+details[open] > summary { margin-bottom: 10px; }
+.hint { font-size: 11.5px; color: var(--muted); }
+.example { font-size: 11px; color: var(--gold); background: var(--gold-soft); padding: 1px 7px; border-radius: 999px; letter-spacing: 0; font-weight: 500; }
+
+/* 결과 */
+main { min-width: 0; display: grid; gap: 14px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.tab { font: 600 14px var(--body); padding: 7px 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; cursor: pointer; }
+.tab[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toolbar input[type=search] { flex: 1 1 200px; }
+.toolbar select { width: auto; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.sum-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
+.sum-card .k { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+.sum-card .v { font-family: var(--display); font-size: 18px; overflow-wrap: anywhere; }
+.sum-card .n { font: 500 13px var(--mono); color: var(--muted); }
+.tbl-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 760px; }
+th { text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; padding: 9px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--soft); position: sticky; top: 0; }
+th.r, td.r { text-align: right; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr.row { cursor: pointer; }
+tr.row:hover td { background: var(--soft); }
+tr.row.base td { background: var(--accent-soft); }
+.rank { font: 500 12px var(--mono); color: var(--muted); width: 32px; }
+.name { font-weight: 600; }
+.tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 0 6px; border-radius: 4px; margin-left: 4px; background: var(--soft); color: var(--muted); border: 1px solid var(--line); vertical-align: 1px; }
+.tag.cus { color: var(--accent); border-color: var(--accent); background: transparent; }
+.tag-del { font: inherit; font-size: 11px; margin-left: 4px; padding: 0 6px; border-radius: 4px; border: 1px solid var(--bad); color: var(--bad); background: transparent; cursor: pointer; vertical-align: 1px; }
+.tag.only { color: var(--accent); border-color: var(--accent); background: transparent; }
+.tag.taken { color: var(--gold); border-color: var(--gold); background: var(--gold-soft); }
+.tag.basetag { background: var(--accent); color: var(--panel); border-color: var(--accent); }
+.mono { font-family: var(--mono); font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.chip { font-size: 11px; padding: 0 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.chip.off { background: transparent; color: var(--muted); border: 1px dashed var(--line); text-decoration: line-through; }
+.chip.c { background: var(--gold-soft); color: var(--gold); }
+.chip.ore { background: var(--ink); color: var(--panel); }
+.exp { font: 600 14px var(--mono); }
+.barcell { width: 160px; }
+.bar { height: 6px; border-radius: 3px; background: var(--soft); overflow: hidden; margin-top: 6px; }
+.bar > i { display: block; height: 100%; background: var(--accent); }
+.delta { font: 500 12px var(--mono); }
+.delta.up { color: var(--good); } .delta.down { color: var(--bad); }
+.crit { color: var(--gold); }
+tr.detail td { background: var(--soft); padding: 12px 16px; }
+.det { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; }
+.det h4 { margin: 0 0 6px; font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+.det ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-size: 13px; }
+.det li.p::before { content: "반영 "; font: 600 10px var(--body); color: var(--accent); }
+.det li.u { color: var(--muted); }
+.det .src { white-space: pre-line; font-size: 12.5px; color: var(--muted); }
+.det .acts { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: 600 12.5px var(--body); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--accent); background: var(--panel); color: var(--accent); cursor: pointer; }
+.btn.solid { background: var(--accent); color: var(--panel); }
+.notes { font-size: 12.5px; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+.notes ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); }
+  aside { position: static; max-height: none; }
+  .det { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: no-preference) { .bar > i { transition: width .25s ease; } }
+
+/* 장착 칸 */
+.slots { display: grid; gap: 8px; }
+.srow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.srow.g5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.slot.g { background: var(--soft); }
+.slot.locked { border-style: dashed; opacity: .7; }
+.slot .o { font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.slot .o.warn { color: var(--bad); }
+.subtabs .sep { width: 1px; background: var(--line); margin: 2px 6px; }
+.ghint { font-size: 12.5px; color: var(--muted); }
+.slot { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; text-align: left; font: inherit; color: var(--ink); cursor: pointer; min-width: 0; position: relative; }
+.slot[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.slot .k { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; font-weight: 600; }
+.slot .v { font-weight: 600; font-size: 13.5px; overflow-wrap: anywhere; }
+.slot .v.empty { color: var(--muted); font-weight: 400; }
+.slot .x { position: absolute; top: 6px; right: 6px; border: 0; background: transparent; color: var(--muted); font-size: 15px; line-height: 1; padding: 2px 5px; cursor: pointer; border-radius: 4px; }
+.slot .x:hover { background: var(--soft); color: var(--bad); }
+.total { background: var(--ink); color: var(--panel); border-radius: 10px; padding: 10px 16px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; min-width: 0; }
+.total .k { font-size: 11px; letter-spacing: 0.06em; opacity: .75; font-weight: 600; }
+.total .v { font: 600 20px var(--mono); }
+.total .n { font-size: 12px; opacity: .8; }
+.total .n.raw { flex-basis: 100%; }
+.rawv { font: 500 11.5px var(--mono); color: var(--muted); }
+.subtabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.subtabs .tab { font-size: 13px; padding: 5px 11px; }
+.eq { font: 600 12px var(--body); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--accent); background: var(--panel); color: var(--accent); cursor: pointer; white-space: nowrap; }
+.eq.on { background: var(--accent); color: var(--panel); }
+.own { display: block; margin: 4px 0 0 auto; font: 600 11px var(--body); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--bad); background: transparent; color: var(--bad); cursor: pointer; white-space: nowrap; }
+.own.on { background: var(--bad); border-color: var(--bad); color: #fff; }
+tr.unown td { opacity: .55; } tr.unown td:last-child { opacity: 1; }
+tr.unown .name { text-decoration: line-through; }
+.tag.un { color: var(--bad); border-color: var(--bad); background: transparent; }
+tr.row.cur td { background: var(--accent-soft); }
+tr.grp td { background: var(--soft); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; color: var(--muted); padding: 6px 10px; }
+.custom { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; background: var(--panel); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; }
+.custom label.f { width: 76px; }
+.luna { display: grid; gap: 6px; }
+.luna .lrow { display: flex; gap: 6px; align-items: center; }
+.luna select { width: 96px; }
+.luna input { width: 90px; }
+.luna .lsol { display: grid; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.luna .lsol input[type=checkbox] { width: auto; }
+.luna .lrow { align-items: flex-start; }
+.luna .lsol label.f { width: 82px; }
+.luna .lsol input { width: 100%; }
+.luna .lrow { flex-wrap: wrap; }
+.luna .lx { border: 0; background: transparent; color: var(--muted); font-size: 16px; cursor: pointer; padding: 0 6px; }
+.luna .lx:hover { color: var(--bad); }
+#lunaList .lrow { position: relative; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 8px 40px 8px 8px; }
+#lunaList .lrow > .lx[data-ldel] { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 6px; background: var(--soft); color: var(--muted); font-size: 15px; line-height: 1; }
+#lunaList .lrow > .lx[data-ldel]:hover { border-color: var(--bad); color: var(--bad); }
+.pgl-box { grid-column: 1 / -1; display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); }
+.pgl-box .lrow { flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.pgl-box .lrow .pn { font-weight: 600; font-size: 13px; }
+.pgl-box .lrow input[type=checkbox] { width: auto; }
+.pgl-box .lrow .chk { flex: none; }
+.pgl-box .lrow select { width: auto; font-size: 12px; padding: 3px 6px; }
+.pfxs { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 4px; }
+.pfx { font-size: 11.5px; padding: 1px 7px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); }
+.pfx.off { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+.pfx b, .psum-r b { color: var(--bad); font-weight: 700; }
+#pPick { display: grid; gap: 8px; }
+#pPick[hidden] { display: none; }
+.pglsum { display: grid; gap: 8px; }
+.pgain { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; display: grid; gap: 2px; font-size: 12px; }
+.pgain .big { font: 600 15px var(--mono); color: var(--ink); }
+.pgain .up { color: var(--good); font-family: var(--mono); font-weight: 600; }
+.pgain .zero { color: var(--muted); font-family: var(--mono); }
+.pgv { font: 600 11.5px var(--mono); color: var(--good); white-space: nowrap; }
+.pgv.zero { color: var(--muted); font-weight: 500; }
+.padd { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.psum { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; display: grid; gap: 2px; }
+.psum-h { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--ink); padding-bottom: 3px; border-bottom: 1px solid var(--line); margin-bottom: 2px; }
+.psum-h span { font-family: var(--mono); color: var(--accent); }
+.psum-r { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.psum-r > span:last-child { font-family: var(--mono); white-space: nowrap; }
+.psum-r.off { color: var(--muted); }
+.psum-r.off > span:last-child { text-decoration: line-through; text-decoration-color: var(--muted); }
+.psum-why { font-size: 11px; color: var(--muted); padding-left: 8px; margin-top: -2px; }
+.shot { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--soft); }
+.shot[hidden] { display: none; }
+.shot, .shot > * { min-width: 0; max-width: 100%; }
+aside section { grid-template-columns: minmax(0, 1fr); }
+.shot-drop { border: 1.5px dashed var(--line); border-radius: 8px; padding: 12px; font-size: 12.5px; text-align: center; background: var(--panel); display: grid; gap: 4px; }
+.shot-drop:focus-visible { outline: 2px solid var(--accent); }
+.shot-pick { position: relative; display: inline-block; justify-self: center; overflow: hidden; }
+.shot-pick input[type=file] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 100px; }
+.shot-pick .btn { display: inline-block; padding: 8px 18px; }
+.shot-ths { display: flex; flex-wrap: wrap; gap: 6px; }
+.shot-th { position: relative; display: grid; gap: 2px; justify-items: center; }
+.shot-st { font-size: 10.5px; color: var(--good); max-width: 92px; text-align: center; }
+.shot-st.bad { color: var(--bad); }
+.shot-th img { width: 92px; height: 52px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); display: block; }
+.shot-th .lx { position: absolute; top: -6px; right: -6px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; width: 20px; height: 20px; line-height: 16px; padding: 0; color: var(--muted); cursor: pointer; }
+.shot-act { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.shot-ex { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 8px 0; }
+.shot-ex figure { margin: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.shot-ex img { display: block; width: 100%; height: auto; }
+.shot-ex figcaption { font-size: 12px; padding: 6px 8px; }
+.shot-bvr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0; font-size: 13px; }
+.shot-bvi { display: inline-flex; align-items: center; gap: 3px; }
+.shot-bvi select { width: auto; }
+.shot-bvi input { width: 70px; }
+.shot-warn { font-size: 12px; color: var(--bad); border: 1px solid var(--bad); border-radius: 6px; padding: 6px 8px; background: var(--panel); }
+.shot-tb { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+.shot-tb th, .shot-tb td { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; position: static; background: transparent; }
+.shot-tb td.num { font-family: var(--mono); color: var(--muted); }
+.shot-tb th:first-child, .shot-tb td:first-child { width: 24px; padding-right: 0; }
+.shot-tb th, .shot-tb td { white-space: normal; overflow-wrap: anywhere; }
+.shot-tb input[type=number], .shot-tb input[type=text] { width: 100%; padding: 3px 6px; font-size: 12.5px; }
+.shot-tb select { width: 100%; font-size: 12px; padding: 3px 6px; }
+.bvals { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin-top: 4px; }
+.brow { display: inline-flex; align-items: center; gap: 4px; }
+.brow select { width: auto; padding: 2px 4px; font-size: 12px; }
+.brow input { width: 64px; padding: 2px 6px; font-size: 12.5px; }
+.brow .lx { border: 0; background: transparent; color: var(--muted); font-size: 15px; cursor: pointer; padding: 0 4px; }
+.badd { font: 600 11.5px var(--body); padding: 2px 8px; border-radius: 999px; border: 1px dashed var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.opt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.opt-card { width: min(760px, 100%); grid-template-rows: auto 1fr; }
+.opt-body { overflow: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); display: grid; gap: 8px; align-content: start; }
+.opt-cond > div, .opt-excl { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.opt-cond .tag, .opt-excl .tag { margin: 0; white-space: normal; }
+.opt-tb { min-width: 0; } .opt-tb th:nth-child(1) { width: 78px; } .opt-tb th:nth-child(3) { width: 28%; } .opt-tb th:nth-child(4) { width: 64px; }
+.opt-excl .tag { margin: 3px 4px 0 0; }
+.opt-excl .lx { padding: 0 2px; }
+.opt-sum { font-size: 14px; } .opt-sum .v { font-family: var(--mono); font-size: 18px; }
+.opt-sum .up { color: var(--good); font-weight: 600; } .opt-sum .down { color: var(--bad); font-weight: 600; } .opt-sum .zero { color: var(--muted); }
+.opt-pin { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 6px; }
+.pinrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.pinrow select, .pinrow input { width: auto; max-width: 100%; font-size: 12.5px; padding: 3px 6px; }
+.cbx { position: relative; flex: 1 1 220px; min-width: 0; display: flex; }
+.cbx input { width: 100%; padding-right: 22px; }
+.cbx-arr { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 11px; pointer-events: none; }
+.cbl { position: absolute; left: 0; right: 0; top: calc(100% + 2px); z-index: 30; max-height: 240px; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+.cbo { padding: 6px 8px; font-size: 12.5px; cursor: pointer; border-bottom: 1px solid var(--line); }
+.cbo:hover, .cbo.act { background: var(--soft); }
+.cbo.on { font-weight: 600; color: var(--accent); }
+.cbo-more { padding: 6px 8px; font-size: 11.5px; color: var(--muted); }
+.pinrow .pin-n { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.pinrow.bad .cbx input { border-color: var(--bad); }
+.hint.bad { color: var(--bad); }
+.tag.pinned { margin: 0 2px 0 0; color: var(--gold); border-color: var(--gold); background: var(--gold-soft); }
+.opt-tb .lx.on { background: var(--gold-soft); border-color: var(--gold); }
+.opt-tb td:last-child { white-space: nowrap; }
+.rev-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.rev-row select, .rev-row input { width: auto; }
+.rev-o { display: inline-flex; gap: 2px; align-items: center; } .rev-o input { width: 120px; }
+.rev-target { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.rev-target input[type=number] { width: 100px; }
+.rev-res { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border: 1px solid var(--good); border-radius: 8px; padding: 8px 10px; font-size: 14px; }
+.rev-res b { font-family: var(--mono); font-size: 18px; color: var(--good); }
+.rev-eq { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.rev-eq summary { cursor: pointer; font-size: 13px; }
+.rev-eq-r { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 6px; font-size: 12.5px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+.rev-eq-r:last-child { border-bottom: 0; } .rev-eq-r .k { color: var(--muted); }
+.rev-list { display: grid; gap: 2px; }
+.rev-h { font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.rev-item { display: grid; grid-template-columns: 22px minmax(0, 1fr) minmax(0, 130px); gap: 6px; align-items: center; font-size: 12.5px; padding: 2px 4px; border-radius: 6px; }
+.rev-item.on { background: var(--soft); outline: 1px solid var(--accent); }
+.rev-item input[type=number], .rev-item input[type=text], .rev-item select { width: 100%; padding: 3px 6px; font-size: 12.5px; }
+.rev-item input[type=checkbox] { justify-self: end; width: auto; }
+.cus-card { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 6px; }
+.cus-top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cus-top select { width: auto; } .cus-top input[type=text] { flex: 1 1 160px; min-width: 0; width: auto; }
+.cus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.cus-grid:empty { display: none; }
+.cus-fx { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cus-fx { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.cus-fx select { width: auto; max-width: 100%; } .cus-fx input[type=number] { width: 80px; }
+.cbx-fx { flex: 1 1 220px; }
+.cus-n { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.chk.sm { font-size: 12px; padding: 2px 8px; }
+.opt-ex { display: grid; gap: 6px; }
+.modal-card.share-card { width: min(900px, 100%); }
+.share-imp { display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.share-imp textarea { width: 100%; box-sizing: border-box; font: 12px/1.4 ui-monospace, monospace; resize: vertical; min-height: 56px; background: var(--soft); color: inherit; border: 1px solid var(--line); border-radius: 6px; padding: 6px; }
+.share-tb { min-width: 560px; table-layout: auto; }
+.share-tb th, .share-tb td { font-size: 12px; vertical-align: top; }
+.share-tb td:first-child { white-space: nowrap; color: var(--muted); }
+.share-tb tr.grp td { background: var(--soft); font-weight: 600; color: inherit; }
+.share-tb tr.dmg td b { font-size: 14px; }
+.share-tb tr.chg td { background: color-mix(in srgb, var(--accent, #3b6cf6) 7%, transparent); }
+.share-tb .sp-row { padding: 1px 0; } .share-tb .sp-row.off { color: var(--muted); } .share-tb .sp-chk { display: inline-flex; padding: 0 6px; font-size: 11px; }
+.share-tb .up { color: #1a7f45; } .share-tb .down { color: #c0392b; } .share-tb .zero { color: var(--muted); }
+.opt-ex-tb td.bt-code { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: ui-monospace, monospace; }
+.opt-ex-wrap { overflow-x: auto; }
+.opt-ex-tb { min-width: 640px; table-layout: auto; }
+.opt-ex-tb td { font-size: 12px; }
+.opt-ex-tb tr.hd td { font-weight: 600; background: var(--soft); }
+.opt-ex-tb td:first-child { width: auto; padding-right: 6px; white-space: nowrap; }
+.opt-fx { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.opt-fx span { font-size: 11px; font-weight: 500; padding: 0 5px; border-radius: 4px; border: 1px solid var(--line); color: var(--ink); background: var(--soft); }
+.opt-fx span.no { color: var(--muted); text-decoration: line-through; background: transparent; }
+.opt-stat { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: grid; gap: 6px; }
+.opt-grid, .opt-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 4px 10px; font-size: 13px; }
+.opt-rows { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.opt-grid span, .opt-rows span { display: flex; justify-content: space-between; gap: 6px; font-family: var(--mono); }
+.opt-grid i, .opt-rows i { font-style: normal; color: var(--muted); font-family: inherit; }
+.opt-tb tr.chg td:nth-child(2) { color: var(--accent); font-weight: 600; }
+.pow-card { width: min(820px, 100%); grid-template-rows: auto auto 1fr auto auto; }
+.pow-ctl { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; }
+.pow-tb { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 12.5px; }
+.pow-tb th, .pow-tb td { border: 1px solid var(--line); padding: 4px 5px; text-align: center; position: static; white-space: nowrap; }
+.pow-tb th { background: var(--soft); color: var(--muted); font-weight: 600; }
+.pow-tb td.v { font-family: var(--mono); cursor: pointer; }
+.pow-tb td.v:hover { background: var(--accent-soft); }
+.pow-tb td.v.sel { background: var(--accent); color: var(--panel); font-weight: 700; }
+.pow-tb td.dim { color: var(--muted); }
+.pow-res { font-size: 13px; background: var(--soft); border-radius: 6px; padding: 8px 10px; }
+.pow-res b { font-family: var(--mono); font-size: 15px; color: var(--accent); }
+.lsol { display: grid; gap: 6px; }
+.lsol-in { display: flex; gap: 6px; }
+.soltot { display: grid; gap: 2px; background: var(--accent-soft); border-radius: 6px; padding: 6px 8px; }
+.soltot b { font: 600 13.5px var(--mono); color: var(--accent); }
+.modal { position: fixed; inset: 0; background: rgba(10, 12, 20, 0.5); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.modal[hidden] { display: none; }
+.modal-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: min(640px, 100%); max-height: min(80vh, 720px); position: relative; max-width: 98vw; display: grid; grid-template-rows: auto auto auto 1fr; gap: 10px; padding: 14px 16px; }
+.modal-card.sized { max-height: 96vh; }
+.neg-wrap { position: relative; display: block; }
+.neg-wrap > input { width: 100%; }
+.neg-btn { display: none; }
+@media (pointer: coarse) {
+  .neg-wrap > input { padding-right: 40px; }
+  .neg-btn { display: block; position: absolute; right: 3px; top: 50%; transform: translateY(-50%); min-width: 34px; height: calc(100% - 6px); min-height: 28px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: inherit; font: 600 15px/1 var(--body, inherit); padding: 0; }
+  .neg-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+}
+.rs-grip { position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; cursor: nwse-resize; touch-action: none; z-index: 2; border-bottom-right-radius: 12px; background: linear-gradient(135deg, transparent 55%, var(--muted) 55%, var(--muted) 62%, transparent 62%, transparent 72%, var(--muted) 72%, var(--muted) 79%, transparent 79%); opacity: .7; }
+.rs-grip:hover { opacity: 1; }
+.modal-h { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+.modal-h .lx { border: 0; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; }
+.modal-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.modal-tools input[type=search] { flex: 1 1 200px; width: auto; }
+.modal-list { overflow: auto; border-top: 1px solid var(--line); min-height: 0; }
+.pgrow { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+.pgrow .pgi { min-width: 0; display: grid; gap: 2px; }
+.pgrow .pge { font-size: 12px; color: var(--muted); }
+.pgrow .btn { flex: none; }
+.pgside { display: grid; gap: 4px; justify-items: end; flex: none; }
+.pledge { display: grid; gap: 4px; justify-items: end; }
+.prow { display: inline-flex; gap: 4px; }
+.prow select { width: 92px; padding: 3px 6px; font-size: 12.5px; }
+.prow input { width: 64px; padding: 3px 6px; font-size: 12.5px; }
+.custom label.f.wide { width: 150px; }
+@media (max-width: 900px) { .srow, .srow.g5 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>어나더에덴 빌더</h1>
+    <span class="sub">무기·방어구·배지·글래스터를 칸마다 하나씩 확정해 가며, 남은 칸의 후보를 대미지 계산기 v4.016 공식으로 비교합니다. <span class="credit">· 계산 공식·장비 데이터 출처: 딩 (AE 대미지 계산기 v4.016 · 장비 정리 시트)</span></span>
+  </header>
+
+  <aside aria-label="계산 조건">
+    <section>
+      <div class="sec-h">캐릭터 스탯 (무기 제외) <span><button class="btn" id="shotOpen" type="button" hidden style="padding:2px 10px">스크린샷 불러오기</button> <span class="example">예시 값</span></span></div>
+      <div id="shotBox" class="shot" hidden></div>
+      <div class="grid3">
+        <label class="f">힘<input type="number" id="str" value="237"></label>
+        <label class="f">지능<input type="number" id="int" value="162"></label>
+        <label class="f">속도<input type="number" id="spd" value="249"></label>
+        <label class="f">행운<input type="number" id="luck" value="150"></label>
+        <label class="f">최대 MP<input type="number" id="mp" value="512"></label>
+        <label class="f">천명<input type="number" id="fate" value="255" min="0" max="255"></label>
+      </div>
+      <div class="grid2">
+        <label class="f">공격 추가 보정<input type="number" id="atkAdj" value="0"></label>
+        <label class="f">마력 추가 보정<input type="number" id="magAdj" value="0"></label>
+      </div>
+      <label class="f">캐릭터 이름 (전용 무기 판별)<input type="text" id="who" placeholder="예: 체리카"></label>
+      <label class="chk"><input type="checkbox" id="hideOther" checked> 다른 캐릭터 전용 장비 숨기기</label>
+    </section>
+
+    <section>
+      <div class="sec-h">시전 스킬 <button class="btn" id="powOpen" type="button" style="padding:2px 10px">스킬 배율 표</button></div>
+      <div class="pow-sum" id="powSum"></div>
+      <div hidden>
+        <select id="atkCls"><option value="" selected>무기 기준 (자동)</option><option>물리</option><option>마법</option></select>
+        <select id="elem"><option>무속성</option><option selected>불</option><option>물</option><option>땅</option><option>바람</option><option>번개</option><option>그림자</option><option>결정</option></select>
+        <select id="range"><option>전체</option><option>단일</option></select>
+        <input type="checkbox" id="normalAtk">
+      </div>
+      <div class="grid2">
+        <label class="f">1Hit 위력 (%)<input type="number" id="power" value="60" step="any"></label>
+        <label class="f">타수<input type="number" id="hits" value="1" min="1"></label>
+        <label class="f">기반 스탯<select id="kind"><option value="" selected>자동</option><option>힘</option><option>지능</option><option>속도</option></select></label>
+        <label class="f">공격 타입 (ZONE 판정)<select id="atkType"><option value="">무기 기준 (자동)</option><option>베기</option><option>찌르기</option><option>타격</option><option>마법</option></select></label>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-h">대상</div>
+      <div class="grid2">
+        <label class="f">레벨<input type="number" id="tlv" value="91"></label>
+        <label class="f">상성<select id="aff"><option>통상</option><option>약점</option><option>저항</option></select></label>
+        <label class="f">방어<input type="number" id="tdef" value="174"></label>
+        <label class="f">마방<input type="number" id="tmdef" value="174"></label>
+      </div>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="tPoison"> 대상 독</label>
+        <label class="chk"><input type="checkbox" id="tPain"> 대상 페인</label>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-h">전투 조건</div>
+      <div class="grid2">
+        <label class="f">현재 HP (%)<input type="number" id="hpPct" value="100" min="1" max="100"></label>
+        <label class="f">어나더 포스 게이지 (%)<input type="number" id="afGauge" value="0" min="0" max="100"></label>
+        <label class="f">전개 중인 진 (ZONE)<select id="zoneT">
+          <option value="">없음</option><option>열화진</option><option>수천진</option><option>지열진</option><option>풍왕진</option><option>초뢰진</option><option>각음진</option><option>휘정진</option><option>황참진</option><option>순돌진</option><option>굉타진</option><option>환마진</option><option>성해진</option><option>쌍격진 참마</option><option>쌍격진 참돌</option><option>섬격진</option><option>월광진</option><option>견수진</option></select></label>
+        <label class="f">ZONE 어빌리티 대미지 %<input type="number" id="zoneAb" value="0"></label>
+        <span class="hint" id="zoneNote" style="grid-column: 1 / -1"></span>
+      </div>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="af"> 어나더 포스 중</label>
+        <label class="chk"><input type="checkbox" id="zone"> ZONE 각성 중 <span class="hint">(극 ○○진)</span></label>
+        <label class="chk"><input type="checkbox" id="wins" checked> 누계 승리 최대치</label>
+      </div>
+      <div class="sec-h" style="margin-top:2px">루나틱 <button class="btn" id="lunaAdd" type="button" style="padding:2px 10px">+ 추가</button></div>
+      <div id="lunaList" class="luna"></div>
+      <div class="sec-h" style="margin-top:2px">자신의 상태 (인핸스)</div>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="sPoison"> 독</label>
+        <label class="chk"><input type="checkbox" id="sPain"> 페인</label>
+        <label class="chk"><input type="checkbox" id="sSeal"> 봉인</label>
+        <label class="chk"><input type="checkbox" id="sTaunt"> 도발</label>
+      </div>
+      <div class="sec-h" style="margin-top:2px">환경</div>
+      <div class="checks">
+        <label class="chk"><input type="checkbox" id="eHeat"> 가열</label>
+        <label class="chk"><input type="checkbox" id="eSpecial"> 특수</label>
+        <label class="chk"><input type="checkbox" id="eWeather"> 날씨 계통</label>
+        <label class="chk"><input type="checkbox" id="eGround"> 지표 계통</label>
+        <label class="chk"><input type="checkbox" id="eAir"> 대기 계통</label>
+      </div>
+      <div class="grid2">
+        <label class="f">경과 턴 (성장)<input type="number" id="turns" value="10" min="0"></label>
+        <label class="f">적 수<input type="number" id="enemies" value="1" min="1"></label>
+        <label class="f">천 아군 수 (전후방)<input type="number" id="fateAllies" value="0" min="0"></label>
+        <label class="f">명 아군 수 (전후방)<input type="number" id="meiAllies" value="0" min="0"></label>
+        <label class="f">스킬 위력 강화 (×)<input type="number" id="skMul" value="1" step="any" min="0"></label>
+        <span class="hint" style="grid-column: 1 / -1">스킬 위력 강화: 스킬 자체 위력 증가·필살기 위력 UP·모드 체인지 등을 n배로 (예: 위력 1.5배 → 1.5, 1이면 없음). 다단 강화와는 증가분끼리 더해서(합연산) 1Hit 위력에 곱합니다 — 1.5배 + 다단 2타(+25%) = 1.75배 (계산기 v4.016 25행).</span>
+        <span class="hint" style="grid-column: 1 / -1">천·명 아군 수는 공명의 힘 계산에 쓰입니다. 파티원이 장착한 공명의 힘·격진의 힘은 버프 · 디버프 → 파티원 P글래스터에서 장착하세요.</span>
+        <label class="f">쓰러진 아군 수<input type="number" id="fallen" value="0" min="0"></label>
+      </div>
+    </section>
+
+    <details id="buffBox">
+      <summary><section style="border:0;padding-bottom:0"><div class="sec-h">버프 · 디버프</div></section></summary>
+      <section>
+        <div class="pgl-box">
+            <div class="sec-h">파티원 P글래스터
+              <select id="pMode" aria-label="P글래스터 입력 방식" style="width:auto;font:500 12px var(--body);padding:3px 6px"><option value="direct">직접 입력</option><option value="pick">P글래 선택</option></select></div>
+            <div id="pglGain" class="pgain"></div>
+            <div id="pDirect" class="grid2">
+              <label class="f">대미지 증가 (P글래스터) %<input type="number" id="pDmg" value="0"></label>
+              <label class="f">속성 공격 (P글래스터) %<input type="number" id="pElem" value="0"></label>
+              <span class="hint" style="grid-column: 1 / -1">대미지 증가는 계산기 43행(공격 대미지 UP), 속성 공격은 35행(속성/무속성 대미지 UP)으로 들어가며, 속성 공격은 지금 스킬 속성에 적용되는 값만 넣으세요. 둘 다 장비 효과입니다.</span>
+            </div>
+            <div id="pPick" hidden>
+              <div id="pglList" class="luna"></div>
+              <button class="btn" id="pglOpen" type="button">P글래 선택 창 열기</button>
+              <div id="pglSum" class="pglsum"></div>
+              <div class="grid2 padd">
+                <span class="psum-h" style="grid-column: 1 / -1">적용 합에 직접 더하기</span>
+                <label class="f">대미지 증가 %<input type="number" id="pAddDmg" value="0"></label>
+                <label class="f">속성 공격 %<input type="number" id="pAddElem" value="0"></label>
+                <span class="hint" style="grid-column: 1 / -1">목록에 없는 효과를 더할 때 씁니다. 대미지 증가는 43행(공격 대미지 UP), 속성 공격은 35행으로 들어가며 위 합계에 함께 표시됩니다. 속성 공격은 지금 스킬 속성에 적용되는 값만 넣으세요.</span>
+              </div>
+            </div>
+          </div>
+        <div class="sub-h">정신 통일 · 심기일체 · MP</div>
+        <div class="grid2">
+          <label class="chk"><input type="checkbox" id="cu1"> 정신 통일 <span class="hint">마법 · MP×0.23%</span></label>
+          <label class="chk"><input type="checkbox" id="cu2"> 심기일체 <span class="hint">물리 · MP×0.16%</span></label>
+          <label class="f">최대 MP 고정값 (버프)<input type="number" id="mpFix" value="0"></label>
+          <label class="f">최대 MP % (버프·디버프)<input type="number" id="mpPct" value="0" min="-100" max="100"></label>
+          <span class="hint" id="mpNote" style="grid-column: 1 / -1"></span>
+        </div>
+        <span class="hint">각각 최대 +250%. 최대 MP = (기본 MP + 장비 MP + 고정값) × (1 + MP %), MP % 합계는 −100%~+100%까지만 적용됩니다. 호시탐탐·하극상 버프까지 합친 증가는 최대 +350%입니다.</span>
+        <div class="sub-h">스탯 · 대미지</div>
+        <div class="grid2">
+          <label class="f">힘 %<input type="number" id="bStr" value="0" min="-100" max="100"></label>
+          <label class="f">지능 %<input type="number" id="bInt" value="0" min="-100" max="100"></label>
+          <label class="f">속도 %<input type="number" id="bSpd" value="0" min="-100" max="100"></label>
+          <label class="f">장착자 대미지 %<input type="number" id="bWield" value="0" min="-100" max="100"></label>
+          <label class="f">속성 대미지 (버프) %<input type="number" id="bElemNE" value="0" min="-100" max="100"></label>
+          <label class="f">호시탐탐 %<input type="number" id="hoshi" value="0"></label>
+          <label class="f">하극상 버프 (계수)<input type="number" id="bGeko" value="0" min="0" placeholder="예: 320"></label>
+          <label class="chk" style="grid-column: 1 / -1"><input type="checkbox" id="bMulti"> 다단 강화 <span class="hint">2타 +25% · 3타 +50% · 4타 +100% · 5타 이후 +200% 위력 (타수 2 이상일 때)</span></label>
+          <span class="hint" style="grid-column: 1 / -1">힘·지능·속도·장착자 대미지·속성 대미지 버프는 각각 −100%~+100%까지만 적용됩니다(계산기 상한). 하극상 버프는 대미지 +(대상 레벨² ÷ 계수)%이며, 개별 +100%·합계 +350%가 상한입니다.</span>
+        </div>
+        <div class="sub-h">버프 · 디버프</div>
+        <div class="grid2">
+          <label class="f">(대상) 내구 %<input type="number" id="bDef" value="0" min="-100" max="100"></label>
+          <label class="f">(대상) 정신 %<input type="number" id="bMdef" value="0" min="-100" max="100"></label>
+          <label class="f">(대상) 물리/마법 내성 % <span class="hint">±100</span><input type="number" id="bRes" value="0" min="-100" max="100"></label>
+          <label class="f">(대상) 속성 내성 % <span class="hint">±100</span><input type="number" id="bERes" value="0" min="-100" max="100"></label>
+        </div>
+        <span class="hint">상한(계산기 기준): 대상 내구·정신 버프·디버프, 물리/마법 내성(저항)·속성 내성(저항) 버프·디버프 모두 각각 −100%~+100%까지만 적용됩니다. 모든 후보에 똑같이 더해지며, 디버프·감소는 음수로 입력합니다.</span>
+      </section>
+    </details>
+    <details id="etcBox">
+      <summary><section style="border:0;padding-bottom:0"><div class="sec-h">기타 보정</div></section></summary>
+      <section>
+        <span class="hint">장착 칸으로 넣을 수 없는 효과(스탯이 무작위인 글래스터 등)를 넣으세요. 모든 후보에 똑같이 더해집니다.</span>
+        <div class="grid2">
+          <label class="f">크리티컬율 (기타) %<input type="number" id="bCrit" value="0"></label>
+          <label class="f">마법 크리티컬율 (기타) %<input type="number" id="bMcrit" value="0"></label>
+          <label class="f">크리티컬 위력 (기타) %<input type="number" id="bCpow" value="0"></label>
+          <label class="f">마법 크리티컬 위력 (기타) %<input type="number" id="bMcpow" value="0"></label>
+          <label class="f">콤보 배율 %<input type="number" id="bCombo" value="100"></label>
+          <label class="f">힘 고정값 (기타 합)<input type="number" id="gStr" value="0"></label>
+          <label class="f">지능 고정값 (기타 합)<input type="number" id="gInt" value="0"></label>
+          <label class="f">속도 고정값 (기타 합)<input type="number" id="gSpd" value="0"></label>
+          <label class="f">약점 배율 증가 %<input type="number" id="bWeak" value="0"></label>
+          <label class="f">최종 대미지 배율 (×)<input type="number" id="bFinal" value="1" step="any" min="0"></label>
+          <span class="hint" style="grid-column: 1 / -1">최종 대미지 배율은 단일 공격 보정(×1.1) 다음, 25억 경감 전에 곱합니다. 1이면 변화 없음. 대상의 피격 대미지 감소도 여기에 넣으면 됩니다 (예: 30% 감소 → 0.7). 여러 개면 계산기처럼 감쇠 연산으로 합친 값을 넣으세요.</span>
+        </div>
+      </section>
+    </details>
+    <section>
+      <button class="btn" id="reset" type="button">예시 값으로 되돌리기</button>
+    </section>
+  </aside>
+
+  <main>
+    <div class="opt-bar"><button class="btn solid" id="optOpen" type="button">최적 빌드 찾기</button><button class="btn" id="cusOpen" type="button">커스텀 장비</button><button class="btn" id="revOpen" type="button">대미지 역산</button><button class="btn" id="shareOpen" type="button">빌드 비교</button><span class="hint">무기는 고정, 나머지 장비를 기대 대미지가 가장 큰 조합으로 찾습니다</span></div>
+    <div class="total" id="total"></div>
+    <div class="slots" id="slots"></div>
+    <div class="tabs" id="cats" role="group" aria-label="비교할 칸"></div>
+    <div class="subtabs" id="subtabs" role="group" aria-label="종류"></div>
+    <div class="ghint" id="gHint" hidden></div>
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="이름, 효과, 장착 조건으로 찾기">
+      <label class="chk" id="dmgWrap" hidden><input type="checkbox" id="dmgOnly" checked> 대미지 관련만</label>
+      <label class="chk" id="withWrap" hidden><input type="checkbox" id="withOre"> 연성 광석까지 함께 고르기</label>
+      <label class="f" style="display:flex;align-items:center;gap:6px">정렬
+        <select id="sort"><option value="exp">기대 대미지</option><option value="n">일반 평균</option><option value="c">크리티컬 평균</option><option value="max">최대</option></select></label>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th id="thName">후보</th><th class="r" id="thStat">공격 / 마력</th><th class="r">일반 평균</th><th class="r">크리 평균</th><th class="r">크리율</th><th class="r">기대 대미지</th><th class="r">현재 대비</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="notes">
+      <strong>계산 방식</strong>
+      <ul>
+        <li>후보 하나를 고른 칸에 넣고, 나머지 칸은 확정한 장비를 그대로 둔 채 계산합니다. "현재 대비"는 지금 세팅(그 칸이 비어 있으면 빈 상태) 대비 증감입니다.</li>
+        <li>대미지 공식은 원본 계산기를 그대로 옮겼고, 원본 엑셀과 무작위 조건 65가지로 대조해 모두 일치했습니다. 장비 효과는 메모 시트의 순서(무기 → 방어구 → 배지 → 글래스터 1 → 연성 1 → … → 글래스터 4 → 전용 글래스터)대로 적용하고, "효과 중복 불가" 효과는 가장 큰 것 하나만 적용합니다.</li>
+        <li>정신 통일·심기일체는 장비의 MP 증가까지 더한 최대 MP로 계산하므로, MP가 붙은 장비의 순위도 올라갑니다.</li>
+        <li>25억이 넘는 대미지는 원본 계산기처럼 경감됩니다. 경감 전 대미지는 위쪽 합계 카드와, 경감이 걸린 후보의 기대 대미지 아래에 함께 표시합니다.</li>
+        <li>공격 = 힘 + 무기 공격, 마력 = 지능 + 무기 마력입니다. 장비의 힘·지능 증가는 공격·마력에도 더해집니다.</li>
+        <li>기대 대미지 = (일반 평균 × (1 − 크리율) + 크리 평균 × 크리율) × 타수. 물리 크리율은 행운 ÷ 16 %에 장비 크리티컬율을 더합니다.</li>
+        <li>전용 글래스터 칸에는 특정 캐릭터 전용 글래스터와 특수계 글래스터가, 글래스터 1~4 칸에는 그 외 글래스터(공격계·생명계·지원계)가 나옵니다. 캐릭터 이름을 넣으면 전용 칸이 그 캐릭터의 것으로 좁혀집니다.</li>
+        <li>글래스터는 고른 무기 종류에 맞는 변형만 보여 주며, 상급·P 글래스터는 각성 + 잠재 연성 상태(활성 스탯 + 잠재 연성으로 강화된 각성 효과), 그 외는 각성 상태(활성 스탯 + 각성 효과)로 비교합니다. 장착한 뒤 칸마다 연성을 바꿀 수 있고(잠재 연성은 상급·중급·P 글래스터), 특수 광석으로 바꾸면 각성 효과 + 광석 효과로 계산합니다. 성격·캐릭터 조건은 직접 확인해 주세요. 같은 글래스터를 여러 칸에 장착할 수 있으며, 다른 칸에 이미 장착된 글래스터에는 표시가 붙습니다.</li>
+        <li>"N종류 중 하나" 옵션이 있는 무기·방어구는 목록의 드롭다운으로 고르며, 기본(자동)은 지금 조건에서 대미지가 가장 높은 옵션입니다.</li>
+        <li>공격·마력이 범위로 적힌 무기(오파츠 감정 무기 등)는 범위의 최댓값으로 계산합니다. 목록에서 "범위" 태그에 마우스를 올리면 범위가 보입니다.</li>
+        <li>천명이 120 미만이면 배지 2, 200 미만이면 글래스터 4 칸이 잠겨 장착·계산에서 빠집니다.</li>
+        <li>버프·디버프(힘·지능·속도·장착자 대미지·속성 대미지, 대상 내구·정신·내성)는 원본 계산기처럼 각각 −100%~+100%까지만 적용됩니다. 약점 배율은 기본 배율에 장비 약점 효과·심안(+100)·기타 보정의 약점 배율 증가를 더한 값입니다.</li>
+        <li>크리티컬 위력(기타)은 물리 공격에만, 마법 크리티컬 위력(기타)은 마법 공격에만 더해집니다. 최종 대미지 배율은 단일 공격 보정(×1.1) 다음, 25억 경감 전에 곱합니다.</li>
+        <li>어나더 포스는 "AF 중이 아닐 때" 같은 장비 조건에만 쓰입니다. AF 콤보 배율은 기타 보정의 콤보 배율에 직접 넣으세요.</li>
+        <li>커스텀 장비는 "커스텀" 태그가 붙고, 후보 목록·최적 빌드에 다른 장비와 똑같이 들어갑니다. "미보유"로 표시한 장비는 목록에서 비교는 되지만 최적 빌드 찾기 후보와 고정에서는 빠집니다.</li>
+        <li>최적 빌드 찾기: 고른 무기 종류 안에서 칸마다 가장 좋은 장비로 바꾸기를 더 안 바뀔 때까지 반복하고 출발점을 여러 개 잡아 가장 좋은 결과를 고릅니다. 같은 글래스터·배지는 두 칸에 넣지 않습니다.</li>
+        <li>미반영: 콤보 배율 강화, 공격 시 디버프·상태 이상 부여, 버프·디버프 효과량 증가, 특정 적 한정 효과, 스탯이 무작위인 글래스터, 스킬 획득.</li>
+      </ul>
+    </div>
+  </main>
+</div>
+
+<div id="pglModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="pglTitle">
+  <div class="modal-card">
+    <div class="modal-h"><strong id="pglTitle">파티원 P글래스터 선택</strong><button class="lx" type="button" id="pglClose" aria-label="닫기">×</button></div>
+    <span class="hint">【P】 효과는 장착 조건(무기종·성격·속성 등)이 같은 파티원에게만, "아군 전체" 효과(공명·격진)는 파티 전원에게 적용됩니다. 초록 숫자는 지금 장착한 P글래에 하나 더 장착했을 때 늘어나는 기대 대미지입니다(내 무기와 같은 무기종 · 기본 연성 상태 · 성격·속성 조건은 해당한다고 가정).</span>
+    <div class="modal-tools">
+      <input type="search" id="pglQ" placeholder="이름·효과 검색" aria-label="P글래스터 검색">
+      <label class="chk"><input type="checkbox" id="pglDmg" checked> 대미지 관련만</label>
+      <select id="pglSort" aria-label="P글래스터 정렬" style="width:auto"><option value="gain">증가량 높은 순</option><option value="sheet">시트 순서</option><option value="name">이름 순</option></select>
+    </div>
+    <div id="pglRows" class="modal-list"></div>
+  </div>
+</div>
+
+<div id="revModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="revTitle">
+  <div class="modal-card opt-card">
+    <div class="modal-h"><strong id="revTitle">대미지 역산</strong><button class="lx" type="button" id="revClose" aria-label="닫기">×</button></div>
+    <div class="opt-body" id="revBody"></div>
+  </div>
+</div>
+<div id="cusModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="cusTitle">
+  <div class="modal-card opt-card">
+    <div class="modal-h"><strong id="cusTitle">커스텀 장비 만들기</strong><button class="lx" type="button" id="cusClose" aria-label="닫기">×</button></div>
+    <div class="opt-body" id="cusBody"></div>
+  </div>
+</div>
+<div id="shareModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+  <div class="modal-card opt-card share-card">
+    <div class="modal-h"><strong id="shareTitle">빌드 비교 · 내보내기 · 가져오기</strong><button class="lx" type="button" id="shareClose" aria-label="닫기">×</button></div>
+    <div class="opt-body" id="shareBody"></div>
+  </div>
+</div>
+<div id="optModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="optTitle">
+  <div class="modal-card opt-card">
+    <div class="modal-h"><strong id="optTitle">최적 빌드 찾기</strong><button class="lx" type="button" id="optClose" aria-label="닫기">×</button></div>
+    <div class="opt-body" id="optBody"></div>
+  </div>
+</div>
+<div id="powModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="powTitle">
+  <div class="modal-card pow-card">
+    <div class="modal-h"><strong id="powTitle">스킬 배율 표로 위력 정하기</strong><button class="lx" type="button" id="powClose" aria-label="닫기">×</button></div>
+    <div class="pow-ctl">
+      <label class="f">대상<select id="pwTarget"><option>단일</option><option>전체</option></select></label>
+      <label class="f">공격 유형<select id="pwCls"><option>물리</option><option>마법</option></select></label>
+      <label class="f">속성<select id="pwElem"><option>무속성</option><option>불</option><option>물</option><option>땅</option><option>바람</option><option>번개</option><option>그림자</option><option>결정</option></select></label>
+      <label class="f">위력<select id="pwGrade"><option>기본 공격</option><option>약</option><option>중</option><option>강</option><option selected>극</option><option>극대</option></select></label>
+      <label class="f">위력 ○배<input type="number" id="pwMul" value="1" min="0" step="0.1"></label>
+      <label class="f">타수<input type="number" id="pwHits" value="1" min="1"></label>
+    </div>
+    <div class="modal-list"><table class="pow-tb" id="powTb"></table></div>
+    <div class="pow-res" id="powRes"></div>
+    <div class="shot-act"><button class="btn solid" type="button" id="powApply">적용</button><button class="btn" type="button" id="powCancel">취소</button><span class="hint">대상·공격 유형·속성은 이 표에서만 정합니다. 1Hit 위력과 타수는 적용한 뒤에도 직접 고칠 수 있어요.</span></div>
+  </div>
+</div>
+
+<script>/*ENGINE*/</script>
+<script src="app.js"></script>
