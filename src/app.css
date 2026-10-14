@@ -369,3 +369,12 @@ a.lnk{display:inline-flex; align-items:center}
 .deckrow .dk{font-weight:700}
 .deckrow .dm{overflow-wrap:anywhere}
 .deckcard{margin-top:6px}
+
+/* 턴별 화력 */
+.tline{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; margin-top:10px}
+.tlc{border:1px solid var(--line); border-radius:8px; padding:6px 8px; background:var(--surface-2); min-width:0}
+.tlc.hot{border-color:var(--accent); background:var(--accent-soft)}
+.tlc .k{font-size:11.5px; color:var(--muted); font-weight:700}
+.tlc .v{font-family:var(--f-mono); font-size:14px; font-weight:600}
+.tlc .s{font-size:11px; color:var(--muted); overflow-wrap:anywhere}
+@media (max-width:560px){ .tline{grid-template-columns:repeat(2, minmax(0,1fr))} }

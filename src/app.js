@@ -632,7 +632,7 @@ async function runPlan(){
 }
 
 function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e8) return (v/1e8).toFixed(2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
-const MODE_KR={burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
+const MODE_KR={opener:'개전 속공',burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
 const RES = new Map(); // 카드 키 → 결과 (추천 세팅 패널용)
 function teamWarns(x, boss, enemy, ex){
   const ev=x.ev, sbz=ev.sb.zone;
@@ -669,7 +669,7 @@ function memHtml(x, i, key, focus, lockSet){
     <div class="tap">추천 세팅 ▾</div>
   </div>`;
 }
-const HOT = {burst:'b',sustain:'s',stability:'t',weak:'s',boss:'',kesshitsu:'',custom:''};
+const HOT = {opener:'o',burst:'b',sustain:'s',stability:'t',weak:'s',boss:'',kesshitsu:'',custom:''};
 function renderResults(r, boss, enemy, mode){
   const P=state.plan, out=$('#results');
   mode = mode||P.mode;
@@ -706,6 +706,24 @@ function toggleDeck(btn){
   if(!box.innerHTML){ const o=DECKCTX[key]; box.innerHTML=cardHtml(rec.x, key, o).replace('<div class="rank">'+rec.x.rank+'<small>위</small></div>', `<div class="rank" style="font-size:15px">${esc(focusLabel(rec.x.focus))}</div>`); }
   box.hidden=false;
 }
+/* 턴별 화력 줄: 1턴(보장~속도 맞춤) · 2턴 · SB · AF */
+function tlOf(x, o){
+  const ev=x.ev; if(ev.tl) return ev.tl;
+  const boss=o&&o.boss;
+  try{ ev.tl = E.turnTimeline(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, {focus:o&&o.focus||null, needPierce:!!(boss&&boss.needs&&boss.needs.barrier_pierce)}, ev); }catch(e){ ev.tl=null; }
+  return ev.tl;
+}
+function timelineHtml(x, o){
+  const tl=tlOf(x,o), ev=x.ev; if(!tl) return '';
+  const pTxt = tl.known ? (tl.p>=0.99?'버퍼가 모두 빠름':tl.p<=0.01?'버퍼가 모두 느림':`버퍼가 빠른 쌍 ${Math.round(tl.p*100)}%`) : '속도 모름 → 반반';
+  const cell=(k,v,sub,hot)=>`<div class="tlc${hot?' hot':''}"><div class="k">${k}</div><div class="v">${fmtN(v)}</div>${sub?`<div class="s">${sub}</div>`:''}</div>`;
+  return `<div class="tline" aria-label="턴별 화력">
+    ${cell('1턴', tl.t1, `보장 ${fmtN(tl.t1g)} ~ 속도 맞춤 ${fmtN(tl.t1u)}<br>${esc(pTxt)}`, o.hot==='o')}
+    ${cell('2턴', tl.t2, '버프 깔린 평타 턴')}
+    ${cell('SB 턴', ev.sbTurn, ev.hasSB?'게이지 차면':'성도 없음')}
+    ${cell('AF 1회', ev.af, `콤보 ${(ev.avgCombo*100).toFixed(0)}%`)}
+  </div>`;
+}
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
 function cardHtml(x, key, o){
   const boss=o.boss, enemy=o.enemy, ref=o.ref, hot=o.hot, shared=!!x.shared;
@@ -732,6 +750,7 @@ function cardHtml(x, key, o){
       <div class="members">${order.map(i=>memHtml(x,i,key,o.focus,o.lockSet)).join('')}</div>
       <div class="setup" data-for="${key}" hidden></div>
       ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${muleLine(x)}</div>`}
+      ${timelineHtml(x, o)}
       <div class="metrics">
         ${metric('SB 턴 화력', ev.sbTurn, rel('sbTurn'), hot==='b')}
         ${metric('AF 1회 화력', ev.af, rel('af'), hot==='b')}
@@ -909,6 +928,13 @@ function turnPlanHtml(x, boss){
   team.forEach((c,i)=>{ const ts=(c.raw.tags||[]).join(' ')+' '+(c.cxWhy||[]).join(' ');
     if(/prayer|기도/.test(ts)) o1.push(`${nm(i)}: 기도 시작(유지)`); else if(/song|가창|노래/.test(ts)) o1.push(`${nm(i)}: 가창 시작(3턴마다 갱신)`); });
   dealers.forEach(i=>{ const c=team[i]; if(/축적|누적|스택|모드|상태/.test((c.cxWhy||[]).join(' '))) o1.push(`${nm(i)}: 축적·상태 준비 <span class="hint">${esc((c.raw.req_ko||c.raw.req||'').slice(0,60))}</span>`); });
+  { const tl = ev.tl;
+    if(tl && tl.givers && tl.givers.length && tl.t1u > tl.t1g*1.05){
+      const att = team.map((c,i)=>i).filter(i=>tl.actT1[i] && (shN[i]>=0.25||shSB[i]>=0.3));
+      const gv = tl.givers.filter(j=>!att.includes(j));
+      if(att.length && gv.length) o1.push(`속도 순서: 버퍼 ${gv.map(nm).join(', ')} → 딜러 ${att.map(nm).join(', ')} 순서여야(<b>버퍼가 더 빨라야</b>) 1턴 공격에 버프·디버프가 들어감 (1턴 딜 ${fmtN(tl.t1g)} → ${fmtN(tl.t1u)}) — 버퍼에 속도 글래스터·배지, 아니면 딜러는 2턴부터 본격 공격`);
+    }
+    o1.push('AF 중에는 누르는 순서대로 바로 행동하므로 버프 → 딜 순서를 직접 맞출 수 있음'); }
   if(!o1.length) o1.push('특별한 준비 없이 바로 공격');
   T.push(['1턴 · 세팅', o1]);
   // 2턴

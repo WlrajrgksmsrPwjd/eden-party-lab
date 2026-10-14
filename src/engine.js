@@ -346,6 +346,7 @@ function prepChar(c){
     persEl: (()=>{ const K={'火':'fire','水':'water','地':'earth','風':'wind','雷':'thunder','陰':'shade','晶':'crystal'}; const L=(ex.personality||[]).map(x=>K[x]).filter(Boolean); return L.length?L:(c.element||[]); })(),
     mpMain: mpx.main!=null ? mpx.main : null, mpBuff: mpx.buff!=null ? mpx.buff : null, mpSB: mpx.sb!=null ? mpx.sb : null,
     buffAct, buffTurns: tx.buff==null ? 3 : tx.buff, manifestMax: ex.manifest!=null ? ex.manifest : null,
+    buffHow: ex.buff_how || (partyHas ? 'skill' : 'none'),
     naR: Math.min(1, 1.6/Math.max(1.6, skillPow(c.main))),
     cx: cx.v, cxWhy: cx.why, rules: compileRules(c), pow, atkKind, atkWt: m0.weapon_type || (atkKind==='mag'?'magic':wt),
     id:c.id, raw:c, name:c.name_kr, elem:(c.element&&c.element[0])||'none', elems:c.element||[], weapon:c.weapon, wt,
@@ -854,6 +855,39 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
   }
   return any ? {per, trig, total:per.reduce((x,y)=>x+y,0)} : null;
 }
+/* ---------- 턴별 화력 (개전 1턴 · 2턴) ----------
+   일반 턴은 속도 순으로 행동하므로, 스킬로 거는 버프·디버프는 버퍼가 딜러보다 빨라야 1턴 딜에 들어간다.
+   1턴 보장: 패시브·개전 자동 버프와 개전 자동 존만. 1턴 속도 맞춤: 스킬 버프·디버프·존까지.
+   버프를 따로 거는 캐릭터는 1턴에 공격하지 않는다. 2턴: 버프가 다 깔린 상태에서 전원 공격.
+   속도: 빌드 코드의 속도가 있으면 버퍼가 딜러보다 빠른지로, 모르면 반반. */
+function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
+  const A = ev.A, fw = focusW(ctx&&ctx.focus);
+  const zs = ev.normal.zones || [{kind:'none',types:[],level:0,label:'존 없음'}];
+  const autoZ = zs.filter(z=>!z.level || z.how==='개전 자동');
+  const anyR = team.some(c=>c.rules), posSets = ev.posSets || null;
+  const cx = Object.assign({}, ctx, {flux:ev.flux});
+  const actT1 = team.map(c=>!c.buffAct); // 1턴에 공격하는 캐릭터
+  const sumCores = (cores, z, mask)=>cores.reduce((v,co,i)=>v + (mask&&!mask[i] ? 0 : applyZoneCap(co, z, S, cap, null)*fw(co)), 0);
+  // 보장: 스킬 버프·디버프 제거
+  const strip = team.map(c=> c.buffHow==='passive'||c.buffHow==='auto' ? Object.assign({}, c, {deb:{}}) : Object.assign({}, c, {party:{scope:'none'}, deb:{}, rules:null}));
+  let g=0, gz=null;
+  for(const z of autoZ){ const FX = strip.some(c=>c.rules) ? buildBF(strip,progs,'normal',z,A,posSets,null) : null;
+    const cores = strip.map((c,i)=>attackerCore(strip,i,progs,A,enemy,S,'normal',cx,FX,z)); const v=sumCores(cores, z, actT1); if(v>g){ g=v; gz=z; } }
+  // 속도 맞춤: 평상 턴 버프 전부, 존은 평상 턴 존
+  const nz = ev.normal.zone;
+  const FXn = anyR ? buildBF(team,progs,'normal',nz,A,posSets,null) : null;
+  const coresN = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FXn,nz));
+  const u = sumCores(coresN, nz, actT1);
+  const t2 = sumCores(coresN, nz, null);
+  // 속도 순서 확률: (버프를 주는 캐릭터 → 공격하는 캐릭터) 쌍 중 버퍼가 빠른 비율
+  const spd = progs.map(p=>p&&p.gear&&p.gear.spd ? p.gear.spd : 0);
+  const givers = team.map((c,i)=>i).filter(i=>!(team[i].buffHow==='passive'||team[i].buffHow==='auto') && (team[i].party&&team[i].party.scope!=='none' || Object.keys(team[i].deb||{}).length));
+  let pairs=0, fast=0, known=0;
+  for(const j of givers) for(let i=0;i<team.length;i++){ if(i===j || !actT1[i]) continue; pairs++; if(spd[j] && spd[i]){ known++; if(spd[j]>spd[i]) fast++; } else fast+=0.5; }
+  const p = pairs ? fast/pairs : 1;
+  const t1 = g + Math.max(0, u-g)*p;
+  return {t1, t1g:g, t1u:Math.max(g,u), t2, p, known:known===pairs && pairs>0, givers, z1:gz, actT1};
+}
 function evalTeam(team, progs, enemy, S, cap, ctx){
   const A = teamAgg(team);
   A.mule = muleShare(team, S, ctx);
@@ -922,8 +956,10 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   if(hasChain){ const FXa = anyR ? buildBF(team,progs,'af',nz,A,posSets,null) : null; afChain = chainCalc(team, progs, A, enemy, S, 'af', cx, FXa, nz, afCores, null, cap, avgCombo, fw); if(afChain) af += afChain.total; }
   const sbTurn = res.sb.total;
   const surv = survival(team, progs);
-  return {sbTurn, af, afChain, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
+  const out = {sbTurn, af, afChain, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A, posSets, sim, mule:A.mule};
+  if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; out.opener = tl.t1 + 0.5*tl.t2; }
+  return out;
 }
 /* 속성·공격 타입 지정: 지정과 맞는 공격만 화력으로 센다 */
 function focusMatch(co, f){
@@ -1062,7 +1098,7 @@ function buildPool(owned, locked, opts){
 function modeWeights(mode, boss, cw, pl){
   if(mode==='custom' && cw){ const b=Math.max(0,+cw.b||0), s=Math.max(0,+cw.s||0), t=Math.max(0,+cw.t||0), z=b+s+t||1; return {b:b/z, s:s/z, t:t/z}; }
   if(pl){ const w=modeWeights(mode, boss); if(pl.nokill) w.t+=0.25; if(pl.turns>0 && pl.turns<=10) w.b+=0.3; else if(pl.turns>0 && pl.turns<=15) w.b+=0.12; return w; }
-  if(mode==='burst') return {b:1,s:0,t:0};
+  if(mode==='burst' || mode==='opener') return {b:1,s:0,t:0};
   if(mode==='sustain') return {b:0,s:1,t:0};
   if(mode==='stability') return {b:0,s:0.4,t:0.6};
   if(mode==='weak') return {b:0.5,s:0.5,t:0};
@@ -1091,6 +1127,8 @@ async function optimize(input, onProgress){
   const {owned, locked=[], excluded=[], backLocked=[], mode, enemy, boss, settings, recommendedIds=[]} = input;
   const S = Object.assign({}, DEFAULT_SETTINGS, settings||{});
   const ctx = buildCtx(input, owned);
+  if(mode==='opener') ctx.timeline = true;
+  const BR = ev => mode==='opener' ? ev.opener : ev.burst; // 개전 속공은 1턴 + 2턴 절반
   const cap = input.cap;
   const ex = new Set(excluded.concat(backLocked));
   const own = owned.filter(o=>!ex.has(o.pc.id));
@@ -1117,7 +1155,7 @@ async function optimize(input, onProgress){
     const idxs = lockIdx.concat(cmb.map(k=>free[k]));
     const team = idxs.map(i=>pool[i].pc), progs = idxs.map(i=>pool[i].prog);
     const ev = evalTeam(team, progs, enemy, S, cap, ctx);
-    teams.push(idxs); raws.push(ev.burst, ev.sustain, ev.surv);
+    teams.push(idxs); raws.push(BR(ev), ev.sustain, ev.surv);
     seen.add(idxs.map(i=>pool[i].pc.id).sort().join());
     done++;
     if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(Math.min(0.85, done/total*0.85)); await new Promise(r=>setTimeout(r,0)); }
@@ -1145,7 +1183,7 @@ async function optimize(input, onProgress){
         seen.add(key);
         const team=mem.map(o=>o.pc), progs=mem.map(o=>o.prog);
         const ev = evalTeam(team, progs, enemy, S, cap, ctx);
-        teams.push(mem.map(o=>posOf.get(o.pc.id))); raws.push(ev.burst, ev.sustain, ev.surv);
+        teams.push(mem.map(o=>posOf.get(o.pc.id))); raws.push(BR(ev), ev.sustain, ev.surv);
         if(nMatch>=3) (deckIdx[fi]=deckIdx[fi]||[]).push(teams.length-1);
         if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(0.85+0.15*fi/FOC.length); await new Promise(r=>setTimeout(r,0)); }
       }
@@ -1165,7 +1203,7 @@ async function optimize(input, onProgress){
     for(const st of starts){
       let cur=st, curEv=null;
       { const tm=cur.map(i=>pool[i]); curEv=evalTeam(tm.map(o=>o.pc),tm.map(o=>o.prog),enemy,S,cap,ctx); }
-      let curSc=scoreOf(curEv.burst,curEv.sustain,curEv.surv);
+      let curSc=scoreOf(BR(curEv),curEv.sustain,curEv.surv);
       for(let pass=0;pass<2;pass++){
         let best=null;
         for(let k=0;k<4;k++){
@@ -1175,8 +1213,8 @@ async function optimize(input, onProgress){
             const nt=cur.slice(); nt[k]=pi;
             const key=nt.map(i=>pool[i].pc.id).sort().join(); if(seen.has(key)) continue; seen.add(key);
             const tm=nt.map(i=>pool[i]); const ev=evalTeam(tm.map(x=>x.pc),tm.map(x=>x.prog),enemy,S,cap,ctx);
-            teams.push(nt); raws.push(ev.burst, ev.sustain, ev.surv);
-            const sc=scoreOf(ev.burst,ev.sustain,ev.surv); if(sc>curSc+1e-9 && (!best||sc>best.sc)) best={nt,sc};
+            teams.push(nt); raws.push(BR(ev), ev.sustain, ev.surv);
+            const sc=scoreOf(BR(ev),ev.sustain,ev.surv); if(sc>curSc+1e-9 && (!best||sc>best.sc)) best={nt,sc};
             if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r=>setTimeout(r,0)); }
           }
         }
@@ -1193,7 +1231,7 @@ async function optimize(input, onProgress){
     if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue;
     const b=raws[3*i]/mb, s=raws[3*i+1]/ms, t=raws[3*i+2]/mt;
     let sc = w.b*b + w.s*s + w.t*t;
-    if(mode==='burst'||mode==='sustain'||mode==='weak') sc *= (t<0.25?0.85:1);
+    if(mode==='burst'||mode==='sustain'||mode==='weak'||mode==='opener') sc *= (t<0.25?0.85:1);
     scored.push([sc,i]);
   }
   scored.sort((a,b)=>b[0]-a[0]);
@@ -1244,7 +1282,7 @@ async function optimize(input, onProgress){
     // 후방 2명: 남은 보유 캐릭터 중 생존 기여 상위
     const {reserves, fixedBack} = pickReserves(team, progs, ev);
     return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topScore,
-      norm:{b:ev.burst/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss,
+      norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss,
       recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))};
   });
   // 속성덱·타입덱: 각 속성·타입에서 점수가 가장 높은 조합
@@ -1253,7 +1291,7 @@ async function optimize(input, onProgress){
   deckIdx.forEach((L,fi)=>{ if(!L||!L.length) return; let bi=-1, bs=-1;
     for(const i of L){ if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue; const b=raws[3*i]/mb, s=raws[3*i+1]/ms, tt=raws[3*i+2]/mt; let sc=w.b*b+w.s*s+w.t*tt; if((mode==='burst'||mode==='sustain'||mode==='weak') && tt<0.25) sc*=0.85; if(maxLv<4 && teamDifficulty(teams[i].map(k=>pool[k].pc)).lv>maxLv) continue; if(sc>bs){ bs=sc; bi=i; } }
     if(bi>=0){ const team=teams[bi].map(k=>pool[k].pc), progs=teams[bi].map(k=>pool[k].prog); const ev=evalTeam(team,progs,enemy,S,cap,ctx); const rv=pickReserves(team,progs,ev);
-      decks.push({focus:FOCL[fi], team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:ev.burst/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); } });
+      decks.push({focus:FOCL[fi], team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); } });
   decks.sort((a,b)=>b.score-a.score);
   return {results, decks, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus};
 }
@@ -1263,6 +1301,7 @@ async function perCharBest(input, onProgress){
   const {owned, excluded=[], backLocked=[], mode, enemy, boss, settings, recommendedIds=[]} = input;
   const S = Object.assign({}, DEFAULT_SETTINGS, settings||{});
   const ctx = buildCtx(input, owned);
+  if(mode==='opener') ctx.timeline = true;
   const cap = input.cap, maxLv = input.maxDiff||4;
   const ex = new Set(excluded.concat(backLocked));
   const own = owned.filter(o=>!ex.has(o.pc.id));
@@ -1279,7 +1318,7 @@ async function perCharBest(input, onProgress){
     let pen=1;
     if(mode==='boss') pen = needPenalty(ev,boss).f * (1+0.06*team.filter(c=>recSet.has(c.id)).length);
     T.push(...mem.map(o=>idxOf.get(o.pc.id)));
-    R.push(ev.burst, ev.sustain, ev.surv, pen, teamDifficulty(team).lv);
+    R.push(mode==='opener'?ev.opener:ev.burst, ev.sustain, ev.surv, pen, teamDifficulty(team).lv);
     return ev;
   };
   const n=pool.length; let total = n*(n-1)*(n-2)*(n-3)/24;
@@ -1301,7 +1340,7 @@ async function perCharBest(input, onProgress){
     if(R[5*i+4]>maxLv) continue;
     const b=R[5*i]/mb, sv=R[5*i+1]/ms, t=R[5*i+2]/mt;
     let sc = w.b*b + w.s*sv + w.t*t;
-    if(mode==='burst'||mode==='sustain'||mode==='weak') sc *= (t<0.25?0.85:1);
+    if(mode==='burst'||mode==='sustain'||mode==='weak'||mode==='opener') sc *= (t<0.25?0.85:1);
     sc *= R[5*i+3];
     for(let j=0;j<4;j++){ const k=T[4*i+j]; if(sc>bestSc[k]){ bestSc[k]=sc; bestI[k]=i; } }
   }
@@ -1317,6 +1356,6 @@ async function perCharBest(input, onProgress){
 
 const API = {ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
-  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX};
+  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);

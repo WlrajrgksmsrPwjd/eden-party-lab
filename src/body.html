@@ -25,6 +25,7 @@
           <label class="lbl">성향</label>
           <div class="seg" id="modeSeg">
             <button type="button" data-mode="burst">최고점 딜</button>
+            <button type="button" data-mode="opener">개전 속공</button>
             <button type="button" data-mode="sustain">지속 딜</button>
             <button type="button" data-mode="stability">안정성</button>
             <button type="button" data-mode="weak">약점 맞춤</button>
@@ -32,7 +33,7 @@
             <button type="button" data-mode="kesshitsu">결현현</button>
             <button type="button" data-mode="custom">직접 조절</button>
           </div>
-          <p class="hint" style="margin:6px 0 0">최고점 = 세팅 후 SB 턴 + AF 한 번 화력 · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력 · 결현현 = 결실 현현 서약 조건 · 직접 조절 = 공격성·유지력·안정성 비율</p>
+          <p class="hint" style="margin:6px 0 0">최고점 = 세팅 후 SB 턴 + AF 한 번 화력 · 개전 속공 = 1턴 딜 + 2턴 절반(속도 순서 반영) · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력 · 결현현 = 결실 현현 서약 조건 · 직접 조절 = 공격성·유지력·안정성 비율</p>
         </div>
         <div id="weightRow" hidden>
           <label class="lbl">성향 직접 조절 <span class="hint" style="letter-spacing:0;font-weight:400">1~100, 비율로 섞어서 점수를 매깁니다</span></label>
@@ -310,7 +311,8 @@
         </tbody></table></div>
         <h2>성향별 점수</h2>
         <ul>
-          <li><b>최고점 딜</b>: 버프·디버프·존을 다 걸어 둔 <b>세팅 후</b> SB 턴 화력 + AF 한 번 화력의 절반. 개전 1턴 딜이 아닙니다(1턴·2턴·AF를 나눈 턴별 화력은 준비 중).</li>
+          <li><b>최고점 딜</b>: 버프·디버프·존을 다 걸어 둔 <b>세팅 후</b> SB 턴 화력 + AF 한 번 화력의 절반. 개전 1턴 딜이 아닙니다.</li>
+          <li><b>개전 속공</b>: 1턴 딜 + 2턴 딜의 절반. 일반 턴은 속도 순으로 행동하므로, 스킬로 거는 버프·디버프는 버퍼가 딜러보다 빨라야 1턴 딜에 들어갑니다. <b>1턴 보장</b>은 패시브·개전 자동 버프와 개전 자동 존만, <b>속도 맞춤</b>은 스킬 버프·디버프·존까지 넣은 값이고, 버프를 따로 거는 캐릭터는 1턴에 공격하지 않는 것으로 봅니다. 보유 캐릭터에 빌드 코드를 넣으면 그 속도로 순서를 판정하고, 모르면 반반으로 섞습니다. SB는 게이지가 필요해 1턴에는 쓰지 않습니다.</li>
           <li><b>지속 딜</b>: 성도 스킬 없이 평상 턴 화력. 스킬 위력 조건(존·축적·편성 등)은 평상 턴에 맞을 확률로 계산합니다.</li>
           <li><b>안정성</b>: 생존력 60% + 지속 딜 40%. 생존력은 회복·배리어·해제·수호·도발·상태이상 무효·부활·적 완력/지성 디버프를 합산하고, 회복이 약한데 자해 캐릭터가 있으면 감점합니다.</li>
           <li><b>약점 맞춤</b>: 입력한 약점·내성 기준으로 최고점 50% + 지속 50%.</li>

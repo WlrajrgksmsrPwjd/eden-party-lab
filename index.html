@@ -377,6 +377,15 @@ a.lnk{display:inline-flex; align-items:center}
 .deckrow .dm{overflow-wrap:anywhere}
 .deckcard{margin-top:6px}
 
+/* 턴별 화력 */
+.tline{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; margin-top:10px}
+.tlc{border:1px solid var(--line); border-radius:8px; padding:6px 8px; background:var(--surface-2); min-width:0}
+.tlc.hot{border-color:var(--accent); background:var(--accent-soft)}
+.tlc .k{font-size:11.5px; color:var(--muted); font-weight:700}
+.tlc .v{font-family:var(--f-mono); font-size:14px; font-weight:600}
+.tlc .s{font-size:11px; color:var(--muted); overflow-wrap:anywhere}
+@media (max-width:560px){ .tline{grid-template-columns:repeat(2, minmax(0,1fr))} }
+
 </style></head><body>
 <header class="top">
   <div class="wrap">
@@ -405,6 +414,7 @@ a.lnk{display:inline-flex; align-items:center}
           <label class="lbl">성향</label>
           <div class="seg" id="modeSeg">
             <button type="button" data-mode="burst">최고점 딜</button>
+            <button type="button" data-mode="opener">개전 속공</button>
             <button type="button" data-mode="sustain">지속 딜</button>
             <button type="button" data-mode="stability">안정성</button>
             <button type="button" data-mode="weak">약점 맞춤</button>
@@ -412,7 +422,7 @@ a.lnk{display:inline-flex; align-items:center}
             <button type="button" data-mode="kesshitsu">결현현</button>
             <button type="button" data-mode="custom">직접 조절</button>
           </div>
-          <p class="hint" style="margin:6px 0 0">최고점 = 세팅 후 SB 턴 + AF 한 번 화력 · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력 · 결현현 = 결실 현현 서약 조건 · 직접 조절 = 공격성·유지력·안정성 비율</p>
+          <p class="hint" style="margin:6px 0 0">최고점 = 세팅 후 SB 턴 + AF 한 번 화력 · 개전 속공 = 1턴 딜 + 2턴 절반(속도 순서 반영) · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력 · 결현현 = 결실 현현 서약 조건 · 직접 조절 = 공격성·유지력·안정성 비율</p>
         </div>
         <div id="weightRow" hidden>
           <label class="lbl">성향 직접 조절 <span class="hint" style="letter-spacing:0;font-weight:400">1~100, 비율로 섞어서 점수를 매깁니다</span></label>
@@ -690,7 +700,8 @@ a.lnk{display:inline-flex; align-items:center}
         </tbody></table></div>
         <h2>성향별 점수</h2>
         <ul>
-          <li><b>최고점 딜</b>: 버프·디버프·존을 다 걸어 둔 <b>세팅 후</b> SB 턴 화력 + AF 한 번 화력의 절반. 개전 1턴 딜이 아닙니다(1턴·2턴·AF를 나눈 턴별 화력은 준비 중).</li>
+          <li><b>최고점 딜</b>: 버프·디버프·존을 다 걸어 둔 <b>세팅 후</b> SB 턴 화력 + AF 한 번 화력의 절반. 개전 1턴 딜이 아닙니다.</li>
+          <li><b>개전 속공</b>: 1턴 딜 + 2턴 딜의 절반. 일반 턴은 속도 순으로 행동하므로, 스킬로 거는 버프·디버프는 버퍼가 딜러보다 빨라야 1턴 딜에 들어갑니다. <b>1턴 보장</b>은 패시브·개전 자동 버프와 개전 자동 존만, <b>속도 맞춤</b>은 스킬 버프·디버프·존까지 넣은 값이고, 버프를 따로 거는 캐릭터는 1턴에 공격하지 않는 것으로 봅니다. 보유 캐릭터에 빌드 코드를 넣으면 그 속도로 순서를 판정하고, 모르면 반반으로 섞습니다. SB는 게이지가 필요해 1턴에는 쓰지 않습니다.</li>
           <li><b>지속 딜</b>: 성도 스킬 없이 평상 턴 화력. 스킬 위력 조건(존·축적·편성 등)은 평상 턴에 맞을 확률로 계산합니다.</li>
           <li><b>안정성</b>: 생존력 60% + 지속 딜 40%. 생존력은 회복·배리어·해제·수호·도발·상태이상 무효·부활·적 완력/지성 디버프를 합산하고, 회복이 약한데 자해 캐릭터가 있으면 감점합니다.</li>
           <li><b>약점 맞춤</b>: 입력한 약점·내성 기준으로 최고점 50% + 지속 50%.</li>
@@ -1694,6 +1705,7 @@ function prepChar(c){
     persEl: (()=>{ const K={'火':'fire','水':'water','地':'earth','風':'wind','雷':'thunder','陰':'shade','晶':'crystal'}; const L=(ex.personality||[]).map(x=>K[x]).filter(Boolean); return L.length?L:(c.element||[]); })(),
     mpMain: mpx.main!=null ? mpx.main : null, mpBuff: mpx.buff!=null ? mpx.buff : null, mpSB: mpx.sb!=null ? mpx.sb : null,
     buffAct, buffTurns: tx.buff==null ? 3 : tx.buff, manifestMax: ex.manifest!=null ? ex.manifest : null,
+    buffHow: ex.buff_how || (partyHas ? 'skill' : 'none'),
     naR: Math.min(1, 1.6/Math.max(1.6, skillPow(c.main))),
     cx: cx.v, cxWhy: cx.why, rules: compileRules(c), pow, atkKind, atkWt: m0.weapon_type || (atkKind==='mag'?'magic':wt),
     id:c.id, raw:c, name:c.name_kr, elem:(c.element&&c.element[0])||'none', elems:c.element||[], weapon:c.weapon, wt,
@@ -2202,6 +2214,39 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
   }
   return any ? {per, trig, total:per.reduce((x,y)=>x+y,0)} : null;
 }
+/* ---------- 턴별 화력 (개전 1턴 · 2턴) ----------
+   일반 턴은 속도 순으로 행동하므로, 스킬로 거는 버프·디버프는 버퍼가 딜러보다 빨라야 1턴 딜에 들어간다.
+   1턴 보장: 패시브·개전 자동 버프와 개전 자동 존만. 1턴 속도 맞춤: 스킬 버프·디버프·존까지.
+   버프를 따로 거는 캐릭터는 1턴에 공격하지 않는다. 2턴: 버프가 다 깔린 상태에서 전원 공격.
+   속도: 빌드 코드의 속도가 있으면 버퍼가 딜러보다 빠른지로, 모르면 반반. */
+function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
+  const A = ev.A, fw = focusW(ctx&&ctx.focus);
+  const zs = ev.normal.zones || [{kind:'none',types:[],level:0,label:'존 없음'}];
+  const autoZ = zs.filter(z=>!z.level || z.how==='개전 자동');
+  const anyR = team.some(c=>c.rules), posSets = ev.posSets || null;
+  const cx = Object.assign({}, ctx, {flux:ev.flux});
+  const actT1 = team.map(c=>!c.buffAct); // 1턴에 공격하는 캐릭터
+  const sumCores = (cores, z, mask)=>cores.reduce((v,co,i)=>v + (mask&&!mask[i] ? 0 : applyZoneCap(co, z, S, cap, null)*fw(co)), 0);
+  // 보장: 스킬 버프·디버프 제거
+  const strip = team.map(c=> c.buffHow==='passive'||c.buffHow==='auto' ? Object.assign({}, c, {deb:{}}) : Object.assign({}, c, {party:{scope:'none'}, deb:{}, rules:null}));
+  let g=0, gz=null;
+  for(const z of autoZ){ const FX = strip.some(c=>c.rules) ? buildBF(strip,progs,'normal',z,A,posSets,null) : null;
+    const cores = strip.map((c,i)=>attackerCore(strip,i,progs,A,enemy,S,'normal',cx,FX,z)); const v=sumCores(cores, z, actT1); if(v>g){ g=v; gz=z; } }
+  // 속도 맞춤: 평상 턴 버프 전부, 존은 평상 턴 존
+  const nz = ev.normal.zone;
+  const FXn = anyR ? buildBF(team,progs,'normal',nz,A,posSets,null) : null;
+  const coresN = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FXn,nz));
+  const u = sumCores(coresN, nz, actT1);
+  const t2 = sumCores(coresN, nz, null);
+  // 속도 순서 확률: (버프를 주는 캐릭터 → 공격하는 캐릭터) 쌍 중 버퍼가 빠른 비율
+  const spd = progs.map(p=>p&&p.gear&&p.gear.spd ? p.gear.spd : 0);
+  const givers = team.map((c,i)=>i).filter(i=>!(team[i].buffHow==='passive'||team[i].buffHow==='auto') && (team[i].party&&team[i].party.scope!=='none' || Object.keys(team[i].deb||{}).length));
+  let pairs=0, fast=0, known=0;
+  for(const j of givers) for(let i=0;i<team.length;i++){ if(i===j || !actT1[i]) continue; pairs++; if(spd[j] && spd[i]){ known++; if(spd[j]>spd[i]) fast++; } else fast+=0.5; }
+  const p = pairs ? fast/pairs : 1;
+  const t1 = g + Math.max(0, u-g)*p;
+  return {t1, t1g:g, t1u:Math.max(g,u), t2, p, known:known===pairs && pairs>0, givers, z1:gz, actT1};
+}
 function evalTeam(team, progs, enemy, S, cap, ctx){
   const A = teamAgg(team);
   A.mule = muleShare(team, S, ctx);
@@ -2270,8 +2315,10 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   if(hasChain){ const FXa = anyR ? buildBF(team,progs,'af',nz,A,posSets,null) : null; afChain = chainCalc(team, progs, A, enemy, S, 'af', cx, FXa, nz, afCores, null, cap, avgCombo, fw); if(afChain) af += afChain.total; }
   const sbTurn = res.sb.total;
   const surv = survival(team, progs);
-  return {sbTurn, af, afChain, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
+  const out = {sbTurn, af, afChain, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A, posSets, sim, mule:A.mule};
+  if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; out.opener = tl.t1 + 0.5*tl.t2; }
+  return out;
 }
 /* 속성·공격 타입 지정: 지정과 맞는 공격만 화력으로 센다 */
 function focusMatch(co, f){
@@ -2410,7 +2457,7 @@ function buildPool(owned, locked, opts){
 function modeWeights(mode, boss, cw, pl){
   if(mode==='custom' && cw){ const b=Math.max(0,+cw.b||0), s=Math.max(0,+cw.s||0), t=Math.max(0,+cw.t||0), z=b+s+t||1; return {b:b/z, s:s/z, t:t/z}; }
   if(pl){ const w=modeWeights(mode, boss); if(pl.nokill) w.t+=0.25; if(pl.turns>0 && pl.turns<=10) w.b+=0.3; else if(pl.turns>0 && pl.turns<=15) w.b+=0.12; return w; }
-  if(mode==='burst') return {b:1,s:0,t:0};
+  if(mode==='burst' || mode==='opener') return {b:1,s:0,t:0};
   if(mode==='sustain') return {b:0,s:1,t:0};
   if(mode==='stability') return {b:0,s:0.4,t:0.6};
   if(mode==='weak') return {b:0.5,s:0.5,t:0};
@@ -2439,6 +2486,8 @@ async function optimize(input, onProgress){
   const {owned, locked=[], excluded=[], backLocked=[], mode, enemy, boss, settings, recommendedIds=[]} = input;
   const S = Object.assign({}, DEFAULT_SETTINGS, settings||{});
   const ctx = buildCtx(input, owned);
+  if(mode==='opener') ctx.timeline = true;
+  const BR = ev => mode==='opener' ? ev.opener : ev.burst; // 개전 속공은 1턴 + 2턴 절반
   const cap = input.cap;
   const ex = new Set(excluded.concat(backLocked));
   const own = owned.filter(o=>!ex.has(o.pc.id));
@@ -2465,7 +2514,7 @@ async function optimize(input, onProgress){
     const idxs = lockIdx.concat(cmb.map(k=>free[k]));
     const team = idxs.map(i=>pool[i].pc), progs = idxs.map(i=>pool[i].prog);
     const ev = evalTeam(team, progs, enemy, S, cap, ctx);
-    teams.push(idxs); raws.push(ev.burst, ev.sustain, ev.surv);
+    teams.push(idxs); raws.push(BR(ev), ev.sustain, ev.surv);
     seen.add(idxs.map(i=>pool[i].pc.id).sort().join());
     done++;
     if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(Math.min(0.85, done/total*0.85)); await new Promise(r=>setTimeout(r,0)); }
@@ -2493,7 +2542,7 @@ async function optimize(input, onProgress){
         seen.add(key);
         const team=mem.map(o=>o.pc), progs=mem.map(o=>o.prog);
         const ev = evalTeam(team, progs, enemy, S, cap, ctx);
-        teams.push(mem.map(o=>posOf.get(o.pc.id))); raws.push(ev.burst, ev.sustain, ev.surv);
+        teams.push(mem.map(o=>posOf.get(o.pc.id))); raws.push(BR(ev), ev.sustain, ev.surv);
         if(nMatch>=3) (deckIdx[fi]=deckIdx[fi]||[]).push(teams.length-1);
         if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(0.85+0.15*fi/FOC.length); await new Promise(r=>setTimeout(r,0)); }
       }
@@ -2513,7 +2562,7 @@ async function optimize(input, onProgress){
     for(const st of starts){
       let cur=st, curEv=null;
       { const tm=cur.map(i=>pool[i]); curEv=evalTeam(tm.map(o=>o.pc),tm.map(o=>o.prog),enemy,S,cap,ctx); }
-      let curSc=scoreOf(curEv.burst,curEv.sustain,curEv.surv);
+      let curSc=scoreOf(BR(curEv),curEv.sustain,curEv.surv);
       for(let pass=0;pass<2;pass++){
         let best=null;
         for(let k=0;k<4;k++){
@@ -2523,8 +2572,8 @@ async function optimize(input, onProgress){
             const nt=cur.slice(); nt[k]=pi;
             const key=nt.map(i=>pool[i].pc.id).sort().join(); if(seen.has(key)) continue; seen.add(key);
             const tm=nt.map(i=>pool[i]); const ev=evalTeam(tm.map(x=>x.pc),tm.map(x=>x.prog),enemy,S,cap,ctx);
-            teams.push(nt); raws.push(ev.burst, ev.sustain, ev.surv);
-            const sc=scoreOf(ev.burst,ev.sustain,ev.surv); if(sc>curSc+1e-9 && (!best||sc>best.sc)) best={nt,sc};
+            teams.push(nt); raws.push(BR(ev), ev.sustain, ev.surv);
+            const sc=scoreOf(BR(ev),ev.sustain,ev.surv); if(sc>curSc+1e-9 && (!best||sc>best.sc)) best={nt,sc};
             if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r=>setTimeout(r,0)); }
           }
         }
@@ -2541,7 +2590,7 @@ async function optimize(input, onProgress){
     if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue;
     const b=raws[3*i]/mb, s=raws[3*i+1]/ms, t=raws[3*i+2]/mt;
     let sc = w.b*b + w.s*s + w.t*t;
-    if(mode==='burst'||mode==='sustain'||mode==='weak') sc *= (t<0.25?0.85:1);
+    if(mode==='burst'||mode==='sustain'||mode==='weak'||mode==='opener') sc *= (t<0.25?0.85:1);
     scored.push([sc,i]);
   }
   scored.sort((a,b)=>b[0]-a[0]);
@@ -2592,7 +2641,7 @@ async function optimize(input, onProgress){
     // 후방 2명: 남은 보유 캐릭터 중 생존 기여 상위
     const {reserves, fixedBack} = pickReserves(team, progs, ev);
     return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topScore,
-      norm:{b:ev.burst/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss,
+      norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss,
       recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))};
   });
   // 속성덱·타입덱: 각 속성·타입에서 점수가 가장 높은 조합
@@ -2601,7 +2650,7 @@ async function optimize(input, onProgress){
   deckIdx.forEach((L,fi)=>{ if(!L||!L.length) return; let bi=-1, bs=-1;
     for(const i of L){ if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue; const b=raws[3*i]/mb, s=raws[3*i+1]/ms, tt=raws[3*i+2]/mt; let sc=w.b*b+w.s*s+w.t*tt; if((mode==='burst'||mode==='sustain'||mode==='weak') && tt<0.25) sc*=0.85; if(maxLv<4 && teamDifficulty(teams[i].map(k=>pool[k].pc)).lv>maxLv) continue; if(sc>bs){ bs=sc; bi=i; } }
     if(bi>=0){ const team=teams[bi].map(k=>pool[k].pc), progs=teams[bi].map(k=>pool[k].prog); const ev=evalTeam(team,progs,enemy,S,cap,ctx); const rv=pickReserves(team,progs,ev);
-      decks.push({focus:FOCL[fi], team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:ev.burst/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); } });
+      decks.push({focus:FOCL[fi], team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); } });
   decks.sort((a,b)=>b.score-a.score);
   return {results, decks, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus};
 }
@@ -2611,6 +2660,7 @@ async function perCharBest(input, onProgress){
   const {owned, excluded=[], backLocked=[], mode, enemy, boss, settings, recommendedIds=[]} = input;
   const S = Object.assign({}, DEFAULT_SETTINGS, settings||{});
   const ctx = buildCtx(input, owned);
+  if(mode==='opener') ctx.timeline = true;
   const cap = input.cap, maxLv = input.maxDiff||4;
   const ex = new Set(excluded.concat(backLocked));
   const own = owned.filter(o=>!ex.has(o.pc.id));
@@ -2627,7 +2677,7 @@ async function perCharBest(input, onProgress){
     let pen=1;
     if(mode==='boss') pen = needPenalty(ev,boss).f * (1+0.06*team.filter(c=>recSet.has(c.id)).length);
     T.push(...mem.map(o=>idxOf.get(o.pc.id)));
-    R.push(ev.burst, ev.sustain, ev.surv, pen, teamDifficulty(team).lv);
+    R.push(mode==='opener'?ev.opener:ev.burst, ev.sustain, ev.surv, pen, teamDifficulty(team).lv);
     return ev;
   };
   const n=pool.length; let total = n*(n-1)*(n-2)*(n-3)/24;
@@ -2649,7 +2699,7 @@ async function perCharBest(input, onProgress){
     if(R[5*i+4]>maxLv) continue;
     const b=R[5*i]/mb, sv=R[5*i+1]/ms, t=R[5*i+2]/mt;
     let sc = w.b*b + w.s*sv + w.t*t;
-    if(mode==='burst'||mode==='sustain'||mode==='weak') sc *= (t<0.25?0.85:1);
+    if(mode==='burst'||mode==='sustain'||mode==='weak'||mode==='opener') sc *= (t<0.25?0.85:1);
     sc *= R[5*i+3];
     for(let j=0;j<4;j++){ const k=T[4*i+j]; if(sc>bestSc[k]){ bestSc[k]=sc; bestI[k]=i; } }
   }
@@ -2665,7 +2715,7 @@ async function perCharBest(input, onProgress){
 
 const API = {ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
-  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX};
+  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);
 
@@ -3305,7 +3355,7 @@ async function runPlan(){
 }
 
 function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e8) return (v/1e8).toFixed(2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
-const MODE_KR={burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
+const MODE_KR={opener:'개전 속공',burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
 const RES = new Map(); // 카드 키 → 결과 (추천 세팅 패널용)
 function teamWarns(x, boss, enemy, ex){
   const ev=x.ev, sbz=ev.sb.zone;
@@ -3342,7 +3392,7 @@ function memHtml(x, i, key, focus, lockSet){
     <div class="tap">추천 세팅 ▾</div>
   </div>`;
 }
-const HOT = {burst:'b',sustain:'s',stability:'t',weak:'s',boss:'',kesshitsu:'',custom:''};
+const HOT = {opener:'o',burst:'b',sustain:'s',stability:'t',weak:'s',boss:'',kesshitsu:'',custom:''};
 function renderResults(r, boss, enemy, mode){
   const P=state.plan, out=$('#results');
   mode = mode||P.mode;
@@ -3379,6 +3429,24 @@ function toggleDeck(btn){
   if(!box.innerHTML){ const o=DECKCTX[key]; box.innerHTML=cardHtml(rec.x, key, o).replace('<div class="rank">'+rec.x.rank+'<small>위</small></div>', `<div class="rank" style="font-size:15px">${esc(focusLabel(rec.x.focus))}</div>`); }
   box.hidden=false;
 }
+/* 턴별 화력 줄: 1턴(보장~속도 맞춤) · 2턴 · SB · AF */
+function tlOf(x, o){
+  const ev=x.ev; if(ev.tl) return ev.tl;
+  const boss=o&&o.boss;
+  try{ ev.tl = E.turnTimeline(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, {focus:o&&o.focus||null, needPierce:!!(boss&&boss.needs&&boss.needs.barrier_pierce)}, ev); }catch(e){ ev.tl=null; }
+  return ev.tl;
+}
+function timelineHtml(x, o){
+  const tl=tlOf(x,o), ev=x.ev; if(!tl) return '';
+  const pTxt = tl.known ? (tl.p>=0.99?'버퍼가 모두 빠름':tl.p<=0.01?'버퍼가 모두 느림':`버퍼가 빠른 쌍 ${Math.round(tl.p*100)}%`) : '속도 모름 → 반반';
+  const cell=(k,v,sub,hot)=>`<div class="tlc${hot?' hot':''}"><div class="k">${k}</div><div class="v">${fmtN(v)}</div>${sub?`<div class="s">${sub}</div>`:''}</div>`;
+  return `<div class="tline" aria-label="턴별 화력">
+    ${cell('1턴', tl.t1, `보장 ${fmtN(tl.t1g)} ~ 속도 맞춤 ${fmtN(tl.t1u)}<br>${esc(pTxt)}`, o.hot==='o')}
+    ${cell('2턴', tl.t2, '버프 깔린 평타 턴')}
+    ${cell('SB 턴', ev.sbTurn, ev.hasSB?'게이지 차면':'성도 없음')}
+    ${cell('AF 1회', ev.af, `콤보 ${(ev.avgCombo*100).toFixed(0)}%`)}
+  </div>`;
+}
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
 function cardHtml(x, key, o){
   const boss=o.boss, enemy=o.enemy, ref=o.ref, hot=o.hot, shared=!!x.shared;
@@ -3405,6 +3473,7 @@ function cardHtml(x, key, o){
       <div class="members">${order.map(i=>memHtml(x,i,key,o.focus,o.lockSet)).join('')}</div>
       <div class="setup" data-for="${key}" hidden></div>
       ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${muleLine(x)}</div>`}
+      ${timelineHtml(x, o)}
       <div class="metrics">
         ${metric('SB 턴 화력', ev.sbTurn, rel('sbTurn'), hot==='b')}
         ${metric('AF 1회 화력', ev.af, rel('af'), hot==='b')}
@@ -3582,6 +3651,13 @@ function turnPlanHtml(x, boss){
   team.forEach((c,i)=>{ const ts=(c.raw.tags||[]).join(' ')+' '+(c.cxWhy||[]).join(' ');
     if(/prayer|기도/.test(ts)) o1.push(`${nm(i)}: 기도 시작(유지)`); else if(/song|가창|노래/.test(ts)) o1.push(`${nm(i)}: 가창 시작(3턴마다 갱신)`); });
   dealers.forEach(i=>{ const c=team[i]; if(/축적|누적|스택|모드|상태/.test((c.cxWhy||[]).join(' '))) o1.push(`${nm(i)}: 축적·상태 준비 <span class="hint">${esc((c.raw.req_ko||c.raw.req||'').slice(0,60))}</span>`); });
+  { const tl = ev.tl;
+    if(tl && tl.givers && tl.givers.length && tl.t1u > tl.t1g*1.05){
+      const att = team.map((c,i)=>i).filter(i=>tl.actT1[i] && (shN[i]>=0.25||shSB[i]>=0.3));
+      const gv = tl.givers.filter(j=>!att.includes(j));
+      if(att.length && gv.length) o1.push(`속도 순서: 버퍼 ${gv.map(nm).join(', ')} → 딜러 ${att.map(nm).join(', ')} 순서여야(<b>버퍼가 더 빨라야</b>) 1턴 공격에 버프·디버프가 들어감 (1턴 딜 ${fmtN(tl.t1g)} → ${fmtN(tl.t1u)}) — 버퍼에 속도 글래스터·배지, 아니면 딜러는 2턴부터 본격 공격`);
+    }
+    o1.push('AF 중에는 누르는 순서대로 바로 행동하므로 버프 → 딜 순서를 직접 맞출 수 있음'); }
   if(!o1.length) o1.push('특별한 준비 없이 바로 공격');
   T.push(['1턴 · 세팅', o1]);
   // 2턴
