@@ -69,10 +69,26 @@ if os.path.exists(VB):
 /* 에덴 편성 연구실에서 builder.html#who=캐릭터&wt=무기종 으로 열면 캐릭터 이름과 무기 종류를 채운다 */
 (function(){ try{
   const h=new URLSearchParams(location.hash.slice(1)), who=h.get('who'), wt=h.get('wt');
-  if(!who && !wt) return;
+  if(!who && !wt && !h.get('code')) return;
   const el=document.getElementById('who');
   if(who && el){ el.value=who; el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true})); }
   if(wt && typeof TYPES!=='undefined' && TYPES.includes(wt) && typeof equip!=='undefined' && !equip.weapon){ curType=wt; cat='weapon'; }
+  // 계산 조건(속성·위력·타수·ZONE·크리율 보정 등): s=JSON
+  const sj=h.get('s');
+  if(sj){ try{ const o=JSON.parse(sj); for(const k in o){ const el=document.getElementById(k); if(!el) continue; if(el.type==='checkbox') el.checked=!!o[k]; else el.value=o[k]; } }catch(e){} }
+  // 빌드 코드(AEB1): 스탯·장비·연성·P글래 설정을 그대로 장착
+  const code=h.get('code');
+  if(code && typeof parseBuild==='function'){
+    const R=parseBuild(code);
+    if(R && !R.err){
+      if(R.st) for(const k in R.st){ const el=document.getElementById(k); if(el && R.st[k]!=null) el.value=R.st[k]; }
+      if(R.who && el) el.value=R.who;
+      const fate=+(document.getElementById('fate')||{}).value||0;
+      for(const k of OPT_ALL){ if(lockOf(k,fate)) continue; equip[k]=R.equip[k]||null; if(GS.includes(k)) ore[k]=R.ore[k]||''; }
+      curType = equip.weapon ? ITEMS[equip.weapon].t : (R.wt||curType);
+      if(R.p && R.p.f) for(const k of ['pMode','pDmg','pElem','pAddDmg','pAddElem']){ const e2=document.getElementById(k); if(e2 && R.p.f[k]!=null) e2.value=R.p.f[k]; }
+    }
+  }
   if(typeof render==='function') render();
 }catch(e){} })();
 </script>

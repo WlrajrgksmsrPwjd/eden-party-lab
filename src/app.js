@@ -997,9 +997,32 @@ function renderRoster(){
     const ta={SS:0,S:1,A:2,B:3,C:4}[a.tier]??5, tb={SS:0,S:1,A:2,B:3,C:4}[b.tier]??5;
     return ta-tb || (b.score-a.score) || a.name.localeCompare(b.name,'ko');
   });
-  $('#rcount').textContent = `보유 ${ownedList().length}명 · 표시 ${list.length}명 / 전체 ${prepped.length}명`;
-  $('#tabOwnN').textContent = ownedList().length;
+  rosterShown = list.map(c=>c.id);
   $('#roster').innerHTML = list.map(rowHtml).join('') || `<div class="empty">조건에 맞는 캐릭터가 없습니다.</div>`;
+  $('#selNoneConfirm').hidden = true;
+  updateRosterCount();
+}
+let rosterShown = [];
+/* 보유 수 · 전체 선택 체크 상태 (표시된 캐릭터 기준) */
+function updateRosterCount(){
+  const own = ownedList().length, n = rosterShown.length, k = rosterShown.filter(id=>state.owned[id]).length;
+  $('#rcount').textContent = `보유 ${own}명 · 표시 ${n}명 / 전체 ${prepped.length}명`;
+  $('#tabOwnN').textContent = own;
+  const cb = $('#selAll'), F = rosterFilters(), filtered = !!(F.q||F.el||F.wp||F.al||F.tier||F.own);
+  cb.checked = n>0 && k===n; cb.indeterminate = k>0 && k<n; cb.disabled = n===0;
+  $('#selAllLbl').textContent = filtered ? `표시된 ${n}명 전체 선택` : `전체 선택 (${n}명)`;
+}
+function selectAllShown(on){
+  if(on){
+    for(const id of rosterShown) if(!state.owned[id]) state.owned[id]={t:0,s:!!byId.get(id).stellar,m:0,g:'none',gl:null};
+    touchRoster(); renderRoster(); return;
+  }
+  const lose = rosterShown.filter(id=>state.owned[id]);
+  if(!lose.length){ updateRosterCount(); return; }
+  // 해제는 입력한 천명치·글래스터도 함께 지워지므로 한 번 더 확인
+  updateRosterCount();
+  $('#selNoneMsg').textContent = `표시된 보유 ${lose.length}명을 해제할까요? 천명치·글래스터 입력도 지워집니다.`;
+  $('#selNoneConfirm').hidden = false;
 }
 function rowHtml(c){
   const o=state.owned[c.id];
@@ -1031,7 +1054,7 @@ function onRosterChange(e){
     else delete state.owned[id];
     touchRoster();
     const row=t.closest('.row'); row.outerHTML=rowHtml(byId.get(id));
-    $('#rcount').textContent = `보유 ${ownedList().length}명`; $('#tabOwnN').textContent = ownedList().length;
+    updateRosterCount();
     return;
   }
   const row=t.closest('.row'); if(!row||!t.dataset.f) return;
@@ -1299,6 +1322,9 @@ function bind(){
   ['#rq','#rel','#rwp','#ral','#rtier','#rown'].forEach(s=>$(s).addEventListener('input',renderRoster));
   $('#roster').addEventListener('change',onRosterChange);
   $('#bulkTop').addEventListener('click',()=>{ for(const c of prepped) if((c.tier==='SS'||c.tier==='S')&&!state.owned[c.id]) state.owned[c.id]={t:0,s:!!c.stellar,m:0,g:'none',gl:null}; touchRoster(); renderRoster(); });
+  $('#selAll').addEventListener('change',e=>selectAllShown(e.target.checked));
+  $('#selNoneYes').addEventListener('click',()=>{ for(const id of rosterShown) delete state.owned[id]; touchRoster(); renderRoster(); });
+  $('#selNoneNo').addEventListener('click',()=>{ $('#selNoneConfirm').hidden=true; updateRosterCount(); });
   $('#bulkNone').addEventListener('click',()=>{ $('#bulkConfirm').hidden=false; });
   $('#bulkNoneYes').addEventListener('click',()=>{ state.owned={}; state.sample=false; save(); $('#bulkConfirm').hidden=true; renderRoster(); });
   $('#bulkNoneNo').addEventListener('click',()=>{ $('#bulkConfirm').hidden=true; });
