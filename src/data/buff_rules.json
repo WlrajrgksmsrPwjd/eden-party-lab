@@ -13,7 +13,7 @@
   "shion_es": [{"f":["elat"],"to":{"pos":"one","side":"r"},"when":{"zone":["slash"]},"me":1}],
   "velette_as": [{"f":["stat","elat"],"when":{"zone":["thunder"]},"e":0.5},{"f":["mf"],"when":{"zone":["thunder"]}},{"f":["allel"],"when":{"t":0.7}},{"f":["weak"],"when":{"t":0.45}},{"f":["critd"],"when":{"sb":true}},{"f":["pierce"],"when":{"zone":["thunder"],"zlv":3}}],
   "velette": [{"f":["stat","elat","critd"],"when":{"zone":["thunder"]},"e":0.5}],
-  "linaria": [{"f":["link"],"to":{"weap":["sword","ax","katana","lance","bow"]}}],
+  "linaria": [{"f":["link"],"to":{"weap":["sword","ax","katana","lance","bow"]}},{"f":["kou"],"when":{"zone":["slash_pierce"],"req":{"kind":"weap","vals":["lance","bow"],"n":1,"others":true}},"x":1,"e":0.3}],
   "hismena_es": [{"f":["allel","crit"],"when":{"zone":["slash_pierce"],"t":0.7}},{"f":["pierce"],"when":{"sb":true}}],
   "flammelapis_es": [{"f":["int","spd"],"when":{"zone":["slash_magic"]}}],
   "dalnis_as": [{"f":["stat","crit","critd","sf","oc"],"to":{"pers":["剣","弓","槍"]}},{"f":["critd"],"when":{"pain":true},"e":0.5},{"f":["stat","critd","sf","oc"],"when":{"t":0.85}},{"f":["crit"],"when":{"t":0.7}},{"f":["link"],"to":{"pos":"one","side":"r"},"when":{"t":0.85}}],

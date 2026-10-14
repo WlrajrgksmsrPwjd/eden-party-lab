@@ -577,7 +577,7 @@
   "self_buff": {"pwr": 100, "int": 0, "spd": 100, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 300, "crit_dmg": 100,
     "over_crit": true, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "연계는 검·도끼·도·창·활 장비자", "pwr": 100, "int": 0, "spd": 100, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 300, "crit_dmg": 100, "over_crit": true, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
+    "pwr_flat": 120, "crit_rate": 300, "crit_dmg": 100, "over_crit": true, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
     "weak_dmg": 0, "multihit": false, "link": true, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {"slash": 25, "pierce": 25}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "slash_pierce", "awakened": true, "condition": "コンフォートゾーン/VC로 双撃陣・斬突 전개. 전투 시작 시 極・双撃陣・斬突 자동 전개"},

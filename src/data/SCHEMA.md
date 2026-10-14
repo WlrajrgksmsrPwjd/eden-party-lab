@@ -102,7 +102,7 @@
 {"f":["stat","weap"], "to":{"elem":["water"]}, "when":{"zone":["thunder"],"zlv":2}, "x":1, "e":0.5, "me":1}
 ```
 
-- `f` 대상 버프 묶음: `stat`(pwr·int·spd) `pwr` `int` `spd` `elem`(전속성+속성) `allel`(전속성) `elat`(속성) `elat:fire`(특정 속성만) `weap` `crit` `critd` `sf` `mf` `focus`(sf+mf) `ot` `eagle` `oc` `mh` `xhit` `pierce` `weak` `link` `*`(전부)
+- `f` 대상 버프 묶음: `stat`(pwr·int·spd) `pwr` `int` `spd` `elem`(전속성+속성) `allel`(전속성) `elat`(속성) `elat:fire`(특정 속성만) `weap` `crit` `critd` `sf` `mf` `focus`(sf+mf) `ot` `eagle` `oc` `mh` `xhit` `pierce` `weak` `link` `kou`(리나리아 巧撃: 크리율·오버크리·완력 고정값 `pwr_flat`) `*`(전부)
 - `to` 받는 사람 조건: `pos`(`self` `one` `adj` `selfone` `selfadj` `others`) + `side`(`r` 오른쪽/`l` 왼쪽), `elem` `weap` `wt` `align` `kind`(phys/mag) `kof` `pers`(퍼스널리티 일본어 원문 배열, extra 데이터로 판정), `p`(판정 불가 조건 → 맞을 확률)
 - `when` 발동 조건: `zone`(`any` `elem` `weap` 또는 존 키 배열: fire…crystal, slash/pierce/blunt/magic, slash_pierce, slash_magic, all(성해진), all_weapon(섬격진), moonlight), `zlv`(2=극/어나더 존, 3=절), `sb`, `af`, `req`(전방 구성, parseReq 형식. 퍼스널리티는 `{"kind":"pers","vals":["アルカディア"],"n":2}`), `reqAny`(편성 조건 중 하나만 맞아도), `pain`(파티에 독·페인), `up`(켜져 있는 비율), `t`(짧은 버프: SB·AF 땐 100%, 평상 턴엔 이 비율)
 - `x` 조건 충족 시 배율(기본 1), `e` 미충족 시 배율(기본 0), `en` 평상 턴에만 쓰는 미충족 배율(지속 턴이 짧아 SB·AF 땐 다 받지만 평상엔 일부만), `me` 1이면 버퍼 자신은 조건과 무관하게 `x`

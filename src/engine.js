@@ -71,14 +71,14 @@ const focusOf = (kind, mp) => Math.min(2.5, Math.max(0, mp||0)*(kind==='mag'?FOC
    스탯 버프는 공격력(속도 기반은 기준 스탯도)에, 방어 디버프는 방어에 들어간다. 엑셀과 무작위 600건 대조 오차 0.65% 이내 */
 const DING = {J3:140, J4:174, J5:174};
 const G5_OF = (kind, stat) => kind==='mag' ? (stat==='pwr'?'힘기반 마법':stat==='spd'?'속도기반 마법':'마법공격') : (stat==='int'?'지능기반 물리':stat==='spd'?'속도기반 물리':'물리공격');
-function dingHit(D, g5, el, b, d){
+function dingHit(D, g5, el, b, d, fs){ // fs: 완력 고정값 버프(14행, 공격력에 더한 뒤 % 버프)
   const phys = g5==='물리공격'||g5==='지능기반 물리'||g5==='속도기반 물리';
-  let X3,X5,X6,X7;
-  if(g5==='물리공격'){ X3=D.str; X5=D.atk*(1+b); X6=D.mag; X7=D.mag; }
+  let X3,X5,X6,X7; fs = +fs||0;
+  if(g5==='물리공격'){ X3=D.str; X5=(D.atk+fs)*(1+b); X6=D.mag; X7=D.mag; }
   else if(g5==='지능기반 물리'){ X3=D.int; X5=D.mag*(1+b); X6=D.int; X7=D.int*(1+b); }
   else if(g5==='속도기반 물리'){ X3=D.spd*(1+b); X5=(D.atk-D.str+D.spd)*(1+b); X6=D.mag; X7=D.spd*(1+b)+D.mag-D.int; }
   else if(g5==='마법공격'){ X3=D.int; X5=D.mag*(1+b); X6=D.int; }
-  else if(g5==='힘기반 마법'){ X3=D.str; X5=D.atk*(1+b); X6=D.int; }
+  else if(g5==='힘기반 마법'){ X3=D.str; X5=(D.atk+fs)*(1+b); X6=D.int; }
   else { X3=D.spd*(1+b); X5=(D.atk-D.str+D.spd)*(1+b); X6=D.int; }
   const def=(phys?DING.J4:DING.J5)*(1-Math.min(1,Math.max(0,d))), k3=1+X3/32, sd=phys?31.5:63;
   const X12 = el ? 1+(Math.sqrt(X6*10+16)-4)/64 : 1;
@@ -250,7 +250,8 @@ const FG = {
   weap:['weapon_atk'], crit:['crit_rate'], critd:['crit_dmg'],
   sf:['singular_focus'], mf:['mental_focus'], focus:['singular_focus','mental_focus'],
   ot:['overthrow'], eagle:['eagle_eyes'], oc:['over_crit'], mh:['multihit'], xhit:['extra_hit'],
-  pierce:['barrier_pierce'], weak:['weak_dmg'], link:['link']
+  pierce:['barrier_pierce'], weak:['weak_dmg'], link:['link'],
+  kou:['crit_rate','over_crit','pwr_flat'] // 리나리아 巧撃: 크리율·오버크리·완력 고정값을 같은 조건으로
 };
 const ALLF = [...new Set(Object.values(FG).flat())];
 /* 디버프 규칙 그룹 (적에게 거는 것이라 받는 사람 조건 to는 쓰지 않음, '*'에 들어가지 않음) */
@@ -672,7 +673,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 스탯 버프 (완력/지성/속도)
   const stat = sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
   const sv=[pct(c.self[stat])], ev=[pct(c.self.elem_atk)], wv=[pct(c.self.weapon_atk)], spv=[];
-  let critA=0, critD = pct(c.self.crit_dmg);
+  let critA=0, critD = pct(c.self.crit_dmg), flatP=0;
   let ocW = c.self.over_crit?1:0, mhW = c.self.multihit?1:0, xW=0, pierceW = sk.barrier_pierce?1:0;
   const weakD = [pct(c.self.weak_dmg)];
   const mpF = focusOf(kind, pr.D ? pr.D.mp : 450);
@@ -697,6 +698,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     else ev.push(pct(p.all_elem_atk)*0.5*F(j,'all_elem_atk'));
     if(p.weapon_atk){ const fw=F(j,'weapon_atk'); wv.push(pct(p.weapon_atk.all)*fw, pct(p.weapon_atk[c.weapon])*fw, pct(p.weapon_atk[wt])*fw); }
     critA += pct(p.crit_rate)*F(j,'crit_rate');
+    if(p.pwr_flat) flatP += (+p.pwr_flat||0)*F(j,'pwr_flat');
     critD += pct(p.crit_dmg)*F(j,'crit_dmg');
     if(p.over_crit) ocW=Math.max(ocW, F(j,'over_crit'));
     if(p.multihit) mhW=Math.max(mhW, F(j,'multihit'));
@@ -751,7 +753,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const defR = dfv.length ? dimin(dfv,1) : 0; // 내구·정신 DOWN: 기본 대미지의 방어에
   // 딩 계산기 기본 대미지: 스탯·장비 공격력·속성 보정·스탯 버프·방어(방어 무시면 0). 크리는 따로(일반타/크리타 나눠 25억 경감)
   const D = pr.D || {str:230, int:230, spd:220, lck:156, mp:450, atk:457, mag:457};
-  const bh = dingHit(D, G5_OF(kind, stat), el!=='none', statB, sk.def_ignore ? 1 : defR);
+  const bh = dingHit(D, G5_OF(kind, stat), el!=='none', statB, sk.def_ignore ? 1 : defR, flatP);
   dmg *= bh.n * (1+typeR+physR) * (1+budDmg);
 
   // 크리티컬
