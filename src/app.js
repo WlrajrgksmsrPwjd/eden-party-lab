@@ -239,6 +239,254 @@ async function calcPerChar(inp, onProgress){
   return {list, evaluated:lr.evaluated, poolSize:lr.poolSize};
 }
 
+/* ---------- 장비 추천 · 빌드 코드 (어나더에덴 빌더의 장비 데이터·계산식, 출처: 딩) ----------
+   장비 데이터(ae-data.json, 약 1MB)는 처음 쓸 때만 받아 온다. 탐색은 장비 전용 워커에서 (못 쓰면 메인 스레드). */
+const EQ = window.AEEq, EQ_URL = 'vendor/ae-builder/ae-data.json';
+const EQS = {data:null, loading:null, w:null, wok:null, seq:0, jobs:new Map(), q:Promise.resolve(), cache:new Map()};
+function eqLoad(){
+  if(EQS.data) return Promise.resolve(EQS.data);
+  if(!EQ || !window.AECalc) return Promise.reject(new Error('장비 계산 모듈을 불러오지 못했습니다.'));
+  if(location.protocol==='file:') return Promise.reject(new Error('파일로 연 페이지에서는 장비 데이터를 받을 수 없습니다. 게시된 사이트에서 써 주세요.'));
+  if(!EQS.loading) EQS.loading = fetch(new URL(EQ_URL, location.href).href)
+    .then(r=>{ if(!r.ok) throw new Error('장비 데이터를 받지 못했습니다 ('+r.status+')'); return r.json(); })
+    .then(d=>{ EQ.init(d); EQS.data=d; return d; })
+    .catch(e=>{ EQS.loading=null; throw e; });
+  return EQS.loading;
+}
+function eqWorkerMain(){
+  'use strict';
+  /* 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
+  self.onmessage = async e=>{
+    const m=e.data;
+    if(m.type==='init'){ self.AEEq.init(m.data); return; }
+    try{
+      const r = await self.AEEq.optimize(m.s, m.wt, Object.assign({}, m.opts||{}, {onTick:n=>self.postMessage({type:'tick', id:m.id, n})}));
+      self.postMessage({type:'done', id:m.id, r:{best:r.best, evals:r.evals, why:r.why||null}});
+    }catch(err){ self.postMessage({type:'error', id:m.id, msg:String(err&&err.message||err)}); }
+  };
+}
+function eqWorker(){
+  if(EQS.w || EQS.wok===false) return EQS.w;
+  try{
+    const a=document.getElementById('aecalc-js'), b=document.getElementById('eqopt-js');
+    if(!a||!b||typeof Worker==='undefined') throw new Error('no worker');
+    const url = URL.createObjectURL(new Blob([a.textContent,'\n',b.textContent,'\n;(',eqWorkerMain.toString(),')();\n'],{type:'text/javascript'}));
+    const w = new Worker(url);
+    w.onmessage = e=>{ const m=e.data, j=EQS.jobs.get(m.id); if(!j) return;
+      if(m.type==='tick'){ if(j.onTick) j.onTick(m.n); return; }
+      EQS.jobs.delete(m.id); if(m.type==='done') j.resolve(m.r); else j.fallback(); };
+    w.onerror = e=>{ if(e&&e.preventDefault) e.preventDefault(); EQS.wok=false; try{ w.terminate(); }catch(x){} EQS.w=null; const js=[...EQS.jobs.values()]; EQS.jobs.clear(); js.forEach(j=>j.fallback()); };
+    w.postMessage({type:'init', data:EQS.data});
+    EQS.w=w; EQS.wok=true; return w;
+  }catch(e){ EQS.wok=false; return null; }
+}
+/* 최적 장비 탐색 (같은 조건이면 저장된 결과를 다시 씀, 한 번에 하나씩) */
+async function eqOptimize(s, wt, opts, onTick){
+  await eqLoad();
+  const key = JSON.stringify([s, wt, opts&&opts.from||null]);
+  if(EQS.cache.has(key)) return EQS.cache.get(key);
+  const main = ()=>EQ.optimize(s, wt, Object.assign({}, opts||{}, {onTick})).then(r=>({best:r.best, evals:r.evals, why:r.why||null}));
+  const run = ()=>new Promise((resolve, reject)=>{
+    const w = eqWorker(); if(!w){ main().then(resolve, reject); return; }
+    const id=++EQS.seq; EQS.jobs.set(id, {resolve, onTick, fallback:()=>main().then(resolve, reject)});
+    try{ w.postMessage({id, s, wt, opts:opts||{}}); }catch(e){ EQS.jobs.delete(id); main().then(resolve, reject); }
+  });
+  const p = EQS.q.then(run, run); EQS.q = p.catch(()=>{});
+  const r = await p; if(r && r.best) EQS.cache.set(key, r); return r;
+}
+
+const EL_B = {fire:'불',water:'물',earth:'땅',wind:'바람',thunder:'번개',shade:'그림자',crystal:'결정',none:'무속성'};
+const WT_B = {slash:'베기', pierce:'찌르기', blunt:'타격', magic:'마법'};
+const STAT_B = {pwr:'힘', int:'지능', spd:'속도'};
+const ZONE_BLD = ['열화진','수천진','지열진','풍왕진','초뢰진','각음진','휘정진','황참진','순돌진','굉타진','환마진','성해진','쌍격진 참마','쌍격진 참돌','섬격진','월광진','견수진'];
+const clampP = v => Math.max(-100, Math.min(100, Math.round(+v||0)));
+const baseName = n => String(n||'').replace(/\s*\(.*\)\s*$/,'').trim();
+/* 빌더 기본 스탯(물리 캐릭터 기준)을 주 스탯에 맞게 */
+function eqBaseStats(kind, stat){ const s={str:237, int:162, spd:249, luck:150, mp:512}; if(kind==='mag' && stat!=='pwr'){ s.str=162; s.int=237; } return s; }
+/* 조합 결과의 한 캐릭터 → 빌더 계산 조건 (평상 주력기 · 이 조합의 버프·존·약점) */
+function eqCondFromTeam(x, i){
+  const c=x.team[i], ev=x.ev, S=settings();
+  const co = ev.normal.cores[i] || ev.sb.cores[i]; if(!co) return null;
+  const z = ev.normal.zone, zt = z && z.level ? z.label.replace(/^[극절]·/,'').replace('·',' ') : '';
+  const o = (x.owns&&x.owns[i]) || state.owned[c.id] || null;
+  const others = x.team.filter((_,k)=>k!==i).concat(x.reserves||[]);
+  const share = ev.mule ? (ev.mule.k[i]||0) : 0;
+  const st = (o && o.build && o.build.st) || eqBaseStats(co.kind, co.stat);
+  const s = {
+    str:st.str, int:st.int, spd:st.spd, luck:st.luck, mp:st.mp, who: baseName(c.name), fate: o ? (+o.t||0) : 80, tlv:140,
+    atkCls: co.kind==='mag'?'마법':'물리', kind: STAT_B[co.stat]||'', atkType: co.kind==='mag'?'':(WT_B[co.wt]||''),
+    elem: EL_B[co.el]||'무속성', range: co.tgt==='st'?'단일':'전체',
+    power: Math.max(10, Math.round(co.sizeV*100*co.mult/(co.baseHits||1))), hits: Math.max(1, Math.round(co.totHits)),
+    aff: co.rel==='weak'?'약점':co.rel==='resist'?'저항':'통상',
+    zoneT: ZONE_BLD.includes(zt)?zt:'', zone: !!(z && z.level>=2 && ZONE_BLD.includes(zt)),
+    tPain: !!(ev.A&&ev.A.painAny), tPoison: !!(ev.A&&ev.A.painAny),
+    enemies: co.tgt==='aoe' ? Math.max(1, S.enemyCount||1) : 1,
+    fateAllies: others.filter(m=>m.align==='light').length, meiAllies: others.filter(m=>m.align!=='light').length,
+    bCrit: co.kind==='phys' ? clampP((co.critR-0.2)*100) : 0, bMcrit: co.kind==='mag' ? clampP(co.critR*100) : 0,
+    bCpow: co.kind==='phys' ? clampP((co.critD||0)*100) : 0, bMcpow: co.kind==='mag' ? clampP((co.critD||0)*100) : 0,
+    bStr:0, bInt:0, bSpd:0, bElemNE: co.el!=='none' ? clampP(co.elB*100) : 0, bWield: clampP(co.wB*100),
+    bRes: clampP(-co.physR*100), bERes: clampP(-co.typeR*100),
+    cu1: co.kind==='mag' && !!((c.self||{}).mental_focus || x.team.some(m=>(m.party||{}).mental_focus)),
+    cu2: co.kind==='phys' && !!((c.self||{}).singular_focus || x.team.some(m=>(m.party||{}).singular_focus)),
+    pMode:'direct', pElem: Math.round(share*(S.mulePct||0.3)*100), pDmg:0
+  };
+  s[{pwr:'bStr',int:'bInt',spd:'bSpd'}[co.stat]||'bStr'] = clampP(co.statB*100);
+  return {s, wt: E.WEAPON_KR[c.weapon], c, own:o};
+}
+/* 캐릭터 평상 주력기 조건 (빌드 코드 평가용). v: {crit, pain, zone, cu} — 파티 상황 유형 */
+const ZONE_OF_EL = {fire:'열화진',water:'수천진',earth:'지열진',wind:'풍왕진',thunder:'초뢰진',shade:'각음진',crystal:'휘정진'};
+const ZONE_OF_WT = {slash:'황참진',pierce:'순돌진',blunt:'굉타진',magic:'환마진'};
+function eqCondNeutral(c, st, fate, v){
+  const pain=v.pain, zone=v.zone;
+  const sk = c.main || c.sb; if(!sk) return null;
+  const kind = sk.kind==='mag'?'mag':'phys', el = sk.element||c.elem||'none', tgt = sk.target==='st'?'st':'aoe';
+  const T = E.SIZE_TABLE[tgt+'_'+kind+'_'+(el==='none'?'no':'el')] || E.SIZE_TABLE.aoe_phys_el;
+  const sizeV = T[E.SIZE_IDX[sk.size]??3]/100, hits = Math.max(1, sk.hits||1), stat = sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
+  const wt = kind==='mag' ? 'magic' : (sk.weapon_type||c.wt);
+  const b = st || eqBaseStats(kind, stat);
+  return {str:b.str, int:b.int, spd:b.spd, luck:b.luck, mp:b.mp, who: baseName(c.name), fate: +fate||0, tlv:140,
+    atkCls: kind==='mag'?'마법':'물리', kind: STAT_B[stat], atkType: kind==='mag'?'':(WT_B[wt]||''),
+    elem: EL_B[el]||'무속성', range: tgt==='st'?'단일':'전체', power: Math.max(10, Math.round(sizeV*100*Math.max(1, sk.mult||1)/hits)), hits,
+    aff:'통상', zoneT: zone ? (ZONE_OF_EL[el]||ZONE_OF_WT[wt]||'') : '', zone:!!zone, tPain:!!pain, tPoison:!!pain, enemies:1,
+    bCrit: kind==='phys'?v.crit:0, bMcrit: kind==='mag'?v.crit:0, cu1: kind==='mag'&&!!v.cu, cu2: kind==='phys'&&!!v.cu, pMode:'direct', pElem:0, pDmg:0};
+}
+const eqCode = (cond, b) => EQ.buildCode({who:cond.s.who, wt:cond.wt, equip:b.equip, ore:b.ore, wc:b.wc,
+  st:{str:cond.s.str, int:cond.s.int, spd:cond.s.spd, luck:cond.s.luck, mp:cond.s.mp, fate:cond.s.fate, atkAdj:0, magAdj:0},
+  p:{f:{pMode:'direct', pDmg:'0', pElem:String(cond.s.pElem||0), pAddDmg:'0', pAddElem:'0'}, l:[]}});
+const builderUrl = (cond, code, id) => 'builder.html#'+new URLSearchParams(Object.assign({who:cond.s.who, wt:cond.wt}, id?{id}:{}, code?{code}:{}, {s:JSON.stringify(cond.s)})).toString();
+function eqCondText(s){
+  const t=[s.elem, s.range, s.hits+'타', s.atkCls+(s.kind?'('+s.kind+')':'')];
+  if(s.aff!=='통상') t.push(s.aff);
+  if(s.zoneT) t.push((s.zone?'극 ':'')+s.zoneT);
+  const cr = s.atkCls==='마법' ? s.bMcrit : s.bCrit; if(cr) t.push('크리율 보정 '+(cr>0?'+':'')+cr+'%');
+  const sb = s.bStr||s.bInt||s.bSpd; if(sb) t.push((s.bStr?'힘':s.bInt?'지능':'속도')+' +'+sb+'%');
+  if(s.bElemNE) t.push('속성 대미지 +'+s.bElemNE+'%');
+  if(s.bRes||s.bERes) t.push('적 내성 '+[s.bRes,s.bERes].filter(Boolean).map(v=>v+'%').join('·'));
+  if(s.tPain) t.push('적 독·페인');
+  if(s.pElem) t.push('P글래 공유 +'+s.pElem+'%');
+  if(s.cu1||s.cu2) t.push(s.cu1?'정신통일':'심기일체');
+  t.push('천명치 '+s.fate);
+  return t;
+}
+const eqItemName = (k, b) => {
+  const id=b.equip[k]; if(!id) return '<span class="hint">비움</span>';
+  const it=EQ.ITEMS()[id]; if(!it) return esc(id);
+  let x=esc(it.n);
+  if(EQ.GS.includes(k)) x+=` <span class="hint">· ${esc(EQ.oreName(it, b.ore[k]||''))}</span>`;
+  if(it.wch && b.wc && b.wc[id]) x+=` <span class="hint">· ${esc(it.wch.map((c,ci)=>(c.opts[+b.wc[id][ci]||0]||c.opts[0]).t).join(', '))}</span>`;
+  return x;
+};
+function eqTableHtml(b, fate){
+  return `<table class="eqtbl">${EQ.OPT_ALL.map(k=>{ const lk=EQ.lockOf(k, fate);
+    return `<tr><th>${esc(EQ.slotLabel(k))}</th><td>${lk?`<span class="hint">잠김 · 천명치 ${lk} 필요</span>`:eqItemName(k,b)}</td></tr>`; }).join('')}</table>`;
+}
+/* 추천 세팅 패널의 '추천 장비 찾기' */
+async function runEqRec(btn){
+  const key=btn.dataset.eqrec, i=+btn.dataset.i, rec=RES.get(key); if(!rec) return;
+  const box=btn.closest('.eqbox'), out=box.querySelector('.eqout');
+  const cond=eqCondFromTeam(rec.x, i); if(!cond){ out.innerHTML='<p class="hint">이 캐릭터는 공격 스킬 정보가 없어 장비를 계산할 수 없습니다.</p>'; return; }
+  btn.disabled=true; out.innerHTML='<p class="hint" role="status">장비 데이터를 받는 중…</p>';
+  try{
+    await eqLoad();
+    const own=cond.own, from = own && own.build && own.build.equip && own.build.wt===cond.wt ? {equip:own.build.equip, ore:own.build.ore||{}} : null;
+    const t0=Date.now();
+    const r = await eqOptimize(cond.s, cond.wt, from?{from}:{}, n=>{ const el=out.querySelector('[role=status]'); if(el) el.textContent=`장비 조합을 찾는 중… ${n.toLocaleString()}개 계산 (${((Date.now()-t0)/1000).toFixed(0)}초)`; });
+    if(!document.body.contains(out)) return;
+    if(!r || !r.best){ out.innerHTML=`<p class="hint ng">${esc(r&&r.why||'장비를 찾지 못했습니다.')}</p>`; return; }
+    const b=r.best, d=b.detail, code=eqCode(cond, b);
+    let mine='';
+    if(from){ const m=EQ.evalState({equip:from.equip, ore:from.ore, wc:own.build.wc||{}}, EQ.makeS(cond.s), cond.wt); if(m && m.exp>0) mine = `<div class="hint">내 빌드(보유 탭에 넣은 코드)는 이 조건에서 ${fmtN(m.exp)} → 추천 장비가 <b>${m.exp>=d.exp*0.995?'거의 같음':'+'+((d.exp/m.exp-1)*100).toFixed(1)+'%'}</b></div>`; }
+    const locks=EQ.OPT_ALL.map(k=>EQ.lockOf(k,cond.s.fate)).filter(Boolean);
+    out.innerHTML = `${eqTableHtml(b, cond.s.fate)}
+      <div class="eqsum">기대 대미지 <b class="num">${fmtN(d.exp)}</b> <span class="hint">(일반 ${fmtN(d.n)} · 크리 ${fmtN(d.c)} · 크리율 ${+d.crit.toFixed(1)}%)</span></div>
+      ${mine}
+      <div class="hint">조건: ${esc(eqCondText(cond.s).join(' · '))}</div>
+      ${locks.length?`<div class="hint">천명치를 올리면 ${[...new Set(locks)].sort((a,b)=>a-b).map(v=>v===120?'120: 배지 2번째 칸':'200: 글래스터 4번째 칸').join(' · ')}이 열립니다.</div>`:''}
+      <div class="hint">스킬 위력은 크기·배율로 추정한 값이라 대미지 숫자는 참고용이고, 장비끼리 비교는 빌더와 같은 계산식입니다. ${r.evals.toLocaleString()}개 조합 계산.</div>
+      <div class="eqbtns"><a class="btn small" href="${esc(builderUrl(cond, code, cond.c.id))}" target="_blank" rel="noopener">빌더에서 열기 ↗</a>${cond.own?` <button type="button" class="btn small" data-eqsave="${esc(cond.c.id)}">내 캐릭터 빌드로 저장</button>`:''} <span class="hint" role="status"></span></div>`;
+    out.dataset.code = code;
+  }catch(e){ if(document.body.contains(out)) out.innerHTML=`<p class="hint ng">${esc(e.message||e)}</p>`; }
+  finally{ btn.disabled=false; }
+}
+
+/* 빌드 코드 → 보유 캐릭터 장비 (최적 장비 대비 화력 비율 · P글래 공유 · 스탯) */
+async function eqApplyCode(id, text, onMsg){
+  const c=byId.get(id), o=state.owned[id]; if(!c||!o) throw new Error('보유 캐릭터가 아닙니다.');
+  await eqLoad();
+  const R=EQ.parseCode(text); if(R.err) throw new Error(R.err);
+  const wt=E.WEAPON_KR[c.weapon];
+  if(R.wt && R.wt!==wt) throw new Error(`${c.name}은(는) ${wt} 캐릭터인데 이 빌드는 ${R.wt} 빌드입니다.`);
+  if(!R.equip.weapon) throw new Error('빌드에 무기가 없습니다.');
+  const st = R.st && R.st.str ? {str:+R.st.str, int:+R.st.int, spd:+R.st.spd, luck:+R.st.luck, mp:+R.st.mp} : null;
+  const fate = R.st && R.st.fate!=null ? +R.st.fate : (+o.t||0);
+  const from={equip:R.equip, ore:R.ore};
+  // 장비 완성도: 파티 상황 유형 4가지에서 같은 조건의 최적 장비 대비 비율을 재고, 이 빌드에 가장 맞는 상황의 값을 쓴다
+  // (빌드는 보통 쓰는 파티에 맞춰 짜므로 상황 차이가 아니라 장비 수준만 반영하려는 것)
+  const V=[{crit:100,pain:1,zone:1,cu:1,n:'풀버프·극존·독페인'},{crit:100,pain:0,zone:1,cu:0,n:'크리 100%·극존'},{crit:100,pain:0,zone:0,cu:0,n:'크리 100%'},{crit:30,pain:0,zone:0,cu:0,n:'버프 적음'}];
+  const r=[];
+  for(let k=0;k<V.length;k++){
+    if(onMsg) onMsg(`최적 장비와 비교하는 중… (${k+1}/${V.length})`);
+    const s=eqCondNeutral(c, st, fate, V[k]); if(!s) throw new Error('공격 스킬 정보가 없어 평가할 수 없습니다.');
+    const best=await eqOptimize(s, wt, {from, restarts:0});
+    const mine=EQ.evalState({equip:R.equip, ore:R.ore, wc:R.wc||{}}, EQ.makeS(s), wt);
+    r.push(+(best && best.best && best.best.v>0 ? mine.exp/Math.max(mine.exp, best.best.v) : 1).toFixed(4));
+  }
+  const qi=r.indexOf(Math.max(...r));
+  const ps=EQ.pShares(R.equip, R.ore);
+  o.build={code:R.code, wt, equip:R.equip, ore:R.ore, wc:R.wc||{}, st, fate, q:r[qi], qn:V[qi].n, r, ps, spd:st?st.spd:0,
+    weapon:EQ.nameOf(R.equip.weapon), miss:R.miss||[], at:new Date().toISOString().slice(0,10)};
+  touchRoster();
+  return o.build;
+}
+function buildBadge(o){
+  const b=o&&o.build; if(!b) return '';
+  const p=Math.round((b.q||0)*100);
+  const tip=`${b.weapon} · 장비 완성도 ${p}% (${b.qn||''} 상황에서 최적 장비 대비)${b.ps&&b.ps.length?` · P글래 공유 ${b.ps.length}개`:''}${b.miss&&b.miss.length?` · 찾지 못한 장비: ${b.miss.join(', ')}`:''}`;
+  return `<span class="badge${p>=97?' okb':p<85?' warn':''}" title="${esc(tip)}">장비 ${p}%</span>`;
+}
+function buildCtlHtml(c, o){
+  const b=o.build;
+  return `<span class="bld">${b?`${buildBadge(o)} <a class="lnk" href="${esc('builder.html#'+new URLSearchParams({who:baseName(c.name), wt:E.WEAPON_KR[c.weapon]||'', id:c.id, code:b.code}).toString())}" target="_blank" rel="noopener">빌더 ↗</a> <button type="button" class="lnk" data-bact="edit">코드 바꾸기</button> <button type="button" class="lnk" data-bact="del">빌드 빼기</button>`
+    : `<button type="button" class="lnk" data-bact="edit" title="장비 빌더의 빌드 코드(AEB1.…)를 넣으면 실제 장비로 계산합니다">장비 빌드 코드</button>`}</span>
+    <div class="bldin" hidden><input type="text" placeholder="AEB1.… (장비 빌더 → 빌드 비교 → 코드 복사)" aria-label="${esc(c.name)} 빌드 코드" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-bact="apply">적용</button><span class="hint" role="status"></span></div>`;
+}
+async function onBuildAct(btn){
+  const row=btn.closest('.row'); if(!row) return; const id=row.dataset.id, o=state.owned[id]; if(!o) return;
+  const act=btn.dataset.bact, box=row.querySelector('.bldin');
+  if(act==='edit'){ box.hidden=!box.hidden; if(!box.hidden) box.querySelector('input').focus(); return; }
+  if(act==='del'){ delete o.build; touchRoster(); row.outerHTML=rowHtml(byId.get(id)); return; }
+  if(act==='apply'){
+    const inp=box.querySelector('input'), msg=box.querySelector('[role=status]');
+    btn.disabled=true; msg.textContent='장비 데이터를 받는 중…';
+    try{ await eqApplyCode(id, inp.value, t=>{ msg.textContent=t; }); const cur=$(`#roster .row[data-id="${CSS.escape(id)}"]`); if(cur) cur.outerHTML=rowHtml(byId.get(id)); }
+    catch(e){ msg.textContent=e.message||String(e); btn.disabled=false; }
+  }
+}
+
+/* 장비 빌더에서 '편성 연구실로 보내기'로 넘어온 빌드 */
+const INBOX_KEY='eden-lab-inbox';
+function readInbox(){ try{ const m=JSON.parse(localStorage.getItem(INBOX_KEY)||'null'); return m&&m.code?m:null; }catch(e){ return null; } }
+function renderInbox(){
+  const bar=$('#inboxBar'); if(!bar) return;
+  const m=readInbox(); if(!m){ bar.hidden=true; bar.innerHTML=''; return; }
+  const wt=m.wt||'';
+  const cands=ownedList().map(id=>byId.get(id)).filter(c=>!wt || E.WEAPON_KR[c.weapon]===wt).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  const pick=(m.id && cands.find(c=>c.id===m.id)) || cands.find(c=>baseName(c.name)===m.who) || null;
+  bar.innerHTML = `<b>장비 빌더에서 보낸 빌드</b>${m.who?` (${esc(m.who)}${wt?' · '+esc(wt):''})`:wt?` (${esc(wt)})`:''}
+    ${cands.length?`<select id="inboxTo" aria-label="저장할 캐릭터">${pick?'':'<option value="">캐릭터 선택…</option>'}${cands.map(c=>`<option value="${esc(c.id)}"${pick&&pick.id===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
+    <button type="button" class="btn small" id="inboxSave">이 캐릭터 빌드로 저장</button>`:`<span class="hint">${esc(wt||'이 무기')} 보유 캐릭터가 없습니다.</span>`}
+    <button type="button" class="btn small" id="inboxDrop">닫기</button> <span class="hint" role="status" id="inboxMsg"></span>`;
+  bar.hidden=false;
+}
+async function saveInbox(){
+  const m=readInbox(), id=($('#inboxTo')||{}).value; if(!m) return renderInbox();
+  if(!id){ $('#inboxMsg').textContent='저장할 캐릭터를 고르세요.'; return; }
+  $('#inboxSave').disabled=true;
+  try{ const b=await eqApplyCode(id, m.code, t=>{ $('#inboxMsg').textContent=t; }); try{ localStorage.removeItem(INBOX_KEY); }catch(e){}
+    renderInbox(); renderRoster(); flash(`${byId.get(id).name} 장비 빌드를 저장했습니다`); }
+  catch(e){ $('#inboxMsg').textContent=e.message||String(e); $('#inboxSave').disabled=false; }
+}
+
 /* ---------- 편성 탭 ---------- */
 function renderPlanControls(){
   const P=state.plan;
@@ -721,7 +969,11 @@ function setupHtml(x, i){
     <div><h4>이 조합에서</h4><ul>${L.join('')}</ul></div>
     <div><h4>추천 육성·장비</h4><ul>${G.join('')}</ul></div>
     <div><h4>주력 스킬</h4><ul>${S2.join('')||'<li class="hint">—</li>'}</ul></div>
-    <div><h4>장비</h4><ul><li><a href="builder.html#who=${encodeURIComponent(c.name.replace(/\(.*\)$/,''))}&wt=${encodeURIComponent(E.WEAPON_KR[c.weapon]||'')}" target="_blank" rel="noopener">장비 빌더에서 무기·방어구·글래스터 비교 ↗</a> <span class="hint">(${esc(E.WEAPON_KR[c.weapon]||'')} · 출처: 딩)</span></li></ul></div>
+    <div class="eqbox"><h4>장비 <span class="hint">(${esc(E.WEAPON_KR[c.weapon]||'')} · 장비 데이터·계산식 출처: 딩)</span></h4>
+      ${o.build?`<p class="hint">내 빌드: ${esc(o.build.weapon||'')} ${buildBadge(o)} — 보유 탭에 넣은 코드로 계산 중</p>`:''}
+      <p><button type="button" class="btn small" data-eqrec="${esc(x._key||'')}" data-i="${i}">추천 장비 찾기</button> <span class="hint">이 조합의 버프·존·약점·P글래 공유 조건에서 기대 대미지가 가장 높은 무기·방어구·배지·글래스터·광석을 찾습니다 (몇 초)</span></p>
+      <div class="eqout"></div>
+      <p><a href="${esc((()=>{ const cd=eqCondFromTeam(x,i); return cd?builderUrl(cd, o.build&&o.build.code||'', c.id):'builder.html'; })())}" target="_blank" rel="noopener">장비 빌더에서 직접 비교 ↗</a> <span class="hint">이 조합 조건을 채워서 엽니다</span></p></div>
     <div><h4>운용 포인트</h4><ul>${O.join('')}${r.note_kr?`<li class="hint">${esc(r.note_kr)}</li>`:''}</ul></div>`;
 }
 function toggleSetup(memEl){
@@ -731,6 +983,7 @@ function toggleSetup(memEl){
   $$(`[data-sk="${key}"]`).forEach(m=>m.setAttribute('aria-expanded','false'));
   if(open){ box.hidden=true; return; }
   memEl.setAttribute('aria-expanded','true');
+  rec.x._key = key;
   box.innerHTML = setupHtml(rec.x, i); box.hidden=false;
 }
 function pctTxt(v){ return v==null?'0%':Math.round(v*100)+'%'; }
@@ -1044,6 +1297,7 @@ function rowHtml(c){
       <label>공격 글래 <select data-f="gl">${Object.entries(GL_PRESETS).map(([k,p])=>`<option value="${k}"${gk===k?' selected':''}>${p.label}</option>`).join('')}</select></label>
       <label title="잠재 광석: 장착 캐릭터가 공격으로 독·페인을 직접 부여"><input type="checkbox" data-f="ore" ${o.gl&&o.gl.ore?'checked':''} ${o.gl?'':'disabled'}> 잠재 광석</label>
       <span class="badge">${t>=200?'글래 4칸':'글래 3칸'}</span>${warn}
+      ${buildCtlHtml(c, o)}
     </div></div>`;
 }
 function onRosterChange(e){
@@ -1322,13 +1576,29 @@ function bind(){
   ['#rq','#rel','#rwp','#ral','#rtier','#rown'].forEach(s=>$(s).addEventListener('input',renderRoster));
   $('#roster').addEventListener('change',onRosterChange);
   $('#bulkTop').addEventListener('click',()=>{ for(const c of prepped) if((c.tier==='SS'||c.tier==='S')&&!state.owned[c.id]) state.owned[c.id]={t:0,s:!!c.stellar,m:0,g:'none',gl:null}; touchRoster(); renderRoster(); });
+  $('#roster').addEventListener('click',e=>{ const b=e.target.closest('[data-bact]'); if(b) onBuildAct(b); });
+  $('#roster').addEventListener('keydown',e=>{ if(e.key==='Enter' && e.target.closest('.bldin input')){ e.preventDefault(); const b=e.target.closest('.bldin').querySelector('[data-bact="apply"]'); if(b) onBuildAct(b); } });
+  document.addEventListener('click',e=>{ const b=e.target.closest('button[data-eqrec]'); if(b){ runEqRec(b); return; }
+    const s=e.target.closest('button[data-eqsave]'); if(s){ const out=s.closest('.eqout'), msg=s.parentNode.querySelector('[role=status]'); s.disabled=true;
+      eqApplyCode(s.dataset.eqsave, out.dataset.code||'', t=>{ msg.textContent=t; }).then(b=>{ msg.textContent='저장했습니다 · 이제 조합 계산에 이 장비를 씁니다'; if($('#p-roster').classList.contains('on')) renderRoster(); }).catch(err=>{ msg.textContent=err.message||String(err); s.disabled=false; }); } });
+  $('#inboxBar') && $('#inboxBar').addEventListener('click',e=>{ if(e.target.id==='inboxSave') saveInbox(); else if(e.target.id==='inboxDrop'){ try{ localStorage.removeItem(INBOX_KEY); }catch(x){} renderInbox(); } });
+  window.addEventListener('storage',e=>{ if(e.key===INBOX_KEY) renderInbox(); });
+  window.addEventListener('focus',renderInbox);
+  renderInbox();
   $('#selAll').addEventListener('change',e=>selectAllShown(e.target.checked));
   $('#selNoneYes').addEventListener('click',()=>{ for(const id of rosterShown) delete state.owned[id]; touchRoster(); renderRoster(); });
   $('#selNoneNo').addEventListener('click',()=>{ $('#selNoneConfirm').hidden=true; updateRosterCount(); });
   $('#bulkNone').addEventListener('click',()=>{ $('#bulkConfirm').hidden=false; });
   $('#bulkNoneYes').addEventListener('click',()=>{ state.owned={}; state.sample=false; save(); $('#bulkConfirm').hidden=true; renderRoster(); });
   $('#bulkNoneNo').addEventListener('click',()=>{ $('#bulkConfirm').hidden=true; });
-  $('#bulkMax').addEventListener('click',()=>{ const F=rosterFilters(); for(const row of $$('#roster .row')){ const id=row.dataset.id; const o=state.owned[id]; if(!o) continue; o.t=Math.max(o.t||0,80); if(byId.get(id).stellar) o.s=true; } touchRoster(); renderRoster(); });
+  $('#bulkFate').addEventListener('change',e=>{ const lt=e.target.value==='lt'; $('#bulkFateN').hidden=!lt; if(lt) $('#bulkFateN').focus(); });
+  $('#bulkFateGo').addEventListener('click',()=>{
+    const sel=$('#bulkFate').value, v = sel==='lt' ? Math.max(0, Math.min(79, parseInt($('#bulkFateN').value||'0',10)||0)) : +sel;
+    const st=$('#bulkStellar').checked; let n=0;
+    for(const id of rosterShown){ const o=state.owned[id]; if(!o) continue; o.t=v; if(st && byId.get(id).stellar) o.s=true; n++; }
+    if(!n){ flash('표시된 캐릭터 중 보유한 캐릭터가 없습니다.'); return; }
+    touchRoster(); renderRoster(); flash(`보유 ${n}명 천명치 ${v}${st?' · 성도각성':''}으로 바꿨습니다`);
+  });
   $('#defGl').addEventListener('change',e=>{ const p=GL_PRESETS[e.target.value]; state.settings.grastaDefault=Object.assign({}, p.v, {ore:$('#defOre').checked}); save(); });
   $('#defOre').addEventListener('change',e=>{ const g=Object.assign({}, E.DEFAULT_SETTINGS.grastaDefault, state.settings.grastaDefault||{}); g.ore=e.target.checked; state.settings.grastaDefault=g; save(); });
   $('#customForm').addEventListener('submit',addCustom);

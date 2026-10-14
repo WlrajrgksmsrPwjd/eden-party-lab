@@ -388,7 +388,12 @@ function charProg(pc, own, S){
   f *= MANIFEST[own?(+own.m||0):0]||1;
   const g = own&&own.g ? own.g : 'none';
   f *= SPECIAL_GRASTA[g]||1;
-  return {f, sbOK, sbMul, goku: g==='goku', t, slots, gl};
+  // 빌드 코드(장비 빌더): 같은 조건의 최적 장비 대비 실제 장비 화력 비율. 글래스터는 최적 배치를 기준으로 두고 비율을 곱한다
+  let gear = null, glx = gl;
+  const b = own && own.build;
+  // q: 장비 완성도 (이 빌드에 맞는 파티 상황에서 최적 장비 대비 화력 비율)
+  if(b && b.q>0){ gear = {q:Math.max(0.2, Math.min(1.1, +b.q)), ps:Array.isArray(b.ps)?b.ps:[], spd:+b.spd||0}; glx = {mode:'auto'}; }
+  return {f, sbOK, sbMul, goku: g==='goku', t, slots, gl:glx, gear};
 }
 
 /* ---------- 적 프로필 ---------- */
@@ -601,6 +606,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     gq = Object.assign({}, gq, {f: gq.f*(base + (S.mulePct||0.3)*share)/base, share});
   }
   dmg *= gq.f * pr.f;
+  if(pr.gear) dmg *= pr.gear.q; // 빌드 코드: 장비 완성도
 
   // 방어 무시/배리어
   if(sk.def_ignore) dmg *= 1.1;
@@ -618,7 +624,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 
   const total = dmg*(1+rep);
   return {perHit: total/totHits, totHits, nT, el, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
-    afx: sk.af_combo_x||1, hitsPerAct: totHits, gq, pierce:!!pierce};
+    afx: sk.af_combo_x||1, hitsPerAct: totHits, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1)};
 }
 
 function grastaFactor(pr, teamPain){
@@ -709,14 +715,27 @@ function muleShare(team, S, ctx){
     wp = best && WEAPON_PERS[best.weapon]; if(!wp) return null;
     const sl = S.muleSlots||3; mules=[{pers:new Set([wp]), slots:sl},{pers:new Set([wp]), slots:sl}]; auto=true;
   }
-  const k = team.map(c=>{ const w=WEAPON_PERS[c.weapon]; return mules.reduce((a,m)=>a+(m.pers.has(w)?m.slots:0),0); });
-  return {k, auto, wp, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
+  const per = (S.mulePct||0.3)*100;
+  const k = team.map(c=>{ const w=WEAPON_PERS[c.weapon]; return mules.reduce((a,m)=>a+(m.shares ? shareSlots(m.shares, c, per) : (m.pers.has(w)?m.slots:0)),0); });
+  return {k, auto, wp, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
+}
+/* 빌드 코드의 P글래 공유 효과 → 받는 캐릭터 기준 '칸' 환산 (속성 공격 +30% = 1칸) */
+const ELEM_B = {fire:'불',water:'물',earth:'땅',wind:'바람',thunder:'번개',shade:'그림자',crystal:'결정'};
+function shareSlots(shares, c, per){
+  const wk = WEAPON_KR[c.weapon], el = (c.main&&c.main.element)||c.elem||'none';
+  let v = 0;
+  for(const p of shares){
+    if(p.wt && p.wt!==wk) continue;
+    if(p.k==='elem'){ const ok = p.e==='all' ? el!=='none' : p.e==='none' ? el==='none' : p.e===ELEM_B[el]; if(ok) v += +p.v||0; }
+    else if(p.k==='hp') v += +p.v||0; // HP 최대 조건: 개전·평상 대부분 충족
+  }
+  return v/per;
 }
 /* 계산 상황: 배리어 관통 필요 여부, 속성·타입 지정, 후열 고정 셔틀 */
 function buildCtx(input, ownedAll){
   const boss=input.boss;
   const mules = (input.backLocked||[]).slice(0,2).map(id=>(ownedAll||[]).find(o=>o.pc.id===id)).filter(Boolean)
-    .map(o=>({id:o.pc.id, name:o.pc.name, pers:o.pc.pers, slots:(o.prog&&o.prog.slots)||3}));
+    .map(o=>({id:o.pc.id, name:o.pc.name, pers:o.pc.pers, slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
   return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules};
 }
 function evalTeam(team, progs, enemy, S, cap, ctx){
@@ -1089,6 +1108,6 @@ async function perCharBest(input, onProgress){
 
 const API = {ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
-  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS};
+  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);

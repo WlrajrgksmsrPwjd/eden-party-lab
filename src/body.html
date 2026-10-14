@@ -15,6 +15,7 @@
   </div>
 </header>
 
+<div class="inbox wrap" id="inboxBar" role="region" aria-label="장비 빌더에서 보낸 빌드" hidden></div>
 <main class="wrap">
   <!-- 편성 추천 -->
   <section class="panel on" id="p-plan" role="tabpanel">
@@ -99,7 +100,11 @@
       <span class="count" id="rcount"></span>
       <span style="flex:1"></span>
       <button type="button" class="btn small" id="bulkTop">SS·S 티어 전부 보유로</button>
-      <button type="button" class="btn small" id="bulkMax">표시된 보유 캐릭터 천명치 80·성도각성으로</button>
+      <span class="fatebulk"><label for="bulkFate">표시된 보유 천명치</label>
+        <select id="bulkFate"><option value="lt">80 미만 (직접)</option><option value="80" selected>80</option><option value="120">120</option><option value="200">200</option><option value="255">255</option></select>
+        <input type="number" id="bulkFateN" min="0" max="79" value="30" hidden aria-label="천명치 (0~79)">
+        <label class="checkrow"><input type="checkbox" id="bulkStellar" checked> <span>성도각성도</span></label>
+        <button type="button" class="btn small" id="bulkFateGo">일괄 적용</button></span>
       <button type="button" class="btn small" id="bulkNone">보유 전부 해제</button>
       <span id="bulkConfirm" hidden class="hint">정말 해제할까요? <button type="button" class="btn small" id="bulkNoneYes">해제</button> <button type="button" class="btn small" id="bulkNoneNo">취소</button></span>
     </div>
