@@ -6,6 +6,7 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 const CHARS_TEXT = document.getElementById('db-chars').textContent;
 const CHARS_BASE = JSON.parse(CHARS_TEXT);
 const BOSSES = JSON.parse(document.getElementById('db-bosses').textContent);
+const BUDDIES = (()=>{ try{ return JSON.parse((document.getElementById('db-buddies')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
 const META = (()=>{ try{ return JSON.parse((document.getElementById('db-meta')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
 const ROLE_KR = {dps:'딜러',support:'버퍼',debuffer:'디버퍼',healer:'힐러',tank:'탱커',zone:'존',breaker:'브레이커'};
 const STYLE_KR = {NS:'노멀',AS:'어나더',ES:'엑스트라',AC:'이시층'};
@@ -27,7 +28,7 @@ function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'
 
 /* ---------- 상태 ---------- */
 let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
-const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null, weights:{b:70,s:40,t:30}, kesId:'', pledge:{nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0}}, rosterView:{}, goals:[]});
+const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null, weights:{b:70,s:40,t:30}, kesId:'', pledge:{nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0}, buddy:{main:'auto',sub:'auto'}}, rosterView:{}, goals:[], buddies:{}});
 const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
 const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
 const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성' : (FT_KR[f.v]||f.v);
@@ -495,6 +496,25 @@ async function saveInbox(){
   catch(e){ $('#inboxMsg').textContent=e.message||String(e); $('#inboxSave').disabled=false; }
 }
 
+/* ---------- 버디 ---------- */
+const BUD_SURV = ['tetra','tetra_as','gansu_as','choco','tyusia','jiruya','pisuke'];
+const BUD_AURA = ['jiruya','moke','pitan_as','hanyamo','gansu','mea','kuramaru','kyumos','kyumos_as'];
+const ownBud = ()=>Object.keys(state.buddies||{}).filter(k=>state.buddies[k] && BUDDIES[k]);
+function budPick(){
+  const P=state.plan, B=P.buddy||(P.buddy={main:'auto',sub:'auto'}), own=ownBud();
+  if(!own.length) return {main:null, sub:null, auto:true};
+  let main = B.main==='none' ? null : B.main==='auto' ? (BUD_SURV.find(k=>own.includes(k)) || own[0]) : (own.includes(B.main) ? B.main : null);
+  let sub = B.sub==='none' ? null : B.sub==='auto' ? (BUD_AURA.find(k=>own.includes(k) && k!==main) || null) : (own.includes(B.sub) && B.sub!==main ? B.sub : null);
+  return {main, sub};
+}
+function buddyInput(){ const b=budPick(); if(!b.main && !b.sub) return null; return {main: b.main?Object.assign({id:b.main}, BUDDIES[b.main]):null, sub: b.sub?Object.assign({id:b.sub}, BUDDIES[b.sub]):null}; }
+const budName = k => k && BUDDIES[k] ? BUDDIES[k].kr : '';
+function renderBudGrid(){
+  const g=$('#budGrid'); if(!g) return;
+  g.innerHTML = Object.entries(BUDDIES).map(([k,b])=>`<label><input type="checkbox" data-bud="${esc(k)}" ${state.buddies&&state.buddies[k]?'checked':''}><span>${esc(b.kr)}<span class="hint">${esc(b.jp)}</span></span></label>`).join('');
+  $('#budN').textContent = ownBud().length;
+}
+
 /* ---------- 결현현(결실 현현) 서약 ---------- */
 function plOf(){
   const P=state.plan; const d={nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0};
@@ -540,6 +560,13 @@ function renderPlanControls(){
     sel.innerHTML = '<option value="">보스 선택…</option>' + BOSSES.filter(b=>!b.kesshitsu).map(b=>`<option value="${esc(b.id)}">${esc(b.name_kr)} · ${esc(CONTENT_KR(b.content))}</option>`).join('');
   }
   sel.value = P.bossId||'';
+  { // 버디
+    const own=ownBud(), B=P.buddy||(P.buddy={main:'auto',sub:'auto'});
+    const opt=(sel,v)=>`<option value="auto"${v==='auto'?' selected':''}>자동</option><option value="none"${v==='none'?' selected':''}>없음</option>`+own.map(k=>`<option value="${esc(k)}"${v===k?' selected':''}>${esc(budName(k))}</option>`).join('');
+    $('#budMain').innerHTML=opt('m',B.main); $('#budSub').innerHTML=opt('s',B.sub);
+    const pk=budPick();
+    $('#budHint').textContent = own.length ? `지금 계산: 메인 ${budName(pk.main)||'없음'} · 서브 ${budName(pk.sub)||'없음'}` : '보유 캐릭터 탭의 "보유 버디"에서 가진 버디를 체크하면 버디 효과를 넣어 계산합니다.';
+  }
   { // 성향 직접 조절
     const W=P.weights||(P.weights={b:70,s:40,t:30});
     [['wB','b'],['wS','s'],['wT','t']].forEach(([id,k])=>{ $('#'+id).value=W[k]; $('#'+id+'v').textContent=W[k]; });
@@ -622,7 +649,7 @@ async function runPlan(){
   const pledge = kes ? pledgeInput(boss) : null;
   $('#runBtn').disabled=true; $('#prog').hidden=false; $('#prog i').style.width='0%';
   const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null,
-      weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, pledge},
+      weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, pledge, buddy: buddyInput()},
     f=>{ if(my===runToken) $('#prog i').style.width=Math.round(f*100)+'%'; });
   if(my!==runToken || !r) return;
   $('#runBtn').disabled=false; $('#prog').hidden=true;
@@ -706,6 +733,21 @@ function toggleDeck(btn){
   if(!box.innerHTML){ const o=DECKCTX[key]; box.innerHTML=cardHtml(rec.x, key, o).replace('<div class="rank">'+rec.x.rank+'<small>위</small></div>', `<div class="rank" style="font-size:15px">${esc(focusLabel(rec.x.focus))}</div>`); }
   box.hidden=false;
 }
+/* 버디 줄: 지금 계산한 버디 + 화력 위주 추천 메인 */
+function budLine(x, o){
+  const own=ownBud(); if(!own.length) return '';
+  const cur=buddyInput(); const cm=cur&&cur.main?cur.main.id:null, cs=cur&&cur.sub?cur.sub.id:null;
+  let tip='';
+  try{
+    if(!x._budBest){ let best=null; const base=x.ev.burst;
+      for(const k of own){ if(k===cs) continue; const bd={main:Object.assign({id:k},BUDDIES[k]), sub:cur&&cur.sub||null};
+        const ev=E.evalTeam(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, {focus:o&&o.focus||null, buddy:bd});
+        if(!best || ev.burst>best.v) best={k, v:ev.burst}; }
+      x._budBest = best && best.k!==cm && best.v>base*1.03 ? {k:best.k, g:best.v/base-1} : null; }
+    if(x._budBest) tip = ` · 화력 위주면 메인 버디 <b>${esc(budName(x._budBest.k))}</b> (세팅 후 폭딜 +${(x._budBest.g*100).toFixed(0)}%)`;
+  }catch(e){}
+  return `<div class="hint">버디: 메인 ${esc(budName(cm)||'없음')} · 서브 ${esc(budName(cs)||'없음')}${tip}</div>`;
+}
 /* 턴별 화력 줄: 1턴(보장~속도 맞춤) · 2턴 · SB · AF */
 function tlOf(x, o){
   const ev=x.ev; if(ev.tl) return ev.tl;
@@ -749,7 +791,7 @@ function cardHtml(x, key, o){
       ${ex.posTotal?`<div class="order">전방 배치 <span class="hint">왼쪽 → 오른쪽 · 위치 버프 ${ex.posOk}/${ex.posTotal} 성립</span></div>`:''}
       <div class="members">${order.map(i=>memHtml(x,i,key,o.focus,o.lockSet)).join('')}</div>
       <div class="setup" data-for="${key}" hidden></div>
-      ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${muleLine(x)}</div>`}
+      ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${budLine(x, o)}${muleLine(x)}</div>`}
       ${timelineHtml(x, o)}
       <div class="metrics">
         ${metric('SB 턴 화력', ev.sbTurn, rel('sbTurn'), hot==='b')}
@@ -1150,7 +1192,8 @@ async function runPerChar(){
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   $('#pcRun').disabled=true; $('#pcProg').hidden=false; $('#pcProg i').style.width='0%';
-  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='boss'&&!boss?'burst':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null},
+  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'burst':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null,
+      weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, buddy: buddyInput()},
     f=>{ if(my===pcToken) $('#pcProg i').style.width=Math.round(f*100)+'%'; });
   if(my!==pcToken || !r) return;
   $('#pcRun').disabled=false; $('#pcProg').hidden=true;
@@ -1187,14 +1230,14 @@ async function runFocusAll(){
   if(ids.length<4){ grid.innerHTML='<div class="empty">보유 캐릭터가 4명 이상이어야 합니다.</div>'; return; }
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
-  const mode = P.mode==='boss'&&!boss?'burst':P.mode, J = jobSnap(), cond = {mode, bossId:boss?boss.id:''};
+  const mode = P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'burst':P.mode, J = jobSnap(), cond = {mode, bossId:boss?boss.id:''};
   for(const k of [...RES.keys()]) if(k[0]==='f') RES.delete(k);
   grid.innerHTML = FOCUS_LIST.map((f,k)=>`<section class="fcard" id="fx-${k}"><div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><span class="hint">대기 중…</span></div></section>`).join('');
   $('#fxRun').disabled=true; $('#fxProg').hidden=false; $('#fxProg i').style.width='0%';
   $('#fxMeta').textContent = `${MODE_KR[P.mode]==='보스 맞춤'&&!boss?'최고점 딜':MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''}`;
   for(let k=0;k<FOCUS_LIST.length;k++){
     const f=FOCUS_LIST[k];
-    const r = await calcOptimize('fx', {locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:f, maxPool:28, topN:3},
+    const r = await calcOptimize('fx', {locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:f, maxPool:28, topN:3, buddy: buddyInput(), weights: P.mode==='custom' ? Object.assign({}, P.weights) : null},
       v=>{ if(my===fxToken) $('#fxProg i').style.width=Math.round((k+v)/FOCUS_LIST.length*100)+'%'; }, J);
     if(my!==fxToken || !r) return;
     $('#fx-'+k).outerHTML = fcardHtml(f, k, r, cond);
@@ -1688,6 +1731,11 @@ function renderMeta(){
 function bind(){
   $$('.tab[data-tab]').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
   $('#modeSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-mode]'); if(!b) return; state.plan.mode=b.dataset.mode; save(); renderPlanControls(); if(b.dataset.mode!=='boss') runPlan(); else if(state.plan.bossId) runPlan(); else runPlan(); });
+  // 버디
+  $('#budMain').addEventListener('change',e=>{ state.plan.buddy.main=e.target.value; save(); renderPlanControls(); runPlan(); });
+  $('#budSub').addEventListener('change',e=>{ state.plan.buddy.sub=e.target.value; save(); renderPlanControls(); runPlan(); });
+  $('#budGrid').addEventListener('change',e=>{ const k=e.target.dataset.bud; if(!k) return; state.buddies=state.buddies||{}; if(e.target.checked) state.buddies[k]=true; else delete state.buddies[k]; touchRoster(); renderBudGrid(); renderPlanControls(); });
+  renderBudGrid();
   // 성향 직접 조절
   $('#weightRow').addEventListener('input',e=>{ const k=e.target.dataset.w; if(!k) return; state.plan.weights[k]=+e.target.value; $('#'+e.target.id+'v').textContent=e.target.value; });
   $('#weightRow').addEventListener('change',e=>{ if(!e.target.dataset.w) return; save(); runPlan(); });

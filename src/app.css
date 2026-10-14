@@ -378,3 +378,10 @@ a.lnk{display:inline-flex; align-items:center}
 .tlc .v{font-family:var(--f-mono); font-size:14px; font-weight:600}
 .tlc .s{font-size:11px; color:var(--muted); overflow-wrap:anywhere}
 @media (max-width:560px){ .tline{grid-template-columns:repeat(2, minmax(0,1fr))} }
+
+/* 버디 */
+.budgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:6px; margin-top:8px}
+.budgrid label{display:flex; gap:6px; align-items:flex-start; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--surface)}
+.budgrid label input{margin-top:3px}
+.budgrid .hint{display:block; font-size:11px}
+#budRow select{max-width:44%}

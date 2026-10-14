@@ -37,6 +37,9 @@ for c in chars:
 # 디버프 조건 규칙(지속·단일 대상 등), 체인 어빌리티
 drules=json.load(open(P('data','debuff_rules.json'),encoding='utf-8'))
 chain=json.load(open(P('data','chain.json'),encoding='utf-8'))
+ctr=json.load(open(P('data','counter.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in ctr and c['id']!='_doc': c['counter']=ctr[c['id']]
 echg=json.load(open(P('data','elem_change.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in echg and c['id']!='_doc': c['echange']={k:v for k,v in echg[c['id']].items() if k!='note'}
@@ -76,6 +79,8 @@ out=head+rd('app.css')+'\n</style></head><body>\n'+rd('body.html')
 out+='<script type="application/json" id="db-chars">'+js(chars)+'</script>\n'
 out+='<script type="application/json" id="db-bosses">'+js(bosses)+'</script>\n'
 out+='<script type="application/json" id="db-meta">'+js(meta)+'</script>\n'
+bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); bfx.pop('_doc',None)
+out+='<script type="application/json" id="db-buddies">'+js(bfx)+'</script>\n'
 # 엔진 코드는 app.js가 textContent를 읽어 Web Worker로도 띄운다
 # 장비 추천: 빌더의 계산기(AECalc)와 장비 탐색(eqopt) — 장비 데이터(ae-data.json)는 쓸 때 받아 온다
 out+='<script id="aecalc-js">\n'+open(os.path.join(here,'..','vendor','ae-builder','ae-engine.js'),encoding='utf-8').read()+'\n</script>\n'

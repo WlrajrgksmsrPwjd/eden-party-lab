@@ -326,6 +326,8 @@ function skillPow(sk){
   return sv*m*(1+(sk.repeat||0)*0.7);
 }
 function prepChar(c){
+  // 요격 세팅 스킬이 주력기로 잡힌 경우: 반격 화력은 요격으로 따로 세므로 주력기 자체 배율은 1로
+  if(c.counter && c.main && /요격|迎撃/.test((c.main.skill||'')+(c.main.condition||''))) c = Object.assign({}, c, {main: Object.assign({}, c.main, {mult:1, mcond:null})});
   const p = c.party_buff||{}, s=c.self_buff||{}, d=c.debuff||{}, sp=c.support||{};
   const wt = WEAPON_TYPE[c.weapon]||'slash';
   const zone = c.zone && c.zone.type ? c.zone : null;
@@ -365,6 +367,7 @@ function prepChar(c){
     selfDamage: (c.tags||[]).includes('self_damage'),
     chain: Array.isArray(c.chain) && c.chain.some(e=>e&&e.atk) ? c.chain.filter(e=>e&&e.atk) : null,
     echange: c.echange || null,
+    counter: c.counter || null,
     mzone: (()=>{ const L=[]; for(const sk of [c.main, c.sb]) if(sk && sk.mcond) for(const cd of [].concat(sk.mcond.need||[], ...((sk.mcond.steps||[]).map(s=>s[1]||[])))) if(cd && cd.zone) L.push(cd); return L.length?L:null; })()
   };
 }
@@ -564,6 +567,14 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
       if(p.eagle_eyes) spv.push(EAGLE_VAL*F(j,'eagle_eyes'));
     }
   }
+  let budDmg = 0;
+  const BUD = A.bud ? A.bud.parts.filter(b=>!(b.sbOnly && situation!=='sb') && !(b.zone && !(zone && zone.level>0 && zoneMatch(b.zone, zone))) && !(b.st && sk.target!=='st')) : null;
+  if(BUD) for(const b of BUD){ const p=b.party; if(!p) continue; const f=b.p;
+    if(p[stat]) sv.push(pct(p[stat])*f);
+    if(p.all_elem_atk && el!=='none') ev.push(pct(p.all_elem_atk)*f);
+    if(p.weapon_atk && p.weapon_atk[c.weapon]) wv.push(pct(p.weapon_atk[c.weapon])*f);
+    if(p.wt_dmg && p.wt_dmg[wt]) wv.push(pct(p.wt_dmg[wt])*f);
+    critA += pct(p.crit_rate)*f; critD += pct(p.crit_dmg)*f; budDmg += pct(p.dmg)*f; }
   let critR = (kind==='phys'?0.2:0) + pct(c.self.crit_rate) + critA;
   const statB = dimin(sv,1), elB = dimin(ev,1), wB = dimin(wv,1);
   let specB = dimin(spv, 3.5);
@@ -587,10 +598,14 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     else mgv.push(pct(d.mag_res)*D('d_mag_res'));
     const dv = kind==='phys' ? d.end : d.spr; if(dv) dfv.push(pct(dv)*D(kind==='phys'?'d_end':'d_spr'));
   }
+  if(BUD) for(const b of BUD){ const d=b.deb; if(!d) continue; const f=b.p;
+    if(d.all_elem_res) tv.push(pct(d.all_elem_res)*f); if(d.elem_res && el!=='none' && d.elem_res[el]) tv.push(pct(d.elem_res[el])*f);
+    if(kind==='phys'){ if(d.phys_res) phv.push(pct(d.phys_res)*f); if(d.weapon_res && d.weapon_res[wt]) phv.push(pct(d.weapon_res[wt])*f); }
+    else if(d.mag_res) mgv.push(pct(d.mag_res)*f); }
   const typeR = (el!=='none'||kind==='mag') ? dimin(tv,1) : 0;
   const physR = kind==='phys' ? dimin(phv,1) : dimin(mgv,1);
   const defR = dfv.length ? dimin(dfv,1) : 0; // 내구·정신 DOWN: 빌더 계산식 기준 −50%에 물리 약 +8%, 마법 약 +6.5%
-  dmg *= (1+typeR+physR) * (1 + defR*(kind==='phys'?0.16:0.13));
+  dmg *= (1+typeR+physR) * (1 + defR*(kind==='phys'?0.16:0.13)) * (1+budDmg);
 
   // 크리티컬
   if(sk.crit_sure) critR = Math.max(critR,1);
@@ -730,17 +745,19 @@ function applyZoneCap(core, z, S, cap, combo){
 }
 
 /* ---------- 생존 점수 ---------- */
-function survival(team, progs){
+function survival(team, progs, bud){
   const cats = ['heal','barrier','cleanse','guard','taunt','status_immune','mp_recover'];
   const W = {heal:6,barrier:5,cleanse:4,guard:5,taunt:2,status_immune:3,mp_recover:1.5};
   let s=0; const det={};
+  const bs = bud && bud.sup || {};
   for(const k of cats){
-    const v = team.map(c=>+(c.sup[k]||0)).sort((a,b)=>b-a);
+    const v = team.map(c=>+(c.sup[k]||0)).concat(bs[k]?[+bs[k]]:[]).sort((a,b)=>b-a);
     const val = (v[0]||0) + 0.35*(v[1]||0);
     det[k]=v[0]||0; s += W[k]*val;
   }
-  const rev = team.some(c=>c.sup.revive); det.revive=rev; if(rev) s+=6;
-  const pd = dimin(team.map(c=>pct(c.deb.pwr)),1), id = dimin(team.map(c=>pct(c.deb.int)),1);
+  const rev = team.some(c=>c.sup.revive) || !!bs.revive; det.revive=rev; if(rev) s+=6;
+  const bd0 = bud ? bud.enemyDown||0 : 0;
+  const pd = dimin(team.map(c=>pct(c.deb.pwr)).concat([bd0]),1), id = dimin(team.map(c=>pct(c.deb.int)).concat([bd0]),1);
   det.enemyDown = Math.max(pd,id); s += 12*(pd+id)/2;
   const selfD = team.filter(c=>c.selfDamage).length;
   if(det.heal<2) s -= 3*selfD;
@@ -847,7 +864,7 @@ function buildCtx(input, ownedAll){
   const maxBack = input.pledge && input.pledge.size ? Math.max(0, Math.min(2, input.pledge.size-4)) : 2;
   const mules = (input.backLocked||[]).slice(0,maxBack).map(id=>(ownedAll||[]).find(o=>o.pc.id===id)).filter(Boolean)
     .map(o=>({id:o.pc.id, name:o.pc.name, pers:o.pc.pers, slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
-  return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack};
+  return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null};
 }
 /* ---------- 체인 어빌리티: 다른 아군의 행동에 반응하는 추격 ----------
    턴당 발동 수 = min(최대, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치 */
@@ -939,6 +956,17 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
   const t1 = g + Math.max(0, u-g)*p;
   return {t1, t1g:g, t1u:Math.max(g,u), t2, p, known:known===pairs && pairs>0, givers, z1:gz, actT1};
 }
+/* 버디: 메인은 오토 스킬+오라(+폭딜 턴 차지 스킬), 서브는 오라만. 약점 조건 오라는 상대 정보가 없으면 반반 */
+function budAgg(bd, team, enemy, A){
+  if(!bd || (!bd.main && !bd.sub)) return null;
+  const weakP = enemy ? (team.some(c=>c.elems.some(e=>enemyRel(enemy,e)==='weak') || enemyRel(enemy,c.wt)==='weak') || A.weakAdd.length ? 1 : 0) : 0.5;
+  const parts=[], sup={}; let enemyDown=0;
+  const add = (x, extra)=>{ if(!x) return; const p = x.when==='weak' ? weakP : 1; parts.push(Object.assign({party:x.party||null, deb:x.deb||null, p, zone:x.when==='zone'?x.zone:null, st:!!x.st}, extra||{}));
+    if(x.deb) enemyDown = Math.max(enemyDown, pct(Math.max(x.deb.pwr||0, x.deb.int||0))*p); };
+  if(bd.main){ add(bd.main.main); add(bd.main.aura); add(bd.main.sb, {sbOnly:true}); for(const k in (bd.main.sup||{})) sup[k]=bd.main.sup[k]; }
+  if(bd.sub && bd.sub!==bd.main){ add(bd.sub.aura); }
+  return {parts, sup, enemyDown};
+}
 /* 속성 변환(변환자재): 아군 전체를 존 속성·특정 속성으로 바꾸는 서포터, 자기 속성을 존·약점·옆 아군에 맞추는 캐릭터 */
 function echgOf(team, progs){
   const L=[]; team.forEach((c,i)=>{ const e=c.echange; if(!e) return; if(e.req && !reqMet(e.req, team, c)) return; L.push(Object.assign({i}, e)); });
@@ -970,10 +998,28 @@ function inflictOf(team, progs, S){
     const gl = progs[i] && progs[i].gl; if(gl && gl.ore){ po=Math.max(po,0.9); pa=Math.max(pa,0.9); by.poison.push(i); by.pain.push(i); } });
   return {poison:po, pain:pa, by};
 }
+/* 요격: 피격 시 반격. 적 공격 수(적 1체당 턴 1.5회) 중 이 캐릭터가 맞는 비율 — 스스로 도발 0.9, 다른 아군이 도발 0.1, 아니면 0.3 */
+function counterCalc(team, progs, A, enemy, S, cx, FX, z, cap, fw){
+  const per=team.map(()=>0), trig=team.map(()=>0); let any=false;
+  const atkN = 1.5*Math.min(4, Math.max(1, S.enemyCount||1));
+  for(let i=0;i<team.length;i++){
+    const c=team[i], ct=c.counter; if(!ct || !ct.atk) continue;
+    const selfT = ct.taunt || (c.sup&&c.sup.taunt>=2), otherT = team.some((m,j)=>j!==i && m.sup && m.sup.taunt>=2);
+    let n = atkN * (selfT ? 0.9 : otherT ? 0.1 : 0.3);
+    if(ct.trig==='phys') n*=0.7; else if(ct.trig==='fire') n*=0.3;
+    if(n<=0.01) continue;
+    const a=ct.atk, sk={skill:'요격', target:a.target, kind:a.kind, stat:a.stat, element:a.element||'none', weapon_type:a.weapon_type, size:a.size||'xl', mult:+a.mult||1, hits:Math.max(1,a.hits||1), repeat:0, crit_sure:false, def_ignore:false, barrier_pierce:false, af_combo_x:1, condition:''};
+    const t2=team.slice(); t2[i]=Object.assign({}, c, {main:sk, sb:null});
+    const co=attackerCore(t2, i, progs, A, enemy, S, 'normal', cx, FX, z); if(!co) continue;
+    per[i]+=applyZoneCap(co, z, S, cap, null)*fw(co)*n; trig[i]+=n; any=true;
+  }
+  return any ? {per, trig, total:per.reduce((x,y)=>x+y,0)} : null;
+}
 function evalTeam(team, progs, enemy, S, cap, ctx){
   const A = teamAgg(team);
   A.inf = inflictOf(team, progs, S);
   A.echg = echgOf(team, progs);
+  A.bud = ctx && ctx.buddy ? budAgg(ctx.buddy, team, enemy, A) : null;
   A.painAny = A.inf.poison>0 || A.inf.pain>0;
   A.mule = muleShare(team, S, ctx, progs);
   const light = team.filter(c=>c.align==='light').length, shadow = team.length-light;
@@ -1002,7 +1048,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     memo.set(key, cores); return cores;
   };
   const fw = focusW(ctx&&ctx.focus);
-  const hasChain = team.some(c=>c.chain);
+  const hasChain = team.some(c=>c.chain), hasCtr = team.some(c=>c.counter);
   // 일반 턴 행동 비중: 주력기 턴 + 통상 공격 턴(주력기 대비 약한 위력)
   const wN = simUse ? team.map((c,i)=>sim.act[i] + sim.alt[i]*Math.max(ALT_R, c.naR) + sim.na[i]*c.naR) : null;
   const sumZ = (cores,z,combo,w)=>{ let v=0; const per=cores.map((co,i)=>{ const d=applyZoneCap(co,z,S,cap,combo)*fw(co)*(w?w[i]:1); v+=d; return d; }); return {v,per}; };
@@ -1022,7 +1068,12 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     if(hasChain){
       const FXc = anyR ? buildBF(team,progs,s2,best,A,posSets,null) : null;
       const ch = chainCalc(team, progs, A, enemy, S, s2, cx, FXc, best, bestCores, useSim?sim:null, cap, null, fw);
-      if(ch){ res[sit].chain=ch; res[sit].total+=ch.total; res[sit].per=bestPer.map((v,i)=>v+ch.per[i]); }
+      if(ch){ res[sit].chain=ch; res[sit].total+=ch.total; res[sit].per=res[sit].per.map((v,i)=>v+ch.per[i]); }
+    }
+    if(hasCtr && sit==='normal'){
+      const FXc = anyR ? buildBF(team,progs,'normal',best,A,posSets,null) : null;
+      const ct = counterCalc(team, progs, A, enemy, S, cx, FXc, best, cap, fw);
+      if(ct){ res[sit].counter=ct; res[sit].total+=ct.total; res[sit].per=res[sit].per.map((v,i)=>v+ct.per[i]); }
     }
   }
   // 지속: 일반 존은 상시, 어나더 존은 2/5 턴 가동 (어나더 존 한정 버프도 그 동안만)
@@ -1042,7 +1093,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   let afChain = null;
   if(hasChain){ const FXa = anyR ? buildBF(team,progs,'af',nz,A,posSets,null) : null; afChain = chainCalc(team, progs, A, enemy, S, 'af', cx, FXa, nz, afCores, null, cap, avgCombo, fw); if(afChain) af += afChain.total; }
   const sbTurn = res.sb.total;
-  const surv = survival(team, progs);
+  const surv = survival(team, progs, A.bud);
   const out = {sbTurn, af, afChain, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A, posSets, sim, mule:A.mule};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; out.opener = tl.t1 + 0.5*tl.t2; }
@@ -1358,7 +1409,7 @@ async function optimize(input, onProgress){
     const fixedBack = nRes>0 ? backLocked.map(id=>owned.find(o=>o.pc.id===id)).filter(Boolean).slice(0,nRes).map(o=>o.pc) : [];
     const mw = ev.mule && ev.mule.auto ? ev.mule.wp : null; // 셔틀 가정이면 그 무기 퍼스널리티 캐릭터를 후열 우선
     const needComp = compM ? Math.max(0, pl.comp.n - team.filter(compM).length) : 0;
-    const reserves = fixedBack.concat(own.filter(o=>!inTeam.has(o.pc.id)).map(o=>({o, v:survival(team.concat([o.pc]),progs.concat([o.prog])).score - ev.surv + (o.pc.sup.revive?3:0) + (mw && o.pc.pers.has(mw) ? 8 + ((o.prog&&o.prog.slots)||3) : 0) + (needComp && compM(o.pc) ? 100 : 0)}))
+    const reserves = fixedBack.concat(own.filter(o=>!inTeam.has(o.pc.id)).map(o=>({o, v:survival(team.concat([o.pc]),progs.concat([o.prog]),ev.A&&ev.A.bud).score - ev.surv + (o.pc.sup.revive?3:0) + (mw && o.pc.pers.has(mw) ? 8 + ((o.prog&&o.prog.slots)||3) : 0) + (needComp && compM(o.pc) ? 100 : 0)}))
       .sort((a,b)=>b.v-a.v).slice(0,Math.max(0,nRes-fixedBack.length)).map(x=>x.o.pc));
     return {reserves, fixedBack};
   }
@@ -1396,7 +1447,7 @@ async function perCharBest(input, onProgress){
   let pool = buildPool(own, [], {enemy,S,cap,ctx,mode});
   const maxD = Math.max(1e-9, ...pool.map(o=>o.pot.dps));
   pool = pool.sort((a,b)=>(b.pot.dps/maxD + b.pot.sup*0.3 + (mode==='stability'?b.pot.surv*0.02:0))-(a.pot.dps/maxD + a.pot.sup*0.3 + (mode==='stability'?a.pot.surv*0.02:0))).slice(0,36);
-  const w = modeWeights(mode, boss), recSet = new Set(recommendedIds);
+  const w = modeWeights(mode, boss, input.weights), recSet = new Set(recommendedIds);
   const idxOf = new Map(own.map((o,i)=>[o.pc.id,i]));
   const T=[], R=[]; // T: 멤버 인덱스(own 기준) 4개씩, R: burst,sustain,surv,penalty,diffLv
   const record = (mem)=>{
