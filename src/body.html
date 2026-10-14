@@ -1,0 +1,247 @@
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><h1>에덴 편성 연구실</h1><span class="sub">어나더 에덴 · 글로벌</span></div>
+    <nav class="tabs" role="tablist" aria-label="화면">
+      <button class="tab" role="tab" data-tab="plan" aria-selected="true">편성 추천</button>
+      <button class="tab" role="tab" data-tab="roster" aria-selected="false">보유 캐릭터 <span class="num" id="tabOwnN">0</span></button>
+      <button class="tab" role="tab" data-tab="perchar" aria-selected="false">캐릭터별 최적</button>
+      <button class="tab" role="tab" data-tab="boss" aria-selected="false">보스 공략</button>
+      <button class="tab" role="tab" data-tab="method" aria-selected="false">계산 방식</button>
+    </nav>
+    <span class="save" id="saveState">불러오는 중…</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- 편성 추천 -->
+  <section class="panel on" id="p-plan" role="tabpanel">
+    <div class="planner">
+      <form class="controls" id="planForm" onsubmit="return false">
+        <div>
+          <label class="lbl">성향</label>
+          <div class="seg" id="modeSeg">
+            <button type="button" data-mode="burst">최고점 딜</button>
+            <button type="button" data-mode="sustain">지속 딜</button>
+            <button type="button" data-mode="stability">안정성</button>
+            <button type="button" data-mode="weak">약점 맞춤</button>
+            <button type="button" data-mode="boss">보스 맞춤</button>
+          </div>
+          <p class="hint" style="margin:6px 0 0">최고점 = SB 턴 + AF 한 번 화력 · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력</p>
+        </div>
+        <div id="bossRow" hidden>
+          <label class="lbl" for="bossSel">보스</label>
+          <select id="bossSel" style="width:100%"></select>
+        </div>
+        <div>
+          <label class="lbl">상대 약점·내성 <span class="hint" style="letter-spacing:0;font-weight:400">(눌러서 보통→약점→내성→무효→흡수)</span></label>
+          <div class="enemy-grid" id="enemyGrid"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">
+            <div class="seg" id="countSeg" aria-label="적 수"><button type="button" data-n="1">적 1</button><button type="button" data-n="2">2</button><button type="button" data-n="3">3</button><button type="button" data-n="4">4</button></div>
+            <button type="button" class="btn small" id="enemyClear">상대 초기화</button>
+          </div>
+        </div>
+        <div>
+          <label class="lbl" for="lockIn">꼭 쓸 캐릭터 (최대 3)</label>
+          <div class="picker"><input type="text" id="lockIn" placeholder="보유 캐릭터 이름 검색" autocomplete="off"><div class="drop" id="lockDrop" hidden></div></div>
+          <div class="chips" id="lockChips"></div>
+        </div>
+        <div>
+          <label class="lbl" for="exIn">빼고 싶은 캐릭터</label>
+          <div class="picker"><input type="text" id="exIn" placeholder="이름 검색" autocomplete="off"><div class="drop" id="exDrop" hidden></div></div>
+          <div class="chips" id="exChips"></div>
+        </div>
+        <div>
+          <label class="lbl" for="backIn">후열 고정 (최대 2) <span class="hint" style="letter-spacing:0;font-weight:400">글래스터 연성 셔틀 등</span></label>
+          <div class="picker"><input type="text" id="backIn" placeholder="후열에 넣어둘 캐릭터" autocomplete="off"><div class="drop" id="backDrop" hidden></div></div>
+          <div class="chips" id="backChips"></div>
+        </div>
+        <div>
+          <label class="lbl">운용 난이도 상한</label>
+          <div class="seg" id="diffSeg">
+            <button type="button" data-lv="1">Lv1 쉬움</button><button type="button" data-lv="2">Lv2 보통</button><button type="button" data-lv="3">Lv3 중간</button><button type="button" data-lv="4">Lv4 고인물용</button>
+          </div>
+          <p class="hint" style="margin:6px 0 0">고른 단계 이하의 조합만 추천합니다. 축적·모드 전환·자상·요격·존 각성 타이밍처럼 손이 가는 요소가 많을수록 단계가 올라갑니다.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label class="checkrow"><input type="checkbox" id="optDiverse"> <span>순위끼리 2명 이상 다른 조합만 보여주기</span></label>
+          <label class="checkrow"><input type="checkbox" id="optCap"> <span>1타 대미지 상한(100억) 반영</span></label>
+        </div>
+        <button type="button" class="btn primary" id="runBtn">편성 계산</button>
+        <div class="progress" id="prog" hidden><i></i></div>
+      </form>
+      <div class="results" id="results"><div class="empty">계산 중…</div></div>
+    </div>
+  </section>
+
+  <!-- 보유 캐릭터 -->
+  <section class="panel" id="p-roster" role="tabpanel">
+    <div class="toolbar">
+      <div class="grp grow"><label class="lbl" for="rq">검색</label><input type="text" id="rq" placeholder="한국어·일본어 이름"></div>
+      <div class="grp"><label class="lbl" for="rel">속성</label><select id="rel"><option value="">전체</option><option value="fire">불</option><option value="water">물</option><option value="earth">땅</option><option value="wind">바람</option><option value="thunder">번개</option><option value="shade">그림자</option><option value="crystal">결정</option><option value="none">무</option></select></div>
+      <div class="grp"><label class="lbl" for="rwp">무기</label><select id="rwp"><option value="">전체</option><option value="staff">지팡이</option><option value="sword">검</option><option value="katana">도</option><option value="ax">도끼</option><option value="lance">창</option><option value="bow">활</option><option value="fist">권갑</option><option value="hammer">망치</option></select></div>
+      <div class="grp"><label class="lbl" for="ral">천/명</label><select id="ral"><option value="">전체</option><option value="light">천</option><option value="shadow">명</option></select></div>
+      <div class="grp"><label class="lbl" for="rtier">티어</label><select id="rtier"><option value="">전체</option><option>SS</option><option>S</option><option>A</option><option>B</option><option>C</option><option value="-">미평가</option></select></div>
+      <div class="grp"><label class="lbl" for="rown">보유</label><select id="rown"><option value="">전체</option><option value="own">보유만</option><option value="no">미보유만</option></select></div>
+    </div>
+    <div class="bulk">
+      <span class="count" id="rcount"></span>
+      <span style="flex:1"></span>
+      <button type="button" class="btn small" id="bulkTop">SS·S 티어 전부 보유로</button>
+      <button type="button" class="btn small" id="bulkMax">표시된 보유 캐릭터 천명치 80·성도각성으로</button>
+      <button type="button" class="btn small" id="bulkNone">보유 전부 해제</button>
+      <span id="bulkConfirm" hidden class="hint">정말 해제할까요? <button type="button" class="btn small" id="bulkNoneYes">해제</button> <button type="button" class="btn small" id="bulkNoneNo">취소</button></span>
+    </div>
+    <div class="defgl">
+      <label class="lbl" style="margin:0" for="defGl">공격 글래스터 기본값</label>
+      <select id="defGl"></select>
+      <label class="checkrow" style="align-items:center"><input type="checkbox" id="defOre"> 잠재 광석 있음 (독·페인을 스스로 부여)</label>
+      <span class="hint">캐릭터별로 따로 정하려면 아래 행의 "공격 글래"를 바꾸세요. 천명치 200 이상이면 4칸으로 계산합니다.</span>
+    </div>
+    <div class="roster" id="roster"></div>
+
+    <details class="fold">
+      <summary>목록에 없는 캐릭터 직접 추가</summary>
+      <form id="customForm">
+        <div class="formgrid">
+          <div class="f"><label for="cName">이름</label><input type="text" id="cName" required></div>
+          <div class="f"><label for="cEl">속성</label><select id="cEl"><option value="fire">불</option><option value="water">물</option><option value="earth">땅</option><option value="wind">바람</option><option value="thunder">번개</option><option value="shade">그림자</option><option value="crystal">결정</option><option value="none">무</option></select></div>
+          <div class="f"><label for="cWp">무기</label><select id="cWp"><option value="staff">지팡이</option><option value="sword">검</option><option value="katana">도</option><option value="ax">도끼</option><option value="lance">창</option><option value="bow">활</option><option value="fist">권갑</option><option value="hammer">망치</option></select></div>
+          <div class="f"><label for="cAl">천/명</label><select id="cAl"><option value="light">천</option><option value="shadow">명</option></select></div>
+          <div class="f"><label for="cRole">주 역할</label><select id="cRole"><option value="dps">딜러</option><option value="support">버퍼</option><option value="debuffer">디버퍼</option><option value="healer">힐러</option><option value="tank">탱커</option></select></div>
+          <div class="f"><label for="cT">천명치</label><input type="number" id="cT" min="0" max="255" value="0"></div>
+          <div class="f"><label for="cTgt">주력 대상</label><select id="cTgt"><option value="aoe">전체</option><option value="st">단일</option></select></div>
+          <div class="f"><label for="cKind">주력 종류</label><select id="cKind"><option value="phys">물리</option><option value="mag">마법</option></select></div>
+          <div class="f"><label for="cSize">위력 크기</label><select id="cSize"><option value="m">중</option><option value="l">대</option><option value="xl" selected>특대</option><option value="xxl">극대</option></select></div>
+          <div class="f"><label for="cMult">위력 배수 (威力N倍)</label><input type="number" id="cMult" min="1" value="10"></div>
+          <div class="f"><label for="cHits">타수</label><input type="number" id="cHits" min="1" value="3"></div>
+          <div class="f"><label for="cRep">재공격 횟수</label><input type="number" id="cRep" min="0" value="0"></div>
+          <div class="f"><label for="cSbMult">성도 스킬 배수 (없으면 0)</label><input type="number" id="cSbMult" min="0" value="0"></div>
+          <div class="f"><label for="cSelfStat">자기 완력·지성 버프 %</label><input type="number" id="cSelfStat" min="0" value="0"></div>
+          <div class="f"><label for="cSelfEl">자기 속성공격 버프 %</label><input type="number" id="cSelfEl" min="0" value="0"></div>
+          <div class="f"><label for="cPStat">아군 완력·지성 버프 %</label><input type="number" id="cPStat" min="0" value="0"></div>
+          <div class="f"><label for="cPEl">아군 전속성공격 버프 %</label><input type="number" id="cPEl" min="0" value="0"></div>
+          <div class="f"><label for="cDEl">적 전속성내성 −%</label><input type="number" id="cDEl" min="0" value="0"></div>
+          <div class="f"><label for="cDPh">적 물리내성 −%</label><input type="number" id="cDPh" min="0" value="0"></div>
+          <div class="f"><label for="cDMg">적 마법내성 −%</label><input type="number" id="cDMg" min="0" value="0"></div>
+          <div class="f"><label for="cZone">존 전개</label><select id="cZone"><option value="">없음</option><option value="elem">자기 속성 존</option><option value="weap">자기 공격종 존</option></select></div>
+          <div class="f"><label for="cHeal">회복 (0~3)</label><input type="number" id="cHeal" min="0" max="3" value="0"></div>
+          <div class="f"><label for="cBar">배리어·경감 (0~3)</label><input type="number" id="cBar" min="0" max="3" value="0"></div>
+          <div class="f"><label for="cCln">해제 (0~3)</label><input type="number" id="cCln" min="0" max="3" value="0"></div>
+          <div class="f"><label for="cGrd">수호·비호 (0~3)</label><input type="number" id="cGrd" min="0" max="3" value="0"></div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:10px">
+          <label class="checkrow"><input type="checkbox" id="cZoneAw"> 극존(존 각성) 가능</label>
+          <label class="checkrow"><input type="checkbox" id="cPain"> 독·페인 부여</label>
+          <button type="submit" class="btn primary">추가</button>
+          <span class="hint" id="cMsg"></span>
+        </div>
+        <div class="chips" id="customList" style="margin-top:10px"></div>
+      </form>
+    </details>
+
+    <details class="fold">
+      <summary>보유 정보 백업 · 다른 기기로 옮기기</summary>
+      <p class="hint">내보내기 하면 보유 캐릭터·천명치·글래스터·직접 추가 캐릭터가 텍스트로 복사됩니다. 다른 기기에서 붙여 넣고 불러오기를 누르세요.</p>
+      <textarea id="ioText" aria-label="백업 텍스트"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><button type="button" class="btn small" id="ioExport">내보내기 (복사)</button><button type="button" class="btn small" id="ioImport">불러오기</button><span class="hint" id="ioMsg"></span></div>
+    </details>
+  </section>
+
+  <!-- 캐릭터별 최적 -->
+  <section class="panel" id="p-perchar" role="tabpanel">
+    <div class="pcbar">
+      <div>
+        <h2 class="pch">캐릭터별 최적 조합</h2>
+        <p class="hint" style="margin:2px 0 0;max-width:70ch">보유 캐릭터 한 명 한 명에 대해, 그 캐릭터를 넣었을 때 가장 점수가 높은 전방 4인을 찾습니다. 성향·상대·난이도 상한·제외·후열 고정은 <b>편성 추천</b> 탭 설정을 그대로 씁니다. 점수는 이번 계산의 1위 조합을 100으로 둔 값입니다.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="runmeta" id="pcMeta"></span>
+        <button type="button" class="btn primary" id="pcRun">계산</button>
+      </div>
+    </div>
+    <div class="progress" id="pcProg" hidden style="margin-top:10px"><i></i></div>
+    <div class="toolbar" style="margin-top:12px">
+      <div class="grp grow"><label class="lbl" for="pcQ">이름 검색</label><input type="text" id="pcQ" placeholder="보유 캐릭터 이름"></div>
+    </div>
+    <div class="tblwrap" id="pcTable"><div class="empty">계산을 누르면 보유 캐릭터별 최적 조합을 보여줍니다. (보유 300명 기준 10초 안팎)</div></div>
+  </section>
+
+  <!-- 보스 공략 -->
+  <section class="panel" id="p-boss" role="tabpanel">
+    <div class="bossbar">
+      <select id="bossFilter" aria-label="콘텐츠"><option value="">모든 콘텐츠</option><option value="星詠みの書架">성영의 서가</option><option value="廻生">회생</option><option value="外史">외사</option><option value="顕現">현현</option></select>
+      <input type="text" id="bossQ" placeholder="보스 이름 검색" aria-label="보스 이름 검색">
+      <span class="hint">약점·기믹은 altema 공략 페이지 요약입니다. (미확인) 표시는 한국어 이름이 확인되지 않은 보스입니다.</span>
+    </div>
+    <div class="bosslayout">
+      <div class="bosslist" id="bossList"></div>
+      <div class="bossdetail" id="bossDetail"></div>
+    </div>
+  </section>
+
+  <!-- 계산 방식 -->
+  <section class="panel" id="p-method" role="tabpanel">
+    <div class="doc">
+      <article>
+        <h2>무엇을 계산하나</h2>
+        <p>캐릭터의 실제 스탯 대신, 스킬 배율과 버프·디버프·존·글래스터를 어나더 에덴의 대미지 공식대로 곱해서 <b>상대 화력</b>을 냅니다. 숫자 자체(예: 312만)는 게임 대미지가 아니라 조합끼리 비교하기 위한 값입니다. 보유 캐릭터 중 후보를 40명 안팎으로 추린 뒤 전방 4명 조합을 전부 평가하고, 성향별 점수로 1~5위를 뽑습니다. 후방 2명은 남은 보유 캐릭터 중 회복·수호·해제를 가장 많이 보강하는 순서로 고릅니다.</p>
+        <h2>대미지 식</h2>
+        <div class="formula">공격 1회 = 스킬 크기 배율 × 위력 배수 × (단일 1.1) × (속성 공격 1.75)
+        × (1+스탯 버프) × (1+속성 공격 버프) × (1+무기종 버프)
+        × (1+정신통일·심기일체·하극상·호시탐탐)      ← 같은 그룹 상한 +350%
+        × (1+속성 내성 디버프+물리/마법 내성 디버프)
+        × 크리티컬 기대값 × 브레이크 × 약점/내성 × 다단강화
+        × 존 × 공격 글래스터 × 육성(천명치·현현·전용 글래)
+        × (1+재공격) × 대상 수</div>
+        <ul>
+          <li>같은 그룹의 버프·디버프는 게임과 같은 체감 중첩입니다. 큰 값 A부터 1 + A + A·B + A·B·C …, 그룹별 상한 100%.</li>
+          <li>약점 2배(+약점 대미지 버프 가산), 내성 0.25배, 무효·흡수 0배. 속성과 공격종이 엇갈리면 약점 → 내성 → 무효 → 흡수 순으로 우선합니다.</li>
+          <li>크리티컬은 기본 확률 20%(물리) + 버프, 크리 배율은 3.25/1.75. 오버크리티컬은 크리율 100%를 넘긴 몫 ÷ 10이 발생 확률(크리율 1100%에서 확정)이고, 발생하면 대미지 2배입니다.</li>
+          <li>정신통일·심기일체는 MP 1,000 기준 +160%, 하극상 +100%, 호시탐탐은 기대값 +60%로 둡니다.</li>
+          <li>AF는 1인 5회 행동, 콤보 75%에서 시작해 타수×2.5%씩 오른다고 보고 평균 콤보(최대 400%)를 곱합니다. AF 콤보 증가 스킬은 그 배수를 반영합니다.</li>
+          <li>1타 대미지 상한은 9,999,999,999(100억−1)입니다. 상대값을 실제 대미지로 바꾸는 스탯 환산 계수(기본 22,000 = Lv100 딜러의 완력·무기 공격 기준 기본 대미지)를 곱해 1타가 상한을 넘으면 잘라냅니다. AF 콤보는 상한 전에 곱합니다. 계수는 오른쪽에서 바꿀 수 있습니다.</li>
+        </ul>
+        <h2>존 · 극존 · 절존</h2>
+        <div class="tbl"><table><thead><tr><th>종류</th><th>일반</th><th>극(어나더 존)</th><th>절</th><th>그 외</th></tr></thead>
+          <tbody><tr><td>속성 존 (열화진 등)</td><td class="num">×1.5</td><td class="num">×2.0</td><td class="num">×2.0</td><td>상극 속성 ×0.5</td></tr>
+          <tr><td>공격종 존 (황참진 등)</td><td class="num">×1.3</td><td class="num">×1.6</td><td class="num">×1.6</td><td>다른 공격종 ×0.7</td></tr></tbody></table></div>
+        <p class="hint">절존은 대미지 배율이 극존과 같습니다. 절존의 통상공격 변화·공명 같은 부가 효과는 반영하지 않습니다.</p>
+        <p>팀 안의 존 전개 캐릭터마다 조건을 읽어 극·절 가능 여부를 판정하고, 팀 화력이 가장 높아지는 존 하나를 고릅니다. 판정은 세 갈래입니다.</p>
+        <ul>
+          <li><b>개전 자동</b>: "전투 시작 시 전방 불 3명이면 극·열화진", "전방에 지팡이 아군이 있으면 극·쌍격진·참마"처럼 전방 구성 조건이 맞을 때만. 조건이 안 맞으면 결과 카드에 "개전 극존 조건 미충족"으로 표시합니다.</li>
+          <li><b>스킬 각성</b>: 존을 깔아 둔 뒤 스킬로 각성하는 경우. 준비 턴이 필요해서 극존 효과의 85%만 인정합니다.</li>
+          <li><b>SB 시</b>: 스텔라 버스트 때만 극이 되는 존은 SB 턴에만 반영합니다.</li>
+        </ul>
+        <p>어나더 존은 지속 딜 계산에서 5턴 중 2턴만 켜진다고 봅니다. 전용 글래스터를 <b>극</b>으로 장착한 존 캐릭터는 조건 없이 극존을 펼친다고 봅니다. 질퍼니(AS)처럼 전방 결정 3명 여부에 따라 존과 공격 속성이 물↔결정으로 바뀌는 캐릭터는 그 조건도 따집니다.</p>
+        <h2>천명치 · 성도각성 · 글래스터</h2>
+        <div class="tbl"><table><thead><tr><th>입력</th><th>반영</th></tr></thead><tbody>
+          <tr><td>천명치 15 / 30 / 50 / 80 (성도각성 캐릭터)</td><td>15부터 성도 스킬 사용(30 전까지는 강화 전으로 ×0.8), 30·50·80에서 스탯 ×1.04·×1.08·×1.15 (레벨 상한·스탯 노드)</td></tr>
+          <tr><td>천명치 120 / 200 / 255</td><td>배지 칸 ×1.02 / 공격 글래스터 4칸 / 전 스탯 +10 ×1.03</td></tr>
+          <tr><td>현현 · 진현현</td><td>×1.08 · ×1.15</td></tr>
+          <tr><td>전용 글래스터 상급 · 진 · 극</td><td>×1.03 · ×1.07 · ×1.12, 극은 존 캐릭터의 극존 해금</td></tr>
+          <tr><td>공격 글래스터</td><td>속성·HP계 1칸당 +30% 가산, 페인·독 1칸당 ×1.3 곱연산. 페인·독은 잠재 광석이 있거나 파티에 독·페인 부여 캐릭터가 있어야 적용. "자동"은 칸 수 안에서 가장 높은 배치를 고릅니다.</td></tr>
+          <tr><td>천/명 구성</td><td>전방 다수 쪽이 그 흐름이 되고, 같은 쪽 성도 캐릭터의 SB 공격 ×1.1 (SB 강화 어빌리티 근사)</td></tr>
+        </tbody></table></div>
+        <h2>성향별 점수</h2>
+        <ul>
+          <li><b>최고점 딜</b>: SB 턴 화력 + AF 한 번 화력의 절반.</li>
+          <li><b>지속 딜</b>: 성도 스킬 없이 평상 턴 화력. 축적·소비형 고배율기는 평상시 40%로 낮춥니다.</li>
+          <li><b>안정성</b>: 생존력 60% + 지속 딜 40%. 생존력은 회복·배리어·해제·수호·도발·상태이상 무효·부활·적 완력/지성 디버프를 합산하고, 회복이 약한데 자해 캐릭터가 있으면 감점합니다.</li>
+          <li><b>약점 맞춤</b>: 입력한 약점·내성 기준으로 최고점 50% + 지속 50%.</li>
+          <li><b>보스 맞춤</b>: 보스의 필요 요소에 따라 가중치를 바꾸고, 배리어 관통이 필요한데 없으면 그 공격자 화력 ×0.25, 수호·해제·상태이상 무효·장기전 회복이 부족하면 감점, 공략 추천 캐릭터 1명당 +3%.</li>
+        </ul>
+        <h2>후열 고정 · 캐릭터별 최적</h2>
+        <p>후열 고정에 넣은 캐릭터(글래스터 연성 셔틀 등)는 전방 후보에서 빠지고 후열 자리를 먼저 차지합니다. 남은 후열 자리는 회복·수호·해제를 가장 많이 보강하는 캐릭터로 채웁니다. 캐릭터별 최적은 상위 후보 36명의 모든 4인 조합과, 그 밖의 캐릭터마다 상위 14명 중 3명을 붙인 조합을 평가해 캐릭터마다 가장 높은 조합을 고릅니다.</p>
+        <h2>운용 난이도</h2>
+        <p>캐릭터마다 조작 부담을 0~4점으로 매기고(상태·모드 전환 +1, 축적 관리 +1, 자상·HP 조건 +0.8, 요격·피격 유도 +0.5, 기도·노래 유지 +0.5, 존 각성 타이밍 +0.4, AF 운용 +0.4, SB 의존 +0.3, 자동 발동형 −0.3), 전방 4명 합에 회복 수단이 없으면 +0.6을 더합니다. 합이 4.9 미만이면 Lv1 쉬움, 6.6 미만 Lv2 보통, 8.2 미만 Lv3 중간, 그 이상은 Lv4 고인물용입니다. 경계값은 SS·S 캐릭터 무작위 4인 조합의 하위 15%·50%·85% 지점에 맞췄습니다.</p>
+        <h2>데이터 출처와 한계</h2>
+        <p>캐릭터 323명(★5 스타일 전체)과 보스 63개는 altema(일본 공략 위키) 캐릭터·보스 페이지와 어나더 에덴 위키의 대미지 공식을 바탕으로 2026년 10월 14일에 정리했습니다. 일부 캐릭터는 페이지에 수치가 없어 추정값이 들어가 있고, 버프의 "인접 아군만", "특정 존에서만 2배" 같은 조건은 대부분 단순화했습니다. 결과는 출발점으로 쓰고, 실제 보스에서 한 번 굴려 보는 것을 전제로 하세요.</p>
+        <p class="hint">출처: <a href="https://anothereden.wiki/w/Damage_Formula" target="_blank" rel="noopener">Another Eden Wiki – Damage Formula</a> · <a href="https://anothereden.wiki/w/Another_Force/Combo" target="_blank" rel="noopener">AF Combo</a> · <a href="https://altema.jp/anaden/sikyo" target="_blank" rel="noopener">altema 최강 랭킹</a> · <a href="https://wiki.biligame.com/ae/%E6%9C%BA%E5%88%B6%EF%BC%9AZONE" target="_blank" rel="noopener">BWIKI ZONE 기제</a></p>
+      </article>
+      <aside class="consts">
+        <label class="lbl">계산 상수 조정</label>
+        <div id="constBox"></div>
+      </aside>
+    </div>
+  </section>
+</main>
