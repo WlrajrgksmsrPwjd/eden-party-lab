@@ -42,6 +42,7 @@ const DEFAULT_SETTINGS = {
   mpCostMul: 1,      // 스킬 소비 MP 배율 (MP 소비 감소 글래스터 등이면 0.85·0.75)
   muleOn: true,      // 후열 글래스터 셔틀: 잠재 광석 단 퍼스널리티 글래스터(P글래)를 후열이 들고 전열에 공유
   muleAuto: true,    // 후열 고정이 없으면 주딜과 같은 무기 퍼스널리티 셔틀 2명을 가정
+  afCycle: true,      // 지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣기
   muleFront: true,   // 자동 가정일 때 같은 퍼스널리티의 전열 서포터(딜러 아님)도 P글래 셔틀로
   muleSlots: 3,      // 셔틀 1명이 공유하는 칸 수 (천명치 200 이상 셔틀은 4칸)
   mulePct: 0.3       // 공유 1칸당 대미지 (속성 글래스터와 같은 가산 그룹)
@@ -368,6 +369,7 @@ function prepChar(c){
     chain: Array.isArray(c.chain) && c.chain.some(e=>e&&e.atk) ? c.chain.filter(e=>e&&e.atk) : null,
     echange: c.echange || null,
     counter: c.counter || null,
+    fateTbl: Array.isArray(c.fate_tbl) && c.fate_tbl.length ? c.fate_tbl : null,
     mzone: (()=>{ const L=[]; for(const sk of [c.main, c.sb]) if(sk && sk.mcond) for(const cd of [].concat(sk.mcond.need||[], ...((sk.mcond.steps||[]).map(s=>s[1]||[])))) if(cd && cd.zone) L.push(cd); return L.length?L:null; })()
   };
 }
@@ -408,8 +410,11 @@ function charProg(pc, own, S){
     if(t>=15){ sbOK=true; sbMul = t>=30?1:0.8; }
     if(t>=80) f*=1.15; else if(t>=50) f*=1.08; else if(t>=30) f*=1.04;
   }
-  if(t>=120) f*=1.02;
-  if(t>=255) f*=1.03;
+  // 천명치(天冥) 보너스: 캐릭터별 표가 있으면 주력 스탯 합계로(주 스탯 실효 약 500 기준), 없으면 일반값
+  if(pc.fateTbl){ const st = (pc.main&&pc.main.stat)==='int'?'int':(pc.main&&pc.main.stat)==='spd'?'spd':'pwr'; let add=0;
+    for(const [lv,d] of pc.fateTbl){ if(t>=lv) add += (d[st]||0) + (st==='spd' ? 0 : 0.3*(d.spd||0)); }
+    f *= 1 + 0.8*add/500; }
+  else { if(t>=120) f*=1.02; if(t>=255) f*=1.03; }
   f *= MANIFEST[own?(+own.m||0):0]||1;
   const g = own&&own.g ? own.g : 'none';
   f *= SPECIAL_GRASTA[g]||1;
@@ -1084,7 +1089,19 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     const cores1 = zdep ? coresFor('normal', z1, simUse) : res.normal.cores;
     sustain = sumZ(cores1, z1, null, wN).v*0.6 + res.normal.total*0.4;
   }
-  // AF: 0MP, 콤보 배율 (AF 중 한정 버프·타이밍 버프 반영, 버프는 미리 걸어 둔 상태)
+  // AF 게이지 충전(평상 턴): ZONE 없으면 타당 1.5%(약점 3.5%, 전체 공격도 1타겟), 맞는 ZONE이면 행동당 7.5%.
+  // 서포트 등급(AF 게이지)·버디로 추가. AF 주기 K = 100 / 턴당 충전
+  let afGain = 0;
+  { const z=nz, cs=res.normal.cores;
+    team.forEach((c,i)=>{ const co=cs[i]; if(!co) return; const pAct = simUse ? (sim.act[i]+sim.alt[i]) : 1;
+      const zMatch = z && z.level>0 && ((z.kind==='elem' && z.types.includes(co.el)) || (z.kind==='weap' && z.types.includes(co.wt)) || z.kind==='all');
+      const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
+      afGain += pAct * (zMatch ? 7.5 : Math.min(30, co.totHits) * (weak?3.5:1.5));
+      afGain += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)];
+    });
+    if(A.bud && ctx && ctx.buddy && ctx.buddy.main && ['moke','korobo','gansu_as'].includes(ctx.buddy.main.id)) afGain += 5;
+  }
+  const afTurns = Math.max(2, Math.min(20, 100/Math.max(1, afGain)));
   const afCores = (sdep || simUse) ? coresFor('af', nz, false) : res.normal.cores;
   let gain=0;
   afCores.forEach(co=>{ if(co) gain += S.afActions*co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); });
@@ -1094,7 +1111,8 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   if(hasChain){ const FXa = anyR ? buildBF(team,progs,'af',nz,A,posSets,null) : null; afChain = chainCalc(team, progs, A, enemy, S, 'af', cx, FXa, nz, afCores, null, cap, avgCombo, fw); if(afChain) af += afChain.total; }
   const sbTurn = res.sb.total;
   const surv = survival(team, progs, A.bud);
-  const out = {sbTurn, af, afChain, sustain, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
+  const sustainAF = sustain + (S.afCycle!==false ? af/afTurns : 0); // 지속 딜: 평상 턴 + AF를 주기마다 한 번
+  const out = {sbTurn, af, afChain, sustain: sustainAF, sustainNoAF: sustain, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo, normal:res.normal, sb:res.sb, A, posSets, sim, mule:A.mule};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; out.opener = tl.t1 + 0.5*tl.t2; }
   return out;

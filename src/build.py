@@ -37,6 +37,9 @@ for c in chars:
 # 디버프 조건 규칙(지속·단일 대상 등), 체인 어빌리티
 drules=json.load(open(P('data','debuff_rules.json'),encoding='utf-8'))
 chain=json.load(open(P('data','chain.json'),encoding='utf-8'))
+fate=json.load(open(P('data','fate.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in fate and c['id']!='_doc': c['fate_tbl']=fate[c['id']]
 ctr=json.load(open(P('data','counter.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in ctr and c['id']!='_doc': c['counter']=ctr[c['id']]
