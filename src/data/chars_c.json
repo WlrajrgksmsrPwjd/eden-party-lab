@@ -110,36 +110,11 @@
   "tier": "SS",
   "score": 98,
   "roles": ["dps", "support", "healer"],
-  "main": {
-    "skill": "グリントクレイモア",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "crystal", "weapon_type": "slash",
-    "mult": 10, "size": "xl", "hits": 3, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "선제. 기본은 마법/지성 의존, 전열 검 퍼스널리티 2명 이상이면 참/완력 의존으로 변화하고 재공격. 정신 수치에 따라 위력 증가(정신 500 시 10배). 완력·지성 30% DOWN(5턴, 3누적)"
-  },
-  "sb": {
-    "skill": "アークオブオース",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "crystal", "weapon_type": "slash",
-    "mult": 50, "size": "xxl", "hits": 4, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "煌斬陣(SB 시 極·煌斬陣) 전개 후 4히트(정신에 따라 최대 15배), 이어서 재차 4히트(전열 정신 합계에 따라 최대 50배). 전열 검 아군 연격수 UP, 아군 MP 최대 +100~1500"
-  },
-  "self_buff": {
-    "pwr": 0, "int": 0, "spd": 0, "elem_atk": 150, "weapon_atk": 0,
-    "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": true, "mental_focus": false,
-    "overthrow": false, "eagle_eyes": false, "weak_dmg": 100, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "크리율은 양옆 아군, 연격수UP은 전열 검 아군",
-    "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": true, "mental_focus": false,
-    "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": true, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 90, "int": 90, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0,
-    "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "グリントクレイモア", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "crystal", "weapon_type": "slash", "mult": 10, "size": "xl", "hits": 3, "repeat": 1, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. 기본은 마법/지성 의존, 전열 검 퍼스널리티 2명 이상이면 참/완력 의존으로 변화하고 재공격. 정신 수치에 따라 위력 증가(정신 500 시 10배). 완력·지성 30% DOWN(5턴, 3누적)"},
+  "sb": {"skill": "アークオブオース", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "crystal", "weapon_type": "slash", "mult": 50, "size": "xxl", "hits": 4, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "煌斬陣(SB 시 極·煌斬陣) 전개 후 4히트(정신에 따라 최대 15배), 이어서 재차 4히트(전열 정신 합계에 따라 최대 50배). 전열 검 아군 연격수 UP, 아군 MP 최대 +100~1500 [알테마 대조(2026-10): SB는 4히트 한 세트, 전열 정신 합계 1500에서 50배]"},
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 150, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": true, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 100, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "크리율은 양옆 아군, 연격수UP은 전열 검 아군", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": true, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": true, "mp_cost_zero": false},
+  "debuff": {"pwr": 90, "int": 90, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "crystal", "awakened": true, "condition": "VC/성도 스킬로 煌斬陣. 전투 개시 시 전열 검 2명 이상이면 자동 전개(조건부 極)"},
   "support": {"heal": 3, "barrier": 2, "cleanse": 2, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 2},
   "req": "전열 검 퍼스널리티 2명 이상, 정신 스택(誓いの剣)",
@@ -159,36 +134,11 @@
   "tier": "SS",
   "score": 98,
   "roles": ["dps", "support", "zone"],
-  "main": {
-    "skill": "桜火爛漫",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "slash",
-    "mult": 5, "size": "xl", "hits": 3, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "烈火陣 전개 시 위력 5배+재공격. 고무 보유 아군 속도 10% UP(5턴, 10누적)"
-  },
-  "sb": {
-    "skill": "秘技・一閃ノ華",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "pierce",
-    "mult": 10, "size": "xxl", "hits": 2, "repeat": 1,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "SB 시 極·烈火陣 전개 후 같은 공격 2히트 추가. 적 화속성 공격·완력·지성·속도 40% DOWN(5턴), 약점간파(화), 아군 실드"
-  },
-  "self_buff": {
-    "pwr": 70, "int": 70, "spd": 100, "elem_atk": 80, "weapon_atk": 30,
-    "crit_rate": 200, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false,
-    "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "전무기종 대미지 UP·MP치유는 고무(鼓舞) 보유 아군(전열 화속성)",
-    "pwr": 70, "int": 70, "spd": 100, "all_elem_atk": 0, "elem_atk": {"fire": 80}, "weapon_atk": {"all": 30},
-    "crit_rate": 100, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false,
-    "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": true, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 40, "int": 40, "spd": 50, "all_elem_res": 0, "elem_res": {"fire": 80}, "phys_res": 30, "mag_res": 0,
-    "weapon_res": {}, "break": "fire", "weak_expose": "fire", "pain_poison": true
-  },
+  "main": {"skill": "桜火爛漫", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "slash", "mult": 5, "size": "xl", "hits": 3, "repeat": 1, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "烈火陣 전개 시 위력 5배+재공격. 고무 보유 아군 속도 10% UP(5턴, 10누적)"},
+  "sb": {"skill": "秘技・一閃ノ華", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "pierce", "mult": 10, "size": "xxl", "hits": 2, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "SB 시 極·烈火陣 전개 후 같은 공격 2히트 추가. 적 화속성 공격·완력·지성·속도 40% DOWN(5턴), 약점간파(화), 아군 실드"},
+  "self_buff": {"pwr": 70, "int": 70, "spd": 100, "elem_atk": 80, "weapon_atk": 30, "crit_rate": 200, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "전무기종 대미지 UP·MP치유는 고무(鼓舞) 보유 아군(전열 화속성)", "pwr": 70, "int": 70, "spd": 100, "all_elem_atk": 0, "elem_atk": {"fire": 80}, "weapon_atk": {"all": 30}, "crit_rate": 100, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": true, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 40, "int": 40, "spd": 50, "all_elem_res": 0, "elem_res": {"fire": 80}, "phys_res": 30, "mag_res": 0, "weapon_res": {}, "break": "fire", "weak_expose": "fire", "pain_poison": true},
   "zone": {"type": "fire", "awakened": true, "condition": "VC/爆蓮之哭로 烈火陣, 고유 스킬로 각성, 火遁으로 絶·烈火陣. 전투 개시 시 전열 화 4명이면 자동(강화 시 極)"},
   "support": {"heal": 2, "barrier": 2, "cleanse": 2, "revive": false, "guard": 2, "taunt": 2, "mp_recover": 1, "af_gauge": 0, "status_immune": 0},
   "req": "烈火陣(바프·디버프 2배), 전열 화속성 파티",

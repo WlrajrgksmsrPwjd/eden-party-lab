@@ -354,7 +354,8 @@ function prepChar(c){
     || p.singular_focus || p.mental_focus || p.overthrow || p.multihit || p.extra_hit || p.over_crit;
   // 파티 버프를 걸려면 따로 행동해야 하는지 (주력기와 같은 스킬로 보이면 행동 소모 없음)
   // 딜러는 버프가 공격기에 붙어 있거나 틈틈이 거는 경우가 많아 행동을 따로 빼지 않는다
-  const buffAct = ex.buff_how==='skill' && !!partyHas && !(c.roles||[]).includes('dps') && mpx.buff!==0 && tx.buff!==99 && !(mpx.buff!=null && mpx.main!=null && mpx.buff===mpx.main);
+  // buff_act: true면 딜러라도 버프 스킬에 행동을 따로 씀 (히스메나(ES) エストレヤ・フガス 등)
+  const buffAct = ex.buff_act===true ? !!partyHas : ex.buff_act===false ? false : (ex.buff_how==='skill' && !!partyHas && !(c.roles||[]).includes('dps') && mpx.buff!==0 && tx.buff!==99 && !(mpx.buff!=null && mpx.main!=null && mpx.buff===mpx.main));
   return {
     pers: new Set((ex.personality||[]).concat(c.element||[]).map(x=>({fire:'火',water:'水',earth:'地',wind:'風',thunder:'雷',shade:'陰',crystal:'晶'}[x]||x))),
     // 속성 퍼스널리티(서약 '속성 ○의 아군' 판정용). 데이터에 없으면 공격 속성으로
@@ -366,7 +367,7 @@ function prepChar(c){
     cx: cx.v, cxWhy: cx.why, rules: compileRules(c), pow, atkKind, atkWt: m0.weapon_type || (atkKind==='mag'?'magic':wt),
     id:c.id, raw:c, name:c.name_kr, elem:(c.element&&c.element[0])||'none', elems:c.element||[], weapon:c.weapon, wt,
     align:c.align, stellar:!!c.stellar, tier:c.tier||'', score:c.score||0, roles:c.roles||[],
-    main:c.main, sb:c.sb,
+    main:c.main, sb:c.sb, afSk: c.af_skill || null,
     self:s, party:p, deb:d, sup:sp, tags:c.tags||[],
     zone, zoneTypes, zspec, zoneAwak: !!(zone&&zone.awakened),
     breakT: (d.break||'').toLowerCase(),
@@ -602,6 +603,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let row=null; const F = (j,k)=>{ if(!row) return 1; const v=row[k]; return v==null?1:v; };
   let sk = c.main, usingSB=false;
   if(sit==='sb' && c.sb && pr.sbOK && c.sb.mult>0){ sk=c.sb; usingSB=true; }
+  if(situation==='af' && c.afSk) sk = c.afSk; // AF 중에만 쓰는 공격(플람라피스(ES) ドゥーイル・スラマ 등)
   if(!sk) return null;
   let el = sk.element||c.elem; const kind = sk.kind==='mag'?'mag':'phys';
   const swc = ELEM_SWITCH[c.id];

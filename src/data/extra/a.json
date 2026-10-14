@@ -398,7 +398,8 @@
   },
   "buff_how": "skill",
   "mp_max": null,
-  "manifest": 0
+  "manifest": 0,
+  "buff_act": true
  },
  "flammelapis_es": {
   "src": "https://altema.jp/anaden/chara/1212",
@@ -411,7 +412,7 @@
    "水"
   ],
   "mp": {
-   "main": 62,
+   "main": 102,
    "sb": 102,
    "buff": 67
   },

@@ -10,7 +10,7 @@ for f in sorted(glob.glob(P('data','extra','*.json'))): EX.update(json.load(open
 for c in chars:
     x=EX.get(c['id'])
     if not x: continue
-    c['ex']={k:x[k] for k in ('personality','mp','turns','buff_how','manifest') if x.get(k) is not None}
+    c['ex']={k:x[k] for k in ('personality','mp','turns','buff_how','buff_act','manifest') if x.get(k) is not None}
     ko_names=x.get('ko') or {}
     for k in ('main','sb'):
         if c.get(k) and ko_names.get(k): c[k]['skill_ko']=ko_names[k]
@@ -73,7 +73,8 @@ for c in chars:
 scond=json.load(open(P('data','skill_cond.json'),encoding='utf-8'))
 for c in chars:
     for k,v in (scond.get(c['id']) or {}).items():
-        if c.get(k): c[k]['mcond']={x:v[x] for x in ('base','top','need','steps') if x in v}
+        kk='af_skill' if k=='af' else k
+        if c.get(kk): c[kk]['mcond']={x:v[x] for x in ('base','top','need','steps') if x in v}
 for c in chars:
     if c['id'] in drules: c['debuff_rules']=drules[c['id']]
     if chain.get(c['id']): c['chain']=[{k:e[k] for k in ('on','max','atk','when','af','every','name','effect') if k in e} for e in chain[c['id']]]

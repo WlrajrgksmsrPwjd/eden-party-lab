@@ -110,39 +110,11 @@
   "tier": "SS",
   "score": 98,
   "roles": ["dps"],
-  "main": {
-    "skill": "電光雷刃",
-    "target": "st", "kind": "phys", "stat": "pwr", "element": "thunder", "weapon_type": "slash",
-    "mult": 4, "size": "xl", "hits": 5, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "단일 1회 + 랜덤 적 4회. 歴戦 상태 시 위력 4배(기본 3배)"
-  },
-  "sb": {
-    "skill": "雷皇斬・双滅",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "thunder", "weapon_type": "slash",
-    "mult": 30, "size": "xxl", "hits": 3, "repeat": 2,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "SB 시 30배(기본 10배) + 疾風迅雷·電光雷刃 연속 실행, 雷 EB 3 누적"
-  },
-  "self_buff": {
-    "pwr": 100, "int": 100, "spd": 100, "elem_atk": 100, "weapon_atk": 30,
-    "crit_rate": 0, "crit_dmg": 0, "over_crit": false,
-    "singular_focus": true, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": true
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "",
-    "pwr": 100, "int": 100, "spd": 0, "all_elem_atk": 0,
-    "elem_atk": {}, "weapon_atk": {"sword": 30, "katana": 30, "ax": 30},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 35, "int": 35, "spd": 50, "all_elem_res": 0, "elem_res": {},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {"slash": 35},
-    "break": "thunder", "weak_expose": "", "pain_poison": true
-  },
+  "main": {"skill": "電光雷刃", "target": "st", "kind": "phys", "stat": "pwr", "element": "thunder", "weapon_type": "slash", "mult": 4, "size": "xl", "hits": 5, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "단일 1회 + 랜덤 적 4회. 歴戦 상태 시 위력 4배(기본 3배)"},
+  "sb": {"skill": "雷皇斬・双滅", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "thunder", "weapon_type": "slash", "mult": 30, "size": "xxl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "SB 시 30배(기본 10배) + 疾風迅雷·電光雷刃 연속 실행, 雷 EB 3 누적 [알테마 대조(2026-10): 재공격 아님(疾風迅雷·電光雷刃 연속 실행은 다른 스킬)]"},
+  "self_buff": {"pwr": 100, "int": 100, "spd": 100, "elem_atk": 100, "weapon_atk": 30, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": true, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": true},
+  "party_buff": {"scope": "all", "restrict": "", "pwr": 100, "int": 100, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"sword": 30, "katana": 30, "ax": 30}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 35, "int": 35, "spd": 50, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {"slash": 35}, "break": "thunder", "weak_expose": "", "pain_poison": true},
   "zone": null,
   "support": {"heal": 1, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "status_immune": 0},
   "req": "歴戦 상태(루나틱+ 수동 발동, AF 7회 후 재발동 가능), 전위 雷/バルオキー 2명",
@@ -893,136 +865,23 @@
   "name_kr": "니나",
   "name_jp": "ニナ",
   "style": "NS",
-  "element": [
-    "crystal"
-  ],
+  "element": ["crystal"],
   "weapon": "staff",
   "align": "shadow",
   "stellar": true,
   "release_jp": "",
   "tier": "S",
   "score": 98,
-  "roles": [
-    "support",
-    "debuffer",
-    "dps",
-    "zone"
-  ],
-  "main": {
-    "skill": "雨糸の檻",
-    "target": "aoe",
-    "kind": "mag",
-    "stat": "int",
-    "element": "crystal",
-    "weapon_type": "magic",
-    "mult": 1,
-    "size": "xl",
-    "hits": 5,
-    "repeat": 1,
-    "crit_sure": false,
-    "def_ignore": false,
-    "barrier_pierce": false,
-    "af_combo_x": 1,
-    "condition": "선제. 완력·지성·속도 25% DOWN(3누적)+페인 영구, 아군 실드(최대 2000). 루나틱<複写> 중 스킬 2회 연속 실행(2회째 MP 0)"
-  },
-  "sb": {
-    "skill": "ドリーミースティッチ",
-    "target": "aoe",
-    "kind": "mag",
-    "stat": "int",
-    "element": "crystal",
-    "weapon_type": "magic",
-    "mult": 10,
-    "size": "xxl",
-    "hits": 4,
-    "repeat": 1,
-    "crit_sure": false,
-    "def_ignore": false,
-    "barrier_pierce": false,
-    "af_combo_x": 1,
-    "condition": "선제. SB 시 공격 전 極・輝晶陣 전개·10배. 아군 정공격 50%(3누적)·50% 경감 배리어 3회, 자신 루나틱<複写> 3턴(복사로 재실행)"
-  },
-  "self_buff": {
-    "pwr": 0,
-    "int": 0,
-    "spd": 0,
-    "elem_atk": 150,
-    "weapon_atk": 100,
-    "crit_rate": 100,
-    "crit_dmg": 30,
-    "over_crit": false,
-    "singular_focus": true,
-    "mental_focus": true,
-    "overthrow": true,
-    "eagle_eyes": false,
-    "weak_dmg": 0,
-    "multihit": false
-  },
-  "party_buff": {
-    "scope": "all",
-    "restrict": "전속성공격 100%는 체인 オートコーディネイト(아군 晶 공격 시, 3회행동). 전무기종 100%·정신통일·심기일체·하극상은 理の再縫(1턴)",
-    "pwr": 0,
-    "int": 0,
-    "spd": 0,
-    "all_elem_atk": 100,
-    "elem_atk": {
-      "crystal": 100
-    },
-    "weapon_atk": {
-      "all": 100
-    },
-    "crit_rate": 100,
-    "crit_dmg": 30,
-    "over_crit": false,
-    "singular_focus": true,
-    "mental_focus": true,
-    "overthrow": true,
-    "eagle_eyes": false,
-    "weak_dmg": 0,
-    "multihit": false,
-    "link": false,
-    "barrier_pierce": false,
-    "extra_hit": false,
-    "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 75,
-    "int": 75,
-    "spd": 75,
-    "all_elem_res": 50,
-    "elem_res": {},
-    "phys_res": 0,
-    "mag_res": 0,
-    "weapon_res": {},
-    "break": "",
-    "weak_expose": "crystal",
-    "pain_poison": true
-  },
-  "zone": {
-    "type": "crystal",
-    "awakened": true,
-    "condition": "ショールーム/VC로 輝晶陣, 전개 중 ZONE 각성. 코디네이트 합계 20 누적 시 턴 시작에 極・輝晶陣 자동 전개. SB 시 極・輝晶陣"
-  },
-  "support": {
-    "heal": 0,
-    "barrier": 3,
-    "cleanse": 0,
-    "revive": false,
-    "guard": 0,
-    "taunt": 0,
-    "mp_recover": 0,
-    "af_gauge": 0,
-    "status_immune": 0
-  },
+  "roles": ["support", "debuffer", "dps", "zone"],
+  "main": {"skill": "雨糸の檻", "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "mult": 1, "size": "xl", "hits": 5, "repeat": 1, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. 완력·지성·속도 25% DOWN(3누적)+페인 영구, 아군 실드(최대 2000). 루나틱<複写> 중 스킬 2회 연속 실행(2회째 MP 0)"},
+  "sb": {"skill": "ドリーミースティッチ", "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "mult": 10, "size": "xxl", "hits": 4, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. SB 시 공격 전 極・輝晶陣 전개·10배. 아군 정공격 50%(3누적)·50% 경감 배리어 3회, 자신 루나틱<複写> 3턴(복사로 재실행) [알테마 대조(2026-10): SB 자체 재실행 없음(복사는 이후 스킬)]"},
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 150, "weapon_atk": 100, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": true, "mental_focus": true, "overthrow": true, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "전속성공격 100%는 체인 オートコーディネイト(아군 晶 공격 시, 3회행동). 전무기종 100%·정신통일·심기일체·하극상은 理の再縫(1턴)", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 100, "elem_atk": {"crystal": 100}, "weapon_atk": {"all": 100}, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": true, "mental_focus": true, "overthrow": true, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 75, "int": 75, "spd": 75, "all_elem_res": 50, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "crystal", "pain_poison": true},
+  "zone": {"type": "crystal", "awakened": true, "condition": "ショールーム/VC로 輝晶陣, 전개 중 ZONE 각성. 코디네이트 합계 20 누적 시 턴 시작에 極・輝晶陣 자동 전개. SB 시 極・輝晶陣"},
+  "support": {"heal": 0, "barrier": 3, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
   "req": "아군의 晶 속성 공격 스킬(체인 최대 3회/턴), 코디네이트 40 누적(理の再縫)",
-  "tags": [
-    "chain_ability",
-    "lunatic_copy",
-    "stack_debuff",
-    "shield",
-    "hp_mp_max_up",
-    "first_use_bonus"
-  ],
+  "tags": ["chain_ability", "lunatic_copy", "stack_debuff", "shield", "hp_mp_max_up", "first_use_bonus"],
   "note_kr": "정속성 파티 디버퍼·버퍼. 고유스킬 선제 5히트로 완력·지성·속도 최대 75% DOWN+페인+실드, ソーイング로 전속성내성 최대 75% DOWN(5턴). 체인 オートコーディネイト로 아군 크리율·마크리율·전속성공격 100%(3회행동). 코디네이트 40 누적 시 理の再縫(弱点看破(晶)+전무기종 100%+정신통일·심기일체·하극상). 루나틱<複写>로 스킬 2회 연속."
 },
 {
