@@ -1,0 +1,7 @@
+{
+  "_doc": "전투 시작 AF 게이지(기본 50%, 계산 방식 탭)를 바꾸는 캐릭터. start: 시작 게이지 %, need: 전열 조건 {elem, n}, buddy: 메인·서브 버디 중 하나 필요(buddy_fx 키). _refill: 전투 중 게이지 회복 {on: sb(SB 사용 시), to: %, cost: 먼저 비AF 턴에 이만큼 AF 게이지를 써서 축적해 둬야 함(히스메나(ES) エスパーダ)}. 출처: 캐릭터 데이터·사용자 확인(질퍼니(AS)+피탄)",
+  "myrus_es": {"start": 100},
+  "izuna": {"start": 100, "need": {"elem": "thunder", "n": 3}},
+  "jilfany_as": {"start": 100, "buddy": ["pitan", "pitan_as"]},
+  "_refill": {"hismena_es": {"on": "sb", "to": 100, "cost": 50}}
+}

@@ -44,6 +44,16 @@ for c in chars:
 stats=json.load(open(P('data','stats.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in stats and not c['id'].startswith('_'): c['stats']=stats[c['id']]
+# 같은 캐릭터 스타일 묶음 (한 파티에 하나만)
+cbase=json.load(open(P('data','char_base.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in cbase and not c['id'].startswith('_'): c['base']=cbase[c['id']]
+# 전투 시작 AF 게이지·전투 중 AF 게이지 회복
+afst=json.load(open(P('data','af_start.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in afst and not c['id'].startswith('_'): c['af_start']=afst[c['id']]
+    rf=(afst.get('_refill') or {}).get(c['id'])
+    if rf: c['af_refill']=rf
 # AF 중 스킬 연출 시간(초) 캐릭터별 값
 afan=json.load(open(P('data','af_anim.json'),encoding='utf-8'))
 for c in chars:
@@ -63,7 +73,7 @@ for c in chars:
 scond=json.load(open(P('data','skill_cond.json'),encoding='utf-8'))
 for c in chars:
     for k,v in (scond.get(c['id']) or {}).items():
-        if c.get(k): c[k]['mcond']={x:v[x] for x in ('base','need','steps') if x in v}
+        if c.get(k): c[k]['mcond']={x:v[x] for x in ('base','top','need','steps') if x in v}
 for c in chars:
     if c['id'] in drules: c['debuff_rules']=drules[c['id']]
     if chain.get(c['id']): c['chain']=[{k:e[k] for k in ('on','max','atk','when','af','every','name','effect') if k in e} for e in chain[c['id']]]

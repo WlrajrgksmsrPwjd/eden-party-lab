@@ -155,3 +155,15 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 
 키 = 캐릭터 id, 값 = `{trig, taunt, copy?, atk}`. 맞은 타수마다 1번 반격(`copy`: 루나틱<복사>면 2번), 행동불능 상태이상이면 발동 안 함.
 `_cover` = `{id: "aoe"|"sb"}` 아군 대신 맞기(수세·전체공격 대신 받기). aoe면 적 전체공격 1번이 전열 수만큼 그 캐릭터에게 들어온다. 빌드 때 캐릭터 `cover`로 들어간다.
+
+# 전투 시작 AF 게이지 (`af_start.json`)
+
+키 = 캐릭터 id, 값 = `{start, need?, buddy?}`: 그 캐릭터가 전열이고 조건(전열 속성 수 `need:{elem,n}`, 메인·서브 버디 `buddy:[키]`)이 맞으면 시작 게이지 %. `_refill` = `{id: {on:"sb", to, cost}}` SB 사용 시 AF 게이지 회복(cost: 먼저 비AF 턴에 쓰는 게이지).
+
+# 캐릭터 묶음 (`char_base.json`)
+
+키 = 캐릭터 id, 값 = 같은 캐릭터 스타일(NS·AS·ES)의 공통 키. 한 파티(전열·후열)에 같은 키는 하나만. 영문 위키 이름 기준, 위키에 없는 캐릭터는 `jp:일본어 이름`.
+
+# 스킬 위력 조건 추가 (`skill_cond.json`)
+
+`top`: 최대 배율을 스킬 데이터 대신 이 값으로. 조건 `{"stat":"spr","full":500,"buff":0.5,"sum":"front"}`: 기본 스탯(천명치 반영)×(1+buff) ÷ full 비율(sum이 front면 전열 합).
