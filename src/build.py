@@ -62,6 +62,9 @@ for c in chars:
 stb=json.load(open(P('data','stellar.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in stb and not c['id'].startswith('_'): c['stellar_board']=stb[c['id']]
+aft=json.load(open(P('data','af_timing.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in aft and not c['id'].startswith('_'): c['af_t']={k:v for k,v in aft[c['id']].items() if k in ('party','self','deb','zone')}
 lnk=json.load(open(P('data','link.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in lnk and not c['id'].startswith('_'): c['links']=lnk[c['id']]

@@ -1188,7 +1188,7 @@
   "tier": "",
   "score": 92,
   "roles": ["dps", "zone", "healer"],
-  "main": {"skill": "サンティエヴェンテ", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "slash", "mult": 35, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. 자신 HP 5할 자상, HP 소모량 비례 최대 35배. ANOTHER ZONE 전개 시 확정크리. 속성 ZONE에 따라 속성 변화(トルネド계)"},
+  "main": {"skill": "サンティエヴェンテ", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "slash", "mult": 35, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. 자신 HP 5할 자상, HP 소모량 비례 최대 35배. ANOTHER ZONE 전개 시 확정크리. 속성 ZONE에 따라 속성 변화(トルネド계)", "af_x": 0.25, "af_note": "[AF 1턴 대조 2026-10-15] HP 소모량 비례 배율: 행동마다 현재 HP 5할을 깎아 소모량이 1, 1/2, 1/4…로 줄어 AF 약 8행동 평균 약 0.25"},
   "sb": null,
   "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 100, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "", "pwr": 0, "int": 0, "spd": 30, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},

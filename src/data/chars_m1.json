@@ -794,7 +794,7 @@
   "tier": "",
   "score": 92,
   "roles": ["support", "healer", "zone"],
-  "main": {"skill": "カスティーゴ", "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "pierce", "mult": 1, "size": "xl", "hits": 6, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "기본 3히트, 献身 대상 전방 시 공격 횟수 +3·献身 대상 속성으로 변화(変幻自在/臨機応変). 아군 물 공격 30%·크리율 100%"},
+  "main": {"skill": "カスティーゴ", "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "pierce", "mult": 1, "size": "xl", "hits": 6, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "기본 3히트, 献身 대상 전방 시 공격 횟수 +3·献身 대상 속성으로 변화(変幻自在/臨機応変). 아군 물 공격 30%·크리율 100%", "af_x": 0.5, "af_note": "[AF 1턴 대조 2026-10-15] 献身 대상 없음 → 3타(6타의 절반)"},
   "sb": null,
   "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "献身 대상 1명: 노나 스탯 30% 가산+버프 효과량 2배", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"water": 30}, "weapon_atk": {"all": 30}, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
@@ -1332,7 +1332,7 @@
    "barrier_pierce": false,
    "af_combo_x": 1,
    "condition": "TL(タクティクスレベル) 50일 때 ライザスマッシュ가 변화, 사용 후 TL 1. TL 50 미만이면 ライザスマッシュ 발동"
-  },
+  , "af_x": 0.03, "af_note": "[AF 1턴 대조 2026-10-15] TL 50 미달 → ライザスマッシュ(3타, 배율 미기재 1배 가정)"},
   "sb": {
    "skill": "ブラストノヴァ",
    "target": "aoe",
@@ -1483,7 +1483,7 @@
    "barrier_pierce": false,
    "af_combo_x": 1,
    "condition": "TL 50일 때 シャインレーザー가 변화, 일부 버프를 디버프로 반전(1턴), 사용 후 TL 1. TL 50 미만이면 シャインレーザー 발동"
-  },
+  , "af_x": 0.05, "af_note": "[AF 1턴 대조 2026-10-15] TL 50 미달 → シャインレーザー(배율 미기재)"},
   "sb": {
    "skill": "スパイラルワインド",
    "target": "aoe",

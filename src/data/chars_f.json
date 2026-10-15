@@ -441,7 +441,7 @@
    "barrier_pierce": false,
    "af_combo_x": 1,
    "condition": "스텔스 시 テンス 수에 따라 공격 횟수 최대 +4. 전방 권/추 3명 이상이면 타속성. 자신 활 피해 50%·虎視眈眈 5턴"
-  },
+  , "af_x": 0.2, "af_note": "[AF 1턴 대조 2026-10-15] テンス 미축적 → 1타"},
   "self_buff": {
    "pwr": 150,
    "int": 0,
@@ -933,7 +933,7 @@
   "tier": "",
   "score": 95,
   "roles": ["dps", "breaker"],
-  "main": {"skill": "葩昇の太刀", "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "slash", "mult": 25, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "후공. 이 턴에 대미지를 받지 않은 적에게 25배. 페인 3턴(내성 무시). 전체는 飄風双激斬(특대 2회, 미피격 적 5배, 브레이크 부여)"},
+  "main": {"skill": "葩昇の太刀", "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "slash", "mult": 25, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "후공. 이 턴에 대미지를 받지 않은 적에게 25배. 페인 3턴(내성 무시). 전체는 飄風双激斬(특대 2회, 미피격 적 5배, 브레이크 부여)", "af_x": 0.15, "af_note": "[AF 1턴 대조 2026-10-15] 25배는 그 턴 안 맞은 적에게만"},
   "sb": null,
   "self_buff": {"pwr": 30, "int": 0, "spd": 30, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "none", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
