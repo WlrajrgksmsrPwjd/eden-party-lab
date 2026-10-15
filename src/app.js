@@ -939,11 +939,13 @@ function basisHtml(x){
   const gq=co.gq||{};
   ln.push(row('글래스터 · 장비', `${X(gq.f||1)} · ${X(co.gearF||1)}`, `${esc(glText(gq))}${gq.share?` (셔틀 P글래 공유)`:''} · 장비는 무기종 표준 풀장비(딩 빌더 최적 빌드)`));
   if(co.auraR) ln.push(row('아군 전체 글래', X(co.auraF||1), `후열 셔틀 ${co.auraR.nb}명: 공명의 힘 +${P(co.auraR.r51)}(51행)${co.auraR.r50?` · 격진의 힘 +${P(co.auraR.r50)}(50행)`:''}`));
-  if(co.linkHits) ln.push(row('연계 추가타', `${+co.linkHits.toFixed(2)}회/행동`, '연계를 받은 공격마다 1타씩, 각자 속성·존 배율'));
+  const chH = (co.links||[]).filter(L=>L.charge).reduce((a,L)=>a+L.n,0), lkH = Math.max(0, (co.linkHits||0) - chH);
+  if(lkH) ln.push(row('연계 추가타', `${+lkH.toFixed(2)}회/행동`, '연계를 받은 공격마다 1타씩, 각자 속성·존 배율'));
+  if(chH) ln.push(row('帯電 추격', `${+chH.toFixed(2)}회/행동`, `루나틱<帯電>: 타격마다 雷 추격(小) 1회${co.chW<1?` (가동률 ${P(co.chW)})`:''} · AF 콤보 타수에도 들어감(가정)`));
   const hit = (h,lab)=>`${lab} 경감 전 ${fmtN(h.pre.n)} / 크리 ${fmtN(h.pre.c)}${h.oc>0?` / 오버크리 ${fmtN(h.pre.oc)}`:''} → 25억 경감 ${fmtN(h.cap.n)} / ${fmtN(h.cap.c)} → 콤보 ${Math.round(h.combo*100)}% ${fmtN(h.fin.n)} / ${fmtN(h.fin.c)}${h.oc>0?` / ${fmtN(h.fin.oc)}`:''}`;
   ln.push(row('1타', `${fmtN(h0.avg)} → ${fmtN(h1.avg)}`, `기대값(크리율 반영), AF 콤보 75% → ${Math.round(fin*100)}%. 99.99억 상한`));
   const det = `<div class="hint">${hit(h0,'콤보 시작:')}</div><div class="hint">${hit(h1,'콤보 끝:')}</div>`;
-  const act = useD ? `<div class="hint">AF ${d.n[i]}회 행동 · 행동 1회 = 1타 × ${+co.totHits.toFixed(2)}타${co.linkHits?` + 연계 ${+co.linkHits.toFixed(2)}`:''}${co.nT>1?` × 적 ${co.nT}체`:''} → 콤보 끝 기준 ${fmtN(h1.act)}</div>` : '';
+  const act = useD ? `<div class="hint">AF ${d.n[i]}회 행동 · 행동 1회 = 1타 × ${+co.totHits.toFixed(2)}타${lkH?` + 연계 ${+lkH.toFixed(2)}`:''}${chH?` + 帯電 ${+chH.toFixed(2)}`:''}${co.nT>1?` × 적 ${co.nT}체`:''} → 콤보 끝 기준 ${fmtN(h1.act)}</div>` : '';
   const sbl = hs ? `<div class="hint">SB ${esc(sbx.co.skill||'')}: AF ${d.sbAt}번째 행동에서 콤보 ${Math.round(sbx.combo*100)}% · 1타 ${fmtN(hs.avg)} × ${+sbx.co.totHits.toFixed(2)}타 = ${fmtN(hs.act)}</div>` : '';
   return `<div class="basis-tbl"><div class="hint">${useD?'최고점(허수아비) 기준: 버프·디버프·존이 다 깔린 AF 중 공격 1회':'SB 턴 기준'} · 각 칸은 곱해집니다</div><table>${ln.join('')}</table>${det}${act}${sbl}</div>`;
 }
