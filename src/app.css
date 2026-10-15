@@ -124,6 +124,13 @@ textarea{width:100%; min-height:110px; font-family:var(--f-mono); font-size:12px
 details.why summary{cursor:pointer; font-size:12.5px; color:var(--muted)}
 .why .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:4px 14px; margin-top:8px; font-size:12.5px}
 .why .grid div{display:flex; justify-content:space-between; gap:8px; border-bottom:1px dashed var(--line); padding-block:2px}
+.basis-tbl{margin-top:8px; font-size:12.5px; display:grid; gap:3px}
+.basis-tbl table{width:100%; border-collapse:collapse}
+.basis-tbl th{text-align:left; font-weight:500; white-space:nowrap; padding:3px 10px 3px 0; vertical-align:top}
+.basis-tbl td{padding:3px 10px 3px 0; vertical-align:top; border-bottom:1px dashed var(--line)}
+.basis-tbl th{border-bottom:1px dashed var(--line)}
+.basis-tbl td.num{white-space:nowrap; font-family:var(--f-mono); font-variant-numeric:tabular-nums}
+@media (max-width:560px){ .basis-tbl tr{display:grid; grid-template-columns:1fr auto} .basis-tbl td.hint{grid-column:1/-1; border-bottom:1px dashed var(--line)} .basis-tbl th,.basis-tbl td.num{border-bottom:0} }
 .warns{display:flex; flex-wrap:wrap; gap:6px}
 .warn{font-size:12px; color:var(--warn); border:1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); border-radius:6px; padding:1px 8px}
 .empty{background:var(--surface); border:1px dashed var(--line); border-radius:var(--r); padding:28px; text-align:center; color:var(--muted)}

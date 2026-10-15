@@ -39,7 +39,7 @@
     "mult": 50, "size": "xxl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": true, "af_combo_x": 1,
     "condition": "HP 소모량 20000 이상일 때 50배"
   },
-  "self_buff": {                       // 자신에게 거는 버프 최대치 (%)
+  "self_buff": {                       // 자신이 받는 버프 최대치 (%) — 자기 파티 버프 포함. 엔진은 같은 항목의 자기 파티 버프를 또 더하지 않음
     "pwr": 100, "int": 100, "spd": 0,
     "elem_atk": 100,                   // 자기 속성 공격 버프
     "weapon_atk": 50,                  // 무기종 대미지 버프
@@ -50,7 +50,10 @@
     "overthrow": true,                 // 하극상
     "eagle_eyes": false,               // 호시탐탐
     "weak_dmg": 0,                     // 약점 시 대미지 UP %
-    "multihit": false                  // 다단강화(多段強化)
+    "multihit": false,                 // 다단강화(多段強化)
+    // 선택 항목: extra_hit·barrier_pierce(자기 연격수+1·배리어 관통), mp_up·mp_flat(최대 MP %·고정값), pwr_flat·int_flat·spd_flat,
+    // kesshi·shinan(루나틱 결사·심안), dmg_up+dmg_src+dmg_on(자기 주는 대미지 UP).
+    // kesshi·shinan·dmg_on 은 true 또는 조건 {"sb":true}(SB 때·그 AF 남은 행동) {"req":{…}}(편성) {"zone":[키],"zlv":2}
   },
   "party_buff": {                      // 아군(전체 또는 인접)에게 주는 버프 최대치. 대상 제한은 scope에
     "scope": "adjacent",               // all / adjacent / right / left / none
@@ -65,7 +68,12 @@
     "link": false,                     // 연계(連携) 부여
     "barrier_pierce": false,           // 아군 배리어 관통 부여
     "extra_hit": false,                // 연격수 +1 부여
-    "mp_cost_zero": false
+    "mp_cost_zero": false,
+    "dmg_up": 0, "dmg_src": "prayer",  // 주는 대미지 %UP(与ダメージ). dmg_src: prayer(기도)·song(가창)·other — 같은 종류는 최댓값 하나, 종류끼리 곱
+    "kesshi": false,                   // 루나틱<捨身>(결사) 부여: 대미지 ×1.7·크리 확정
+    "shinan": false,                   // 루나틱<心眼>(심안) 부여: 대미지 ×1.5·약점 배율 +1
+    "mp_up": 0,                        // 최대 MP %UP (정신통일·심기일체 계산에 들어감)
+    "pwr_flat": 0, "int_flat": 0, "spd_flat": 0 // 스탯 고정값 UP(＋100 등, % 아님)
   },
   "debuff": {                          // 적에게 거는 디버프 최대치 (%)
     "pwr": 0, "int": 0, "spd": 0,
@@ -102,7 +110,7 @@
 {"f":["stat","weap"], "to":{"elem":["water"]}, "when":{"zone":["thunder"],"zlv":2}, "x":1, "e":0.5, "me":1}
 ```
 
-- `f` 대상 버프 묶음: `stat`(pwr·int·spd) `pwr` `int` `spd` `elem`(전속성+속성) `allel`(전속성) `elat`(속성) `elat:fire`(특정 속성만) `weap` `crit` `critd` `sf` `mf` `focus`(sf+mf) `ot` `eagle` `oc` `mh` `xhit` `pierce` `weak` `link` `kou`(리나리아 巧撃: 크리율·오버크리·완력 고정값 `pwr_flat`) `*`(전부)
+- `f` 대상 버프 묶음: `stat`(pwr·int·spd) `pwr` `int` `spd` `elem`(전속성+속성) `allel`(전속성) `elat`(속성) `elat:fire`(특정 속성만) `weap` `crit` `critd` `sf` `mf` `focus`(sf+mf) `ot` `eagle` `oc` `mh` `xhit` `pierce` `weak` `link` `kou`(리나리아 巧撃: 크리율·오버크리·완력 고정값 `pwr_flat`) `shinan`(심안) `kesshi`(결사) `dmg`(주는 대미지) `mp`(최대 MP) `flat`(스탯 고정값) `*`(전부)
 - `to` 받는 사람 조건: `pos`(`self` `one` `adj` `selfone` `selfadj` `others`) + `side`(`r` 오른쪽/`l` 왼쪽), `elem` `weap` `wt` `align` `kind`(phys/mag) `kof` `pers`(퍼스널리티 일본어 원문 배열, extra 데이터로 판정), `p`(판정 불가 조건 → 맞을 확률)
 - `when` 발동 조건: `zone`(`any` `elem` `weap` 또는 존 키 배열: fire…crystal, slash/pierce/blunt/magic, slash_pierce, slash_magic, all(성해진), all_weapon(섬격진), moonlight), `zlv`(2=극/어나더 존, 3=절), `sb`, `af`, `req`(전방 구성, parseReq 형식. 퍼스널리티는 `{"kind":"pers","vals":["アルカディア"],"n":2}`), `reqAny`(편성 조건 중 하나만 맞아도), `pain`(파티에 독·페인), `up`(켜져 있는 비율), `t`(짧은 버프: SB·AF 땐 100%, 평상 턴엔 이 비율)
 - `x` 조건 충족 시 배율(기본 1), `e` 미충족 시 배율(기본 0), `en` 평상 턴에만 쓰는 미충족 배율(지속 턴이 짧아 SB·AF 땐 다 받지만 평상엔 일부만), `me` 1이면 버퍼 자신은 조건과 무관하게 `x`

@@ -15,5 +15,6 @@
   "m2_claudia": [{"f":["def"],"when":{"up":0.5}}],
   "nonold": [{"f":["def"],"st":true}],
   "kuchinawa_as": [{"f":["def"],"st":true}],
-  "fermina": [{"f":["def"],"st":true}]
+  "fermina": [{"f":["def"],"st":true}],
+  "aldo": [{"f":["allres"],"when":{"sb":true}}]
 }

@@ -819,7 +819,7 @@ function dummyHtml(x){
   const ord=(x.ex&&x.ex.order)||d.n.map((_,i)=>i);
   const sbTxt = d.sbWhen ? ` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(AF ${d.sbAt}번째 행동에서 SB 게이지 100%)</span>` : d.sbNeed ? ` <span class="hint">· SB 못 씀 (AF가 끝날 때 SB 게이지 ${Math.round(d.sbGauge)}%)</span>` : ' <span class="hint">· 성도 없음</span>';
   const mu = d.mule && d.mule.auto && !(d.mule.inv) ? ' · 후열 연성 P글래 셔틀 2명 가정' : '';
-  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 콤보 75%→${Math.round(d.fin*100)}%)</span>${sbTxt}</div><div class="hint">허수아비 1턴 · AF 100%로 시작 · 왼쪽 버퍼부터 행동하며 버프를 깔고, 버프는 행동한 뒤부터${mu} · 딜 비중 ${top}</div></div>`;
+  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 콤보 75%→${Math.round(d.fin*100)}%)</span>${sbTxt}</div><div class="hint">허수아비 1턴 · AF 100%로 시작 · 존 ${esc(d.zFull&&d.zFull.level?d.zFull.label+(d.zFull.byName?' ('+d.zFull.byName+')':''):'없음')}${d.sbAt!=null&&x.ev.sb.zone&&x.ev.sb.zone.level&&x.ev.sb.zone.how==='SB 시'&&(!d.zFull||x.ev.sb.zone.key!==d.zFull.key)?' → SB 후 '+esc(x.ev.sb.zone.label):''} · 왼쪽 버퍼부터 행동하며 버프를 깔고, 버프는 행동한 뒤부터${mu} · 딜 비중 ${top}</div></div>`;
 }
 function timelineHtml(x, o){
   const tl=tlOf(x,o), ev=x.ev; if(!tl) return dummyHtml(x)+bsimHtml(ev);
@@ -868,19 +868,10 @@ function cardHtml(x, key, o){
       </div>
       ${warns.length?`<div class="warns">${warns.map(w=>`<span class="warn"${w.full?` title="${esc(w.full)}"`:''}>${esc(w.t)}</span>`).join('')}</div>`:''}
       <details class="why turns"${boss&&(x.rank===1||shared)?' open':''}><summary>턴별 운영${boss?' · '+esc(boss.name_kr)+' 기믹 대응':''}</summary>${turnPlanHtml(x, boss)}</details>
-      <details class="why"><summary>계산 근거·운용 포인트 보기 (주딜 ${esc(x.team[top].name)} 기준)</summary>
+      <details class="why"><summary>계산 근거·운용 포인트 보기 (주딜 ${esc(x.team[basisTop(x)].name)} 기준)</summary>
+        ${basisHtml(x)}
         <div class="grid">
-          <div><span>스탯 버프</span><span class="num">+${pctTxt(co&&co.statB)}</span></div>
-          <div><span>속성 공격 버프</span><span class="num">+${pctTxt(co&&co.elB)}</span></div>
-          <div><span>무기종 대미지</span><span class="num">+${pctTxt(co&&co.wB)}</span></div>
-          <div><span>정신통일·심기일체·하극상</span><span class="num">+${pctTxt(co&&co.specB)}</span></div>
-          <div><span>속성 내성 디버프</span><span class="num">−${pctTxt(co&&co.typeR)}</span></div>
-          <div><span>물리/마법 내성 디버프</span><span class="num">−${pctTxt(co&&co.physR)}</span></div>
-          <div><span>크리티컬 확률</span><span class="num">${pctTxt(co&&Math.min(co.critR,1))}</span></div>
-          <div><span>브레이크</span><span class="num">×${co?co.brk.toFixed(1):'1.0'}</span></div>
           <div><span>존 (SB / 평상)</span><span class="num">${esc(sbz&&sbz.level?sbz.label:'없음')} / ${esc(nz&&nz.level?nz.label:'없음')}</span></div>
-          <div><span>AF 평균 콤보</span><span class="num">${(ev.avgCombo*100).toFixed(0)}%</span></div>
-          <div><span>공격 글래스터</span><span class="num">×${co&&co.gq?co.gq.f.toFixed(2):'1.00'}</span></div>
           <div><span>회복/배리어/해제/수호</span><span class="num">${ev.survDet.heal}/${ev.survDet.barrier}/${ev.survDet.cleanse}/${ev.survDet.guard}</span></div>
         </div>
         ${ex.notes.length?`<ul class="ops">${ex.notes.map(n=>`<li><b>${esc(n.name)}</b> <span class="cond ${n.lvl}">${n.lvl==='ok'?'조건 충족':n.lvl==='off'?'조건 미충족':'일부 적용'}</span> ${esc(n.text)}${n.to.length?` → 대상 ${esc(n.to.join(', '))}`:''}</li>`).join('')}</ul>`:''}
@@ -889,6 +880,42 @@ function cardHtml(x, key, o){
     </section>`;
 }
 
+/* 계산 근거: 최고점(허수아비)의 주 딜러 1명, 버프가 다 깔린 AF 중 공격 1회를 딩 계산기 순서대로 */
+function basisTop(x){ const d=x.ev.dummy; const per=(d&&!d.fast&&d.per&&d.per.length===x.team.length)?d.per:x.ev.sb.per; return per.indexOf(Math.max(...per)); }
+function basisHtml(x){
+  const ev=x.ev, d=ev.dummy, i=basisTop(x), c=x.team[i], S=x.S||settings();
+  const useD = d && !d.fast && d.full;
+  const co = useD ? d.full[i] : ev.sb.cores[i], z = useD ? d.zFull : ev.sb.zone;
+  if(!co) return '<p class="hint">주 딜러의 공격 정보가 없습니다.</p>';
+  const fin = useD ? d.fin : ev.avgCombo;
+  const h0 = E.hitInfo(co, z, S, 0.75), h1 = E.hitInfo(co, z, S, fin);
+  const sbx = useD && d.sbCo && d.sbCo[i] ? d.sbCo[i] : null, hs = sbx ? E.hitInfo(sbx.co, sbx.z, S, sbx.combo) : null;
+  const sk = co.usingSB ? c.sb : c.main;
+  const P = v=>pctTxt(v), X = v=>'×'+(+v).toFixed(2);
+  const row = (k,v,sub)=>`<tr><th>${k}</th><td class="num">${v}</td><td class="hint">${sub||''}</td></tr>`;
+  const ln = [];
+  const hitsTxt = `${co.baseHits}타${co.totHits>co.baseHits*(1+(co.rep||0))+1e-9?' + 연격 1':''}${co.rep?` · 재공격 ${+co.rep.toFixed(2)}`:''}`;
+  ln.push(row('스킬', esc(co.skill||''), `${esc(SIZE_KR[sk&&sk.size]||'')} ${co.mult>1?esc(+co.mult.toFixed(2))+'배':''} · ${hitsTxt}${co.st1?' · 단일 ×1.1':''} · ${esc(E.ELEM_KR[co.el]||'')} ${esc(E.WT_KR[co.wt]||'')}`));
+  ln.push(row('기본 대미지 (위력 100%)', `${fmtN(co.bh.n)} / 크리 ${fmtN(co.bh.c)}`, `딩 v4.016 식: (공격력 − 방어/2)×(1+스탯/32)×1.75×속성 보정. 공격력에 스탯 버프 +${P(co.statB)}${co.flatP?` · 고정값 +${Math.round(co.flatP)}`:''}${co.defR?` · 방어 디버프 −${P(co.defR)}`:''}`));
+  ln.push(row('속성 · 무기종', `+${P(co.elB)} · +${P(co.wB)}`, '같은 묶음은 감쇠 합산(1 + A + A·B …), 상한 100%'));
+  ln.push(row('정신통일·심기일체·하극상', `+${P(co.specB)}`, co.mpF?`최대 MP ${Math.round(co.mpTot)}${co.mpB?` (MP +${P(co.mpB)})`:''} × ${co.kind==='mag'?'0.23':'0.16'}% = ${P(co.mpF)} (상한 250%)`:'MP 비례 버프 없음'));
+  const luna=[]; if(co.kess) luna.push('결사 ×1.7·크리 확정'); if(co.shin) luna.push('심안 ×1.5');
+  const dsrc=Object.entries(co.dmgS||{}).map(([k,v])=>({prayer:'기도',song:'가창',self:'자신',other:'기타'}[k]||k)+' +'+P(v));
+  ln.push(row('루나틱 · 주는 대미지', `${X(co.lunaF)} · ${X(co.dmgUp)}`, (luna.join(' · ')||'루나틱 없음')+' / '+(dsrc.join(' · ')||'기도·가창 없음')));
+  ln.push(row('내성 디버프', `×${(1+co.typeR+co.physR).toFixed(2)}`, `속성 내성 −${P(co.typeR)} + ${co.kind==='mag'?'마법':'물리'} 내성 −${P(co.physR)} (합산)`));
+  ln.push(row('크리티컬', `${P(Math.min(co.critR,1))} · ${X(co.cR)}`, `크리 확률${co.critR>1?` (${P(co.critR)}${co.oc>0?`, 오버크리 ${P(co.oc)} 확률로 2배`:''})`:''} · 크리타÷일반타 (방어/4·×3.25, 크리 위력 +${P(co.critD)})`));
+  ln.push(row('약점 · 브레이크', `${X(co.relF)} · ${X(co.brk)}`, co.rel==='weak'?'약점: 물리 1.85+마력 비례 · 마법 2'+(co.shin?' (+1 심안)':''):'허수아비는 약점 없음'));
+  ln.push(row('존', X(h1.zf), esc(z&&z.level?z.label:'없음')+(useD?' (허수아비 AF에서 고른 존)':'')));
+  const gq=co.gq||{};
+  ln.push(row('글래스터 · 장비', `${X(gq.f||1)} · ${X(co.gearF||1)}`, `${esc(glText(gq))}${gq.share?` (셔틀 P글래 공유)`:''} · 장비는 무기종 표준 풀장비(딩 빌더 최적 빌드)`));
+  if(co.linkHits) ln.push(row('연계 추가타', `${+co.linkHits.toFixed(2)}회/행동`, '연계를 받은 공격마다 1타씩, 각자 속성·존 배율'));
+  const hit = (h,lab)=>`${lab} 경감 전 ${fmtN(h.pre.n)} / 크리 ${fmtN(h.pre.c)}${h.oc>0?` / 오버크리 ${fmtN(h.pre.oc)}`:''} → 25억 경감 ${fmtN(h.cap.n)} / ${fmtN(h.cap.c)} → 콤보 ${Math.round(h.combo*100)}% ${fmtN(h.fin.n)} / ${fmtN(h.fin.c)}${h.oc>0?` / ${fmtN(h.fin.oc)}`:''}`;
+  ln.push(row('1타', `${fmtN(h0.avg)} → ${fmtN(h1.avg)}`, `기대값(크리율 반영), AF 콤보 75% → ${Math.round(fin*100)}%. 99.99억 상한`));
+  const det = `<div class="hint">${hit(h0,'콤보 시작:')}</div><div class="hint">${hit(h1,'콤보 끝:')}</div>`;
+  const act = useD ? `<div class="hint">AF ${d.n[i]}회 행동 · 행동 1회 = 1타 × ${+co.totHits.toFixed(2)}타${co.linkHits?` + 연계 ${+co.linkHits.toFixed(2)}`:''}${co.nT>1?` × 적 ${co.nT}체`:''} → 콤보 끝 기준 ${fmtN(h1.act)}</div>` : '';
+  const sbl = hs ? `<div class="hint">SB ${esc(sbx.co.skill||'')}: AF ${d.sbAt}번째 행동에서 콤보 ${Math.round(sbx.combo*100)}% · 1타 ${fmtN(hs.avg)} × ${+sbx.co.totHits.toFixed(2)}타 = ${fmtN(hs.act)}</div>` : '';
+  return `<div class="basis-tbl"><div class="hint">${useD?'최고점(허수아비) 기준: 버프·디버프·존이 다 깔린 AF 중 공격 1회':'SB 턴 기준'} · 각 칸은 곱해집니다</div><table>${ln.join('')}</table>${det}${act}${sbl}</div>`;
+}
 /* ---------- 조합 공유 링크 ---------- */
 let SHARE = null, shareDirty = false; // SHARE: {ids, mode, bossId, focus}
 function parseShare(hash){

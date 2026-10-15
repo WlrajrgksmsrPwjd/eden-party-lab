@@ -74,15 +74,16 @@ const focusOf = (kind, mp) => Math.min(2.5, Math.max(0, mp||0)*(kind==='mag'?FOC
    스탯 버프는 공격력(속도 기반은 기준 스탯도)에, 방어 디버프는 방어에 들어간다. 엑셀과 무작위 600건 대조 오차 0.65% 이내 */
 const DING = {J3:140, J4:174, J5:174};
 const G5_OF = (kind, stat) => kind==='mag' ? (stat==='pwr'?'힘기반 마법':stat==='spd'?'속도기반 마법':'마법공격') : (stat==='int'?'지능기반 물리':stat==='spd'?'속도기반 물리':'물리공격');
-function dingHit(D, g5, el, b, d, fs){ // fs: 완력 고정값 버프(14행, 공격력에 더한 뒤 % 버프)
+function dingHit(D, g5, el, b, d, fs){ // fs: 스탯 고정값 버프 {p:완력(14행), i:지성(15행), s:속도(16행)} — 공격력·마력에 더한 뒤 % 버프 (숫자면 완력)
   const phys = g5==='물리공격'||g5==='지능기반 물리'||g5==='속도기반 물리';
-  let X3,X5,X6,X7; fs = +fs||0;
-  if(g5==='물리공격'){ X3=D.str; X5=(D.atk+fs)*(1+b); X6=D.mag; X7=D.mag; }
-  else if(g5==='지능기반 물리'){ X3=D.int; X5=D.mag*(1+b); X6=D.int; X7=D.int*(1+b); }
-  else if(g5==='속도기반 물리'){ X3=D.spd*(1+b); X5=(D.atk-D.str+D.spd)*(1+b); X6=D.mag; X7=D.spd*(1+b)+D.mag-D.int; }
-  else if(g5==='마법공격'){ X3=D.int; X5=D.mag*(1+b); X6=D.int; }
-  else if(g5==='힘기반 마법'){ X3=D.str; X5=(D.atk+fs)*(1+b); X6=D.int; }
-  else { X3=D.spd*(1+b); X5=(D.atk-D.str+D.spd)*(1+b); X6=D.int; }
+  let X3,X5,X6,X7;
+  const F = typeof fs==='object' && fs ? fs : {p:+fs||0}, fp=+F.p||0, fi=+F.i||0, fsp=+F.s||0;
+  if(g5==='물리공격'){ X3=D.str; X5=(D.atk+fp)*(1+b); X6=D.mag; X7=D.mag; }
+  else if(g5==='지능기반 물리'){ X3=D.int; X5=(D.mag+fi)*(1+b); X6=D.int; X7=(D.int+fi)*(1+b); }
+  else if(g5==='속도기반 물리'){ X3=(D.spd+fsp)*(1+b); X5=(D.atk-D.str+D.spd+fsp)*(1+b); X6=D.mag; X7=(D.spd+fsp)*(1+b)+D.mag-D.int; }
+  else if(g5==='마법공격'){ X3=D.int; X5=(D.mag+fi)*(1+b); X6=D.int; }
+  else if(g5==='힘기반 마법'){ X3=D.str; X5=(D.atk+fp)*(1+b); X6=D.int; }
+  else { X3=(D.spd+fsp)*(1+b); X5=(D.atk-D.str+D.spd+fsp)*(1+b); X6=D.int; }
   const def=(phys?DING.J4:DING.J5)*(1-Math.min(1,Math.max(0,d))), k3=1+X3/32, sd=phys?31.5:63;
   const X12 = el ? 1+(Math.sqrt(X6*10+16)-4)/64 : 1;
   const n = Math.max(1,(X5-def/2)*k3*1.75*X12) + X5*sd/25.6;
@@ -255,7 +256,11 @@ const FG = {
   ot:['overthrow'], eagle:['eagle_eyes'], oc:['over_crit'], mh:['multihit'], xhit:['extra_hit'],
   pierce:['barrier_pierce'], weak:['weak_dmg'], link:['link'],
   kou:['crit_rate','over_crit','pwr_flat'], // 리나리아 巧撃: 크리율·오버크리·완력 고정값을 같은 조건으로
-  shinan:['shinan'] // 루나틱<심안>: 대미지 ×1.5 (딩 계산기 44행)
+  shinan:['shinan'], // 루나틱<심안>: 대미지 ×1.5, 약점 배율 +1 (딩 계산기 44·26행)
+  kesshi:['kesshi'], // 루나틱<捨身>(결사): 대미지 ×1.7, 크리티컬 확정 (딩 계산기 44행)
+  dmg:['dmg_up'],    // 주는 대미지 UP(기도·가창 등): 출처 종류마다 최댓값 하나, 종류끼리 곱
+  mp:['mp_up'],      // 최대 MP %UP (딩 계산기 19행) → 정신통일·심기일체
+  flat:['pwr_flat','int_flat','spd_flat'] // 스탯 고정값 UP (딩 계산기 14~16행)
 };
 const ALLF = [...new Set(Object.values(FG).flat())];
 /* 디버프 규칙 그룹 (적에게 거는 것이라 받는 사람 조건 to는 쓰지 않음, '*'에 들어가지 않음) */
@@ -438,7 +443,8 @@ function prepChar(c){
   const pow = Math.max(skillPow(c.main), 0.6*skillPow(c.sb)) * ((c.roles||[]).includes('dps')?1:0.5);
   const ex = c.ex || {}, mpx = ex.mp || {}, tx = ex.turns || {};
   const partyHas = ['pwr','int','spd','all_elem_atk','crit_rate','crit_dmg'].some(k=>(p[k]||0)>0) || Object.values(p.elem_atk||{}).some(v=>v>0) || Object.values(p.weapon_atk||{}).some(v=>v>0)
-    || p.singular_focus || p.mental_focus || p.overthrow || p.multihit || p.extra_hit || p.over_crit;
+    || p.singular_focus || p.mental_focus || p.overthrow || p.multihit || p.extra_hit || p.over_crit
+    || (p.dmg_up||0)>0 || (p.mp_up||0)>0 || p.kesshi || p.shinan || (p.pwr_flat||0)>0 || (p.int_flat||0)>0;
   // 파티 버프를 걸려면 따로 행동해야 하는지 (주력기와 같은 스킬로 보이면 행동 소모 없음)
   // 딜러는 버프가 공격기에 붙어 있거나 틈틈이 거는 경우가 많아 행동을 따로 빼지 않는다
   // buff_act: true면 딜러라도 버프 스킬에 행동을 따로 씀 (히스메나(ES) エストレヤ・フガス 등)
@@ -716,47 +722,68 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 
   // 스탯 버프 (완력/지성/속도)
   const stat = sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
-  const sv=[pct(c.self[stat])], ev=[pct(c.self.elem_atk)], wv=[pct(c.self.weapon_atk)], spv=[];
-  let critA=0, critD = pct(c.self.crit_dmg), flatP=0, shinW=0;
-  let ocW = c.self.over_crit?1:0, mhW = c.self.multihit?1:0, xW=0, pierceW = sk.barrier_pierce?1:0;
-  const weakD = [pct(c.self.weak_dmg)];
-  const mpF = focusOf(kind, pr.D ? pr.D.mp : 450);
-  if(kind==='phys' && c.self.singular_focus) spv.push(mpF);
-  if(kind==='mag' && c.self.mental_focus) spv.push(mpF);
-  if(c.self.overthrow) spv.push(OVERTHROW_VAL);
-  if(c.self.eagle_eyes) spv.push(EAGLE_VAL);
+  const me = c.self;
+  // 자기 버프(self_buff)는 '자신이 받는 최대치'라 자기 파티 버프를 이미 포함한다 → 같은 항목은 자기 파티 버프를 또 더하지 않음
+  const has = k => { const v=me[k]; return typeof v==='number' ? v>0 : !!v; };
+  const sv=[pct(me[stat])], ev=[pct(me.elem_atk)], wv=[pct(me.weapon_atk)], spv=[], mpv=[pct(me.mp_up)];
+  // 자기 상태 효과 조건: true 또는 {sb: SB 때(그 AF의 남은 행동 포함), req: 편성 조건, zone/zlv: 존}
+  const selfOn = q => q===true || (!!q && typeof q==='object' && (!q.sb || situation==='sb' || (situation==='af' && A.postSB))
+    && (!q.req || reqMet(q.req, team, c)) && (!q.zone || zoneMatch(q.zone, zone)) && (!q.zlv || (zone && zone.level>=q.zlv)));
+  let critA=0, critD = pct(me.crit_dmg), shinW = selfOn(me.shinan)?1:0;
+  const FK = stat==='int'?'int_flat':stat==='spd'?'spd_flat':'pwr_flat';
+  let flatP = +me[FK]||0;
+  let ocW = me.over_crit?1:0, mhW = me.multihit?1:0, xW = me.extra_hit?1:0, pierceW = (sk.barrier_pierce||me.barrier_pierce)?1:0;
+  const fKey = kind==='phys' ? 'singular_focus' : 'mental_focus';
+  let focW = me[fKey]?1:0, otW = me.overthrow?1:0, eaW = me.eagle_eyes?1:0;
+  let kessW = selfOn(me.kesshi) ? 1 : 0;
+  const dmgS = {}; // 주는 대미지 UP: 출처 종류(prayer 기도·song 가창·other·self)마다 최댓값
+  if(me.dmg_up && selfOn(me.dmg_on==null ? true : me.dmg_on)) dmgS[me.dmg_src||'self'] = pct(me.dmg_up);
+  const weakD = [pct(me.weak_dmg)];
   const zElem = zone && zone.kind==='elem' && zone.level>0 ? zone.types : null;
   for(let j=0;j<team.length;j++){
     const p = team[j].party; if(!p || p.scope==='none') continue;
     row = FX&&FX[j] ? FX[j].rows[idx] : null;
-    sv.push(pct(p[stat])*F(j,stat));
-    if(el!=='none'){
-      ev.push(pct(p.all_elem_atk)*F(j,'all_elem_atk'));
-      if(p.elem_atk){
-        let ea;
-        if(FX&&FX[j]&&FX[j].zel&&zElem) ea = zElem.includes(el) ? Math.max(0,...Object.values(p.elem_atk).map(pct)) : 0; // 존 속성을 따라가는 속성 버프
-        else ea = pct(p.elem_atk[el]);
-        if(ea) ev.push(ea*F(j,'elem_atk')*F(j,'elem_atk:'+el));
+    const own = j===idx;
+    if(!(own && has(stat))) sv.push(pct(p[stat])*F(j,stat));
+    if(!(own && has('elem_atk'))){
+      if(el!=='none'){
+        ev.push(pct(p.all_elem_atk)*F(j,'all_elem_atk'));
+        if(p.elem_atk){
+          let ea;
+          if(FX&&FX[j]&&FX[j].zel&&zElem) ea = zElem.includes(el) ? Math.max(0,...Object.values(p.elem_atk).map(pct)) : 0; // 존 속성을 따라가는 속성 버프
+          else ea = pct(p.elem_atk[el]);
+          if(ea) ev.push(ea*F(j,'elem_atk')*F(j,'elem_atk:'+el));
+        }
       }
+      else ev.push(pct(p.all_elem_atk)*0.5*F(j,'all_elem_atk'));
     }
-    else ev.push(pct(p.all_elem_atk)*0.5*F(j,'all_elem_atk'));
-    if(p.weapon_atk){ const fw=F(j,'weapon_atk'); wv.push(pct(p.weapon_atk.all)*fw, pct(p.weapon_atk[c.weapon])*fw, pct(p.weapon_atk[wt])*fw); }
-    critA += pct(p.crit_rate)*F(j,'crit_rate');
-    if(p.pwr_flat) flatP += (+p.pwr_flat||0)*F(j,'pwr_flat');
+    if(p.weapon_atk && !(own && has('weapon_atk'))){ const fw=F(j,'weapon_atk'); wv.push(pct(p.weapon_atk.all)*fw, pct(p.weapon_atk[c.weapon])*fw, pct(p.weapon_atk[wt])*fw); }
+    if(!(own && has('crit_rate'))) critA += pct(p.crit_rate)*F(j,'crit_rate');
+    if(p[FK]) flatP += (+p[FK]||0)*F(j,FK);
     if(p.shinan) shinW = Math.max(shinW, F(j,'shinan'));
-    critD += pct(p.crit_dmg)*F(j,'crit_dmg');
+    if(p.kesshi) kessW = Math.max(kessW, F(j,'kesshi'));
+    if(p.dmg_up){ const v = pct(p.dmg_up)*F(j,'dmg_up'), s = p.dmg_src||'other'; if(v>(dmgS[s]||0)) dmgS[s]=v; }
+    if(p.mp_up && !(own && has('mp_up'))) mpv.push(pct(p.mp_up)*F(j,'mp_up'));
+    if(!(own && has('crit_dmg'))) critD += pct(p.crit_dmg)*F(j,'crit_dmg');
     if(p.over_crit) ocW=Math.max(ocW, F(j,'over_crit'));
     if(p.multihit) mhW=Math.max(mhW, F(j,'multihit'));
     if(p.extra_hit) xW=Math.max(xW, F(j,'extra_hit'));
     if(p.barrier_pierce) pierceW=Math.max(pierceW, F(j,'barrier_pierce'));
-    if(p.weak_dmg) weakD.push(pct(p.weak_dmg)*F(j,'weak_dmg'));
-    if(j!==idx){
-      if(kind==='phys' && p.singular_focus) spv.push(mpF*F(j,'singular_focus'));
-      if(kind==='mag' && p.mental_focus) spv.push(mpF*F(j,'mental_focus'));
-      if(p.overthrow) spv.push(OVERTHROW_VAL*F(j,'overthrow'));
-      if(p.eagle_eyes) spv.push(EAGLE_VAL*F(j,'eagle_eyes'));
+    if(p.weak_dmg && !(own && has('weak_dmg'))) weakD.push(pct(p.weak_dmg)*F(j,'weak_dmg'));
+    // 정신통일·심기일체·하극상·호시탐탐은 상태 하나라 여러 명이 걸어도 겹치지 않음(가장 잘 깔린 것 하나)
+    if(!own){
+      if(p[fKey]) focW = Math.max(focW, F(j,fKey));
+      if(p.overthrow) otW = Math.max(otW, F(j,'overthrow'));
+      if(p.eagle_eyes) eaW = Math.max(eaW, F(j,'eagle_eyes'));
     }
   }
+  const mpB = dimin(mpv, 1); // 최대 MP %: 19행 감쇠 합, 최대 +100%
+  const mpBase = (pr.D ? pr.D.mp : 450) + (+me.mp_flat||0);
+  const mpF = focusOf(kind, mpBase*(1+mpB));
+  if(focW>0) spv.push(mpF*Math.min(1,focW));
+  if(otW>0) spv.push(OVERTHROW_VAL*Math.min(1,otW));
+  if(eaW>0) spv.push(EAGLE_VAL*Math.min(1,eaW));
+  let dmgUp = 1; for(const s in dmgS) dmgUp *= 1+dmgS[s];
   let budDmg = 0;
   const BUD = A.bud ? A.bud.parts.filter(b=>!(b.sbOnly && situation!=='sb') && !(b.zone && !(zone && zone.level>0 && zoneMatch(b.zone, zone))) && !(b.st && sk.target!=='st')) : null;
   if(BUD) for(const b of BUD){ const p=b.party; if(!p) continue; const f=b.p;
@@ -798,11 +825,13 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const defR = dfv.length ? dimin(dfv,1) : 0; // 내구·정신 DOWN: 기본 대미지의 방어에
   // 딩 계산기 기본 대미지: 스탯·장비 공격력·속성 보정·스탯 버프·방어(방어 무시면 0). 크리는 따로(일반타/크리타 나눠 25억 경감)
   const D = pr.D || {str:230, int:230, spd:220, lck:156, mp:450, atk:457, mag:457};
-  const bh = dingHit(D, G5_OF(kind, stat), el!=='none', statB, sk.def_ignore ? 1 : defR, flatP);
-  dmg *= bh.n * (1+typeR+physR) * (1+budDmg) * (1+0.5*Math.min(1,shinW)); // 심안 ×1.5
+  const fsObj = stat==='int' ? {i:flatP} : stat==='spd' ? {s:flatP} : {p:flatP};
+  const bh = dingHit(D, G5_OF(kind, stat), el!=='none', statB, sk.def_ignore ? 1 : defR, fsObj);
+  const lunaF = (1+0.7*Math.min(1,kessW)) * (1+0.5*Math.min(1,shinW)); // 루나틱 44행: 결사 ×1.7 → 심안 ×1.5
+  dmg *= bh.n * (1+typeR+physR) * (1+budDmg) * lunaF * dmgUp;
 
   // 크리티컬
-  if(sk.crit_sure) critR = Math.max(critR,1);
+  if(sk.crit_sure || kessW>=0.5) critR = Math.max(critR,1); // 결사: 크리티컬 확정
   if(kind==='mag' && critR<=0) critR=0;
   const p = Math.min(Math.max(critR,0),1);
   const cR = bh.c/bh.n*(1+critD); // 크리타 ÷ 일반타 (방어/4 · ×3.25 · 크리 위력)
@@ -812,7 +841,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 브레이크
   let brk = 1;
   for(const b of A.breaks){
-    if(b===el || b===wt || (b==='slash_pierce'&&(wt==='slash'||wt==='pierce'))) { brk=Math.max(brk,1.5); }
+    if(b===el || b===wt || (b.indexOf('_')>0 && b.split('_').includes(wt))) { brk=Math.max(brk,1.5); } // 웨폰브레이크(斬突·斬魔 등 두 종류)
     else if(['all','any','generic','break','weapon'].includes(b)) brk=Math.max(brk,1.3);
   }
   dmg *= brk;
@@ -829,7 +858,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     else if(rs.includes('absorb')) rel='absorb';
   }
   let relF = 1;
-  if(rel==='weak') relF = bh.wk + weakD.reduce((a,b)=>a+b,0); // 약점: 물리 1.85+마력 비례 · 마법 2 (딩 계산기 26행)
+  if(rel==='weak') relF = bh.wk + weakD.reduce((a,b)=>a+b,0) + Math.min(1,shinW); // 약점: 물리 1.85+마력 비례 · 마법 2 (딩 계산기 26행), 심안이면 +1
   else if(rel==='resist') relF = 0.25;
   else if(rel==='null'||rel==='absorb') relF = 0;
   dmg *= relF;
@@ -893,7 +922,8 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     }
   }
   return {perHit: pN*critX, pN, cR, p, oc:ocP, totHits, links, linkHits, nT, el, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
-    afx: sk.af_combo_x||1, hitsPerAct: totHits + linkHits, rep, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1)};
+    afx: sk.af_combo_x||1, hitsPerAct: totHits + linkHits, rep, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
+    bh, defR, flatP, lunaF, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st'};
 }
 
 /* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
@@ -1521,7 +1551,15 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   // 허수아비 기록은 후열 연성 P글래 셔틀·풀장비로 잰다(사용자 확인): 보유 표시가 없으면 셔틀 2명을 가정(설정 dummyMule로 끔)
   let Ad = A;
   if(S.dummyMule!==false && !A.mule){ const m2 = muleShare(team, Object.assign({}, S, {pglAssumeAll:true}), ctx, progs); if(m2) Ad = Object.assign({}, A, {mule:m2}); }
-  out.dummy = dummySim({team, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz, awStart, awConst, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow});
+  // 허수아비는 AF에서 펼칠 존을 고를 수 있다: 평상 턴 최적 존 + 다른 존 후보(존 없음 포함)를 다 돌려 가장 높은 것
+  const zc = [nz]; for(const q of (res.normal.zones||[])) if(q && !zc.some(r=>r && r.kind===q.kind && r.key===q.key && r.level===q.level)) zc.push(q);
+  let bestD = null;
+  for(const zq of zc.slice(0, 4)){
+    const zs2 = sameZ(res.normal.zones, zq), awC = zs2.some(q=>q.how!=='개전 자동' && q.how!=='SB 시'), awS = !awC && zs2.some(q=>q.how==='개전 자동');
+    const dd = dummySim({team, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow});
+    if(!bestD || dd.total > bestD.total*1.0005) bestD = dd;
+  }
+  out.dummy = bestD;
   out.dummy.mule = Ad.mule || null;
   out.dummy.S0 = A.tm.S0;
   out.dummyT = out.dummy.total;
@@ -1569,7 +1607,7 @@ function dummySim(o){
   const sbAct = S.sbPerAct!=null ? +S.sbPerAct : 2.5;
   // 성도 게이지 충전 보너스(강화): 성도 각성한 캐릭터는 조건을 채운다고 보고 2배(설정으로 끔)
   const sbRate = team.map((c,i)=> sbAct * (S.sbFillBonus!==false && c.stellar && progs[i] && progs[i].sbOK ? 2 : 1));
-  let sbAt = null, sb = 0, zOver = null; const sbPer = [];
+  let sbAt = null, sb = 0, zOver = null; const sbPer = [], sbCo = {};
   for(const a of afA.seq){
     const i = a.i, c = team[i];
     const buffOnly = cnt[i]===0 && c.buffAct;
@@ -1583,7 +1621,7 @@ function dummySim(o){
     if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
       sbAt = afA.seq.indexOf(a)+1;
       const zSB = sbAw && sbz ? sbz : zNow;
-      for(const j of sbIdx){ const co = coreAt(acted, zSB, 'sb', j); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co); sb += d; per[j] += d; sbPer.push([j, d]); }
+      for(const j of sbIdx){ const co = coreAt(acted, zSB, 'sb', j); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
       if(sbAw && sbz) zOver = sbz; // SB로 각성한 존은 남은 AF 동안
       A.postSB = true; // SB로 건 버프(연격수+1·심안·크리 대미지 등)는 남은 AF 행동에도
     }
@@ -1592,7 +1630,17 @@ function dummySim(o){
   const fin = Math.min(combo, cmax);
   return {total: af + sb, af, sb, afPer: per.map((v,i)=>v - sbPer.filter(x=>x[0]===i).reduce((q,x)=>q+x[1],0)), per, n: cnt, avg: af>0 ? cw/af : 0.75, fin,
     sbCombo: sbAt!=null ? null : null, sbAt, lv: nz && nz.level>=2 && zFrom0 ? 2 : (nz ? nz.level : 0), sbWhen: sbAt!=null ? 'af' : null,
-    sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && sbAt==null, acts: afA.seq.length, order: prio, ex: 0};
+    sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && sbAt==null, acts: afA.seq.length, order: prio, ex: 0,
+    full, zFull: nz, sbCo}; // 계산 근거 화면용: 버프가 다 깔린 AF 중 1회 공격(평상 존), SB 공격
+}
+/* 계산 근거: 공격 1회의 1타 (존 배율 → 일반·크리·오버크리 → 25억 경감 → AF 콤보 → 99.99억 상한) */
+function hitInfo(co, z, S, combo){
+  if(!co) return null;
+  const zf = zoneFactorEff(z, co.el, co.wt, S), c = combo||1, p = co.p, oc = co.oc||0;
+  const n = co.pN*zf, cr = n*co.cR, o2 = 2*cr, on = S.capOn!==false;
+  const K = v => on ? dingCap(v) : v, H = v => Math.min(HIT_MAX, K(v)*c);
+  return {zf, combo:c, p, oc, pre:{n, c:cr, oc:o2}, cap:{n:K(n), c:K(cr), oc:K(o2)}, fin:{n:H(n), c:H(cr), oc:H(o2)},
+    avg:(1-p)*H(n) + p*((1-oc)*H(cr) + oc*H(o2)), hits:co.totHits, linkHits:co.linkHits||0, act:applyZoneCap(co, z, S, null, c)};
 }
 /* 속성·공격 타입 지정: 지정과 맞는 공격만 화력으로 센다 */
 function focusMatch(co, f){
@@ -2053,7 +2101,7 @@ async function perCharBest(input, onProgress){
   return {list, evaluated:N, poolSize:pool.length};
 }
 
-const API = {dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
+const API = {hitInfo, dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
   explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
   statsAt, charStats, STAT_ORDER, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO, dupBase};
