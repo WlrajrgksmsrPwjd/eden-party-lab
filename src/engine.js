@@ -788,7 +788,9 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let el = sk.element||c.elem; const kind = sk.kind==='mag'?'mag':'phys';
   const swc = ELEM_SWITCH[c.id];
   if(swc && (el===swc.yes || el===swc.no)) el = (swc.zone ? zoneMatch(swc.zone, zone) : reqMet(swc.need, team, c)) ? swc.yes : swc.no;
+  const elNat = el; // 속성 변환 전 원래 공격 속성
   if(A.echg) el = echgElem(A.echg, team, idx, el, situation, zone, enemy);
+  const conv = el!==elNat && elNat!=='none'; // 남이 바꿔 준 속성(変幻自在 등): 자기 속성 공격 버프(self elem_atk, 보통 '자신의 ○속성 공격')는 원래 속성 몫이라 안 받음
   const wt = sk.weapon_type || (kind==='mag'?'magic':c.wt);
   const tgt = sk.target==='st'?'st':'aoe';
   const key = tgt+'_'+kind+'_'+(el==='none'?'no':'el');
@@ -808,7 +810,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const me = c.afT ? afAdj(c.self, Object.assign({}, c.afT.party||{}, c.afT.self||{}), situation, A, sbOKi) : c.self; // 자기 파티 버프 보정은 자기 몫에도
   // 자기 버프(self_buff)는 '자신이 받는 최대치'라 자기 파티 버프를 이미 포함한다 → 같은 항목은 자기 파티 버프를 또 더하지 않음(판정은 보정 전 값으로)
   const has = k => { const v=c.self[k]; return typeof v==='number' ? v>0 : !!v; };
-  const sv=[pct(me[stat])], ev=[pct(me.elem_atk)], wv=[pct(me.weapon_atk)], spv=[], mpv=[pct(me.mp_up)];
+  const sv=[pct(me[stat])], ev=[conv ? 0 : pct(me.elem_atk)], wv=[pct(me.weapon_atk)], spv=[], mpv=[pct(me.mp_up)];
   // 자기 상태 효과 조건: true 또는 {sb: SB 때(그 AF의 남은 행동 포함), req: 편성 조건, zone/zlv: 존}
   const selfOn = q => q===true || (!!q && typeof q==='object' && (!q.sb || situation==='sb' || (situation==='af' && A.postSB))
     && (!q.req || reqMet(q.req, team, c)) && (!q.zone || zoneMatch(q.zone, zone)) && (!q.zlv || (zone && zone.level>=q.zlv)));
@@ -830,7 +832,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     row = FX&&FX[j] ? FX[j].rows[idx] : null;
     const own = j===idx;
     if(!(own && has(stat))) sv.push(pct(p[stat])*F(j,stat));
-    if(!(own && has('elem_atk'))){
+    if(!(own && has('elem_atk') && !conv)){ // 바뀐 속성이면 자기 파티 버프 중 전속성·그 속성 몫만
       if(el!=='none'){
         ev.push(pct(p.all_elem_atk)*F(j,'all_elem_atk'));
         if(p.elem_atk){
@@ -1833,7 +1835,10 @@ function dummySim(o){
     infT.forEach((t,j)=>{ if(!t) return; const on = t.w==='start' || (t.w==='main' && atk[j]) || (t.w==='skill' && ia[j]);
       if(on){ po=Math.max(po,t.po); pa=Math.max(pa,t.pa); } if(t.ore && (atk[j]||ia[j])){ po=Math.max(po,0.9); pa=Math.max(pa,0.9); } });
     return {poison:po, pain:pa}; };
-  const infK = q => '|i'+Math.round(q.poison*10)+Math.round(q.pain*10);
+  const infK = q => '|i'+Math.round(q.poison*10)+Math.round(q.pain*10)+(q.eg?'|e'+q.eg:'');
+  // 속성 변환(elem_change): 건 사람이 행동한 뒤부터. act:2 = 파티 버프와 다른 스킬이라 버프 행동 다음 행동에(네코코(ES) 猫又巫女神楽)
+  const egOf = cnt => A.echg ? A.echg.map(e=> e.to==='self' || passive[e.i] || cnt[e.i] >= ((+e.act||1) > 1 && team[e.i].buffAct ? 2 : 1) ? '1' : '0').join('') : '';
+  const egAll = A.echg ? A.echg.map(()=>'1').join('') : '';
   const all = team.map(()=>true);
   const full0 = team.map((c,i)=>attackerCore(team, i, progs, A, enemy, S, 'af', cx, buildBF(team, progs, 'af', nz, A, posSets, team.map(()=>1), true), nz));
   const afA = afActionsOf(team, progs, full0, nz, enemy, S, 100, prio);
@@ -1853,14 +1858,14 @@ function dummySim(o){
       sit = sit || 'af';
       const key = sit+'|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow);
       const ck = key+'|'+i; if(coMemo.has(ck)) return coMemo.get(ck);
-      Av.infNow = inow; Av.echg = A.echg ? A.echg.filter(e=>e.to==='self'||acted[e.i]||passive[e.i]) : null; if(Av.echg && !Av.echg.length) Av.echg = null; // 속성 변환(変幻自在 등)도 건 사람이 행동한 뒤부터
+      Av.infNow = inow; Av.echg = A.echg ? A.echg.filter((e,k)=>(inow.eg||'')[k]==='1') : null; if(Av.echg && !Av.echg.length) Av.echg = null; // 속성 변환(変幻自在 등)도 건 뒤부터
       let FX = fxMemo.get(key);
       if(FX===undefined){ const upt = team.map((c,j)=> acted[j]||passive[j] ? 1 : 0); FX = buildBF(team, progs, sit, z, Av, posSets, upt, true); fxMemo.set(key, FX); }
       const co = attackerCore(team, i, progs, Av, enemy, S, sit, cx, FX, z); coMemo.set(ck, co); return co;
     };
     const altCoreAt = (acted, z, i, inow) => { // 횟수를 다 쓴 뒤의 주력(같은 버프 상태)
       const k0 = 'af|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow), key = 'alt|'+k0+'|'+i; if(coMemo.has(key)) return coMemo.get(key);
-      coreAt(acted, z, 'af', i, inow); const FX = fxMemo.get(k0); Av.infNow = inow; Av.echg = A.echg ? A.echg.filter(e=>e.to==='self'||acted[e.i]||passive[e.i]) : null; if(Av.echg && !Av.echg.length) Av.echg = null;
+      coreAt(acted, z, 'af', i, inow); const FX = fxMemo.get(k0); Av.infNow = inow; Av.echg = A.echg ? A.echg.filter((e,k)=>(inow.eg||'')[k]==='1') : null; if(Av.echg && !Av.echg.length) Av.echg = null;
       const tAlt = team.map((m,k)=> k===i ? Object.assign({}, m, {main:m.mainAlt}) : m);
       const co = attackerCore(tAlt, i, progs, Av, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
     const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), mu = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false); // mu: 주력 사용 횟수(횟수 제한 스킬용)
@@ -1869,7 +1874,7 @@ function dummySim(o){
     for(const a of afA.seq){
       const i = a.i, c = team[i];
       const buffOnly = cnt[i]===0 && c.buffAct, isInf = i===kAct && !ia[i] && !buffOnly;
-      const zNow = zCur, inow = infAt(atk, ia);
+      const zNow = zCur, inow = Object.assign(infAt(atk, ia), {eg: egOf(cnt)});
       if(!buffOnly && !isInf){
         const useAlt = c.mainAlt && mu[i] >= c.main.uses && !c.afSk; if(!useAlt) mu[i]++;
         const co = useAlt ? altCoreAt(acted, zNow, i, inow) : coreAt(acted, zNow, 'af', i, inow);
@@ -1882,14 +1887,14 @@ function dummySim(o){
       if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
         sbAt = afA.seq.indexOf(a)+1;
         const sbZOK = !!(sbAw && sbz) && (zoneOK(zCur, sbz) || (zCur && zCur.key===sbz.key)); // 극 존은 다른 존으로 못 바꿈
-        const zSB = sbZOK ? sbz : zCur, inow2 = infAt(atk, ia);
+        const zSB = sbZOK ? sbz : zCur, inow2 = Object.assign(infAt(atk, ia), {eg: egOf(cnt)});
         for(const j of sbIdx){ const co = coreAt(acted, zSB, 'sb', j, inow2); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
         if(sbZOK) zCur = sbz; // SB로 각성한 존은 남은 AF 동안
         Av.postSB = true; // SB로 건 버프(연격수+1·심안·크리 대미지 등)는 남은 AF 행동에도
       }
     }
     Av.postSB = false;
-    const full = team.map((c,i)=>coreAt(all, nz, 'af', i, infAt(all, team.map((_,j)=>j===kAct))));
+    const full = team.map((c,i)=>coreAt(all, nz, 'af', i, Object.assign(infAt(all, team.map((_,j)=>j===kAct)), {eg: egAll})));
     const fin = Math.min(combo, cmax);
     return {total: af + sb, af, sb, afPer: per.map((v,i)=>v - sbPer.filter(x=>x[0]===i).reduce((q,x)=>q+x[1],0)), per, n: cnt, avg: af>0 ? cw/af : 0.75, fin,
       sbCombo: null, sbAt, lv: nz && nz.level>=2 && zFrom0 ? 2 : (nz ? nz.level : 0), sbWhen: sbAt!=null ? 'af' : null,
