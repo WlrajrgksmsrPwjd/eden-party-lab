@@ -221,3 +221,15 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 
 ## 아군 挺身
 `party_buff.teishin: true` + buff_rules `f:["teishin"]`(조건: 絶 존·가창 등) → 받는 사람 기본 내구(힘 공격)·정신(지성 공격)을 고정값으로 더함(자기 挺身과 겹치지 않음).
+
+## 2026-10-16 엔진 2차 보강 데이터
+
+- `buff_acts.json` 행동 g의 `self.<self_buff 키>`: 그 자기 버프의 출처 행동(auto 처음부터 · main 주력 뒤 · buff/attack 그 행동 뒤 · sb SB 뒤). g에 없는 self 키는 늘 켜짐. 행동 `z: "deploy"|"awaken"`(존 전개·각성, g가 비어도 행동), `zk`(존 종류), `lv`(2면 그 행동으로 바로 극), `afx`(공격 버프기 AF 콤보 배율).
+- `state.json`: 시간 한정 상태(루나틱 3턴·개전 N턴·모드). 데이터 값 = ON. `self_off`(OFF 때 0이 되는 self 키, "teishin" = 자기 挺身), `main_off`/`sb_off`(OFF 때 바뀌는 스킬 필드, mcond 포함), `pow`(+`pow_to`), `on_self`, `party_off`, `start`·`dur`·`uses`·`cd`·`cycle`·`up`(평상 턴 가동률), `af`(허수아비 AF·SB 0~1 또는 "sb"), `res`(자원 소비형: `{start, exec: 실행마다 소비, step: 행동 소비}` — 테오도로스 闘魂).
+- `alts.json`: 주력 후보(스킬 형식 + `when`·`normal`·`af`·`cycle`·`attack:false`). 상황마다 가장 센 것.
+- `once.json`: 전투 중 1회·첫 사용·N턴마다 강공격(`atk`, `per`: battle | every:N, `af`, `first`).
+- 스킬 필드 `combo_scale: {lo, hi, full, when?}`(AF 콤보 0.75→full에서 lo→hi배), `combo_add: k`(위력 += k×콤보). party_buff `combo_up`(타수당 콤보 증가 +%p, 규칙 묶음 combo).
+- chars `zone.vc_only`(VC로만 전개 → 1턴 AF 존 없음), `zone.breaks`(존 파괴 후 전개, "sb"면 SB만), `zone.awaken_any: {kinds, skill}`(남이 편 일반 존을 극으로).
+- 스킬 칸(사용자 확인): 천명치 80 미만 3칸, 이상 4칸. 주력(통상 공격 변화 제외)·AF 전용·비SB 성도 스킬이 먼저 쓰고 남는 칸에 buff/attack 행동(앞쪽부터).
+- `style_bonus.json`: 다른 스타일 5성 보드 완성 보너스 `[{from: 스타일 id, add: {스탯: 고정값}}]` — 그 스타일을 보유하면 완성으로 봄(설정 styleBonus=false로 끔, app settings의 ownedIds).
+- `stellar.json` `stats`(2026-10-16 위키 시트: 6스탯은 모든 능력 +20 포함, all 없음)·`lv100`(Lv80→100 성장분 HP·MP·6스탯). `fate.json` 255 단계에 공통 +10 포함(엔진 규칙 삭제).

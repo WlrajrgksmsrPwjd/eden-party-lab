@@ -34,7 +34,7 @@ const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
 const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
 const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성' : (FT_KR[f.v]||f.v);
 const sameFocus = (a,b) => (!a&&!b) || (a&&b&&a.kind===b.kind&&a.v===b.v);
-function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1}); }
+function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1, ownedIds: ownedList()}); } // ownedIds: 다른 스타일 보드 완성 보너스(보유 = 완성으로 봄)
 function rebuildChars(){
   chars = CHARS_BASE.concat(state.custom||[]);
   prepped = chars.map(E.prepChar);

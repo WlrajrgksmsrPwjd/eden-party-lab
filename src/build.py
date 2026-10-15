@@ -69,7 +69,7 @@ for c in chars:
 # AF 버프·디버프 행동(알테마 대조 299명): 버프 스킬 하나에 AF 행동 1번
 bac=json.load(open(P('data','buff_acts.json'),encoding='utf-8'))
 for c in chars:
-    if c['id'] in bac and not c['id'].startswith('_'): c['bact']=[{k:v for k,v in a.items() if k in ('s','k','g','h','mp','el','wt','size','mult','hits')} for a in bac[c['id']]['acts']]
+    if c['id'] in bac and not c['id'].startswith('_'): c['bact']=[{k:v for k,v in a.items() if k in ('s','k','g','h','mp','el','wt','size','mult','hits','afx','z','zk','lv','req')} for a in bac[c['id']]['acts']]
 # 루나틱<솔선(挺身)>: 내구→힘·정신→지성 고정값(딩 14·15행)
 lun=json.load(open(P('data','lunatic.json'),encoding='utf-8'))
 for c in chars:
@@ -93,6 +93,13 @@ inflict=json.load(open(P('data','inflict.json'),encoding='utf-8'))
 for c in chars:
     x=inflict.get(c['id'])
     if x: c['inflict']={k:x[k] for k in ('poison','pain','target','turns','on_main') if k in x}
+def LJ(n): return json.load(open(P('data',n),encoding='utf-8')) if os.path.exists(P('data',n)) else {}
+stt=LJ('state.json'); alt=LJ('alts.json'); onc=LJ('once.json'); sbn=LJ('style_bonus.json')
+for c in chars:
+    if stt.get(c['id']) and not c['id'].startswith('_'): c['states']=[{k:v for k,v in e.items() if k!='note'} for e in stt[c['id']]]
+    if alt.get(c['id']) and not c['id'].startswith('_'): c['alts']=[{k:v for k,v in e.items() if k!='note'} for e in alt[c['id']]]
+    if onc.get(c['id']) and not c['id'].startswith('_'): c['once']=[{k:v for k,v in e.items() if k!='note'} for e in onc[c['id']]]
+    if sbn.get(c['id']) and not c['id'].startswith('_'): c['style_bonus']=[{k:v for k,v in e.items() if k in ('from','add')} for e in sbn[c['id']] if e.get('add')]
 tend=json.load(open(P('data','turn_end.json'),encoding='utf-8')) if os.path.exists(P('data','turn_end.json')) else {}
 sstk=json.load(open(P('data','self_stk.json'),encoding='utf-8')) if os.path.exists(P('data','self_stk.json')) else {}
 for c in chars:
