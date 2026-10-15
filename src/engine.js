@@ -960,7 +960,8 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 다단강화
   const xh = xW>=0.5 && kind==='phys';
   const hits = Math.max(1, sk.hits||1) + (xh ? 1 : 0);
-  if(mhW>0) dmg *= 1 + (multihitAvg(hits)-1)*Math.min(1,mhW);
+  // 다단강화는 스킬 한 번 안의 n번째 타격 기준: 여러 스킬을 이어 치는 행동(execs, 예: 세스타(AS) 二刀神狼・改 5실행 10타)은 실행당 타수로
+  if(mhW>0) dmg *= 1 + (multihitAvg(Math.max(1, Math.round(hits/Math.max(1, +sk.execs||1))))-1)*Math.min(1,mhW);
   if(xh) dmg *= hits/Math.max(1,hits-1);
 
   // 장비: 공격 글래스터 (속성/HP계 가산 +30%, 페인·독 곱연산 ×1.3)
@@ -1160,9 +1161,11 @@ function simTeam(team, progs, S){
   for(let i=0;i<n;i++){
     const c=team[i];
     const mpMax = (S.mpBase||450) + Math.min(120, (progs[i].t||0)*0.47);
-    const costMain = Math.round((c.mpMain!=null?c.mpMain:55)*mul), costBuff = Math.round((c.mpBuff!=null?c.mpBuff:50)*mul);
+    // MP消費攻撃(질퍼니(AS) クルオルエンシス 등): 대미지 +100% 대신 공격 스킬 소비 MP +100% — AF(MP 소비 없음)엔 공짜지만 평상 턴엔 MP가 두 배로 듦
+    const mpAtkX = (+((c.self||{}).mp_atk)||0)>0 || team.some(m=>m.party && m.party.scope!=='none' && (+m.party.mp_atk||0)>0) ? 2 : 1;
+    const costMain = Math.round((c.mpMain!=null?c.mpMain:55)*mul*mpAtkX), costBuff = Math.round((c.mpBuff!=null?c.mpBuff:50)*mul);
     const bt = c.buffTurns>=99 ? H+1 : Math.max(1, c.buffTurns||3);
-    const costAlt = Math.min(costMain, Math.round(ALT_MP*mul));
+    const costAlt = Math.min(costMain, Math.round(ALT_MP*mul*mpAtkX));
     let mp=mpMax, rem=0, active=0, mainN=0, altN=0, naN=0, buffN=0, out=0;
     for(let t=1;t<=H;t++){
       if(c.buffAct && rem<=0 && mp>=costBuff){ mp-=costBuff; rem=bt; buffN++; }
