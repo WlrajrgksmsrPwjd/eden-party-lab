@@ -321,7 +321,7 @@ function ruleAct(r, j, team, progs, sit, z, A){
   if(w.noaf && sit!=='normal') return 0; // AF·SB 땐 못 거는 효과: 허수아비·시뮬의 AF(와 그 안의 SB)는 세팅 턴 없이(축적 0) 시작하므로, 긴 축적이 필요한 스킬(예: 니나 理の再縫 = 코디네이트 40)
   if(w.req && !reqMet(w.req, team, team[j])) return 0;
   if(w.reqAny && !w.reqAny.some(q=>reqMet(q, team, team[j]))) return 0;
-  if(w.pain && !A.painAny) return 0;
+  if(w.pain){ const f=A.infNow; if(f ? !(f.poison>0 || f.pain>0) : !A.painAny) return 0; } // 허수아비는 그 순간 걸려 있는지
   if(w.up!=null) a*=w.up;
   if(w.t!=null && sit==='normal') a*=w.t;
   if(w.stack) a*=ruleStackFill(w.stack, team, sit, A);
@@ -608,7 +608,7 @@ function charProg(pc, own, S){
   let gear = null, glx = gl;
   const b = own && own.build;
   // q: 장비 완성도 (이 빌드에 맞는 파티 상황에서 최적 장비 대비 화력 비율)
-  if(b && b.q>0){ gear = {q:Math.max(0.2, Math.min(1.1, +b.q)), ps:Array.isArray(b.ps)?b.ps:[]}; glx = {mode:'auto'}; }
+  if(b && b.q>0){ gear = {q:Math.max(0.2, Math.min(1.1, +b.q)), ps:Array.isArray(b.ps)?b.ps:[]}; glx = S && S.glLocked ? {mode:'none'} : {mode:'auto'}; }
   // 속도: 빌드 코드의 장비 포함 속도 > 빌드에 넣은 캐릭터 스탯 > 위키 기본 스탯(+장비 속도 설정)
   return {f, sbOK, sbMul, goku: g==='goku', t, slots, gl:glx, gear, D, lvB: lvBonusOf(t, !!(pc.stellar && own && own.s)),
     spd: cs ? cs.spd : 0, spdSrc: cs ? cs.spdSrc : null, lck, msV, ms};
@@ -1182,12 +1182,16 @@ function simTeam(team, progs, S){
    P글래 종류별로 계산기 그룹이 다르다: 속성·HP 계(공격 글래스터 속성 그룹과 가산), ZONE 전개 중(별도 곱), 특정 ZONE(별도 곱).
    자동 가정: 주딜 무기 퍼스널리티의 후열 셔틀(인원 서약 반영) + 같은 퍼스널리티의 전열 서포터(딜러 아님)의 글래스터 칸.
    칸 배분은 받는 캐릭터마다 가장 이득인 조합(존이 깔려 있으면 존 계 P글래를 섞는 쪽이 보통 이득). */
+/* 보유 표시 중 무기·퍼스널리티 P글래 부분(아군 전체 표 _a만 표시했으면 없음으로 — 그 경우 무기·퍼스널리티는 표시 없음과 같게) */
+function pglWP(ctx){ const g = ctx && ctx.pgl; if(!g) return null;
+  const any = Object.keys(g).some(k=>k!=='_p' && k!=='_a' && Object.values(g[k]||{}).some(v=>+v>0)) || Object.values(g._p||{}).some(o=>Object.values(o||{}).some(v=>+v>0));
+  return any ? g : null; }
 function muleShare(team, S, ctx, progs){
   if(S.muleOn===false || S.glLocked) return null;
   let mules = ctx && ctx.mules && ctx.mules.length ? ctx.mules : null, auto=false, wp=null, front=[];
   if(!mules){
     if(S.muleAuto===false) return null;
-    if(!(ctx && ctx.pgl) && !S.pglAssumeAll) return null; // 연성 P글래를 표시하지 않았으면 셔틀 공유를 가정하지 않음
+    if(!pglWP(ctx) && !S.pglAssumeAll) return null; // 연성 P글래를 표시하지 않았으면 셔틀 공유를 가정하지 않음
     let best=null; for(const c of team) if(!best || (c.pow||0)>(best.pow||0)) best=c;
     wp = best && WEAPON_PERS[best.weapon]; if(!wp) return null;
     const sl = S.muleSlots||4, nb = ctx && ctx.maxBack!=null ? ctx.maxBack : 2;
@@ -1210,7 +1214,7 @@ function muleShare(team, S, ctx, progs){
   });
   // 파티 단위 배분(pglPlan): 빌드 코드로 실제 P글래를 넘긴 셔틀이 없으면. 셔틀 칸 = 후열 셔틀마다 칸 수(자동 가정은 퍼스널리티 제한 없음)
   const plan = !mules.some(m=>m.shares), carriers = mules.map(m=>({slots:m.slots, pers: auto ? null : m.pers}));
-  return {k, kd, cs, inv: (ctx && ctx.pgl) || null, auto, wp, front: plan ? [] : front, plan, carriers, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
+  return {k, kd, cs, inv: pglWP(ctx), auto, wp, front: plan ? [] : front, plan, carriers, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
 }
 /* 빌드 코드의 P글래 공유 효과 → 받는 캐릭터 기준 % (e: 속성·HP 그룹, z: ZONE 전개 중, t: 특정 ZONE) */
 const ELEM_B = {fire:'불',water:'물',earth:'땅',wind:'바람',thunder:'번개',shade:'그림자',crystal:'결정'};
@@ -1380,7 +1384,8 @@ function buildCtx(input, ownedAll){
    게이지가 0이 될 때까지 각자 몇 번 행동하는지 센다. 속도는 빌드 코드(장비 포함) → 기본 스탯(+장비 속도 설정) 순. */
 function afActionsOf(team, progs, cores, z, enemy, S, g0, prio){
   const n = team.length; g0 = g0==null ? 100 : g0;
-  if(S.afAuto===false){ const k=Math.max(1,Math.round((+S.afActions||5)*g0/100)); return {n:team.map(()=>k), dur:null, fast:team.map(()=>null), auto:false}; }
+  if(S.afAuto===false){ const k=Math.max(1,Math.round((+S.afActions||5)*g0/100)), ord = prio || team.map((_,i)=>i), seq=[]; // 행동 수 고정: 우선순위 순으로 한 바퀴씩
+    for(let r=0;r<k;r++) for(const i of ord) seq.push({i, t:r}); return {n:team.map(()=>k), dur:null, fast:team.map(()=>null), auto:false, seq}; }
   const anim = Math.max(0.5, +S.afAnim||2);
   // 속도: 빌드 코드(장비 포함) 그대로, 아니면 기본 스탯(+장비 속도 설정). '빌드 없는 캐릭터도 249 이상'을 켜면 빌드 없는 캐릭터는 빠른 쪽
   const spdOf = i=>{ const p=progs[i]; return p && p.spd ? p.spd : 0; };
@@ -1449,7 +1454,7 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
         let s=0;
         for(let i=0;i<team.length;i++){ if(i===h && (o.by||'other')!=='any') continue; s += chainActP(team[i], i, o, cores, sit==='af'?'sb':sit, sim);
           // 요격도 공격(사용자 확인: 네코코(ES) 変幻自在로 알마(AS) 요격을 번개로 → 벨벳(AS) イレクトリ가 턴 최대 10번): 평상 턴 요격 횟수만큼
-          if(ctr && sit==='normal' && ctr.trig[i]>0 && (o.act||'attack')==='attack' && (!o.elem || o.elem.includes(ctr.els[i])) && (!o.wt || o.wt.includes(ctr.wts[i]))) s += ctr.trig[i]; }
+          if(ctr && sit==='normal' && ctr.trig[i]>0 && (o.act||'attack')==='attack' && (!o.elem || o.elem.includes(ctr.els[i])) && (!o.wt || o.wt.includes(ctr.wts[i])) && (!o.kind || ctr.kinds[i]===o.kind) && (!o.tgt || ctr.tgts[i]===o.tgt)) s += ctr.trig[i]; }
         n += sit==='af' ? (s>0 ? (e.max||1) : 0) : Math.min(e.max||1, s);
       }
       n /= opts.length;
@@ -1559,7 +1564,7 @@ function inflictOf(team, progs, S){
    전체 공격은 전열 모두가 1타씩, 수세(아군 전체공격 대신 받기)면 전열 수만큼 이 캐릭터가 맞음. 단일 공격은 도발이면 90%, 다른 도발·수세 아군이 있으면 10%, 아니면 1/전열 수.
    행동불능 상태이상에 걸리면 요격이 안 나가므로, 보스가 그런 상태이상을 쓰고 상태이상 무효가 없으면 ×0.6 */
 function counterCalc(team, progs, A, enemy, S, cx, FX, z, cap, fw){
-  const per=team.map(()=>0), trig=team.map(()=>0), els=team.map(()=>null), wts=team.map(()=>null); let any=false;
+  const per=team.map(()=>0), trig=team.map(()=>0), els=team.map(()=>null), wts=team.map(()=>null), kinds=team.map(()=>null), tgts=team.map(()=>null); let any=false;
   const nE = Math.min(4, Math.max(1, S.enemyCount||1)), front = Math.max(1, Math.min(4, team.length));
   const H = Math.max(0.5, +S.enemyHits||2), pA = Math.min(1, Math.max(0, S.enemyAoE!=null ? +S.enemyAoE : 0.4));
   const coverAoE = team.map(m=>m.cover==='aoe');
@@ -1577,9 +1582,9 @@ function counterCalc(team, progs, A, enemy, S, cx, FX, z, cap, fw){
     const a=ct.atk, sk={skill:'요격', target:a.target, kind:a.kind, stat:a.stat, element:a.element||'none', weapon_type:a.weapon_type, size:a.size||'xl', mult:+a.mult||1, hits:Math.max(1,a.hits||1), repeat:0, crit_sure:false, def_ignore:false, barrier_pierce:false, af_combo_x:1, condition:''};
     const t2=team.slice(); t2[i]=Object.assign({}, c, {main:sk, sb:null});
     const co=attackerCore(t2, i, progs, A, enemy, S, 'normal', cx, FX, z); if(!co) continue;
-    per[i]+=applyZoneCap(co, z, S, cap, null)*fw(co)*n; trig[i]+=n; els[i]=co.el; wts[i]=co.wt; any=true;
+    per[i]+=applyZoneCap(co, z, S, cap, null)*fw(co)*n; trig[i]+=n; els[i]=co.el; wts[i]=co.wt; kinds[i]=co.kind; tgts[i]=co.tgt; any=true;
   }
-  return any ? {per, trig, els, wts, total:per.reduce((x,y)=>x+y,0)} : null;
+  return any ? {per, trig, els, wts, kinds, tgts, total:per.reduce((x,y)=>x+y,0)} : null;
 }
 /* ---------- N턴 전투 시뮬레이션 (최고점 = 개전부터 N턴 총 대미지) ----------
    턴마다: AF(게이지 50% 이상이면 쓸지 말지 둘 다 따짐, 100%면 오래감) → AF 안에서 SB 게이지가 차면 그 시점 콤보로 SB
@@ -1848,17 +1853,17 @@ function dummySim(o){
       sit = sit || 'af';
       const key = sit+'|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow);
       const ck = key+'|'+i; if(coMemo.has(ck)) return coMemo.get(ck);
-      Av.infNow = inow; Av.echg = A.echg ? A.echg.filter(e=>acted[e.i]||passive[e.i]) : null; if(Av.echg && !Av.echg.length) Av.echg = null; // 속성 변환(変幻自在 등)도 건 사람이 행동한 뒤부터
+      Av.infNow = inow; Av.echg = A.echg ? A.echg.filter(e=>e.to==='self'||acted[e.i]||passive[e.i]) : null; if(Av.echg && !Av.echg.length) Av.echg = null; // 속성 변환(変幻自在 등)도 건 사람이 행동한 뒤부터
       let FX = fxMemo.get(key);
       if(FX===undefined){ const upt = team.map((c,j)=> acted[j]||passive[j] ? 1 : 0); FX = buildBF(team, progs, sit, z, Av, posSets, upt, true); fxMemo.set(key, FX); }
       const co = attackerCore(team, i, progs, Av, enemy, S, sit, cx, FX, z); coMemo.set(ck, co); return co;
     };
     const altCoreAt = (acted, z, i, inow) => { // 횟수를 다 쓴 뒤의 주력(같은 버프 상태)
       const k0 = 'af|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow), key = 'alt|'+k0+'|'+i; if(coMemo.has(key)) return coMemo.get(key);
-      coreAt(acted, z, 'af', i, inow); const FX = fxMemo.get(k0); Av.infNow = inow; Av.echg = A.echg ? A.echg.filter(e=>acted[e.i]||passive[e.i]) : null; if(Av.echg && !Av.echg.length) Av.echg = null;
+      coreAt(acted, z, 'af', i, inow); const FX = fxMemo.get(k0); Av.infNow = inow; Av.echg = A.echg ? A.echg.filter(e=>e.to==='self'||acted[e.i]||passive[e.i]) : null; if(Av.echg && !Av.echg.length) Av.echg = null;
       const tAlt = team.map((m,k)=> k===i ? Object.assign({}, m, {main:m.mainAlt}) : m);
       const co = attackerCore(tAlt, i, progs, Av, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
-    const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false);
+    const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), mu = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false); // mu: 주력 사용 횟수(횟수 제한 스킬용)
     let combo = 0.75, af = 0, cw = 0, sbG = Math.min(50, 12.5*Math.max(o.light, o.shadow));
     let sbAt = null, sb = 0, zCur = zFrom0 ? nz : null; const sbPer = [], sbCo = {};
     for(const a of afA.seq){
@@ -1866,7 +1871,7 @@ function dummySim(o){
       const buffOnly = cnt[i]===0 && c.buffAct, isInf = i===kAct && !ia[i] && !buffOnly;
       const zNow = zCur, inow = infAt(atk, ia);
       if(!buffOnly && !isInf){
-        const useAlt = c.mainAlt && cnt[i] >= c.main.uses && !c.afSk;
+        const useAlt = c.mainAlt && mu[i] >= c.main.uses && !c.afSk; if(!useAlt) mu[i]++;
         const co = useAlt ? altCoreAt(acted, zNow, i, inow) : coreAt(acted, zNow, 'af', i, inow);
         if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
           combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
@@ -2328,12 +2333,22 @@ async function perCharBest(input, onProgress){
   const n=pool.length; let total = n*(n-1)*(n-2)*(n-3)/24;
   const outsiders = own.filter(o=>!pool.some(p=>p.pc.id===o.pc.id));
   const partners = pool.slice(0,14);
-  total += outsiders.length * (partners.length*(partners.length-1)*(partners.length-2)/6);
+  // 풀 밖 캐릭터는 상위 10명 + 그 캐릭터 속성·무기에 맞는 존·버프 담당 6명과 짝지음(예: 음속성 딜러는 각음진·음속성 버퍼가 있어야 제 값)
+  const potOf = new Map(pool.map(p=>[p.pc.id, p.pot]));
+  const potGet = q => { if(!potOf.has(q.pc.id)) potOf.set(q.pc.id, soloPotential(q.pc, q.prog, enemy, S, cap, ctx)); return potOf.get(q.pc.id); };
+  const top10 = new Set(partners.slice(0,10).map(p=>p.pc.id));
+  const synOf = o => { const el = o.pc.elem, wt = o.pc.wt, wp = o.pc.weapon;
+    return own.filter(q=>q.pc.id!==o.pc.id && !top10.has(q.pc.id) && (q.pc.base||q.pc.id)!==(o.pc.base||o.pc.id)).filter(q=>{ const c=q.pc, p=c.party||{};
+      const z = c.zoneTypes && c.zoneTypes.opts.some(op=> op.kind==='elem' ? op.types.includes(el) : (op.types.includes(wt) || op.types.includes('all')));
+      const b = (p.elem_atk && +p.elem_atk[el]>0) || (p.weapon_atk && (+p.weapon_atk[wp]>0 || +p.weapon_atk[wt]>0));
+      return z || b; }).sort((x,y)=>potGet(y).sup-potGet(x).sup).slice(0,6); };
+  const psOf = new Map(outsiders.map(o=>[o.pc.id, partners.slice(0,10).concat(synOf(o)).filter(p=>p.pc.id!==o.pc.id)]));
+  for(const o of outsiders){ const m=psOf.get(o.pc.id).length; total += m*(m-1)*(m-2)/6; }
   let done=0, last=Date.now();
   const tick = async()=>{ done++; if(Date.now()-last>40){ last=Date.now(); if(onProgress) onProgress(done/total); await new Promise(r=>setTimeout(r,0)); } };
   for(const cmb of combos(n,4)){ record(cmb.map(k=>pool[k])); await tick(); }
   for(const o of outsiders){
-    const ps = partners.filter(p=>p.pc.id!==o.pc.id);
+    const ps = psOf.get(o.pc.id);
     for(const cmb of combos(ps.length,3)){ record([o].concat(cmb.map(k=>ps[k]))); await tick(); }
   }
   const N = R.length/5;

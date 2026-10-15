@@ -1437,13 +1437,18 @@ async function runFocusAll(){
   grid.innerHTML = FOCUS_LIST.map((f,k)=>`<section class="fcard" id="fx-${k}"><div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><span class="hint">대기 중…</span></div></section>`).join('');
   $('#fxRun').disabled=true; $('#fxProg').hidden=false; $('#fxProg i').style.width='0%';
   $('#fxMeta').textContent = `${MODE_KR[P.mode]==='보스 맞춤'&&!boss?'최고점 딜':MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''}`;
-  for(let k=0;k<FOCUS_LIST.length;k++){
-    const f=FOCUS_LIST[k];
-    const r = await calcOptimize('fx', {locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:f, maxPool:28, topN:3, buddy: buddyInput(), weights: P.mode==='custom' ? Object.assign({}, P.weights) : null},
-      v=>{ if(my===fxToken) $('#fxProg i').style.width=Math.round((k+v)/FOCUS_LIST.length*100)+'%'; }, J);
-    if(my!==fxToken || !r) return;
-    $('#fx-'+k).outerHTML = fcardHtml(f, k, r, cond);
-  }
+  // 11가지를 워커 여러 개(코어 수 - 1, 최대 4)로 나눠 동시에 계산
+  const NW = Math.max(1, Math.min(4, ((navigator.hardwareConcurrency||2)-1), FOCUS_LIST.length));
+  const fp = FOCUS_LIST.map(()=>0), upd = ()=>{ if(my===fxToken) $('#fxProg i').style.width=Math.round(fp.reduce((a,b)=>a+b,0)/FOCUS_LIST.length*100)+'%'; };
+  const buddy = buddyInput(), weights = P.mode==='custom' ? Object.assign({}, P.weights) : null;
+  let next = 0, stop = false;
+  const lane = async slot => { while(!stop){ const k = next++; if(k>=FOCUS_LIST.length) return; const f=FOCUS_LIST[k];
+      const r = await calcOptimize('fx'+slot, {locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:f, maxPool:28, topN:3, buddy, weights},
+        v=>{ fp[k]=v; upd(); }, J);
+      if(my!==fxToken || !r){ stop=true; return; }
+      fp[k]=1; upd(); const el=$('#fx-'+k); if(el) el.outerHTML = fcardHtml(f, k, r, cond); } };
+  await Promise.all(Array.from({length:NW}, (_,s)=>lane(s)));
+  if(my!==fxToken) return;
   $('#fxRun').disabled=false; $('#fxProg').hidden=true;
 }
 function fcardHtml(f, k, r, cond){
