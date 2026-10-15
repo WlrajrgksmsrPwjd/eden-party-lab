@@ -18,7 +18,7 @@
   "flammelapis_es": [{"f":["int","spd"],"when":{"zone":["slash_magic"]}}],
   "dalnis_as": [{"f":["stat","crit","critd","sf","oc"],"to":{"pers":["剣","弓","槍"]}},{"f":["critd"],"when":{"pain":true},"e":0.5},{"f":["stat","critd","sf","oc"],"when":{"t":0.85}},{"f":["crit"],"when":{"t":0.7}},{"f":["link"],"to":{"pos":"one","side":"r"},"when":{"t":0.85}}],
   "elseal": [{"f":["*"],"to":{"elem":["water"]},"e":0.5}],
-  "elseal_as": [{"f":["stat","weap"],"to":{"elem":["water"]},"e":0.5},{"f":["stat","weap"],"when":{"req":{"kind":"elem","vals":["water"],"n":4}}},{"f":["xhit"],"to":{"elem":["water"]},"when":{"sb":true}}],
+  "elseal_as": [{"f":["stat","weap"],"to":{"elem":["water"]},"e":0.5},{"f":["stat","weap"],"when":{"req":{"kind":"elem","vals":["water"],"n":4}}},{"f":["xhit"],"to":{"elem":["water"]},"when":{"sb":true}},{"f":["shinan"],"when":{"sb":true}}],
   "melpiphia": [{"f":["stat","weap"],"when":{"up":0.7},"e":0.5},{"f":["critd"],"when":{"zone":["wind"],"req":{"kind":"pers","vals":["アルカディア"],"n":2}}}],
   "matsurika": [{"f":["*"],"to":{"pos":"one","side":"r"},"e":0.5},{"f":["link","pierce"],"to":{"pos":"one","side":"r"}}],
   "tsubame_ac": [{"f":["stat","focus"],"to":{"pos":"selfone","side":"r"}},{"f":["weap"],"to":{"elem":["wind"]}},{"f":["*"],"when":{"up":0.7},"e":0.5}],

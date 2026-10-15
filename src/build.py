@@ -58,6 +58,9 @@ for c in chars:
 afan=json.load(open(P('data','af_anim.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in afan and not c['id'].startswith('_'): c['af_anim']=afan[c['id']]
+lnk=json.load(open(P('data','link.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in lnk and not c['id'].startswith('_'): c['links']=lnk[c['id']]
 ctr=json.load(open(P('data','counter.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in ctr and not c['id'].startswith('_'): c['counter']=ctr[c['id']]
