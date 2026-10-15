@@ -60,7 +60,7 @@ const DEFAULT_SETTINGS = {
   muleAuto: true,    // 후열 고정이 없으면 주딜과 같은 무기 퍼스널리티 셔틀 2명을 가정
   afCycle: true,      // 지속 딜에 AF 주기(턴당 게이지 충전으로 계산)를 넣기
   muleFront: true,   // 자동 가정일 때 같은 퍼스널리티의 전열 서포터(딜러 아님)도 P글래 셔틀로
-  muleSlots: 3,      // 셔틀 1명이 공유하는 칸 수 (천명치 200 이상 셔틀은 4칸)
+  muleSlots: 4,      // 셔틀 1명이 공유하는 칸 수: 셔틀은 천명치 200을 찍어 글래 4칸이라고 가정(사용자 확인 — 3이면 천명치 200 미만)
   mulePct: 0.3       // 공유 1칸당 대미지 (속성 글래스터와 같은 가산 그룹)
 };
 const WEAPON_PERS = {sword:'剣', katana:'刀', ax:'斧', lance:'槍', bow:'弓', fist:'拳', hammer:'槌', staff:'杖'};
@@ -661,20 +661,23 @@ function zoneCandidates(team, progs, situation){
    月光陣: 뇌·정·음 +30%(극 +60%), 화·수·지·풍 −30%
    무기(타입) 존: 그 타입 +30%(극 +60%), 다른 타입 −30% · 閃撃陣: 전 타입 +30%, 전투 첫 턴만 */
 const ELEM4 = ['fire','water','earth','wind'];
-/* 존 전개 중 AF 게이지(행동당 %). 존이 없거나 상관없는 공격이면 null(타당 계산) */
-function zoneAF(z, co){
+/* 존 전개 중 AF 게이지(영문 위키 Zone 표): 존이 깔려 있으면 타격당이 아니라 행동(실행)당 충전으로 바뀐다.
+   맞는 속성·타입 7.5%, 상극·다른 타입 0%, 그 밖의 공격(무속성·고정 대미지·자상 포함) 1.5%.
+   각음진: 그림자 7.5 · 다른 속성 2.5 / 휘정진: 속성 공격 전부 7.5 / 초뢰진: 번개 AF 중 10(평상 5) · 그림자 0 /
+   월광진: 뇌·정·음 7.5 · 화수지풍 0 / 섬격진 10 / 성해진 7.5. 존이 없으면 null(타당 계산) */
+function zoneAF(z, co, inAF){
   if(!z || !z.level || z.kind==='none') return null;
-  const el=co.el, wt=co.wt;
-  if(z.kind==='all') return 10;
+  const el=co.el, wt=co.wt, none = !el || el==='none';
+  if(z.kind==='all'){ const k=z.key||''; return (k==='starsea'||k==='stellar_sea'||k==='星海陣') ? 7.5 : 10; }
   if(z.kind==='weap') return z.types.includes(wt) ? 7.5 : 0;
   const key = z.key || z.types[0];
-  if(key==='crystal') return 7.5;
-  if(key==='shade') return el==='shade' ? 7.5 : 2.5;
-  if(key==='thunder') return el==='thunder' ? 5 : el==='shade' ? 0 : null;
-  if(key==='moonlight') return z.types.includes(el) ? 7.5 : ELEM4.includes(el) ? 0 : null;
+  if(key==='crystal') return none ? 1.5 : 7.5;
+  if(key==='shade') return el==='shade' ? 7.5 : none ? 1.5 : 2.5;
+  if(key==='thunder') return el==='thunder' ? (inAF===false ? 5 : 10) : el==='shade' ? 0 : 1.5;
+  if(key==='moonlight') return z.types.includes(el) ? 7.5 : ELEM4.includes(el) ? 0 : 1.5;
   if(z.types.includes(el)) return 7.5;
   if(z.types.some(t=>OPP[t]===el)) return 0;
-  return null;
+  return 1.5;
 }
 function zoneFactor(z, el, wt, S, rel){
   // 빌더 코어(ae-core zoneEffect, 계산기 56행) 기준. 괄호는 극(ZONE 각성, 절 포함)
@@ -1168,7 +1171,7 @@ function muleShare(team, S, ctx, progs){
     if(!(ctx && ctx.pgl) && !S.pglAssumeAll) return null; // 연성 P글래를 표시하지 않았으면 셔틀 공유를 가정하지 않음
     let best=null; for(const c of team) if(!best || (c.pow||0)>(best.pow||0)) best=c;
     wp = best && WEAPON_PERS[best.weapon]; if(!wp) return null;
-    const sl = S.muleSlots||3, nb = ctx && ctx.maxBack!=null ? ctx.maxBack : 2;
+    const sl = S.muleSlots||4, nb = ctx && ctx.maxBack!=null ? ctx.maxBack : 2;
     mules=[{pers:new Set([wp]), slots:sl},{pers:new Set([wp]), slots:sl}].slice(0,Math.max(0,nb)); auto=true;
     if(S.muleFront!==false) team.forEach((c,j)=>{ if(!(c.roles||[]).includes('dps') && c.pers && c.pers.has(wp)) front.push(j); });
     if(!mules.length && !front.length) return null;
@@ -1293,27 +1296,44 @@ function pglPlan(team, progs, A, S, zone){
     if(zkey && AURA_Z.has(zkey)) add({id:'R50:'+zkey, label:`격진의 힘<${ZONE_KR[zkey]||zkey}>`, kind:'r50', v:0.15, carrier:null, cap:1, recv:all});
     if(zOn && AURA49[zkey]){ const a=AURA49[zkey]; add({id:'R49:'+zkey, label:`극 격진의 힘<${ZONE_KR[zkey]||zkey}>`, kind:'r49', v:15, ev:a.v, carrier:null, cap:1, recv:all, erecv: idxs(r=> a.el==='all' ? r.el!=='none' : r.el===a.el)}); }
   }
-  // 셔틀 칸: 후열 셔틀(자동 가정이면 퍼스널리티 제한 없이 가정, 고정 셔틀이면 그 캐릭터 퍼스널리티)
-  const carriers = mu.carriers.map(m=>({left:m.slots, pers:m.pers}));
-  const gainOf = t => { let g=0;
-    if(t.kind==='add') for(const i of t.recv){ const r=R[i]; g += r.w*Math.log((r.base+(r.add+t.v)/100)/(r.base+r.add/100)); }
-    else if(t.kind==='zone' || t.kind==='r49'){ for(const i of t.recv){ const r=R[i], d=1+GL_Z*r.z0+r.zp/100; g += r.w*Math.log((d+t.v/100)/d); }
-      if(t.kind==='r49') for(const i of t.erecv){ const r=R[i]; g += r.w*Math.log((r.base+(r.add+t.ev)/100)/(r.base+r.add/100)); } }
-    else if(t.kind==='r51') g = Math.log((1+r51+t.v)/(1+r51));
-    else if(t.kind==='r50') g = Math.log((1+r50+t.v)/(1+r50));
-    return g; };
-  const fit = t => { let best=null; for(const c of carriers){ if(c.left<=0) continue; if(t.carrier && c.pers && !c.pers.has(t.carrier)) continue; if(!best || (c.pers && !best.pers)) best=c; } return best; };
-  const used=[];
-  for(let guard=0; guard<64; guard++){
-    let bt=null, bg=1e-6, bc=null;
-    for(const t of T){ if(t.cap<=0) continue; const c=fit(t); if(!c) continue; const g=gainOf(t); if(g>bg){ bg=g; bt=t; bc=c; } }
-    if(!bt) break;
-    bc.left--; bt.cap--; used.push(bt.label);
-    if(bt.kind==='add') for(const i of bt.recv){ R[i].add+=bt.v; R[i].names.push(bt.label); }
-    else if(bt.kind==='zone' || bt.kind==='r49'){ for(const i of bt.recv){ R[i].zp+=bt.v; if(bt.kind==='zone') R[i].names.push(bt.label); } if(bt.kind==='r49') for(const i of bt.erecv) R[i].add+=bt.ev; }
-    else if(bt.kind==='r51') r51+=bt.v; else if(bt.kind==='r50') r50+=bt.v;
-  }
-  const out = {per: R.map(r=>({e:r.add, z:r.zp, names:r.names})), r51, r50, used, slots: mu.carriers.reduce((a,m)=>a+m.slots,0), nb: mu.carriers.length};
+  // 셔틀 칸: 고정 셔틀이면 그 캐릭터 퍼스널리티. 자동 가정이면 후열 셔틀마다 무기 퍼스널리티 하나(예: 도 셔틀 + 도끼 셔틀, 사용자 확인: 이런 조합의 정배),
+  // 무기 P글래는 그 무기 셔틀만, 그 밖의 퍼스널리티 P글래·아군 전체 글래는 어느 셔틀이든 단다고 본다. 셔틀 무기 조합은 이득이 가장 큰 쪽으로 고른다
+  const WPS = Object.values(WEAPON_PERS);
+  const run = carriers => {
+    const Rc = R.map(r=>Object.assign({}, r, {add:0, zp:0, names:[]})), Tc = T.map(t=>Object.assign({}, t));
+    let q51=0, q50=0, score=0; const used=[];
+    const gainOf = t => { let g=0;
+      if(t.kind==='add') for(const i of t.recv){ const r=Rc[i]; g += r.w*Math.log((r.base+(r.add+t.v)/100)/(r.base+r.add/100)); }
+      else if(t.kind==='zone' || t.kind==='r49'){ for(const i of t.recv){ const r=Rc[i], d=1+GL_Z*r.z0+r.zp/100; g += r.w*Math.log((d+t.v/100)/d); }
+        if(t.kind==='r49') for(const i of t.erecv){ const r=Rc[i]; g += r.w*Math.log((r.base+(r.add+t.ev)/100)/(r.base+r.add/100)); } }
+      else if(t.kind==='r51') g = Math.log((1+q51+t.v)/(1+q51));
+      else if(t.kind==='r50') g = Math.log((1+q50+t.v)/(1+q50));
+      return g; };
+    const ok = (c,t) => { if(c.left<=0) return false; if(!t.carrier) return true;
+      if(c.pers) return c.pers.has(t.carrier);
+      if(c.weap && WPS.includes(t.carrier)) return c.weap===t.carrier;
+      return true; };
+    const fit = t => { let best=null; for(const c of carriers) if(ok(c,t) && (!best || (c.pers||c.weap) && !(best.pers||best.weap))) best=c; return best; };
+    for(let guard=0; guard<64; guard++){
+      let bt=null, bg=1e-6, bc=null;
+      for(const t of Tc){ if(t.cap<=0) continue; const c=fit(t); if(!c) continue; const g=gainOf(t); if(g>bg){ bg=g; bt=t; bc=c; } }
+      if(!bt) break;
+      bc.left--; bt.cap--; used.push(bt.label); score += bg;
+      if(bt.kind==='add') for(const i of bt.recv){ Rc[i].add+=bt.v; Rc[i].names.push(bt.label); }
+      else if(bt.kind==='zone' || bt.kind==='r49'){ for(const i of bt.recv){ Rc[i].zp+=bt.v; if(bt.kind==='zone') Rc[i].names.push(bt.label); } if(bt.kind==='r49') for(const i of bt.erecv) Rc[i].add+=bt.ev; }
+      else if(bt.kind==='r51') q51+=bt.v; else if(bt.kind==='r50') q50+=bt.v;
+    }
+    return {score, Rc, used, q51, q50};
+  };
+  let best=null, wsel=null;
+  if(mu.auto){
+    const ws = [...new Set(R.map(r=>r.wp).filter(Boolean))], nb = mu.carriers.length, sl = mu.carriers.length ? mu.carriers[0].slots : 3;
+    const combos = []; const rec = (k, from, acc) => { if(k===nb){ combos.push(acc.slice()); return; } for(let a=from;a<ws.length;a++){ acc.push(ws[a]); rec(k+1, a, acc); acc.pop(); } };
+    if(ws.length && nb>0) rec(0, 0, []); else combos.push([]);
+    for(const cb of combos){ const r = run(cb.length ? cb.map(w=>({left:sl, weap:w})) : mu.carriers.map(m=>({left:m.slots}))); if(!best || r.score>best.score+1e-12){ best=r; wsel=cb; } }
+  } else best = run(mu.carriers.map(m=>({left:m.slots, pers:m.pers||null})));
+  const out = {per: best.Rc.map(r=>({e:r.add, z:r.zp, names:r.names})), r51:best.q51, r50:best.q50, used:best.used, slots: mu.carriers.reduce((a,m)=>a+m.slots,0), nb: mu.carriers.length,
+    shuttleWeap: wsel ? wsel.map(w=>PERS_KR[w]||w) : null};
   memo.set(zk, out); return out;
 }
 /* 보스가 행동불능 상태이상(기절·수면·마비·석화·빙결·혼란·매료·공포)을 거는지 — 걸리면 요격이 안 나감 */
@@ -1345,7 +1365,7 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio){
     const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
     const byHit = Math.min(30, co.totHits + (co.linkHits||0))*(weak?3.5:1.5);
     // 재공격은 실행마다 행동 한 번처럼 AF 게이지가 찬다(사용자 확인 — 루나틱 복사는 예외): 맞는 존은 실행당 7.5%, 그 밖은 타수 기준(재공격 타수 포함)
-    const ex = co.execs || (1 + Math.max(0, co.rep||0)), za = zoneAF(z, co); if(za!=null) return za>0 ? Math.max(za*ex, byHit) : za; // 상극·안 맞는 존은 0
+    const ex = co.execs || (1 + Math.max(0, co.rep||0)), za = zoneAF(z, co, true); if(za!=null) return za*ex; // 존이 있으면 행동(실행)당 충전으로 바뀜(위키), 상극·안 맞는 타입은 0
     return byHit; });
   // 연출 시간: 캐릭터별 값(af_anim)이 있으면 그 값. 재공격은 한 행동 안에서 이어 치므로 쿨타임은 행동당 한 번만 늘고(사용자 확인),
   // 이어 치는 연출은 실행당 S.afRepAnim배(기본 0.5)로 셈
@@ -1653,15 +1673,15 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     const cores1 = zdep ? coresFor('normal', z1, simUse) : res.normal.cores;
     sustain = sumZ(cores1, z1, null, wN).v*0.6 + res.normal.total*0.4;
   }
-  // AF 게이지 충전(평상 턴): ZONE 없으면 타당 1.5%(약점 3.5%, 전체 공격도 1타겟), 맞는 ZONE이면 행동당 7.5%.
+  // AF 게이지 충전(평상 턴): ZONE 없으면 타당 1.5%(약점 3.5%, 전체 공격도 1타겟), ZONE이 있으면 행동(실행)당(맞으면 7.5%, 그 밖 1.5%, 상극 0).
   // 서포트 등급(AF 게이지)·버디로 추가. AF 주기 K = 100 / 턴당 충전
   let afGain = 0;
   { const z=nz, cs=res.normal.cores;
     team.forEach((c,i)=>{ const co=cs[i]; if(!co) return; const pAct = simUse ? (sim.act[i]+sim.alt[i]) : 1;
-      const za = zoneAF(z, co);
+      const za = zoneAF(z, co, false);
       const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
       const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5), ex = co.execs || (1 + Math.max(0, co.rep||0));
-      afGain += pAct * (za!=null ? (za>0 ? Math.max(za*ex, byHit) : za) : byHit);
+      afGain += pAct * (za!=null ? za*ex : byHit); // 존이 있으면 행동(실행)당
       afGain += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)];
     });
     if(A.bud && ctx && ctx.buddy && ctx.buddy.main && ['moke','korobo','gansu_as'].includes(ctx.buddy.main.id)) afGain += 5;
@@ -1805,7 +1825,7 @@ function dummySim(o){
         combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
     }
     acted[i] = true; cnt[i]++; sbG += sbRate[i];
-    if(!buffOnly && c.zoneSet){ const zc = zcs.find(q=>q && q.by===c.id && q.level>0); const cur = zOver || zNow; if(zc && !(cur && cur.key===zc.key && cur.level>=zc.level)) zOver = zc; } // 존은 하나: 행동 스킬로 자기 존을 펴면 기존 존을 덮어씀(사용자 확인)
+    if(!buffOnly && c.zoneSet){ const zc = zcs.find(q=>q && q.by===c.id && q.level>0); const cur = zOver || zNow; if(zc && !(cur && cur.level>=2) && !(cur && cur.key===zc.key && cur.level>=zc.level)) zOver = zc; } // 존은 하나: 행동 스킬로 자기 존을 펴면 기존 존을 덮어씀(사용자 확인). 각성(극)한 존은 덮어쓸 수 없음(위키)
     if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
       sbAt = afA.seq.indexOf(a)+1;
       const zSB = sbAw && sbz ? sbz : zNow;

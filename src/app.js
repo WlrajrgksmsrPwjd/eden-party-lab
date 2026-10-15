@@ -1074,8 +1074,8 @@ function muleLine(x){
   const got = muleGot(x);
   const fr = (mu.front||[]).map(j=>esc(x.team[j].name));
   const zoneTip = x.ev.sb.zone && x.ev.sb.zone.level>=2 ? ' · 극존(ZONE 각성)이 깔리면 셔틀마다 각성의 힘(+25%)을 섞는 게 이득 (속성 P글래와 다른 그룹이라 곱해짐)' : '';
-  if(mu.auto && mu.plan){ const sl = (mu.carriers||[]).reduce((a,m)=>a+m.slots,0);
-    return `<div class="hint">P글래 셔틀 가정: 후열 셔틀 ${mu.mules.length}명(${sl}칸)이 ${pglCount()?'표시한':'모든'} 잠재 연성 P글래를 종류마다 ${pglCount()?'표시한 수만큼':'1개씩'} 나눠 달고, 장착 조건(무기종·퍼스널리티·속성)이 같은 아군에게 공유 → ${got.join(', ')||'—'}. 남는 칸엔 아군 전체 글래(공명·격진의 힘)</div>`; }
+  if(mu.auto && mu.plan){ const sl = (mu.carriers||[]).reduce((a,m)=>a+m.slots,0), pl = mu._pm && mu._pm.size ? [...mu._pm.values()].pop() : null, sw = pl && pl.shuttleWeap;
+    return `<div class="hint">P글래 셔틀 가정: 후열 ${sw&&sw.length?sw.map(w=>esc(w)+' 캐릭터').join(' + '):'셔틀 '+mu.mules.length+'명'}(천명치 200, ${sl}칸)이 ${pglCount()?'표시한':'모든'} 잠재 연성 P글래를 종류마다 ${pglCount()?'표시한 수만큼':'1개씩'} 나눠 달고, 장착 조건(무기종·퍼스널리티·속성)이 같은 아군에게 공유 → ${got.join(', ')||'—'}. 남는 칸엔 아군 전체 글래(공명·격진의 힘)</div>`; }
   if(mu.auto) return `<div class="hint">P글래 셔틀 가정: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 ${mu.mules.length?`후열 ${mu.mules.length}명`:''}${mu.mules.length&&fr.length?' + ':''}${fr.length?`전열 서포터 ${fr.join(', ')}`:''}이 잠재 연성한 P글래를 공유 → ${got.join(', ')||'—'}${zoneTip}</div>`;
   return `<div class="hint">후열 고정 셔틀의 P글래 공유: ${got.join(', ')||'<span class="ng">무기 퍼스널리티가 맞는 전열 캐릭터 없음</span>'}</div>`;
 }
