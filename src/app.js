@@ -25,7 +25,7 @@ const GL_PRESETS = {
 };
 function glKey(gl){ if(!gl) return 'def'; if(gl.mode==='auto') return 'auto'; if(gl.mode==='none') return 'none';
   for(const [k,p] of Object.entries(GL_PRESETS)) if(p.v&&p.v.mode==='preset'&&p.v.e===gl.e&&p.v.pa===gl.pa&&p.v.po===gl.po) return k; return 'e3'; }
-function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'; const p=[]; if(g.e) p.push('속성'+g.e); if(g.pa) p.push('페인'+g.pa); if(g.po) p.push('독'+g.po); if(g.z) p.push('각성의 힘'); return p.join('·')||'—'; }
+function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'; const p=[]; if(g.e) p.push(g.rebel ? '반역·HP저하'+(g.e>2?'·속성'+(g.e-2):'') : '속성'+g.e); if(g.pa) p.push('페인'+g.pa); if(g.po) p.push('독'+g.po); if(g.z) p.push('각성의 힘'); return p.join('·')||'—'; }
 
 /* ---------- 상태 ---------- */
 let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
@@ -817,7 +817,7 @@ function dummyHtml(x){
   const nm=i=>esc(x.team[i].name), tot=d.per.reduce((a,b)=>a+b,0)||1;
   const top=d.per.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).filter(p=>p[0]/tot>=0.05).map(([v,i])=>`${nm(i)} ${Math.round(v/tot*100)}%`).join(' · ');
   const ord=(x.ex&&x.ex.order)||d.n.map((_,i)=>i);
-  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 평균 콤보 ×${d.avg.toFixed(2)}${d.lv>=2?', 극존':''})</span>${d.sbWhen?` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(${d.sbWhen==='before'?'AF 직전에 SB로 극존을 열고':`AF 끝 콤보 ×${d.fin.toFixed(2)}`})</span>`:' <span class="hint">· 성도 없음</span>'}</div><div class="hint">버프·디버프·ZONE을 다 깐 뒤 게이지 100% AF 한 번 · 딜 비중 ${top}</div></div>`;
+  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 평균 콤보 ×${d.avg.toFixed(2)}${d.lv>=2?', 극존':''})</span>${d.sbWhen?` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(${d.sbWhen==='before'?'AF 직전에 SB로 극존을 열고':`AF 끝 콤보 ×${d.fin.toFixed(2)}`})</span>`:' <span class="hint">· 성도 없음</span>'}${d.ex?` + EX 필살기 <span class="num">${fmtN(d.ex)}</span> <span class="hint">(AF 대미지의 35%)</span>`:''}</div><div class="hint">버프·디버프·ZONE을 다 깐 뒤 게이지 100% AF 한 번 · 딜 비중 ${top}</div></div>`;
 }
 function timelineHtml(x, o){
   const tl=tlOf(x,o), ev=x.ev; if(!tl) return dummyHtml(x)+bsimHtml(ev);
