@@ -813,11 +813,13 @@ function bsimHtml(ev){
 }
 /* 최고점 = 허수아비 어포딜 한 줄: AF 행동 딜 + AF 끝 SB(콤보 배율) */
 function dummyHtml(x){
-  const d=x.ev.dummy; if(!d) return '';
+  const d=x.ev.dummy; if(!d || d.fast) return '';
   const nm=i=>esc(x.team[i].name), tot=d.per.reduce((a,b)=>a+b,0)||1;
   const top=d.per.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).filter(p=>p[0]/tot>=0.05).map(([v,i])=>`${nm(i)} ${Math.round(v/tot*100)}%`).join(' · ');
   const ord=(x.ex&&x.ex.order)||d.n.map((_,i)=>i);
-  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 평균 콤보 ×${d.avg.toFixed(2)}${d.lv>=2?', 극존':''})</span>${d.sbWhen?` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(${d.sbWhen==='before'?'AF 직전에 SB로 극존을 열고':`AF 끝 콤보 ×${d.fin.toFixed(2)}`})</span>`:' <span class="hint">· 성도 없음</span>'}${d.ex?` + EX 필살기 <span class="num">${fmtN(d.ex)}</span> <span class="hint">(AF 대미지의 35%)</span>`:''}</div><div class="hint">버프·디버프·ZONE을 다 깐 뒤 게이지 100% AF 한 번 · 딜 비중 ${top}</div></div>`;
+  const sbTxt = d.sbWhen ? ` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(AF ${d.sbAt}번째 행동에서 SB 게이지 100%)</span>` : d.sbNeed ? ` <span class="hint">· SB 못 씀 (AF가 끝날 때 SB 게이지 ${Math.round(d.sbGauge)}%)</span>` : ' <span class="hint">· 성도 없음</span>';
+  const mu = d.mule && d.mule.auto && !(d.mule.inv) ? ' · 후열 연성 P글래 셔틀 2명 가정' : '';
+  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 콤보 75%→${Math.round(d.fin*100)}%)</span>${sbTxt}</div><div class="hint">허수아비 1턴 · AF 100%로 시작 · 왼쪽 버퍼부터 행동하며 버프를 깔고, 버프는 행동한 뒤부터${mu} · 딜 비중 ${top}</div></div>`;
 }
 function timelineHtml(x, o){
   const tl=tlOf(x,o), ev=x.ev; if(!tl) return dummyHtml(x)+bsimHtml(ev);

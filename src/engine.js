@@ -964,14 +964,17 @@ function grastaFactor(pr, inf, zOn, hpLow, noEl){
   return {f,e,pa,po,z,add:addOf(e),rebel:!!hpLow,painOK,n,upo,upa};
 }
 
-/* 1타 대미지 = 일반타·크리타(·오버크리)를 나눠 각각 25억 초과 경감·최종 상한(딩 계산기)을 건 기대값. AF 콤보는 경감 전에 곱한다 */
+/* 1타 대미지 = 일반타·크리타(·오버크리)를 나눠 각각 25억 초과 경감(딩 계산기)을 건 기대값.
+   AF 콤보는 경감 뒤에 곱하고 마지막에 1타 상한 9,999,999,999 (사용자 확인: AF 초반 25~35억이 찍히다 콤보가 오르며 점점 커짐) */
+const HIT_MAX = 9999999999;
 function applyZoneCap(core, z, S, cap, combo){
   if(!core) return 0;
-  const m = zoneFactorEff(z, core.el, core.wt, S)*(combo||1);
-  const pn = core.pN*m, pc = pn*core.cR, p = core.p, oc = core.oc||0;
-  const E1 = x => S.capOn ? (1-p)*dingCap(x) + p*((1-oc)*dingCap(x*core.cR) + oc*dingCap(2*x*core.cR)) : x*((1-p) + p*core.cR*(1+oc));
-  let tot = E1(pn)*core.totHits;
-  if(core.links) for(const L of core.links){ const ml = zoneFactorEff(z, L.el, core.wt, S)*(combo||1); tot += E1(core.pN*L.rho*ml)*L.n; } // 연계 추가타
+  const zf = zoneFactorEff(z, core.el, core.wt, S), c = combo||1, p = core.p, oc = core.oc||0;
+  const H = v => Math.min(HIT_MAX, v*c);
+  const E1 = x => S.capOn ? (1-p)*H(dingCap(x)) + p*((1-oc)*H(dingCap(x*core.cR)) + oc*H(dingCap(2*x*core.cR)))
+                          : x*c*((1-p) + p*core.cR*(1+oc));
+  let tot = E1(core.pN*zf)*core.totHits;
+  if(core.links) for(const L of core.links){ tot += E1(core.pN*L.rho*zoneFactorEff(z, L.el, core.wt, S))*L.n; } // 연계 추가타
   return tot*core.nT;
 }
 
