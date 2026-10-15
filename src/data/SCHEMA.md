@@ -29,6 +29,8 @@
     "hits": 3,
     "repeat": 1,                       // 재공격/재행동 횟수 (없으면 0). 조건 있으면 condition에 기술
     "execs": 1,                        // (선택) 한 행동의 실행 수(다른 스킬 연속 실행 포함, 재공격 제외). AF 게이지는 실행마다 찬다
+    "repeat_af": 0,                    // (선택) AF 중 재공격 횟수가 다를 때
+    "uses": 4, "alt": {…},             // (선택) 전투 중 횟수 제한(예: 狼志 4) — 허수아비 AF에서 다 쓰면 alt(스킬 필드 덮어쓰기, mcond 가능)로
     "crit_sure": false,                // 확정 크리티컬
     "def_ignore": false,
     "barrier_pierce": false,
@@ -86,6 +88,7 @@
     "weapon_res": {"blunt": 0},        // 참/타/돌 내성 DOWN (slash blunt pierce)
     "break": "fire",                   // 브레이크 종류 (속성명/slash/blunt/pierce/"")
     "weak_expose": "",                 // 약점 부여 (속성명 등)
+    "weak_expose_start": false,        // (선택) 전투 시작 시 자동 부여(그 밖엔 부여한 사람이 행동한 뒤부터, 문구에 SB가 있으면 SB 때부터)
     "pain_poison": true                // 페인/독 부여
   },
   "zone": {                            // ZONE 전개 (없으면 null)

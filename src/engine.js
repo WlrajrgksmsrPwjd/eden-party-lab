@@ -398,7 +398,7 @@ function buildBF(team, progs, sit, z, A, posSets, upt, debToo){
   for(let j=0;j<n;j++){
     const R=team[j].rules, u = upt ? upt[j] : 1;
     if(!R){
-      if(u<1){ any=true; const rows=[]; for(let i=0;i<n;i++){ const row={}; for(const k of ALLF) row[k]=u; if(debToo) for(const k of DEBF) row[k]=u; rows.push(row); } FX[j]={rows, zel:false}; }
+      if(u<1){ any=true; const rows=[]; for(let i=0;i<n;i++){ const row={weak_x:u}; for(const k of ALLF) row[k]=u; if(debToo) for(const k of DEBF) row[k]=u; rows.push(row); } FX[j]={rows, zel:false}; }
       continue;
     }
     any=true;
@@ -421,7 +421,7 @@ function buildBF(team, progs, sit, z, A, posSets, upt, debToo){
         const row=rows[i]; for(const k of r.fs) row[k]=(row[k]==null?1:row[k])*v;
       }
     }
-    if(u<1) for(const row of rows){ for(const k of ALLF) row[k]=(row[k]==null?1:row[k])*u; if(debToo) for(const k of DEBF) row[k]=(row[k]==null?1:row[k])*u; for(const k in row) if(k.indexOf(':')>0) row[k]*=u; }
+    if(u<1) for(const row of rows){ row.weak_x = u; for(const k of ALLF) row[k]=(row[k]==null?1:row[k])*u; if(debToo) for(const k of DEBF) row[k]=(row[k]==null?1:row[k])*u; for(const k in row) if(k.indexOf(':')>0) row[k]*=u; }
     FX[j]={rows, zel:R.zel};
   }
   return any?FX:null;
@@ -469,6 +469,8 @@ function prepChar(c){
     id:c.id, raw:c, name:c.name_kr, elem:(c.element&&c.element[0])||'none', elems:c.element||[], weapon:c.weapon, wt,
     align:c.align, stellar:!!c.stellar, tier:c.tier||'', score:c.score||0, roles:c.roles||[],
     main:c.main, sb:c.sb, afSk: c.af_skill || null,
+    // 횟수 제한 주력(main.uses, 예: 세스타(AS) 狼志 4): 다 쓰면 main.alt 로 (허수아비 AF 행동 단위에서만)
+    mainAlt: c.main && c.main.uses && c.main.alt ? Object.assign({}, c.main, c.main.alt, {alt:null, uses:null}) : null,
     self:s, party:p, deb:d, sup:sp, tags:c.tags||[],
     zone, zoneTypes, zspec, zoneAwak: !!(zone&&zone.awakened),
     breakT: (d.break||'').toLowerCase(),
@@ -708,12 +710,14 @@ function zoneFactorEff(z, el, wt, S, rel){
 /* ---------- 팀 단위 공통 집계 ---------- */
 function teamAgg(team){
   // 적에게 거는 것(독·페인, 브레이크, 약점 부여)만 팀 공통. 아군 버프는 attackerCore에서 받는 사람별로 조건을 따진다.
-  const A = {painAny:false, breaks:[], weakAdd:[]};
-  for(const c of team){
+  const A = {painAny:false, breaks:[], weakAdd:[], weakInfo:[]};
+  team.forEach((c,j)=>{
     if(c.pain) A.painAny=true;
     if(c.breakT) A.breaks.push(c.breakT);
-    if(c.weakExpose) A.weakAdd.push(c.weakExpose);
-  }
+    if(c.weakExpose){ A.weakAdd.push(c.weakExpose); // 약점 부여(弱点看破): SB 한정 표기면 SB 때(그 AF 남은 행동)만, 개전 자동이면 처음부터, 그 밖엔 부여한 사람이 행동한 뒤부터
+      const raw = String((c.raw && c.raw.debuff && c.raw.debuff.weak_expose) || '');
+      A.weakInfo.push({t:c.weakExpose, j, sb:/SB/.test(raw), start: !!(c.raw && c.raw.debuff && c.raw.debuff.weak_expose_start)}); }
+  });
   return A;
 }
 
@@ -869,9 +873,12 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 
   // 약점/내성
   let rel = null;
+  const wkOn = t => (A.weakInfo||[]).some(w => w.t===t && (!w.sb || situation==='sb' || (situation==='af' && A.postSB))
+    && (w.start || !(FX && FX[w.j] && FX[w.j].rows[idx] && FX[w.j].rows[idx].weak_x!=null && FX[w.j].rows[idx].weak_x<0.5)));
+  const added = wkOn(el) || wkOn(wt);
+  if(!enemy && added) rel = 'weak'; // 허수아비 등 상성 중립 적에게도 약점 부여는 통함
   if(enemy){
     const r1 = enemyRel(enemy, el), r2 = enemyRel(enemy, wt);
-    const added = A.weakAdd.includes(el)||A.weakAdd.includes(wt);
     const rs=[r1,r2];
     if(rs.includes('weak') || (added && !rs.includes('null') && !rs.includes('absorb'))) rel='weak';
     else if(rs.includes('resist')) rel='resist';
@@ -973,7 +980,7 @@ function condP(cd, sit, team, c, A, zone, enemy, el, progs){
   if(cd.af!=null) return (sit==='af') === !!cd.af ? 1 : 0;
   if(cd.enemy){ const e=cd.enemy;
     if(e==='poison'||e==='pain'){ const f=A.inf; if(!f) return A.painAny?1:0; return e==='poison' ? f.poison : Math.max(f.pain, f.poison); } // 'pain'은 '독/페인 중 하나'로 쓰인 경우가 있음
-    if(e==='weak') return enemy ? (enemyRel(enemy, el)==='weak' || A.weakAdd.includes(el) ? 1 : 0) : 0.4;
+    if(e==='weak') return A.weakAdd.includes(el) || (enemy && enemyRel(enemy, el)==='weak') ? 1 : enemy ? 0 : 0.4;
     if(e==='break') return A.breaks.length ? 1 : 0.3;
     return 0.8; }
   if(cd.turn) return nrm ? 0.3 : 0.5;
@@ -1636,6 +1643,11 @@ function dummySim(o){
     if(FX===undefined){ const upt = team.map((c,j)=> acted[j]||passive[j] ? 1 : 0); FX = buildBF(team, progs, sit, z, A, posSets, upt, true); fxMemo.set(key, FX); }
     const co = attackerCore(team, i, progs, A, enemy, S, sit, cx, FX, z); coMemo.set(ck, co); return co;
   };
+  const altCoreAt = (acted, z, i) => { // 횟수를 다 쓴 뒤의 주력(같은 버프 상태)
+    const key = 'alt|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(A.postSB?'|P':'')+'|'+i; if(coMemo.has(key)) return coMemo.get(key);
+    coreAt(acted, z, 'af', i); const FX = fxMemo.get('af|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(A.postSB?'|P':''));
+    const tAlt = team.map((m,k)=> k===i ? Object.assign({}, m, {main:m.mainAlt}) : m);
+    const co = attackerCore(tAlt, i, progs, A, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
   const all = team.map(()=>true);
   const full = team.map((c,i)=>coreAt(all, nz, 'af', i));
   const afA = afActionsOf(team, progs, full, nz, enemy, S, 100, prio);
@@ -1651,7 +1663,8 @@ function dummySim(o){
     const buffOnly = cnt[i]===0 && c.buffAct;
     const zNow = zOver || zoneAt(acted);
     if(!buffOnly){
-      const co = coreAt(acted, zNow, 'af', i);
+      const useAlt = c.mainAlt && cnt[i] >= c.main.uses && !c.afSk;
+      const co = useAlt ? altCoreAt(acted, zNow, i) : coreAt(acted, zNow, 'af', i);
       if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
         combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
     }
