@@ -1984,7 +1984,7 @@ function prepChar(c){
     // 속성 퍼스널리티(서약 '속성 ○의 아군' 판정용). 데이터에 없으면 공격 속성으로
     persEl: (()=>{ const K={'火':'fire','水':'water','地':'earth','風':'wind','雷':'thunder','陰':'shade','晶':'crystal'}; const L=(ex.personality||[]).map(x=>K[x]).filter(Boolean); return L.length?L:(c.element||[]); })(),
     mpMain: mpx.main!=null ? mpx.main : null, mpBuff: mpx.buff!=null ? mpx.buff : null, mpSB: mpx.sb!=null ? mpx.sb : null,
-    buffAct, buffTurns: tx.buff==null ? 3 : tx.buff, manifestMax: ex.manifest!=null ? ex.manifest : null,
+    buffAct, buffTurns: tx.buff==null ? 3 : tx.buff, debTurns: tx.debuff==null ? 3 : tx.debuff, manifestMax: ex.manifest!=null ? ex.manifest : null,
     buffHow: ex.buff_how || (partyHas ? 'skill' : 'none'),
     naR: Math.min(1, 1.6/Math.max(1.6, skillPow(c.main))),
     cx: cx.v, cxWhy: cx.why, rules: compileRules(c), pow, atkKind, atkWt: m0.weapon_type || (atkKind==='mag'?'magic':wt),
@@ -2687,15 +2687,17 @@ function simTeam(team, progs, S){
     // MP消費攻撃(질퍼니(AS) クルオルエンシス 등): 대미지 +100% 대신 공격 스킬 소비 MP +100% — AF(MP 소비 없음)엔 공짜지만 평상 턴엔 MP가 두 배로 듦
     const mpAtkX = (+((c.self||{}).mp_atk)||0)>0 || team.some(m=>m.party && m.party.scope!=='none' && (+m.party.mp_atk||0)>0) ? 2 : 1;
     const costMain = Math.round((c.mpMain!=null?c.mpMain:55)*mul*mpAtkX), costBuff = Math.round((c.mpBuff!=null?c.mpBuff:50)*mul);
-    const bt = c.buffTurns>=99 ? H+1 : Math.max(1, c.buffTurns||3);
+    const bt = c.buffTurns>=99 ? H+1 : Math.max(1, c.buffTurns||3), dt = c.debTurns>=99 ? H+1 : Math.max(1, c.debTurns||3);
     const costAlt = Math.min(costMain, Math.round(ALT_MP*mul*mpAtkX));
     // 버프 스킬(buff_acts): 하나씩 따로 써야 해서 끊긴 것이 있으면 그 턴은 그 스킬(공격 버프기는 주력의 30%쯤으로 셈). 데이터가 없으면 예전대로 버퍼만 1개
     const steps = c.bact ? c.bact.steps : (c.buffAct ? [{k:'buff'}] : []), K = steps.length;
     const rem = steps.map(()=>0), act = steps.map(()=>0);
+    // 지속 턴: 디버프만 주는 스킬은 디버프 턴(낫잡이(AS) トルメンタハルパー 3턴 — 버프 1턴으로 보면 매 턴 다시 걸어 주력을 못 씀)
+    const dur = steps.map(st=>st.g && st.g.size && [...st.g].every(x=>x.indexOf('d_')===0||x==='brk') ? dt : bt);
     let mp=mpMax, mainN=0, altN=0, naN=0, buffN=0, out=0;
     for(let t=1;t<=H;t++){
       const k = rem.findIndex(r=>r<=0), cB = k>=0 ? Math.round((+steps[k].mp||c.mpBuff||50)*mul) : 0;
-      if(k>=0 && mp>=cB){ mp-=cB; rem[k]=bt; buffN++; if(steps[k].k==='attack') altN++; }
+      if(k>=0 && mp>=cB){ mp-=cB; rem[k]=dur[k]; buffN++; if(steps[k].k==='attack') altN++; }
       else if(mp>=costMain){ mp-=costMain; mainN++; }
       else { if(!out) out=t; if(mp>=costAlt){ mp-=costAlt; altN++; } else naN++; }
       for(let q=0;q<K;q++) if(rem[q]>0){ act[q]++; rem[q]--; }
