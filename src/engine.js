@@ -309,6 +309,7 @@ function ruleAct(r, j, team, progs, sit, z, A){
   if(w.zlv && !(z && z.kind!=='none' && z.level>=w.zlv)) return 0;
   if(w.sb && !((sit==='sb' || (sit==='af' && A.postSB)) && progs[j] && progs[j].sbOK)) return 0; // SB로 건 효과는 그 AF의 남은 행동에도
   if(w.af && sit!=='af') return 0;
+  if(w.noaf && sit!=='normal') return 0; // AF·SB 땐 못 거는 효과: 허수아비·시뮬의 AF(와 그 안의 SB)는 세팅 턴 없이(축적 0) 시작하므로, 긴 축적이 필요한 스킬(예: 니나 理の再縫 = 코디네이트 40)
   if(w.req && !reqMet(w.req, team, team[j])) return 0;
   if(w.reqAny && !w.reqAny.some(q=>reqMet(q, team, team[j]))) return 0;
   if(w.pain && !A.painAny) return 0;
@@ -716,7 +717,7 @@ function teamAgg(team){
     if(c.breakT) A.breaks.push(c.breakT);
     if(c.weakExpose){ A.weakAdd.push(c.weakExpose); // 약점 부여(弱点看破): SB 한정 표기면 SB 때(그 AF 남은 행동)만, 개전 자동이면 처음부터, 그 밖엔 부여한 사람이 행동한 뒤부터
       const raw = String((c.raw && c.raw.debuff && c.raw.debuff.weak_expose) || '');
-      A.weakInfo.push({t:c.weakExpose, j, sb:/SB/.test(raw), start: !!(c.raw && c.raw.debuff && c.raw.debuff.weak_expose_start)}); }
+      A.weakInfo.push({t:c.weakExpose, j, sb:/SB/.test(raw), start: !!(c.raw && c.raw.debuff && c.raw.debuff.weak_expose_start), noaf: !!(c.raw && c.raw.debuff && c.raw.debuff.weak_expose_noaf)}); }
   });
   return A;
 }
@@ -873,7 +874,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 
   // 약점/내성
   let rel = null;
-  const wkOn = t => (A.weakInfo||[]).some(w => w.t===t && (!w.sb || situation==='sb' || (situation==='af' && A.postSB))
+  const wkOn = t => (A.weakInfo||[]).some(w => w.t===t && !(w.noaf && situation!=='normal') && (!w.sb || situation==='sb' || (situation==='af' && A.postSB))
     && (w.start || !(FX && FX[w.j] && FX[w.j].rows[idx] && FX[w.j].rows[idx].weak_x!=null && FX[w.j].rows[idx].weak_x<0.5)));
   const added = wkOn(el) || wkOn(wt);
   if(!enemy && added) rel = 'weak'; // 허수아비 등 상성 중립 적에게도 약점 부여는 통함
@@ -958,7 +959,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     }
   }
   return {perHit: pN*critX, pN, cR, p, oc:ocP, totHits, links, linkHits, nT, el, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
-    afx: sk.af_combo_x||1, hitsPerAct: totHits + linkHits, rep, execs: Math.max(1, +sk.execs||1)*(1+rep), // 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
+    afx: sk.af_combo_x||1, hitsPerAct: totHits + linkHits, rep, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
     bh, defR, flatP, lunaF, auraF, auraR, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st'};
 }
 

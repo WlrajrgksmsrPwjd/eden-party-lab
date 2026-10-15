@@ -24,7 +24,7 @@
   "tsubame_ac": [{"f":["stat","focus"],"to":{"pos":"selfone","side":"r"}},{"f":["weap"],"to":{"elem":["wind"]}},{"f":["*"],"when":{"up":0.7},"e":0.5}],
   "black_katana_as": [{"f":["pwr","int"],"when":{"zone":"any","zlv":2}}],
   "myrus_es": [{"f":["ot","weap"],"when":{"zone":["all"]}},{"f":["link"],"when":{"zone":["all"],"t":0.85}},{"f":["crit"],"when":{"t":0.7}}],
-  "nina": [{"f":["allel","crit"],"when":{"req":{"kind":"elem","vals":["crystal"],"n":1,"others":true}}},{"f":["weap","focus","ot"],"when":{"t":0.3}},{"f":["critd"],"when":{"sb":true}}],
+  "nina": [{"f":["allel","crit"],"when":{"req":{"kind":"elem","vals":["crystal"],"n":1,"others":true}}},{"f":["weap","focus","ot"],"when":{"t":0.3,"noaf":true}},{"f":["critd"],"when":{"sb":true}},{"f":["elat:crystal"],"when":{"sb":true},"x":0.334}],
   "white_porcelain_as": [{"f":["critd"],"to":{"elem":["earth"]}},{"f":["focus","mh"],"to":{"elem":["earth"]},"when":{"sb":true}},{"f":["stat","weap"],"when":{"up":0.8}},{"f":["spd"],"when":{"req":{"kind":"elem","vals":["earth"],"n":2}},"e":0.5}],
   "rabina_as": [{"f":["elat:fire"],"when":{"req":{"kind":"elem","vals":["fire"],"n":3}}},{"f":["critd"],"when":{"req":{"kind":"elem","vals":["fire"],"n":2}},"e":0.5},{"f":["dmg"],"when":{"req":{"kind":"elem","vals":["fire"],"n":3}},"e":0.8},{"f":["mp"],"when":{"req":{"kind":"elem","vals":["wind"],"n":2}}}],
   "nekoko_ac": [{"f":["link"],"to":{"pos":"one","side":"l"}},{"f":["weap"],"when":{"sb":true}}],
