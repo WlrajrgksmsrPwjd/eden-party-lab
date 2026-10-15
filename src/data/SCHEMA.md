@@ -149,6 +149,8 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - `zone`: `"none"`(AF에선 그 사람이 존을 못 폄), `"base"`(AF에선 극 없이 일반 존).
 - 체인 어빌리티·오더 스킬·요격·카운터는 AF 중 발동하지 않는다(사용자 확인). 체인 추격은 평상 턴(평상 턴 SB 포함)만.
 
+캐릭터에 `sb_normal`(SB가 아닐 때 성도 스킬, 스킬 형식 + mcond·af_x 가능)을 두면 AF 행동마다 주력과 비교해 큰 쪽을 쓴다(AF 중 MP 0, 사용자 확인). party_buff `mp_atk`(MP消費攻撃 대미지 %, 최댓값 하나·장비 +15%를 대체).
+
 스킬(main·sb)에는 `af_x`(AF·SB 때 위력 배율: 턴 종료 공격·요격형·HP 소모 조건 등)와 `repeat_af`(AF·SB 때 재공격 횟수)를 둘 수 있다. `af_note`는 근거.
 
 # 스킬 위력 조건 (`skill_cond.json`)

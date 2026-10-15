@@ -426,6 +426,7 @@
    "condition": "ステルス 상태 통상공격. テンス 전부 소비, 최대 30 소비 시 300배. 스텔스 중 스킬 위력 1.2배. 피격 시 스텔스 해제"
   },
   "sb": {
+  "sb_normal": {"skill": "ポイントブランク", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "pierce", "size": "xxl", "mult": 30, "hits": 1, "execs": 1, "repeat": 0, "condition": "[성도 스킬 일반 사용, 알테마 대조 2026-10-15] 페이지에 SB/비SB 구분 표기가 없어 평시도 30배. 기본 타수 표기 없음 → 1, ステルス 상태에서 テンス 최대 15개 기준 +4(총 5). 전방 拳·槌 3명 이상이면 타(blunt)로 변화. 자신에 弓 장비자 대미지 50%UP+虎視眈眈 5턴 / AF 보정: テンス 0이라 추가 타수 없음(1타)"},
    "skill": "ポイントブランク",
    "target": "aoe",
    "kind": "phys",

@@ -550,6 +550,7 @@
    "condition": "기본 특대 2배, パワーレベル 축적 수에 따라 최대 5배. 1번째 엘리먼트 속성으로 변화. 아군 크리데미지 최대 40%(3턴)"
   },
   "sb": {
+  "sb_normal": {"skill": "エックス斬り・真", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "none", "weapon_type": "slash", "size": "xxl", "mult": 5, "hits": 2, "execs": 1, "repeat": 0, "af_x": 0.5, "condition": "[성도 스킬 일반 사용, 알테마 대조 2026-10-15] 극대 2연, 기본 2배·아군 パワーレベル 합계 40에서 최대 5배. 双撃陣・斬魔 전개(極 아님). 아군 전체 완력 50%UP·전무기종 대미지 50%UP 3T. 10배·極 승격은 SB라 제외 / AF 보정: 아군 パワーレベル 합계 비례 2~5배"},
    "skill": "エックス斬り・真",
    "target": "aoe",
    "kind": "phys",
@@ -1242,6 +1243,7 @@
   "roles": ["tank", "healer", "debuffer"],
   "main": {"skill": "コメットビーム", "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "mult": 1, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. 완력·지성 30% DOWN+도발+수면, 자신 迎撃(5턴: 피격 시 전체 晶 마법 특대+아군 회복·상태이상 회복, パワーレベル에 따라 최대 2배)"},
   "sb": {"skill": "メテオザッパー", "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "mult": 10, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. SB 시 10배, 守勢→守護(턴 종료까지). 자신 전속성내성 50%. 双撃陣・斬魔 전개 시 コメットビーム 연속 실행"},
+  "sb_normal": {"skill": "メテオザッパー", "target": "aoe", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "size": "xxl", "mult": 1, "hits": 1, "execs": 1, "repeat": 0, "condition": "[성도 스킬 일반 사용, 알테마 대조 2026-10-15] 선제 극대, 배율 표기 없음(1). 자신 전속성내성 50%UP+守勢(턴 종료까지). 双撃陣・斬魔 전개 시 コメットビーム 연속 실행(일반·SB 양쪽 기재, 존 조건이라 execs에는 미반영). 10배·守護는 SB라 제외"},
   "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "shinan": true},
   "party_buff": {"scope": "all", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"crystal": 30}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 30, "int": 30, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},

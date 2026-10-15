@@ -111,6 +111,7 @@ const GEAR_STD = {
   hammer:{atk:204, mag:149, ms:[50,108], str:0, int:45, spd:30, lck:30, mp:0}
 };
 const GEAR_FX = [1.85, 2.04];
+const MPATK_GEAR = 0.15; // 표준 장비에 든 MP 소비 공격(배지 +15%, 43행): 파티 MP消費攻撃이 더 크면 그것으로 바뀜
 const lerpT = (a, t) => a[0] + (a[1]-a[0])*Math.min(1, Math.max(0, ((+t||0)-80)/175));
 
 const _dbuf = new Float64Array(128);
@@ -264,6 +265,7 @@ const FG = {
   kesshi:['kesshi'], // 루나틱<捨身>(결사): 대미지 ×1.7, 크리티컬 확정 (딩 계산기 44행)
   dmg:['dmg_up'],    // 주는 대미지 UP(기도·가창 등): 출처 종류마다 최댓값 하나, 종류끼리 곱
   mp:['mp_up'],      // 최대 MP %UP (딩 계산기 19행) → 정신통일·심기일체
+  mpatk:['mp_atk'],  // MP消費攻撃(주는 대미지 %UP): 장비의 MP 소비 공격과 같은 종류라 하나만(최댓값, 사용자 확인)
   flat:['pwr_flat','int_flat','spd_flat'] // 스탯 고정값 UP (딩 계산기 14~16행)
 };
 const ALLF = [...new Set(Object.values(FG).flat())];
@@ -472,7 +474,7 @@ function prepChar(c){
     cx: cx.v, cxWhy: cx.why, rules: compileRules(c), pow, atkKind, atkWt: m0.weapon_type || (atkKind==='mag'?'magic':wt),
     id:c.id, raw:c, name:c.name_kr, elem:(c.element&&c.element[0])||'none', elems:c.element||[], weapon:c.weapon, wt,
     align:c.align, stellar:!!c.stellar, tier:c.tier||'', score:c.score||0, roles:c.roles||[],
-    main:c.main, sb:c.sb, afSk: c.af_skill || null,
+    main:c.main, sb:c.sb, afSk: c.af_skill || null, sbN: c.stellar && c.sb_normal && c.sb_normal.attack!==false && c.sb_normal.mult>0 ? c.sb_normal : null, // 비SB 성도 스킬(AF 행동 후보)
     zoneSet: !!((c.af_skill && c.af_skill.zone_set) || (!c.af_skill && c.main && c.main.zone_set)), // AF 행동 스킬이 자기 존을 전개(존은 하나뿐이라 기존 존을 덮어씀)
     // 횟수 제한 주력(main.uses, 예: 세스타(AS) 狼志 4): 다 쓰면 main.alt 로 (허수아비 AF 행동 단위에서만)
     mainAlt: c.main && c.main.uses && c.main.alt ? Object.assign({}, c.main, c.main.alt, {alt:null, uses:null}) : null,
@@ -501,7 +503,7 @@ function prepChar(c){
     stBoard: c.stellar_board || null, // 스텔라 보드: stats(합계), fill(天冥 어빌리티 조건 → SB 게이지 충전 증가)
     stats: Array.isArray(c.stats) && c.stats.length===8 ? c.stats : null,
     mainStat: (m0.stat==='int'||m0.stat==='spd') ? m0.stat : 'pwr',
-    mzone: (()=>{ const L=[]; for(const sk of [c.main, c.sb]) if(sk && sk.mcond) for(const cd of [].concat(sk.mcond.need||[], ...((sk.mcond.steps||[]).map(s=>s[1]||[])))) if(cd && cd.zone) L.push(cd); return L.length?L:null; })()
+    mzone: (()=>{ const L=[]; for(const sk of [c.main, c.sb, c.af_skill, c.sb_normal]) if(sk && sk.mcond) for(const cd of [].concat(sk.mcond.need||[], ...((sk.mcond.steps||[]).map(s=>s[1]||[])))) if(cd && cd.zone) L.push(cd); return L.length?L:null; })()
   };
 }
 
@@ -750,7 +752,18 @@ function afAdj(o, t, situation, A, sbOK){
   }
   return r || o;
 }
+/* AF 행동: 성도 스킬은 SB가 아니어도 일반 스킬로 쓸 수 있고 AF 중엔 MP가 안 들어 매 행동 쓸 수 있다(사용자 확인).
+   비SB 성도 스킬(sb_normal)이 있으면 주력(또는 AF 전용 스킬)과 한 행동 대미지를 비교해 큰 쪽을 쓴다 */
 function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
+  const c = team[idx];
+  const co1 = attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone);
+  if(situation!=='af' || !c || !c.sbN || c._sbN || !(progs[idx] && progs[idx].sbOK)) return co1; // 성도 각성했을 때만
+  const t2 = team.slice(); t2[idx] = Object.assign({}, c, {afSk: c.sbN, _sbN: true});
+  const co2 = attackerCore0(t2, idx, progs, A, enemy, S, situation, ctx, FX, zone);
+  if(!co2) return co1; if(!co1) return co2;
+  return applyZoneCap(co2, zone, S, null, 1) > applyZoneCap(co1, zone, S, null, 1) ? Object.assign(co2, {viaSbN: true}) : co1;
+}
+function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const c = team[idx], pr = progs[idx];
   const sit = situation==='af' ? 'normal' : situation; // AF는 스킬 선택이 평상과 같음
   let row=null; const F = (j,k)=>{ const t=team[j].afT, a = t && t.party ? afTV(t.party[k.split(':')[0]], situation, A, progs[j]&&progs[j].sbOK) : 1; if(!row) return a; const v=row[k]; return (v==null?1:v)*a; };
@@ -839,6 +852,9 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   if(otW>0) spv.push(OVERTHROW_VAL*Math.min(1,otW));
   if(eaW>0) spv.push(EAGLE_VAL*Math.min(1,eaW));
   let dmgUp = 1; for(const s in dmgS) dmgUp *= 1+dmgS[s];
+  // MP消費攻撃: 아군·자신 버프 중 최댓값 하나. 표준 장비(딩 빌더 최적 빌드)의 배지 MP 소비 공격 +15%(43행, 중복 불가)를 대신한다(AF 중에도 대미지는 증가, 사용자 확인)
+  { let ma = pct(me.mp_atk); for(let j=0;j<team.length;j++){ const p=team[j].party; if(!p || p.scope==='none' || !p.mp_atk) continue; row = FX&&FX[j] ? FX[j].rows[idx] : null; ma = Math.max(ma, pct(p.mp_atk)*F(j,'mp_atk')); }
+    if(ma > MPATK_GEAR) dmgUp *= (1+ma)/(1+MPATK_GEAR); }
   let budDmg = 0;
   const BUD = A.bud ? A.bud.parts.filter(b=>!(b.sbOnly && situation!=='sb') && !(b.zone && !(zone && zone.level>0 && zoneMatch(b.zone, zone))) && !(b.st && sk.target!=='st')) : null;
   if(BUD) for(const b of BUD){ const p=b.party; if(!p) continue; const f=b.p;
@@ -990,7 +1006,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
       let lm = +L.mult||1; if(L.stack) lm = 1 + (lm-1)*stackFill(+L.stack, situation, A, false);
       let rho = lsz*lm*1.1/Math.max(1e-9, sizeV*mult*(tgt==='st'?1.1:1));
       if(L.el==='none' && el!=='none') rho /= 1.8; else if(L.el!=='none' && el==='none') rho *= 1.8; // 속성 보정(약 ×1.8) 차이
-      const n = (1+rep)*Math.min(1,fL);
+      const n = Math.max(1, +sk.execs||1)*(1+rep)*Math.min(1,fL); // 연계는 연속 실행마다 터짐(사용자 확인 2026-10-15)
       (links=links||[]).push({rho, el:L.el==='none'?'none':L.el, n}); linkHits += n;
     }
   }

@@ -15,7 +15,7 @@
   "velette": [{"f":["stat","elat","critd"],"when":{"zone":["thunder"]},"e":0.5}],
   "linaria": [{"f":["link"],"to":{"weap":["sword","ax","katana","lance","bow"]}},{"f":["kou"],"when":{"zone":["slash_pierce"],"stack":{"use":2,"turn":10,"turnReq":{"kind":"weap","vals":["lance","bow"],"n":1},"max":30}},"x":1,"e":0},{"f":["crit","critd"],"to":{"kind":"phys"}}],
   "hismena_es": [{"f":["allel","crit"],"when":{"zone":["slash_pierce"],"t":0.7}},{"f":["pierce"],"when":{"sb":true}},{"f":["pwr"],"when":{"zone":["slash_pierce"]}}],
-  "flammelapis_es": [{"f":["int","spd"],"when":{"zone":["slash_magic"]}},{"f":["critd"],"to":{"kind":"mag"},"when":{"zone":["slash_magic"]},"x":2,"e":1}],
+  "flammelapis_es": [{"f":["int","spd"],"when":{"zone":["slash_magic"]}},{"f":["critd"],"to":{"kind":"mag"},"when":{"zone":["slash_magic"]},"x":2,"e":1},{"f":["mpatk"],"when":{"zone":["slash_magic"]}}],
   "dalnis_as": [{"f":["stat","crit","critd","sf","oc"],"to":{"pers":["剣","弓","槍"]}},{"f":["critd"],"when":{"pain":true},"e":0.5},{"f":["stat","critd","sf","oc"],"when":{"t":0.85}},{"f":["crit"],"when":{"t":0.7}},{"f":["link"],"to":{"pos":"one","side":"r"},"when":{"t":0.85}}],
   "elseal": [{"f":["*"],"to":{"elem":["water"]},"e":0.5}],
   "elseal_as": [{"f":["stat","weap"],"to":{"elem":["water"]},"e":0.5},{"f":["stat","weap"],"when":{"req":{"kind":"elem","vals":["water"],"n":4}}},{"f":["xhit"],"to":{"elem":["water"]},"when":{"sb":true}},{"f":["crit"],"when":{"sb":true}}],
