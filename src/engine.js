@@ -406,11 +406,19 @@ function computePos(team){
 }
 function buildBF(team, progs, sit, z, A, posSets, upt, debToo){
   const n=team.length; let any=false; const FX=new Array(n).fill(null);
-  for(let j=0;j<n;j++){
-    const R=team[j].rules, u = upt ? upt[j] : 1;
+  for(let j=0;j<n;j++){ const f = bfOne(team, progs, sit, z, A, posSets, upt ? upt[j] : 1, debToo, j); if(f){ FX[j]=f; any=true; } }
+  return any?FX:null;
+}
+/* 버프 주는 사람 j 한 명의 받는 사람별 배율 행(조건 규칙 × 지금 켜진 정도 u0: 숫자 또는 {m: 켜진 항목}) */
+function bfOne(team, progs, sit, z, A, posSets, u0in, debToo, j){
+  const n=team.length; let any=false; const FX=[null];
+  {
+    const R=team[j].rules, u0 = u0in, um = u0 && typeof u0==='object' ? u0.m : null, u = um ? 1 : u0; // um: 지금 켜진 항목(버프 행동별, buff_acts.json)
+    const mk = k => um.has(k) ? 1 : 0;
     if(!R){
-      if(u<1){ any=true; const rows=[]; for(let i=0;i<n;i++){ const row={weak_x:u}; for(const k of ALLF) row[k]=u; if(debToo) for(const k of DEBF) row[k]=u; rows.push(row); } FX[j]={rows, zel:false}; }
-      continue;
+      if(um){ any=true; const rows=[]; for(let i=0;i<n;i++){ const row={weak_x:mk('weak'), brk_x:mk('brk')}; for(const k of ALLF) row[k]=mk(k); if(debToo) for(const k of DEBF) row[k]=mk(k); rows.push(row); } FX[j]={rows, zel:false}; }
+      else if(u<1){ any=true; const rows=[]; for(let i=0;i<n;i++){ const row={weak_x:u, brk_x:u}; for(const k of ALLF) row[k]=u; if(debToo) for(const k of DEBF) row[k]=u; rows.push(row); } FX[0]={rows, zel:false}; }
+      return FX[0];
     }
     any=true;
     const rows=[]; for(let i=0;i<n;i++) rows.push({});
@@ -432,10 +440,11 @@ function buildBF(team, progs, sit, z, A, posSets, upt, debToo){
         const row=rows[i]; for(const k of r.fs) row[k]=(row[k]==null?1:row[k])*v;
       }
     }
-    if(u<1) for(const row of rows){ row.weak_x = u; for(const k of ALLF) row[k]=(row[k]==null?1:row[k])*u; if(debToo) for(const k of DEBF) row[k]=(row[k]==null?1:row[k])*u; for(const k in row) if(k.indexOf(':')>0) row[k]*=u; }
-    FX[j]={rows, zel:R.zel};
+    if(um) for(const row of rows){ row.weak_x = mk('weak'); row.brk_x = mk('brk'); for(const k of ALLF) row[k]=(row[k]==null?1:row[k])*mk(k); if(debToo) for(const k of DEBF) row[k]=(row[k]==null?1:row[k])*mk(k); for(const k in row) if(k.indexOf(':')>0) row[k]*=mk(k.split(':')[0]); }
+    else if(u<1) for(const row of rows){ row.weak_x = u; row.brk_x = u; for(const k of ALLF) row[k]=(row[k]==null?1:row[k])*u; if(debToo) for(const k of DEBF) row[k]=(row[k]==null?1:row[k])*u; for(const k in row) if(k.indexOf(':')>0) row[k]*=u; }
+    FX[0]={rows, zel:R.zel};
   }
-  return any?FX:null;
+  return FX[0];
 }
 
 /* ---------- 캐릭터 전처리 ---------- */
@@ -484,6 +493,17 @@ function prepChar(c){
     // 횟수 제한 주력(main.uses, 예: 세스타(AS) 狼志 4): 다 쓰면 main.alt 로 (허수아비 AF 행동 단위에서만)
     mainAlt: c.main && c.main.uses && c.main.alt ? Object.assign({}, c.main, c.main.alt, {alt:null, uses:null}) : null,
     self:s, party:p, deb:d, tags:c.tags||[], teishin: !!c.teishin,
+    // AF 버프·디버프 행동(buff_acts.json): auto·main·sb 항목 묶음 + buff/attack 행동 목록(순서대로). 데이터에 있는데 행동에 없는 항목은 main
+    bact: (()=>{ const L = Array.isArray(c.bact) ? c.bact : null; if(!L) return null;
+      const key = g => g.indexOf('party.')===0 ? g.slice(6) : g==='debuff.break' ? 'brk' : g==='debuff.weak_expose' ? 'weak' : g.indexOf('debuff.')===0 ? 'd_'+g.slice(7) : null;
+      const auto=new Set(), main=new Set(), sb=new Set(), steps=[], seen=new Set();
+      for(const a of L){ const g=(a.g||[]).map(key).filter(Boolean); if(!g.length) continue; g.forEach(x=>seen.add(x));
+        if(a.k==='auto') g.forEach(x=>auto.add(x)); else if(a.k==='main') g.forEach(x=>main.add(x)); else if(a.k==='sb') g.forEach(x=>sb.add(x));
+        else if(a.k==='buff'||a.k==='attack') steps.push({k:a.k, g:new Set(g), h:+a.h||0, s:a.s||''}); }
+      const nzv = v => typeof v==='number' ? v>0 : v && typeof v==='object' ? Object.values(v).some(nzv) : !!v;
+      for(const k in p) if(k!=='scope' && k!=='restrict' && nzv(p[k]) && !seen.has(k)) main.add(k);
+      for(const k in d) if(nzv(d[k])){ const kk = k==='break' ? 'brk' : k==='weak_expose' ? 'weak' : 'd_'+k; if(!seen.has(kk)) main.add(kk); }
+      return {auto, main, sb, steps}; })(),
     // 부활·전투불능 방지 등급(data/revive.json g, 0~3). 조사 밖이면 예전 true/false → 1/0
     sup: Object.assign({}, sp, {revive: c.revive && c.revive.g!=null ? +c.revive.g : (sp.revive ? 1 : 0), reviveFx: (c.revive && c.revive.fx) || null}),
     zone, zoneTypes, zspec, zoneAwak: !!(zone&&zone.awakened),
@@ -932,6 +952,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let brk = 1;
   for(let bi=0; bi<A.breaks.length; bi++){ const b=A.breaks[bi], bj = A.breakJ ? A.breakJ[bi] : -1, bt = bj>=0 && team[bj] && team[bj].afT && team[bj].afT.deb;
     if(bt && afTV(bt.break, situation, A, !!(progs[bj]&&progs[bj].sbOK)) < 0.5) continue; // 체인·턴 종료 등으로만 거는 브레이크는 AF 땐 없음
+    if(bj>=0 && FX && FX[bj] && FX[bj].rows[idx] && FX[bj].rows[idx].brk_x!=null && FX[bj].rows[idx].brk_x<0.5) continue; // 허수아비: 건 사람이 그 스킬을 쓰기 전
     if(b===el || b===wt || (b.indexOf('_')>0 && b.split('_').includes(wt))) { brk=Math.max(brk,1.5); } // 웨폰브레이크(斬突·斬魔 등 두 종류)
     else if(['all','any','generic','break','weapon'].includes(b)) brk=Math.max(brk,1.3);
   }
@@ -1387,7 +1408,7 @@ function buildCtx(input, ownedAll){
    AF는 실시간: 게이지 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찬다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%).
    캐릭터마다 행동 → 연출(기본 2초, 캐릭터별 값이 있으면 그 값, 재행동은 실행 횟수만큼) → 대기. 대기는 행동할수록 늘어남: 속도 249 이상 1·2·3…초, 미만 2·3·4…초.
    게이지가 0이 될 때까지 각자 몇 번 행동하는지 센다. 속도는 빌드 코드(장비 포함) → 기본 스탯(+장비 속도 설정) 순. */
-function afActionsOf(team, progs, cores, z, enemy, S, g0, prio){
+function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan){ // plan[i]: 처음 행동들이 버프('buff', 게이지 0)·주력 아닌 공격('attack')인지
   const n = team.length; g0 = g0==null ? 100 : g0;
   if(S.afAuto===false){ const k=Math.max(1,Math.round((+S.afActions||5)*g0/100)), ord = prio || team.map((_,i)=>i), seq=[]; // 행동 수 고정: 우선순위 순으로 한 바퀴씩
     for(let r=0;r<k;r++) for(const i of ord) seq.push({i, t:r}); return {n:team.map(()=>k), dur:null, fast:team.map(()=>null), auto:false, seq}; }
@@ -1414,10 +1435,10 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio){
     let i=-1, tn=Infinity; for(const k of ord) if(cores[k] && next[k]<tn){ tn=next[k]; i=k; }
     if(i<0) break;
     const gAt = g - 10*(tn - t); if(gAt <= 0){ t += g/10; g = 0; break; }
-    const buffOnly = prio && cnt[i]===0 && team[i].buffAct; // 버프만 거는 첫 행동은 게이지 0 (위키)
-    g = Math.min(100, gAt + (buffOnly ? 0 : refill[i])); t = tn;
-    seq.push({i, t:tn, k:cnt[i]});
-    cnt[i]++; next[i] = tn + animOf[i] + (fast[i] ? cnt[i] : cnt[i]+1);
+    const pk = plan ? (plan[i] && cnt[i] < plan[i].length ? plan[i][cnt[i]] : null) : (prio && cnt[i]===0 && team[i].buffAct ? 'buff' : null); // 버프만 거는 행동은 게이지 0 (위키·사용자 확인)
+    g = Math.min(100, gAt + (pk==='buff' ? 0 : refill[i])); t = tn;
+    seq.push({i, t:tn, k:cnt[i], pk});
+    cnt[i]++; next[i] = tn + (pk ? (team[i].afAnim||anim) : animOf[i]) + (fast[i] ? cnt[i] : cnt[i]+1);
   }
   if(g>0) t += g/10;
   return {n:cnt, dur:t, fast, known, spd:team.map((c,i)=>spdOf(i)), auto:true, seq};
@@ -1778,7 +1799,13 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     const rateAvg = team.reduce((x,c,i)=>x + afA.n[i]*sa*(sbFillOK(team, i, progs, S) ? 2 : 1), 0)/totA;
     const needA = (100 - sb0)/Math.max(0.1, rateAvg), sbOK = sbIdx.length>0 && needA <= totA + 1e-9;
     const cAt = Math.min(0.75 + gain*Math.min(1, needA/totA), S.comboCap>0?S.comboCap:Infinity);
-    out.dummyT = af*0.85 + (sbOK ? (simIn.sbBurst - simIn.sbChain)*cAt : 0); out.dummy = {total:out.dummyT, fast:true, per:team.map(()=>0), order:team.map((_,i)=>i), n:afA.n}; return out; }
+    // 버프 행동(buff_acts): 버프 스킬을 다 쓰면 AF 행동·시간이 그만큼 빠짐 — 어림에도 반영(정밀 계산은 2단계)
+    let afD = af*0.85;
+    if(team.some(c=>c.bact && c.bact.steps.length)){
+      const plan = team.map(c=> c.bact ? c.bact.steps.map(st=>st.k) : (c.buffAct ? ['buff'] : []));
+      const a2 = afActionsOf(team, progs, afCores, nz, enemy, S, 100, dummyPrio(team, progs), plan);
+      const nA = a2.n.map((v,i)=>Math.max(0, v - plan[i].length)); afD = sumZ(afCores, nz, avgCombo, nA).v*0.85; }
+    out.dummyT = afD + (sbOK ? (simIn.sbBurst - simIn.sbChain)*cAt : 0); out.dummy = {total:out.dummyT, fast:true, per:team.map(()=>0), order:team.map((_,i)=>i), n:afA.n}; return out; }
   if(!needDummy){ out.dummy = {total:0, af:0, sb:0, per:team.map(()=>0), afPer:team.map(()=>0), n:team.map(()=>0), order:team.map((_,i)=>i), fin:0.75, avg:0.75, acts:0, sbAt:null}; out.dummyT = 0; return out; }
   // 허수아비 기록은 후열 연성 P글래 셔틀·풀장비로 잰다(사용자 확인): 보유 표시가 없으면 셔틀 2명을 가정(설정 dummyMule로 끔)
   let Ad = A;
@@ -1790,12 +1817,15 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     if(zt==='base' && q.level>=2) return Object.assign({}, q, {level:1, how:'', label:String(q.label||'').replace(/^(극|절)·/,'')});
     return q; };
   const zc = [zAF(nz)]; for(const q0 of (res.normal.zones||[])){ const q=zAF(q0); if(q && !zc.some(r=>r && r.kind===q.kind && r.key===q.key && r.level===q.level)) zc.push(q); }
-  let bestD = null;
+  // 존 후보마다 버프 행동을 다 쓰는 계획으로 먼저 재고, 가장 높은 존에서만 버프 행동 개수를 바꿔 봄(계산량)
+  let bestD = null, bestO = null;
   for(const zq of zc.slice(0, 4)){
     const zs2 = sameZ(res.normal.zones, zq), awC = zs2.some(q=>q.how!=='개전 자동' && q.how!=='SB 시'), awS = !awC && zs2.some(q=>q.how==='개전 자동');
-    const dd = dummySim({team, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow, zcs:(res.normal.zones||[]).map(zAF)});
-    if(!bestD || dd.total > bestD.total*1.0005) bestD = dd;
+    const o = {team, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow, zcs:(res.normal.zones||[]).map(zAF), quick:true};
+    const dd = dummySim(o);
+    if(!bestD || dd.total > bestD.total*1.0005){ bestD = dd; bestO = o; }
   }
+  if(bestO){ bestO.quick = false; const dd = dummySim(bestO); if(dd.total >= bestD.total) bestD = dd; } // 같은 존이라 기억해 둔 계산을 이어 씀
   out.dummy = bestD;
   out.dummy.mule = Ad.mule || null;
   out.dummy.S0 = A.tm.S0;
@@ -1805,7 +1835,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
 /* ---------- 최고점 딜 = 허수아비(대두타) 기준 어포딜 ----------
    허수아비는 1턴만 칠 수 있고 AF 100%로 시작한다(사용자 확인). 그래서 AF 한 번을 행동 단위로 따라간다:
    - AF 첫 바퀴는 왼쪽부터(버퍼·디버퍼·ZONE 담당 먼저), 이후 속도별 쿨타임 순서. 게이지는 초당 10% 감소, 타격으로 충전
-   - 버프·디버프는 그 캐릭터가 AF에서 한 번 행동한 뒤부터(패시브·자동은 처음부터). 버프 전용 캐릭터의 첫 행동은 버프만
+   - 버프·디버프는 그 효과가 붙은 스킬을 쓴 뒤부터(buff_acts.json: auto 처음부터, main 주력 공격 뒤, buff/attack 스킬 하나에 행동 1번 — buff는 게이지 0). 캐릭터마다 버프 행동 수를 바꿔 보며 가장 높은 쪽
    - ZONE: 개전 자동이면 처음부터, 아니면 펼치는 캐릭터가 행동한 뒤부터
    - 콤보: 75%에서 시작해 행동마다 그 행동의 타수만큼 오르고, 각 행동은 그 순간의 콤보로 계산
    - 축적은 AF 중 행동 횟수만큼(stackFill)
@@ -1840,76 +1870,103 @@ function dummySim(o){
     return {poison:po, pain:pa}; };
   const infK = q => '|i'+Math.round(q.poison*10)+Math.round(q.pain*10)+(q.eg?'|e'+q.eg:'');
   // 속성 변환(elem_change): 건 사람이 행동한 뒤부터. act:2 = 파티 버프와 다른 스킬이라 버프 행동 다음 행동에(네코코(ES) 猫又巫女神楽)
-  const egOf = cnt => A.echg ? A.echg.map(e=> e.to==='self' || passive[e.i] || cnt[e.i] >= ((+e.act||1) > 1 && team[e.i].buffAct ? 2 : 1) ? '1' : '0').join('') : '';
   const egAll = A.echg ? A.echg.map(()=>'1').join('') : '';
   const all = team.map(()=>true);
   const full0 = team.map((c,i)=>attackerCore(team, i, progs, A, enemy, S, 'af', cx, buildBF(team, progs, 'af', nz, A, posSets, team.map(()=>1), true), nz));
-  const afA = afActionsOf(team, progs, full0, nz, enemy, S, 100, prio);
   const cmax = S.comboCap>0 ? S.comboCap : Infinity;
   const sbAct = S.sbPerAct!=null ? +S.sbPerAct : 2.5;
   // 성도 게이지 충전 보너스(강화): 성도 각성한 캐릭터는 조건을 채운다고 보고 2배(설정으로 끔)
   const sbRate = team.map((c,i)=> sbAct * (sbFillOK(team, i, progs, S) ? 2 : 1));
-  const run = kAct => { // kAct: 주력이 아닌 독·페인 스킬에 첫 공격 행동을 쓰는 캐릭터(없으면 null)
+  // 버프·디버프 행동(buff_acts.json, 사용자 확인): 버프 스킬 하나에 AF 행동 1번(게이지 0), 여러 개면 차례로 — 쓴 뒤부터 그 효과만 켜짐.
+  // auto = 처음부터, main = 주력 공격 뒤, sb = SB 뒤. 속성 변환 스킬(elem_change.skill)은 그 캐릭터 버프 행동 맨 앞으로
+  const B = team.map((c,j)=>{ const b=c.bact; if(!b) return null; const e = A.echg && A.echg.find(x=>x.i===j && x.skill);
+    if(!e) return b; const k = b.steps.findIndex(st=>st.s===e.skill); if(k<=0) return b;
+    const steps = b.steps.slice(); steps.unshift(steps.splice(k,1)[0]); return Object.assign({}, b, {steps}); });
+  const maskOf = (j, stepDone, atk, postSB) => { const b=B[j], m=new Set(b.auto); if(atk[j]) for(const x of b.main) m.add(x);
+    for(let k=0;k<stepDone[j];k++) for(const x of b.steps[k].g) m.add(x); if(postSB && sbIdx.includes(j)) for(const x of b.sb) m.add(x); return m; };
+  const mm = o.memo || (o.memo = {fx:new Map(), co:new Map(), bf:new Map()}), fxMemo = mm.fx, coMemo = mm.co, bfMemo = mm.bf; // 여러 행동 계획(run)·같은 존의 다시 계산이 같이 씀
+  const stKey = (acted, stepDone, atk) => team.map((c,j)=> B[j] ? stepDone[j]+(atk[j]?'a':'') : (acted[j]||passive[j]?'1':'0')).join(',');
+  const run = (kAct, castN) => { // kAct: 주력이 아닌 독·페인 스킬에 첫 공격 행동을 쓰는 캐릭터(없으면 null), castN: 캐릭터마다 쓰는 버프 행동 수(앞에서부터)
+    const plan = team.map((c,j)=> B[j] ? B[j].steps.slice(0, castN[j]).map(st=>st.k) : (c.buffAct ? ['buff'] : []));
+    const afA = afActionsOf(team, progs, full0, nz, enemy, S, 100, prio, plan);
+    const isStepOf = (i, c2) => c2[i] < plan[i].length;
     // 글래스터 장착은 AF 전체에서 걸려 있는 비율(뒤 행동일수록 콤보가 커서 가중)로 고름
     { const c2=team.map(()=>0), at=team.map(()=>false), ia=team.map(()=>false); let w=0, sp=0, sa=0; const L=afA.seq.length;
-      afA.seq.forEach((a,q)=>{ const i=a.i, bo = c2[i]===0 && team[i].buffAct, isInf = i===kAct && !ia[i] && !bo;
+      afA.seq.forEach((a,q)=>{ const i=a.i, bo = isStepOf(i, c2), isInf = i===kAct && !ia[i] && !bo;
         if(!bo && !isInf){ const st=infAt(at, ia), wq = 1 + q/Math.max(1,L); w+=wq; sp+=wq*st.poison; sa+=wq*st.pain; }
         c2[i]++; if(isInf) ia[i]=true; else if(!bo) at[i]=true; });
       var Av = Object.assign({}, A, {infPick:{poison: w>0?sp/w:0, pain: w>0?sa/w:0}, postSB:false}); }
-    const fxMemo = new Map(), coMemo = new Map();
-    const coreAt = (acted, z, sit, i, inow) => { // 그 순간 깔린 버프·독페인으로 i의 공격 1회 (필요한 것만 계산)
+    const pk = '|p'+Math.round(Av.infPick.poison*20)+'_'+Math.round(Av.infPick.pain*20); // 글래 배치가 같으면 행동 계획이 달라도 같은 상태의 계산은 재사용
+    const coreAt = (st, z, sit, i, inow) => { // 그 순간 깔린 버프·독페인으로 i의 공격 1회 (필요한 것만 계산). st = {acted, stepDone, atk}
       sit = sit || 'af';
-      const key = sit+'|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow);
+      const key = sit+'|'+stKey(st.acted, st.stepDone, st.atk)+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow)+pk;
       const ck = key+'|'+i; if(coMemo.has(ck)) return coMemo.get(ck);
       Av.infNow = inow; Av.echg = A.echg ? A.echg.filter((e,k)=>(inow.eg||'')[k]==='1') : null; if(Av.echg && !Av.echg.length) Av.echg = null; // 속성 변환(変幻自在 등)도 건 뒤부터
       let FX = fxMemo.get(key);
-      if(FX===undefined){ const upt = team.map((c,j)=> acted[j]||passive[j] ? 1 : 0); FX = buildBF(team, progs, sit, z, Av, posSets, upt, true); fxMemo.set(key, FX); }
+      if(FX===undefined){ // 주는 사람마다 따로 기억(그 사람 상태·상황·존이 같으면 재사용)
+        const base = '|'+sit+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow)+pk; let any=false;
+        FX = team.map((c,j)=>{ const kj = j+'|'+(B[j] ? st.stepDone[j]+(st.atk[j]?'a':'') : (st.acted[j]||passive[j] ? '1' : '0'))+base;
+          let f = bfMemo.get(kj); if(f===undefined){ const u = B[j] ? {m: maskOf(j, st.stepDone, st.atk, Av.postSB)} : (st.acted[j]||passive[j] ? 1 : 0); f = bfOne(team, progs, sit, z, Av, posSets, u, true, j); bfMemo.set(kj, f); }
+          if(f) any=true; return f; });
+        if(!any) FX = null; fxMemo.set(key, FX); }
       const co = attackerCore(team, i, progs, Av, enemy, S, sit, cx, FX, z); coMemo.set(ck, co); return co;
     };
-    const altCoreAt = (acted, z, i, inow) => { // 횟수를 다 쓴 뒤의 주력(같은 버프 상태)
-      const k0 = 'af|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow), key = 'alt|'+k0+'|'+i; if(coMemo.has(key)) return coMemo.get(key);
-      coreAt(acted, z, 'af', i, inow); const FX = fxMemo.get(k0); Av.infNow = inow; Av.echg = A.echg ? A.echg.filter((e,k)=>(inow.eg||'')[k]==='1') : null; if(Av.echg && !Av.echg.length) Av.echg = null;
+    const altCoreAt = (st, z, i, inow) => { // 횟수를 다 쓴 뒤의 주력(같은 버프 상태)
+      const k0 = 'af|'+stKey(st.acted, st.stepDone, st.atk)+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow)+pk, key = 'alt|'+k0+'|'+i; if(coMemo.has(key)) return coMemo.get(key);
+      coreAt(st, z, 'af', i, inow); const FX = fxMemo.get(k0); Av.infNow = inow; Av.echg = A.echg ? A.echg.filter((e,k)=>(inow.eg||'')[k]==='1') : null; if(Av.echg && !Av.echg.length) Av.echg = null;
       const tAlt = team.map((m,k)=> k===i ? Object.assign({}, m, {main:m.mainAlt}) : m);
       const co = attackerCore(tAlt, i, progs, Av, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
-    const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), mu = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false); // mu: 주력 사용 횟수(횟수 제한 스킬용)
+    const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), mu = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false), stepDone = team.map(()=>0); // mu: 주력 사용 횟수(횟수 제한 스킬용)
+    const st = {acted, stepDone, atk};
+    // 속성 변환은 건 사람이 그 스킬을 쓴 뒤부터(elem_change.skill이 버프 행동에 있으면 그 행동 뒤, 없으면 act 수만큼 행동한 뒤)
+    const egOf = () => A.echg ? A.echg.map(e=>{ if(e.to==='self' || passive[e.i]) return '1';
+      const b=B[e.i]; if(b && e.skill){ const k=b.steps.findIndex(x=>x.s===e.skill); if(k>=0) return stepDone[e.i] > k ? '1' : '0'; }
+      return cnt[e.i] >= ((+e.act||1) > 1 && team[e.i].buffAct ? 2 : 1) ? '1' : '0'; }).join('') : '';
     let combo = 0.75, af = 0, cw = 0, sbG = Math.min(50, 12.5*Math.max(o.light, o.shadow));
-    let sbAt = null, sb = 0, zCur = zFrom0 ? nz : null; const sbPer = [], sbCo = {};
+    let sbAt = null, sb = 0, zCur = zFrom0 ? nz : null; const sbPer = [], sbCo = {}, used = team.map(()=>[]);
     for(const a of afA.seq){
       const i = a.i, c = team[i];
-      const buffOnly = cnt[i]===0 && c.buffAct, isInf = i===kAct && !ia[i] && !buffOnly;
-      const zNow = zCur, inow = Object.assign(infAt(atk, ia), {eg: egOf(cnt)});
+      const buffOnly = isStepOf(i, cnt), isInf = i===kAct && !ia[i] && !buffOnly;
+      const zNow = zCur, inow = Object.assign(infAt(atk, ia), {eg: egOf()});
       if(!buffOnly && !isInf){
         const useAlt = c.mainAlt && mu[i] >= c.main.uses && !c.afSk; if(!useAlt) mu[i]++;
-        const co = useAlt ? altCoreAt(acted, zNow, i, inow) : coreAt(acted, zNow, 'af', i, inow);
+        const co = useAlt ? altCoreAt(st, zNow, i, inow) : coreAt(st, zNow, 'af', i, inow);
         if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
           combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
-      }
-      acted[i] = true; cnt[i]++; sbG += sbRate[i]; if(isInf) ia[i] = true; else if(!buffOnly) atk[i] = true;
+      } else if(buffOnly && B[i]){ const s0 = B[i].steps[stepDone[i]]; used[i].push(s0.s); if(s0.k==='attack' && s0.h) combo += s0.h*0.025; }
+      acted[i] = true; if(buffOnly && B[i]) stepDone[i]++; cnt[i]++; sbG += sbRate[i]; if(isInf) ia[i] = true; else if(!buffOnly) atk[i] = true;
       if(i===zBy && nz && zoneOK(zCur, nz) && !(zCur && zCur.key===nz.key && zCur.level>=nz.level)) zCur = nz;
       if(!buffOnly && !isInf && c.zoneSet){ const zc = zcs.find(q=>q && q.by===c.id && q.level>0); if(zoneOK(zCur, zc)) zCur = zc; }
       if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
         sbAt = afA.seq.indexOf(a)+1;
         const sbZOK = !!(sbAw && sbz) && (zoneOK(zCur, sbz) || (zCur && zCur.key===sbz.key)); // 극 존은 다른 존으로 못 바꿈
-        const zSB = sbZOK ? sbz : zCur, inow2 = Object.assign(infAt(atk, ia), {eg: egOf(cnt)});
-        for(const j of sbIdx){ const co = coreAt(acted, zSB, 'sb', j, inow2); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
+        const zSB = sbZOK ? sbz : zCur, inow2 = Object.assign(infAt(atk, ia), {eg: egOf()});
+        for(const j of sbIdx){ const co = coreAt(st, zSB, 'sb', j, inow2); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
         if(sbZOK) zCur = sbz; // SB로 각성한 존은 남은 AF 동안
         Av.postSB = true; // SB로 건 버프(연격수+1·심안·크리 대미지 등)는 남은 AF 행동에도
       }
     }
     Av.postSB = false;
-    const full = team.map((c,i)=>coreAt(all, nz, 'af', i, Object.assign(infAt(all, team.map((_,j)=>j===kAct)), {eg: egAll})));
+    const stAll = {acted: all, stepDone: team.map((c,j)=> B[j] ? castN[j] : 0), atk: all};
+    const full = team.map((c,i)=>coreAt(stAll, nz, 'af', i, Object.assign(infAt(all, team.map((_,j)=>j===kAct)), {eg: egAll})));
     const fin = Math.min(combo, cmax);
     return {total: af + sb, af, sb, afPer: per.map((v,i)=>v - sbPer.filter(x=>x[0]===i).reduce((q,x)=>q+x[1],0)), per, n: cnt, avg: af>0 ? cw/af : 0.75, fin,
       sbCombo: null, sbAt, lv: nz && nz.level>=2 && zFrom0 ? 2 : (nz ? nz.level : 0), sbWhen: sbAt!=null ? 'af' : null,
-      sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && sbAt==null, acts: afA.seq.length, order: prio, ex: 0,
-      full, zFull: nz, sbCo, inf: {pick: Av.infPick, act: kAct}}; // 계산 근거 화면용: 버프가 다 깔린 AF 중 1회 공격(평상 존), SB 공격
+      sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && sbAt==null, acts: afA.seq.length, order: prio, ex: 0, dur: afA.dur,
+      full, zFull: nz, sbCo, inf: {pick: Av.infPick, act: kAct}, buffUsed: used, castN: castN.slice()}; // 계산 근거 화면용: 버프가 다 깔린 AF 중 1회 공격(평상 존), SB 공격
   };
+  // 버프 행동 고르기: 전부 쓰는 것에서 시작해 캐릭터마다 앞에서 몇 개만 쓰는 쪽(0개 포함)이 더 높으면 바꿈(한 바퀴)
+  let castN = team.map((c,j)=> B[j] ? B[j].steps.length : 0);
+  let best = run(null, castN);
+  if(!o.quick) for(const j of prio){ const L = B[j] ? B[j].steps.length : 0; if(!L) continue;
+    const dps = (team[j].roles||[]).includes('dps'); // 딜러: 안 쓰기(셋 이상이면 하나만도), 서포터: 하나만(둘 이상일 때) — 중간 개수는 차이가 작고 계산이 길어짐
+    const opts = dps ? (L>=3 ? [0, 1] : [0]) : (L>=2 ? [1] : []);
+    for(const k of opts){ if(k===castN[j]) continue; const cn = castN.slice(); cn[j] = k; const r = run(null, cn); if(r.total > best.total*1.0005){ best = r; castN = cn; } } }
   // 주력이 아닌 스킬로 독·페인을 거는 캐릭터: 첫 공격 행동을 그 스킬에 쓰는 쪽과 안 쓰는 쪽 중 높은 것
   const base = infAt(all, team.map(()=>false));
   const cands = infT.map((t,j)=>t && t.w==='skill' && ((t.po>0 && base.poison<t.po) || (t.pa>0 && base.pain<t.pa)) ? j : -1).filter(j=>j>=0)
     .sort((x,y)=>(infT[y].po+infT[y].pa)-(infT[x].po+infT[x].pa) || prio.indexOf(x)-prio.indexOf(y)).slice(0,2);
-  let best = run(null);
-  for(const k of cands){ const r = run(k); if(r.total > best.total*1.0005) best = r; }
+  if(!o.quick) for(const k of cands){ const r = run(k, castN); if(r.total > best.total*1.0005) best = r; }
   return best;
 }
 /* 계산 근거: 공격 1회의 1타 (존 배율 → 일반·크리·오버크리 → 25억 경감 → AF 콤보 → 99.99억 상한) */
@@ -2173,7 +2230,7 @@ async function optimize(input, onProgress){
     const top = teams.map((_,i)=>i).sort((a,b)=>raws[3*b]-raws[3*a]);
     for(let r=0; r<top.length; r++){
       const i = top[r];
-      if(r<400){ const tm=teams[i].map(k=>pool[k]); const ev=evalTeam(tm.map(o=>o.pc), tm.map(o=>o.prog), enemy, S, cap, ctx); raws[3*i]=BR(ev); }
+      if(r<250){ const tm=teams[i].map(k=>pool[k]); const ev=evalTeam(tm.map(o=>o.pc), tm.map(o=>o.prog), enemy, S, cap, ctx); raws[3*i]=BR(ev); }
       else raws[3*i] *= 0.5; // 정밀 계산 안 한 조합은 뒤로
       if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r2=>setTimeout(r2,0)); }
     }

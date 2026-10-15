@@ -842,7 +842,12 @@ function dummyHtml(x){
   const ord=(x.ex&&x.ex.order)||d.n.map((_,i)=>i);
   const sbTxt = d.sbWhen ? ` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(AF ${d.sbAt}번째 행동에서 SB 게이지 100%)</span>` : d.sbNeed ? ` <span class="hint">· SB 못 씀 (AF가 끝날 때 SB 게이지 ${Math.round(d.sbGauge)}%)</span>` : ' <span class="hint">· 성도 없음</span>';
   const mu = d.mule && d.mule.auto && !(d.mule.inv) ? ' · 후열 연성 P글래 셔틀 2명 가정' : '';
-  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 콤보 75%→${Math.round(d.fin*100)}%)</span>${sbTxt}</div><div class="hint">허수아비 1턴 · AF 100%로 시작 · 존 ${esc(d.zFull&&d.zFull.level?d.zFull.label+(d.zFull.byName?' ('+d.zFull.byName+')':''):'없음')}${d.sbAt!=null&&x.ev.sb.zone&&x.ev.sb.zone.level&&x.ev.sb.zone.how==='SB 시'&&(!d.zFull||x.ev.sb.zone.key!==d.zFull.key)?' → SB 후 '+esc(x.ev.sb.zone.label):''} · 왼쪽 버퍼부터 행동하며 버프를 깔고, 버프는 행동한 뒤부터${mu} · 딜 비중 ${top}</div></div>`;
+  // 버프 행동(버프 스킬 하나에 AF 행동 1번, 게이지 안 참): 누가 무엇을 썼는지, 안 쓰는 게 나아 뺀 것
+  const atkS = (i,nmS) => { const st=(x.team[i].bact&&x.team[i].bact.steps||[]).find(z=>z.s===nmS); return st&&st.k==='attack' ? '(공격)' : ''; };
+  const bu = (d.buffUsed||[]).map((L,i)=>L&&L.length ? `${nm(i)} ${L.map(q=>esc(q)+atkS(i,q)).join('→')}` : '').filter(Boolean);
+  const skipped = x.team.map((c,i)=>{ const st=c.bact&&c.bact.steps||[]; const k=d.castN?d.castN[i]:st.length; return st.length>k ? `${nm(i)} ${st.slice(k).map(z=>esc(z.s)).join('·')}` : ''; }).filter(Boolean);
+  const buTxt = bu.length || skipped.length ? `<div class="hint">버프 행동(스킬 하나에 AF 행동 1번, 공격 아닌 버프기는 게이지 안 참): ${bu.length?bu.join(' / '):'없음'}${skipped.length?` · 안 쓰는 게 나아서 뺌: ${skipped.join(' / ')}`:''}</div>` : '';
+  return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 콤보 75%→${Math.round(d.fin*100)}%)</span>${sbTxt}</div><div class="hint">허수아비 1턴 · AF 100%로 시작 · 존 ${esc(d.zFull&&d.zFull.level?d.zFull.label+(d.zFull.byName?' ('+d.zFull.byName+')':''):'없음')}${d.sbAt!=null&&x.ev.sb.zone&&x.ev.sb.zone.level&&x.ev.sb.zone.how==='SB 시'&&(!d.zFull||x.ev.sb.zone.key!==d.zFull.key)?' → SB 후 '+esc(x.ev.sb.zone.label):''} · 왼쪽 버퍼부터 행동하며 버프를 깔고, 버프는 그 스킬을 쓴 뒤부터${mu} · 딜 비중 ${top}</div>${buTxt}</div>`;
 }
 function timelineHtml(x, o){
   const tl=tlOf(x,o), ev=x.ev; if(!tl) return dummyHtml(x)+bsimHtml(ev);

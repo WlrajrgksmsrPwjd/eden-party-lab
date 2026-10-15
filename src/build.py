@@ -65,6 +65,10 @@ for c in chars:
 aft=json.load(open(P('data','af_timing.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in aft and not c['id'].startswith('_'): c['af_t']={k:v for k,v in aft[c['id']].items() if k in ('party','self','deb','zone')}
+# AF 버프·디버프 행동(알테마 대조 299명): 버프 스킬 하나에 AF 행동 1번
+bac=json.load(open(P('data','buff_acts.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in bac and not c['id'].startswith('_'): c['bact']=[{k:v for k,v in a.items() if k in ('s','k','g','h')} for a in bac[c['id']]['acts']]
 # 루나틱<솔선(挺身)>: 내구→힘·정신→지성 고정값(딩 14·15행)
 lun=json.load(open(P('data','lunatic.json'),encoding='utf-8'))
 for c in chars:
