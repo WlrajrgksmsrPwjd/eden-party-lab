@@ -234,7 +234,9 @@ const KOF_JP = ['テリー・ボガード','草薙京','クーラ・ダイアモ
 const PERS_KR = {'アルカディア':'아르카디아','IDAスクール':'IDA 스쿨','アウトロー':'아웃로','KMS社':'KMS사','時の傷痕の輪舞':'시간의 흉터 윤무','ロストラボ':'로스트 랩',
   'ミグランス王宮':'미그란스 왕궁','巳の国':'사의 나라','魔獣':'마수','聖職者':'성직자','エルフ':'엘프','主人公':'주인공','ねこ好き':'고양이 애호','普賢一刀流':'보현일도류',
   'コープ':'코프','合成人間':'인조인간','東方':'동방','王族':'왕족','KOF':'KOF','FFIX':'FFIX','剣':'검','刀':'도','斧':'도끼','槍':'창','弓':'활','拳':'권갑','槌':'망치','杖':'지팡이',
-  '火':'불','水':'물','地':'땅','風':'바람','雷':'번개','陰':'그림자','晶':'결정'};
+  '火':'불','水':'물','地':'땅','風':'바람','雷':'번개','陰':'그림자','晶':'결정',
+  '仮面':'가면','科学者':'과학자','記憶喪失':'기억 상실','人見知り':'낮가림','甘党':'단것 애호가','大食い':'대식가','読書家':'독서가','ドラゴンキラー':'드래곤 킬러','心の怪盗団':'마음의 괴도단',
+  '未来革命家':'미래 혁명가','復讐者':'복수','辛党':'부천수 애호가','西方':'서방','メガネ':'안경','煉獄界':'연옥계','妖し':'요괴','料理':'요리','竜':'용','吟遊詩人':'음유 시인','ニックネーマー':'작명가','銃':'총','COA':'COA'};
 function reqText(req){
   if(!req) return '';
   const nm = req.kind==='elem' ? req.vals.map(v=>ELEM_KR[v]).join('·')+' 속성'
@@ -932,7 +934,12 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const gk = '_gq'+Math.round(inf.poison*20)+'_'+Math.round(inf.pain*20)+(zOn?'z':'')+(hpLow?'h':'')+(noEl?'n':'');
   let gq = pr[gk] || (pr[gk] = grastaFactor(pr, inf, zOn, hpLow, noEl));
   const share = A.mule ? A.mule.k[idx] : 0, sd = A.mule && A.mule.kd ? A.mule.kd[idx] : null;
-  if(share>0 || sd){ // 셔틀이 공유하는 P글래: 속성·HP는 자기 속성 글래와 같은 합연산 묶음, 각성의 힘은 자기 것과 같은 49행(합) 후 곱
+  const plan = A.mule && A.mule.plan ? pglPlan(team, progs, A, S, zone) : null;
+  if(plan){ const p = plan.per[idx];
+    if(p && (p.e>0 || p.z>0)){ const base = 1 + (gq.add!=null ? gq.add : 0.3*(gq.e||0)), z0 = gq.z||0;
+      const f = (base + p.e/100)/base * (1+GL_Z*z0+p.z/100)/(1+GL_Z*z0);
+      gq = Object.assign({}, gq, {f: gq.f*f, share: p.names.length, alloc:{e:p.e, z:p.z, t:0, pct:true, f, names:p.names}}); } }
+  else if(share>0 || sd){ // 셔틀이 공유하는 P글래: 속성·HP는 자기 속성 글래와 같은 합연산 묶음, 각성의 힘은 자기 것과 같은 49행(합) 후 곱
     const base = 1 + (gq.add!=null ? gq.add : 0.3*(gq.e||0)), z0 = gq.z||0;
     let f, al;
     const cs = A.mule.cs ? A.mule.cs[idx] : [];
@@ -948,9 +955,10 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 아군 전체 글래(빌더 코어 '아군 전체' 효과): 후열 셔틀 1명당 남는 칸(일반 존 2칸, 극존 1칸 — 극존이면 각성의 힘 P에 1칸 더 씀)에
   // 공명의 힘 <많은 쪽 천/명>(51행, 전후방 그 성향 1명당 +5%) → 격진의 힘 <펼친 존>(50행, +15%) 순서로. 같은 행은 합, 행끼리 곱
   let auraF = 1, auraR = null;
-  if(A.aura && A.aura.nb>0){ const au=A.aura, zk = zone && zone.level>0 ? (zone.key||'') : '', k = zone && zone.level>=2 ? 1 : 2;
-    let r51 = au.nb*0.05*au.nMaj, r50 = 0;
-    if(k>=2){ if(zk && AURA_Z.has(zk)) r50 = au.nb*0.15; else if(au.nMin>0) r51 += au.nb*0.05*au.nMin; }
+  if(plan){ if(plan.r51>0 || plan.r50>0){ auraF = (1+plan.r50)*(1+plan.r51); auraR = {r50:plan.r50, r51:plan.r51, nb:plan.nb}; dmg *= auraF; } }
+  else if(A.aura && A.aura.nb>0){ const au=A.aura, zk = zone && zone.level>0 ? (zone.key||'') : ''; // 셔틀 배분이 없을 때: 종류마다 1개(사용자 확인) — 공명의 힘 <많은 쪽> → 격진의 힘 <존> 또는 공명의 힘 <적은 쪽>
+    let r51 = 0.05*au.nMaj, r50 = 0;
+    if(zk && AURA_Z.has(zk)) r50 = 0.15; else if(au.nMin>0) r51 += 0.05*au.nMin;
     auraF = (1+r50)*(1+r51); auraR = {r50, r51, nb:au.nb}; dmg *= auraF; }
   if(pr.gear) dmg *= pr.gear.q; // 빌드 코드: 장비 완성도
 
@@ -1161,7 +1169,9 @@ function muleShare(team, S, ctx, progs){
     if(auto && c.pers && c.pers.has(wp)) for(const j of front) if(j!==i){ n += fsl(j); cs[i].push(fsl(j)); }
     return n;
   });
-  return {k, kd, cs, inv: (ctx && ctx.pgl) || null, auto, wp, front, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
+  // 파티 단위 배분(pglPlan): 빌드 코드로 실제 P글래를 넘긴 셔틀이 없으면. 셔틀 칸 = 후열 셔틀마다 칸 수(자동 가정은 퍼스널리티 제한 없음)
+  const plan = !mules.some(m=>m.shares), carriers = mules.map(m=>({slots:m.slots, pers: auto ? null : m.pers}));
+  return {k, kd, cs, inv: (ctx && ctx.pgl) || null, auto, wp, front: plan ? [] : front, plan, carriers, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
 }
 /* 빌드 코드의 P글래 공유 효과 → 받는 캐릭터 기준 % (e: 속성·HP 그룹, z: ZONE 전개 중, t: 특정 ZONE) */
 const ELEM_B = {fire:'불',water:'물',earth:'땅',wind:'바람',thunder:'번개',shade:'그림자',crystal:'결정'};
@@ -1216,6 +1226,78 @@ function shareAlloc0(cs, base, pct, zoneOn, noEl, inv, z0){
   const ev = pe*nE + pct*nH;
   const f = (base+ev)/base * (1+SHARE_Z*(z0+nZ))/(1+SHARE_Z*z0);
   return {f, e:nE+nH, el:nE, hp:nH, z:nZ, t:0, ev:Math.round(ev*100), inv:!!inv};
+}
+/* 퍼스널리티 P글래(딩 빌더 글래스터 데이터 + 알테마 대조 2026-10-15). 사용자 확인: 같은 이름 P글래는 셔틀끼리 겹치고, 한 캐릭터가 여러 개 달 수 있으며,
+   종류(이름+조건)마다 대부분 1개만 얻는다 → 파티 전체에서 종류마다 1개(보유 표시가 2개 이상이면 그만큼)를 셔틀 칸에 나눠 단다.
+   【P】 효과는 그 글래스터의 장착 조건(무기종·퍼스널리티·속성)을 가진 파티원 전원에게 간다(후열 장착 가능, 셔틀도 그 퍼스널리티가 있어야 장착). */
+const PGL_ALL = ['仮面','科学者','記憶喪失','人見知り','甘党','大食い','読書家','東方','ドラゴンキラー','ロストラボ','魔獣','心の怪盗団','アウトロー','ミグランス王宮','未来革命家','普賢一刀流',
+  '復讐者','辛党','西方','聖職者','アルカディア','メガネ','ねこ好き','エルフ','煉獄界','王族','妖し','料理','竜','吟遊詩人','ニックネーマー','銃','合成人間','COA','IDAスクール','KMS社']; // 全能の力 <X>: 모든 속성 공격 +25%
+const PGL_HPMAX = ['東方','西方','魔獣','聖職者','ロストラボ'];   // HP最大時強化 <X>: +30%
+const PGL_ZONE5 = ['IDAスクール','ロストラボ'];                 // 覚醒の力 <X>: ZONE 각성 중 +5%
+const PGL_HPLOW = ['未来革命家'];                               // HP低下時強化 <X>: HP 80% 이하 +40%
+const PGL_ELEMP = {fire:'火',water:'水',earth:'地',wind:'風',thunder:'雷',shade:'陰',crystal:'晶'}; // HP最大時強化 <속성>: 같은 속성 파티원 +10%(잠재)
+const PGL_ELKR = {fire:'폭염의 힘',water:'격류의 힘',earth:'격진의 힘',wind:'열풍의 힘',thunder:'분뇌의 힘',shade:'검은 그림자의 힘',crystal:'결정의 힘',none:'허공의 힘'};
+const AURA49 = {thunder:{el:'thunder',v:30}, shade:{el:'shade',v:30}, crystal:{el:'crystal',v:30}, blunt:{el:'all',v:20}}; // 극 격진의 힘 <존>: 49행 +15% + 아군 전체 속성 공격
+/* 셔틀 칸 배분(파티 단위 탐욕): 종류마다 보유 수만큼, 장착 조건이 맞는 셔틀 칸에, 받는 사람들의 대미지 비중(pow)으로 가중한 이득이 큰 것부터.
+   속성·HP 계는 공격 글래스터 속성 묶음과 합(35~37행), 각성의 힘은 49행 합, 공명의 힘 51행·격진의 힘 50행은 아군 전체(행끼리 곱) */
+function pglPlan(team, progs, A, S, zone){
+  const mu = A.mule; if(!mu || !mu.plan) return null;
+  const zk = zone && zone.level>0 ? (zone.key||zone.kind)+':'+zone.level : '-';
+  const memo = mu._pm || (mu._pm = new Map()); if(memo.has(zk)) return memo.get(zk);
+  const zOn = !!(zone && zone.level>=2), inv = mu.inv;
+  const inf = A.inf || (A.painAny ? {poison:1, pain:1} : {poison:0, pain:0});
+  const R = team.map((c,i)=>{ const el = (c.main && c.main.element) || c.elem || 'none', hpLow = !!c.selfDamage;
+    const g = grastaFactor(progs[i]||{}, inf, zOn, hpLow, el==='none');
+    return {el, hpLow, wp: WEAPON_PERS[c.weapon], pers: c.pers || new Set(), w: Math.max(0.02, +c.pow||1), base: 1 + (g.add!=null ? g.add : 0.3*(g.e||0)), z0: +g.z||0, add:0, zp:0, names:[]}; });
+  const wsum = R.reduce((a,r)=>a+r.w,0) || 1; R.forEach(r=>r.w/=wsum);
+  const capW = (wp,k)=> inv ? (+(((inv[WEAPON_KR[Object.keys(WEAPON_PERS).find(x=>WEAPON_PERS[x]===wp)]]||{})[k]))||0) : 1;
+  const capP = (x,k)=> inv ? (+(((inv._p||{})[x]||{})[k])||0) : 1;
+  const T = []; const add = t => { if(t.cap>0 && t.recv.length) T.push(t); };
+  const idxs = f => R.map((r,i)=>f(r)?i:-1).filter(i=>i>=0);
+  for(const wp of new Set(R.map(r=>r.wp).filter(Boolean))){
+    const wk = PERS_KR[wp]||wp;
+    for(const el of new Set(R.filter(r=>r.wp===wp).map(r=>r.el))) add({id:'E:'+wp+':'+el, label:`${PGL_ELKR[el]||'속성의 힘'}<${wk}>`, kind:'add', v: el==='none'?40:30, carrier:wp, cap:capW(wp, el), recv: idxs(r=>r.wp===wp && r.el===el)});
+    add({id:'H:'+wp, label:`HP 최대 시 강화<${wk}>`, kind:'add', v:30, carrier:wp, cap:capW(wp,'hp'), recv: idxs(r=>r.wp===wp && !r.hpLow)});
+    add({id:'L:'+wp, label:`HP 저하 시 강화<${wk}>`, kind:'add', v:40, carrier:wp, cap:capW(wp,'low'), recv: idxs(r=>r.wp===wp && r.hpLow)});
+    if(zOn) add({id:'Z:'+wp, label:`각성의 힘<${wk}>`, kind:'zone', v:25, carrier:wp, cap:capW(wp,'zone'), recv: idxs(r=>r.wp===wp)});
+  }
+  const allP = new Set(); R.forEach(r=>r.pers.forEach(x=>allP.add(x)));
+  for(const x of allP){ const xk = PERS_KR[x]||x;
+    if(PGL_ALL.includes(x)) add({id:'A:'+x, label:`전능의 힘<${xk}>`, kind:'add', v:25, carrier:x, cap:capP(x,'all'), recv: idxs(r=>r.pers.has(x) && r.el!=='none')});
+    if(PGL_HPMAX.includes(x)) add({id:'HP:'+x, label:`HP 최대 시 강화<${xk}>`, kind:'add', v:30, carrier:x, cap:capP(x,'hp'), recv: idxs(r=>r.pers.has(x) && !r.hpLow)});
+    if(PGL_HPLOW.includes(x)) add({id:'LP:'+x, label:`HP 저하 시 강화<${xk}>`, kind:'add', v:40, carrier:x, cap:capP(x,'low'), recv: idxs(r=>r.pers.has(x) && r.hpLow)});
+    if(zOn && PGL_ZONE5.includes(x)) add({id:'Z5:'+x, label:`각성의 힘<${xk}>`, kind:'zone', v:5, carrier:x, cap:capP(x,'zone'), recv: idxs(r=>r.pers.has(x))});
+  }
+  for(const el in PGL_ELEMP){ const x = PGL_ELEMP[el]; if(allP.has(x)) add({id:'HE:'+x, label:`HP 최대 시 강화<${PERS_KR[x]||x}>`, kind:'add', v:10, carrier:x, cap:capP(x,'hp'), recv: idxs(r=>r.pers.has(x) && !r.hpLow)}); }
+  let r51=0, r50=0; const au = A.aura;
+  if(au){ const all = R.map((r,i)=>i), zkey = zone && zone.level>0 ? (zone.key||'') : '';
+    add({id:'R51:maj', label:'공명의 힘<많은 쪽 천/명>', kind:'r51', v:0.05*au.nMaj, carrier:null, cap:1, recv:all});
+    if(au.nMin>0) add({id:'R51:min', label:'공명의 힘<적은 쪽 천/명>', kind:'r51', v:0.05*au.nMin, carrier:null, cap:1, recv:all});
+    if(zkey && AURA_Z.has(zkey)) add({id:'R50:'+zkey, label:`격진의 힘<${ZONE_KR[zkey]||zkey}>`, kind:'r50', v:0.15, carrier:null, cap:1, recv:all});
+    if(zOn && AURA49[zkey]){ const a=AURA49[zkey]; add({id:'R49:'+zkey, label:`극 격진의 힘<${ZONE_KR[zkey]||zkey}>`, kind:'r49', v:15, ev:a.v, carrier:null, cap:1, recv:all, erecv: idxs(r=> a.el==='all' ? r.el!=='none' : r.el===a.el)}); }
+  }
+  // 셔틀 칸: 후열 셔틀(자동 가정이면 퍼스널리티 제한 없이 가정, 고정 셔틀이면 그 캐릭터 퍼스널리티)
+  const carriers = mu.carriers.map(m=>({left:m.slots, pers:m.pers}));
+  const gainOf = t => { let g=0;
+    if(t.kind==='add') for(const i of t.recv){ const r=R[i]; g += r.w*Math.log((r.base+(r.add+t.v)/100)/(r.base+r.add/100)); }
+    else if(t.kind==='zone' || t.kind==='r49'){ for(const i of t.recv){ const r=R[i], d=1+GL_Z*r.z0+r.zp/100; g += r.w*Math.log((d+t.v/100)/d); }
+      if(t.kind==='r49') for(const i of t.erecv){ const r=R[i]; g += r.w*Math.log((r.base+(r.add+t.ev)/100)/(r.base+r.add/100)); } }
+    else if(t.kind==='r51') g = Math.log((1+r51+t.v)/(1+r51));
+    else if(t.kind==='r50') g = Math.log((1+r50+t.v)/(1+r50));
+    return g; };
+  const fit = t => { let best=null; for(const c of carriers){ if(c.left<=0) continue; if(t.carrier && c.pers && !c.pers.has(t.carrier)) continue; if(!best || (c.pers && !best.pers)) best=c; } return best; };
+  const used=[];
+  for(let guard=0; guard<64; guard++){
+    let bt=null, bg=1e-6, bc=null;
+    for(const t of T){ if(t.cap<=0) continue; const c=fit(t); if(!c) continue; const g=gainOf(t); if(g>bg){ bg=g; bt=t; bc=c; } }
+    if(!bt) break;
+    bc.left--; bt.cap--; used.push(bt.label);
+    if(bt.kind==='add') for(const i of bt.recv){ R[i].add+=bt.v; R[i].names.push(bt.label); }
+    else if(bt.kind==='zone' || bt.kind==='r49'){ for(const i of bt.recv){ R[i].zp+=bt.v; if(bt.kind==='zone') R[i].names.push(bt.label); } if(bt.kind==='r49') for(const i of bt.erecv) R[i].add+=bt.ev; }
+    else if(bt.kind==='r51') r51+=bt.v; else if(bt.kind==='r50') r50+=bt.v;
+  }
+  const out = {per: R.map(r=>({e:r.add, z:r.zp, names:r.names})), r51, r50, used, slots: mu.carriers.reduce((a,m)=>a+m.slots,0), nb: mu.carriers.length};
+  memo.set(zk, out); return out;
 }
 /* 보스가 행동불능 상태이상(기절·수면·마비·석화·빙결·혼란·매료·공포)을 거는지 — 걸리면 요격이 안 나감 */
 const CC_RE = /기절|스턴|수면|마비|석화|빙결|혼란|매료|공포|행동 ?불능|睡眠|麻痺|気絶|石化|凍結|混乱|魅了|恐怖|スタン/;
@@ -2192,6 +2274,6 @@ async function perCharBest(input, onProgress){
 const API = {hitInfo, dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
   explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
-  statsAt, charStats, STAT_ORDER, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO, dupBase};
+  statsAt, charStats, STAT_ORDER, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO, dupBase, PGL_ALL, PGL_HPMAX, PGL_ZONE5, PGL_HPLOW, PGL_ELEMP, pglPlan};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);

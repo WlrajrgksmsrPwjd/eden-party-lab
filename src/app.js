@@ -549,16 +549,25 @@ function renderBudGrid(){
 
 /* ---------- 연성 P글래 보유 (무기 퍼스널리티 × 대미지 P글래, 딩 님 빌더 목록 기준) ---------- */
 const PGL_WEAP = ['검','도','도끼','창','활','권갑','망치','지팡이'];
-const PGL_COLS = [['fire','폭염의 힘','불'],['water','격류의 힘','물'],['earth','격진의 힘','땅'],['wind','열풍의 힘','바람'],['thunder','분뇌의 힘','번개'],['shade','검은 그림자의 힘','그림자'],['crystal','결정의 힘','결정'],['none','허공의 힘','무속성'],['hp','HP 최대 시 강화','HP 최대'],['zone','각성의 힘','각성(극존)']];
+const PGL_COLS = [['fire','폭염의 힘','불'],['water','격류의 힘','물'],['earth','격진의 힘','땅'],['wind','열풍의 힘','바람'],['thunder','분뇌의 힘','번개'],['shade','검은 그림자의 힘','그림자'],['crystal','결정의 힘','결정'],['none','허공의 힘','무속성'],['hp','HP 최대 시 강화','HP 최대'],['low','HP 저하 시 강화','HP 저하'],['zone','각성의 힘','각성(극존)']];
+/* 무기 외 퍼스널리티·속성 P글래(딩 빌더 목록): 전능의 힘(36종 +25%), HP 최대 시 강화(동방·서방·마수·성직자·로스트 랩 +30%, 속성 +10%), 각성의 힘(IDA 스쿨·로스트 랩 +5%), HP 저하 시 강화(미래 혁명가 +40%) */
+const PGLP_COLS = [['all','전능의 힘','전능'],['hp','HP 최대 시 강화','HP 최대'],['zone','각성의 힘','각성'],['low','HP 저하 시 강화','HP 저하']];
+const pglPRows = () => { const has = (x,k) => k==='all' ? E.PGL_ALL.includes(x) : k==='hp' ? E.PGL_HPMAX.includes(x) || Object.values(E.PGL_ELEMP).includes(x) : k==='zone' ? E.PGL_ZONE5.includes(x) : E.PGL_HPLOW.includes(x);
+  const xs = [...E.PGL_ALL].sort((a,b)=>(E.PERS_KR[a]||a).localeCompare(E.PERS_KR[b]||b,'ko')).concat(Object.values(E.PGL_ELEMP));
+  return xs.map(x=>({x, kr:E.PERS_KR[x]||x, cols:PGLP_COLS.map(([k])=>has(x,k))})); };
 const pglState = () => (state.pgl = state.pgl || {});
-function pglCount(){ let n=0; for(const w in (state.pgl||{})) for(const k in state.pgl[w]) if(state.pgl[w][k]>0) n++; return n; }
+function pglCount(){ let n=0; const P=state.pgl||{}; for(const w in P){ if(w==='_p') continue; for(const k in P[w]) if(P[w][k]>0) n++; } for(const x in (P._p||{})) for(const k in P._p[x]) if(P._p[x][k]>0) n++; return n; }
 /* 엔진 입력: 표시가 하나도 없으면 null(전부 있다고 가정). '2개 이상'은 셔틀 최대 수(4)로 */
-function pglInput(){ if(!pglCount()) return null; const o={}; for(const w of PGL_WEAP){ const r=(state.pgl||{})[w]||{}; o[w]={}; for(const [k] of PGL_COLS) o[w][k]= r[k]>=2 ? 4 : (r[k]||0); } return o; }
+function pglInput(){ if(!pglCount()) return null; const o={}; for(const w of PGL_WEAP){ const r=(state.pgl||{})[w]||{}; o[w]={}; for(const [k] of PGL_COLS) o[w][k]= r[k]>=2 ? 2 : (r[k]||0); }
+  o._p={}; const PP=(state.pgl||{})._p||{}; for(const x in PP){ o._p[x]={}; for(const [k] of PGLP_COLS) o._p[x][k] = PP[x][k]>=2 ? 2 : (PP[x][k]||0); } return o; }
 function renderPglTbl(){
   const t=$('#pglTbl'); if(!t) return;
   const P=state.pgl||{}, lab=['없음','1개','2개 이상'];
   t.innerHTML = `<thead><tr><th scope="col">퍼스널리티</th>${PGL_COLS.map(([k,n,s])=>`<th scope="col" title="${esc(n)}">${esc(s)}</th>`).join('')}</tr></thead><tbody>`
     + PGL_WEAP.map(w=>`<tr><th scope="row">${esc(w)}</th>${PGL_COLS.map(([k,n])=>{ const v=(P[w]&&P[w][k])||0; return `<td><button type="button" class="pgc v${v}" data-pw="${esc(w)}" data-pk="${k}" aria-label="${esc(n)} <${esc(w)}>: ${lab[v]}">${v===0?'–':v===1?'1':'2+'}</button></td>`; }).join('')}</tr>`).join('') + '</tbody>';
+  const t2=$('#pglTblP'); const PP=P._p||{};
+  if(t2) t2.innerHTML = `<thead><tr><th scope="col">퍼스널리티</th>${PGLP_COLS.map(([k,n,s])=>`<th scope="col" title="${esc(n)}">${esc(s)}</th>`).join('')}</tr></thead><tbody>`
+    + pglPRows().map(r=>`<tr><th scope="row">${esc(r.kr)}</th>${PGLP_COLS.map(([k,n],ci)=>{ if(!r.cols[ci]) return '<td class="na">·</td>'; const v=(PP[r.x]&&PP[r.x][k])||0; return `<td><button type="button" class="pgc v${v}" data-pp="${esc(r.x)}" data-pk="${k}" aria-label="${esc(n)} <${esc(r.kr)}>: ${lab[v]}">${v===0?'–':v===1?'1':'2+'}</button></td>`; }).join('')}</tr>`).join('') + '</tbody>';
   const n=pglCount(); $('#pglN').textContent = n ? `${n}종 표시` : (settings().pglAssumeAll ? '표시 없음 · 전부 있다고 가정' : '표시 없음 · 셔틀 공유 없음');
 }
 
@@ -1050,12 +1059,14 @@ function openMetaDeck(k){
 /* ---------- 후열 글래스터 셔틀 ---------- */
 const slotTxt = v => Number.isInteger(v) ? String(v) : v.toFixed(1);
 function muleBadge(x, c){ const mu=x.ev.mule; if(!mu) return ''; const w=mu.auto?mu.wp:null; return w && c.pers && c.pers.has(w) ? ' <span class="fixed">셔틀</span>' : ''; }
-function allocTxt(al){ if(!al) return ''; if(al.pct) return [al.e?`속성·HP +${al.e}%`:'', al.z?`존 +${al.z}%`:'', al.t?`특정 존 +${al.t}%`:''].filter(Boolean).join(' · ');
+function allocTxt(al){ if(!al) return ''; if(al.names && al.names.length) return al.names.join(' · ')+` (속성·HP +${Math.round(al.e)}%${al.z?` · 존 각성 +${Math.round(al.z)}%`:''})`;
+  if(al.pct) return [al.e?`속성·HP +${al.e}%`:'', al.z?`존 +${al.z}%`:'', al.t?`특정 존 +${al.t}%`:''].filter(Boolean).join(' · ');
   if(al.el==null) return '';
   return [al.el?`${al.el>1?al.el+'×':''}속성 P`:'', al.hp?`${al.hp>1?al.hp+'×':''}HP 최대 P`:'', al.z?`${al.z>1?al.z+'×':''}각성의 힘`:''].filter(Boolean).join(' · ')+` (+${al.ev}%${al.z?` · 극존 중 ×${(1+0.25*al.z).toFixed(2)}`:''})`; }
 function muleGot(x){
   const mu=x.ev.mule; if(!mu) return [];
-  return x.team.map((c,i)=>{ if(!(mu.k[i]>0) && !(mu.kd&&mu.kd[i])) return null; const co=x.ev.sb.cores[i], al=co&&co.gq&&co.gq.alloc, at=allocTxt(al);
+  return x.team.map((c,i)=>{ const co=x.ev.sb.cores[i], al=co&&co.gq&&co.gq.alloc, at=allocTxt(al); if(!(mu.k[i]>0) && !(mu.kd&&mu.kd[i]) && !(al&&al.names&&al.names.length)) return null;
+    if(al && al.names) return `${esc(c.name)}: ${esc(at)}`;
     return `${esc(c.name)} ${al&&al.pct?'':al&&al.el!=null?`P글래 ${al.e+al.z}개`:'+'+slotTxt(mu.k[i])+'칸'}${at?` (${esc(at)})`:''}`; }).filter(Boolean);
 }
 function muleLine(x){
@@ -1063,6 +1074,8 @@ function muleLine(x){
   const got = muleGot(x);
   const fr = (mu.front||[]).map(j=>esc(x.team[j].name));
   const zoneTip = x.ev.sb.zone && x.ev.sb.zone.level>=2 ? ' · 극존(ZONE 각성)이 깔리면 셔틀마다 각성의 힘(+25%)을 섞는 게 이득 (속성 P글래와 다른 그룹이라 곱해짐)' : '';
+  if(mu.auto && mu.plan){ const sl = (mu.carriers||[]).reduce((a,m)=>a+m.slots,0);
+    return `<div class="hint">P글래 셔틀 가정: 후열 셔틀 ${mu.mules.length}명(${sl}칸)이 ${pglCount()?'표시한':'모든'} 잠재 연성 P글래를 종류마다 ${pglCount()?'표시한 수만큼':'1개씩'} 나눠 달고, 장착 조건(무기종·퍼스널리티·속성)이 같은 아군에게 공유 → ${got.join(', ')||'—'}. 남는 칸엔 아군 전체 글래(공명·격진의 힘)</div>`; }
   if(mu.auto) return `<div class="hint">P글래 셔틀 가정: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 ${mu.mules.length?`후열 ${mu.mules.length}명`:''}${mu.mules.length&&fr.length?' + ':''}${fr.length?`전열 서포터 ${fr.join(', ')}`:''}이 잠재 연성한 P글래를 공유 → ${got.join(', ')||'—'}${zoneTip}</div>`;
   return `<div class="hint">후열 고정 셔틀의 P글래 공유: ${got.join(', ')||'<span class="ng">무기 퍼스널리티가 맞는 전열 캐릭터 없음</span>'}</div>`;
 }
@@ -1920,6 +1933,9 @@ function bind(){
   $('#pglTbl').addEventListener('click',e=>{ const b=e.target.closest('[data-pw]'); if(!b) return; const P=pglState(), w=b.dataset.pw, k=b.dataset.pk;
     P[w]=P[w]||{}; P[w][k]=(((P[w][k]||0)+1)%3); if(!P[w][k]) delete P[w][k]; if(!Object.keys(P[w]).length) delete P[w];
     touchRoster(); renderPglTbl(); const nb=$(`#pglTbl [data-pw="${w}"][data-pk="${k}"]`); if(nb) nb.focus(); });
+  $('#pglTblP').addEventListener('click',e=>{ const b=e.target.closest('[data-pp]'); if(!b) return; const P=pglState(), x=b.dataset.pp, k=b.dataset.pk; const Q=P._p=P._p||{};
+    Q[x]=Q[x]||{}; Q[x][k]=(((Q[x][k]||0)+1)%3); if(!Q[x][k]) delete Q[x][k]; if(!Object.keys(Q[x]).length) delete Q[x]; if(!Object.keys(Q).length) delete P._p;
+    touchRoster(); renderPglTbl(); const nb=$(`#pglTblP [data-pp="${x}"][data-pk="${k}"]`); if(nb) nb.focus(); });
   $('#pglClear').addEventListener('click',()=>{ state.pgl={}; touchRoster(); renderPglTbl(); });
   $('#budGrid').addEventListener('change',e=>{ const k=e.target.dataset.bud; if(!k) return; state.buddies=state.buddies||{}; if(e.target.checked) state.buddies[k]=true; else delete state.buddies[k]; touchRoster(); renderBudGrid(); renderPlanControls(); });
   renderBudGrid(); renderPglTbl();

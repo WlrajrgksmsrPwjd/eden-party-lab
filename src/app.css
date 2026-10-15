@@ -407,6 +407,7 @@ a.lnk{display:inline-flex; align-items:center}
 .pgltbl th,.pgltbl td{padding:3px 4px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap}
 .pgltbl th[scope=row]{text-align:left; padding-right:8px}
 .pgltbl thead th{font-weight:500; color:var(--muted); font-size:11.5px}
+.pgltbl td.na{color:var(--muted); opacity:.5}
 .pgc{min-width:34px; min-height:30px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--muted); font:inherit; cursor:pointer}
 .pgc.v1{background:var(--accent-soft); color:var(--ink, inherit); font-weight:700; border-color:currentColor}
 .pgc.v2{background:var(--accent); color:var(--accent-ink); font-weight:700; border-color:transparent}
