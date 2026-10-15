@@ -680,7 +680,7 @@ function setupPicker(inputSel, dropSel, key, max){
     const q=inp.value.trim().toLowerCase();
     const own=ownedList().map(id=>byId.get(id));
     items = own.filter(c=>!state.plan.locked.includes(c.id)&&!state.plan.excluded.includes(c.id)&&!(state.plan.backLocked||[]).includes(c.id))
-      .filter(c=>!q || c.name.toLowerCase().includes(q) || (c.raw.name_jp||'').toLowerCase().includes(q) || c.id.includes(q)).slice(0,30);
+      .filter(c=>!q || c.name.toLowerCase().includes(q) || (c.raw.name_jp||'').toLowerCase().includes(q) || c.id.includes(q) || (c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(q))).slice(0,30);
     drop.innerHTML = items.length ? items.map((c,i)=>`<button type="button" data-i="${i}" class="${i===hl?'hl':''}">${elChip(c.elem)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span></button>`).join('')
       : `<div class="hint" style="padding:8px 10px">보유 캐릭터 중 일치하는 이름이 없습니다.</div>`;
     drop.hidden=false;
@@ -1630,7 +1630,7 @@ function setupGoalPicker(){
   const close=()=>{ drop.hidden=true; };
   const refresh=()=>{
     const q=inp.value.trim().toLowerCase(); if(!q){ close(); return; }
-    items=prepped.filter(c=>!goalPick.includes(c.id) && (c.name.toLowerCase().includes(q)||(c.raw.name_jp||'').toLowerCase().includes(q))).slice(0,30);
+    items=prepped.filter(c=>!goalPick.includes(c.id) && (c.name.toLowerCase().includes(q)||(c.raw.name_jp||'').toLowerCase().includes(q)||(c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(q)))).slice(0,30);
     drop.innerHTML = items.map((c,i)=>`<button type="button" data-i="${i}">${elChip(c.elem)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span>${state.owned[c.id]?'':' <span class="badge">미보유</span>'}</button>`).join('') || '<div class="hint" style="padding:8px 10px">일치하는 캐릭터가 없습니다.</div>';
     drop.hidden=false;
   };
@@ -1650,7 +1650,7 @@ function rosterFilters(){
 function renderRoster(){
   const F=rosterFilters();
   const list = prepped.filter(c=>{
-    if(F.q && !(c.name.toLowerCase().includes(F.q) || (c.raw.name_jp||'').toLowerCase().includes(F.q))) return false;
+    if(F.q && !(c.name.toLowerCase().includes(F.q) || (c.raw.name_jp||'').toLowerCase().includes(F.q) || (c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(F.q)))) return false;
     if(F.el && !c.elems.includes(F.el)) return false;
     if(F.wp && c.weapon!==F.wp) return false;
     if(F.al && c.align!==F.al) return false;
@@ -1749,6 +1749,7 @@ const normName = s => String(s||'').normalize('NFKC').toLowerCase().replace(/[\s
 function nameIndex(){
   const m=new Map(), put=(n,id)=>{ const k=normName(n); if(k && !m.has(k)) m.set(k,id); };
   for(const c of prepped) put(c.name, c.id);           // 한국어 이름 우선
+  for(const c of prepped) for(const a of (c.raw.alias_kr||[])) put(a, c.id); // 예전 표시명(2026-10-16 위키 시트 이름으로 바꾸기 전)
   for(const c of prepped){ put(c.raw.name_jp, c.id); put(c.id, c.id); }
   return m;
 }
@@ -1775,7 +1776,7 @@ function editDist(a,b){
 function suggestName(q){
   const k=normName(q); if(!k) return null;
   let best=null, bd=Infinity;
-  for(const c of prepped) for(const n of [c.name, c.raw.name_jp]){
+  for(const c of prepped) for(const n of [c.name, c.raw.name_jp].concat(c.raw.alias_kr||[])){
     const kn=normName(n); if(!kn) continue;
     const d = (kn.includes(k)||k.includes(kn)) ? Math.abs(kn.length-k.length)*0.3 : editDist(k,kn);
     if(d<bd){ bd=d; best=c; }
