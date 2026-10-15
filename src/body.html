@@ -24,7 +24,8 @@
         <div>
           <label class="lbl">성향</label>
           <div class="seg" id="modeSeg">
-            <button type="button" data-mode="burst">최고점 딜</button>
+            <button type="button" data-mode="all">종합</button>
+            <button type="button" data-mode="burst">최고점(허수아비)</button>
             <button type="button" data-mode="opener">개전 속공</button>
             <button type="button" data-mode="sustain">지속 딜</button>
             <button type="button" data-mode="stability">안정성</button>
@@ -33,8 +34,8 @@
             <button type="button" data-mode="kesshitsu">결현현</button>
             <button type="button" data-mode="custom">직접 조절</button>
           </div>
-          <div class="nturn" id="nturnRow"><label for="burstN">실전 기준</label> <select id="burstN"><option value="1">1턴</option><option value="2">2턴</option><option value="3">3턴</option><option value="4">4턴</option><option value="5">5턴</option><option value="7">7턴</option><option value="10">10턴</option></select> <span class="hint">약점·보스·직접 조절의 화력 = 개전부터 이 턴 수 안에 넣는 총 대미지 (AF·SB는 게이지가 찰 때)</span></div>
-          <p class="hint" style="margin:6px 0 0">최고점 = 허수아비(대두타) 기준 어포딜: 1턴, AF 100%로 시작해 AF 한 번을 행동 단위로 계산(버퍼부터 행동하며 버프를 깔고, SB는 AF 도중 SB 게이지가 차는 순간, 후열 연성 P글래 셔틀 가정) · 약점 맞춤·보스 맞춤 = 그 상대 기준 실전(개전부터 N턴 총딜) · 개전 속공 = 1턴 총 대미지(시작 게이지로 쓸 수 있는 AF 포함) · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력 · 결현현 = 결실 현현 서약 조건 · 직접 조절 = 공격성·유지력·안정성 비율</p>
+          <div class="nturn" id="nturnRow"><label for="burstN">실전 기준</label> <select id="burstN"><option value="1">1턴</option><option value="2">2턴</option><option value="3">3턴</option><option value="4">4턴</option><option value="5">5턴</option><option value="7">7턴</option><option value="10">10턴</option></select> <span class="hint">종합·약점·보스·직접 조절의 화력 = 개전부터 이 턴 수 안에 넣는 총 대미지 (AF·SB는 게이지가 찰 때)</span></div>
+          <p class="hint" style="margin:6px 0 0"><b>종합(기본)</b> = 실전에서 쓸 팔방미인 덱: 개전부터 N턴 총딜 40% + 지속 딜 30%(MP·버프를 다시 거는 턴까지 반영) + 생존력 30%, 생존이 너무 약하면 감점 · 최고점(허수아비) = 기록·재미용 1턴 최대치: 1턴, AF 100%로 시작해 AF 한 번을 행동 단위로 계산(버퍼부터 행동하며 버프를 깔고, SB는 AF 도중 SB 게이지가 차는 순간, 후열 연성 P글래 셔틀 가정) · 약점 맞춤·보스 맞춤 = 그 상대 기준 실전(개전부터 N턴 총딜) · 개전 속공 = 1턴 총 대미지(시작 게이지로 쓸 수 있는 AF 포함) · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력 · 결현현 = 결실 현현 서약 조건 · 직접 조절 = 공격성·유지력·안정성 비율</p>
         </div>
         <div id="weightRow" hidden>
           <label class="lbl">성향 직접 조절 <span class="hint" style="letter-spacing:0;font-weight:400">1~100, 비율로 섞어서 점수를 매깁니다</span></label>

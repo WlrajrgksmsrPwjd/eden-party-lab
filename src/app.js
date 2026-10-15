@@ -29,7 +29,7 @@ function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'
 
 /* ---------- 상태 ---------- */
 let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
-const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'burst', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null, weights:{b:70,s:40,t:30}, kesId:'', pledge:{nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0}, buddy:{main:'auto',sub:'auto'}}, rosterView:{}, goals:[], buddies:{}});
+const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'all', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null, weights:{b:70,s:40,t:30}, kesId:'', pledge:{nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0}, buddy:{main:'auto',sub:'auto'}}, rosterView:{}, goals:[], buddies:{}});
 const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
 const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
 const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성' : (FT_KR[f.v]||f.v);
@@ -57,6 +57,7 @@ async function loadState(){
   try{ const raw=localStorage.getItem(LS_KEY); if(raw) loaded=JSON.parse(raw); }catch(e){}
   state = Object.assign(DEF_STATE(), loaded||{});
   state.plan = Object.assign(DEF_STATE().plan, state.plan||{});
+  if(!state.modeV2){ if(state.plan.mode==='burst') state.plan.mode='all'; state.modeV2=1; } // 기본 성향을 종합(팔방미인)으로 한 번 옮김(사용자 요청: 최고점은 재미용)
   if(!loaded){ state.owned = sampleOwned(); state.sample=true; }
 }
 async function connectDb(){
@@ -623,7 +624,7 @@ function renderPlanControls(){
   const P=state.plan;
   $$('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.mode===P.mode?'true':'false'));
   $('#bossRow').hidden = P.mode!=='boss';
-  { const nb=$('#burstN'); if(nb) nb.value = String(settings().burstTurns||3); $('#nturnRow').hidden = !['weak','boss','custom'].includes(P.mode); }
+  { const nb=$('#burstN'); if(nb) nb.value = String(settings().burstTurns||3); $('#nturnRow').hidden = !['all','weak','boss','custom'].includes(P.mode); }
   $('#weightRow').hidden = P.mode!=='custom';
   $('#kesRow').hidden = P.mode!=='kesshitsu';
   const sel=$('#bossSel');
@@ -730,7 +731,7 @@ async function runPlan(){
 }
 
 function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e12) return (v/1e12).toFixed(2)+'조'; if(v>=1e8) return (v/1e8).toFixed(v>=1e10?0:v>=1e9?1:2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
-const MODE_KR={opener:'개전 속공',burst:'최고점 딜',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
+const MODE_KR={all:'종합',opener:'개전 속공',burst:'최고점(허수아비)',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
 const RES = new Map(); // 카드 키 → 결과 (추천 세팅 패널용)
 function teamWarns(x, boss, enemy, ex){
   const ev=x.ev, sbz=ev.sb.zone;
@@ -951,14 +952,14 @@ function parseShare(hash){
   const h=String(hash||'').replace(/^#/,''); if(!/^share=/.test(h)) return null;
   let q; try{ q=new URLSearchParams(h); }catch(e){ return null; }
   const ids=(q.get('share')||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,4);
-  let mode=q.get('m')||'burst'; if(!MODE_KR[mode]) mode='burst';
+  let mode=q.get('m')||'all'; if(!MODE_KR[mode]) mode='all';
   const fp=(q.get('f')||'').split(':');
   const f=FOCUS_LIST.find(x=>x.kind===fp[0]&&x.v===fp[1]);
   return {ids, mode, bossId:q.get('b')||'', focus:f?Object.assign({},f):null};
 }
 function shareUrl(rec){
   const base = location.origin && location.origin!=='null' ? location.origin+location.pathname : location.href.split('#')[0];
-  let u = base+'#share='+rec.x.team.map(c=>encodeURIComponent(c.id)).join(',')+'&m='+encodeURIComponent(rec.mode||'burst');
+  let u = base+'#share='+rec.x.team.map(c=>encodeURIComponent(c.id)).join(',')+'&m='+encodeURIComponent(rec.mode||'all');
   if(rec.mode==='boss' && rec.bossId) u+='&b='+encodeURIComponent(rec.bossId);
   if(rec.focus) u+='&f='+rec.focus.kind+':'+rec.focus.v;
   return u;
@@ -991,7 +992,7 @@ function renderShare(){
   if(!SHARE){ box.hidden=true; box.innerHTML=''; return; }
   const sh=SHARE;
   const boss = sh.mode==='boss' ? BOSSES.find(b=>b.id===sh.bossId)||null : null;
-  const mode = sh.mode==='boss'&&!boss ? 'burst' : sh.mode;
+  const mode = sh.mode==='boss'&&!boss ? 'all' : sh.mode;
   const cond = [MODE_KR[mode]].concat(boss?[boss.name_kr]:[], sh.focus?[focusLabel(sh.focus)+' 화력만']:[]).join(' · ');
   const head = `<div class="sharehead"><b>${esc(sh.label||'공유받은 조합')}</b><span class="hint">${esc(cond)}</span><button type="button" class="btn small" data-shareclose="1">닫기</button></div>`;
   const team = sh.ids.map(id=>byId.get(id));
@@ -1071,7 +1072,7 @@ function renderMetaDecks(){
 }
 function openMetaDeck(k){
   const d=DECKS[k]; if(!d) return;
-  SHARE = {ids:d.members.slice(), mode: d.basis==='non_af' ? 'sustain' : 'burst', bossId:'', focus:null, label:'추천 덱 · '+d.name};
+  SHARE = {ids:d.members.slice(), mode: d.basis==='non_af' ? 'sustain' : 'all', bossId:'', focus:null, label:'추천 덱 · '+d.name};
   renderShare(); revealShare();
 }
 
@@ -1399,7 +1400,7 @@ async function runPerChar(){
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   $('#pcRun').disabled=true; $('#pcProg').hidden=false; $('#pcProg i').style.width='0%';
-  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'burst':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null,
+  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null,
       weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, buddy: buddyInput()},
     f=>{ if(my===pcToken) $('#pcProg i').style.width=Math.round(f*100)+'%'; });
   if(my!==pcToken || !r) return;
@@ -1437,7 +1438,7 @@ async function runFocusAll(){
   if(ids.length<4){ grid.innerHTML='<div class="empty">보유 캐릭터가 4명 이상이어야 합니다.</div>'; return; }
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
-  const mode = P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'burst':P.mode, J = jobSnap(), cond = {mode, bossId:boss?boss.id:''};
+  const mode = P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, J = jobSnap(), cond = {mode, bossId:boss?boss.id:''};
   for(const k of [...RES.keys()]) if(k[0]==='f') RES.delete(k);
   grid.innerHTML = FOCUS_LIST.map((f,k)=>`<section class="fcard" id="fx-${k}"><div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><span class="hint">대기 중…</span></div></section>`).join('');
   $('#fxRun').disabled=true; $('#fxProg').hidden=false; $('#fxProg i').style.width='0%';

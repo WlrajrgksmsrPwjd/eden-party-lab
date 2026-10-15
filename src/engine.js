@@ -499,7 +499,7 @@ function prepChar(c){
       const auto=new Set(), main=new Set(), sb=new Set(), steps=[], seen=new Set();
       for(const a of L){ const g=(a.g||[]).map(key).filter(Boolean); if(!g.length) continue; g.forEach(x=>seen.add(x));
         if(a.k==='auto') g.forEach(x=>auto.add(x)); else if(a.k==='main') g.forEach(x=>main.add(x)); else if(a.k==='sb') g.forEach(x=>sb.add(x));
-        else if(a.k==='buff'||a.k==='attack') steps.push({k:a.k, g:new Set(g), h:+a.h||0, s:a.s||''}); }
+        else if(a.k==='buff'||a.k==='attack') steps.push({k:a.k, g:new Set(g), h:+a.h||0, s:a.s||'', mp:+a.mp||0}); }
       const nzv = v => typeof v==='number' ? v>0 : v && typeof v==='object' ? Object.values(v).some(nzv) : !!v;
       for(const k in p) if(k!=='scope' && k!=='restrict' && nzv(p[k]) && !seen.has(k)) main.add(k);
       for(const k in d) if(nzv(d[k])){ const kk = k==='break' ? 'brk' : k==='weak_expose' ? 'weak' : 'd_'+k; if(!seen.has(kk)) main.add(kk); }
@@ -1187,15 +1187,19 @@ function simTeam(team, progs, S){
     const costMain = Math.round((c.mpMain!=null?c.mpMain:55)*mul*mpAtkX), costBuff = Math.round((c.mpBuff!=null?c.mpBuff:50)*mul);
     const bt = c.buffTurns>=99 ? H+1 : Math.max(1, c.buffTurns||3);
     const costAlt = Math.min(costMain, Math.round(ALT_MP*mul*mpAtkX));
-    let mp=mpMax, rem=0, active=0, mainN=0, altN=0, naN=0, buffN=0, out=0;
+    // 버프 스킬(buff_acts): 하나씩 따로 써야 해서 끊긴 것이 있으면 그 턴은 그 스킬(공격 버프기는 주력의 30%쯤으로 셈). 데이터가 없으면 예전대로 버퍼만 1개
+    const steps = c.bact ? c.bact.steps : (c.buffAct ? [{k:'buff'}] : []), K = steps.length;
+    const rem = steps.map(()=>0), act = steps.map(()=>0);
+    let mp=mpMax, mainN=0, altN=0, naN=0, buffN=0, out=0;
     for(let t=1;t<=H;t++){
-      if(c.buffAct && rem<=0 && mp>=costBuff){ mp-=costBuff; rem=bt; buffN++; }
+      const k = rem.findIndex(r=>r<=0), cB = k>=0 ? Math.round((+steps[k].mp||c.mpBuff||50)*mul) : 0;
+      if(k>=0 && mp>=cB){ mp-=cB; rem[k]=bt; buffN++; if(steps[k].k==='attack') altN++; }
       else if(mp>=costMain){ mp-=costMain; mainN++; }
       else { if(!out) out=t; if(mp>=costAlt){ mp-=costAlt; altN++; } else naN++; }
-      if(rem>0){ active++; rem--; }
+      for(let q=0;q<K;q++) if(rem[q]>0){ act[q]++; rem[q]--; }
       mp=Math.min(mpMax, mp+regen);
     }
-    const upt = c.buffAct ? active/H : 1;
+    const upt = K ? act.reduce((x,y)=>x+y,0)/(K*H) : 1;
     R.upt.push(upt); R.act.push(mainN/H); R.alt.push(altN/H); R.na.push(naN/H); R.out.push(out); R.mainN.push(mainN); R.buffN.push(buffN); R.mpMax.push(Math.round(mpMax)); R.costMain.push(costMain);
     if(upt<1 || mainN<H) R.any=true;
   }
@@ -1879,9 +1883,17 @@ function dummySim(o){
   const sbRate = team.map((c,i)=> sbAct * (sbFillOK(team, i, progs, S) ? 2 : 1));
   // 버프·디버프 행동(buff_acts.json, 사용자 확인): 버프 스킬 하나에 AF 행동 1번(게이지 0), 여러 개면 차례로 — 쓴 뒤부터 그 효과만 켜짐.
   // auto = 처음부터, main = 주력 공격 뒤, sb = SB 뒤. 속성 변환 스킬(elem_change.skill)은 그 캐릭터 버프 행동 맨 앞으로
-  const B = team.map((c,j)=>{ const b=c.bact; if(!b) return null; const e = A.echg && A.echg.find(x=>x.i===j && x.skill);
-    if(!e) return b; const k = b.steps.findIndex(st=>st.s===e.skill); if(k<=0) return b;
-    const steps = b.steps.slice(); steps.unshift(steps.splice(k,1)[0]); return Object.assign({}, b, {steps}); });
+  // 존 전개(사용자 확인): 개전 자동이 아니면 존 전개가 붙은 스킬을 써야 깔림 — 그 스킬이 버프 행동이면 그 행동 뒤, 주력이면 첫 공격 뒤
+  const zTxt = zBy>=0 ? String((team[zBy].zone||{}).condition||'') : '';
+  const sName = x => String(x||'').split(/[（(]/)[0].trim();
+  const B = team.map((c,j)=>{ const b=c.bact; if(!b) return null; const front = [];
+    if(j===zBy && !zFrom0){ const k = b.steps.findIndex(st=>sName(st.s) && zTxt.includes(sName(st.s))); if(k>=0) front.push(b.steps[k].s); }
+    const e = A.echg && A.echg.find(x=>x.i===j && x.skill); if(e && !front.includes(e.skill)) front.push(e.skill);
+    if(!front.length) return b; const steps = b.steps.slice();
+    for(const nm of front.slice().reverse()){ const k = steps.findIndex(st=>st.s===nm); if(k>0) steps.unshift(steps.splice(k,1)[0]); }
+    return Object.assign({}, b, {steps}); });
+  const zStep = zBy>=0 && !zFrom0 && B[zBy] ? B[zBy].steps.findIndex(st=>sName(st.s) && zTxt.includes(sName(st.s))) : -1;
+  const zMain = zBy>=0 && !zFrom0 && zStep<0 && !!(team[zBy].main && sName(team[zBy].main.skill) && zTxt.includes(sName(team[zBy].main.skill)));
   const maskOf = (j, stepDone, atk, postSB) => { const b=B[j], m=new Set(b.auto); if(atk[j]) for(const x of b.main) m.add(x);
     for(let k=0;k<stepDone[j];k++) for(const x of b.steps[k].g) m.add(x); if(postSB && sbIdx.includes(j)) for(const x of b.sb) m.add(x); return m; };
   const mm = o.memo || (o.memo = {fx:new Map(), co:new Map(), bf:new Map()}), fxMemo = mm.fx, coMemo = mm.co, bfMemo = mm.bf; // 여러 행동 계획(run)·같은 존의 다시 계산이 같이 씀
@@ -1916,6 +1928,11 @@ function dummySim(o){
       coreAt(st, z, 'af', i, inow); const FX = fxMemo.get(k0); Av.infNow = inow; Av.echg = A.echg ? A.echg.filter((e,k)=>(inow.eg||'')[k]==='1') : null; if(Av.echg && !Av.echg.length) Av.echg = null;
       const tAlt = team.map((m,k)=> k===i ? Object.assign({}, m, {main:m.mainAlt}) : m);
       const co = attackerCore(tAlt, i, progs, Av, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
+    const stepCoreAt = (st, z, i, inow, s0) => { const k0 = 'af|'+stKey(st.acted, st.stepDone, st.atk)+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow)+pk, key = 'stp|'+k0+'|'+i+'|'+s0.s; if(coMemo.has(key)) return coMemo.get(key);
+      coreAt(st, z, 'af', i, inow); const FX = fxMemo.get(k0); const m = team[i].main || {};
+      const sk = {skill:s0.s, target:m.target==='st'?'st':'aoe', kind:m.kind==='mag'?'mag':'phys', stat:m.stat||(m.kind==='mag'?'int':'pwr'), element:m.element||team[i].elem||'none', weapon_type:m.weapon_type||null, size:'xl', mult:1, hits:Math.max(1, s0.h||1), repeat:0, crit_sure:false, def_ignore:false, barrier_pierce:false, af_combo_x:1, condition:''};
+      const t2 = team.map((q,k)=> k===i ? Object.assign({}, q, {main:sk, afSk:null, sbN:null, mainAlt:null}) : q);
+      const co = attackerCore(t2, i, progs, Av, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
     const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), mu = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false), stepDone = team.map(()=>0); // mu: 주력 사용 횟수(횟수 제한 스킬용)
     const st = {acted, stepDone, atk};
     // 속성 변환은 건 사람이 그 스킬을 쓴 뒤부터(elem_change.skill이 버프 행동에 있으면 그 행동 뒤, 없으면 act 수만큼 행동한 뒤)
@@ -1933,9 +1950,11 @@ function dummySim(o){
         const co = useAlt ? altCoreAt(st, zNow, i, inow) : coreAt(st, zNow, 'af', i, inow);
         if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
           combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
-      } else if(buffOnly && B[i]){ const s0 = B[i].steps[stepDone[i]]; used[i].push(s0.s); if(s0.k==='attack' && s0.h) combo += s0.h*0.025; }
+      } else if(buffOnly && B[i]){ const s0 = B[i].steps[stepDone[i]]; used[i].push(s0.s);
+        if(s0.k==='attack'){ const co = stepCoreAt(st, zNow, i, inow, s0); // 주력 아닌 공격 버프기: 위력 표기가 없어 특대 1배·데이터 타수로(주력과 같은 속성·종류)
+          if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax); combo += co.hitsPerAct*0.025*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); } } }
       acted[i] = true; if(buffOnly && B[i]) stepDone[i]++; cnt[i]++; sbG += sbRate[i]; if(isInf) ia[i] = true; else if(!buffOnly) atk[i] = true;
-      if(i===zBy && nz && zoneOK(zCur, nz) && !(zCur && zCur.key===nz.key && zCur.level>=nz.level)) zCur = nz;
+      if(i===zBy && nz && (zStep>=0 ? stepDone[i] > zStep : zMain ? atk[i] : true) && zoneOK(zCur, nz) && !(zCur && zCur.key===nz.key && zCur.level>=nz.level)) zCur = nz; // 존 전개 스킬을 쓴 뒤
       if(!buffOnly && !isInf && c.zoneSet){ const zc = zcs.find(q=>q && q.by===c.id && q.level>0); if(zoneOK(zCur, zc)) zCur = zc; }
       if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
         sbAt = afA.seq.indexOf(a)+1;
@@ -2108,9 +2127,9 @@ function buildPool(owned, locked, opts){
     add('dps', 20, fm);
     const zm = free.filter(o=>o.pc.zoneTypes && o.pc.zoneTypes.opts.some(op=>F.kind==='elem' ? op.kind==='elem'&&op.types.includes(F.v) : op.kind==='weap'&&op.types.includes(F.v)));
     add('sup', 8, zm);
-    add('sup', mode==='stability'?12:14); add('surv', mode==='stability'?10:5);
+    add('sup', mode==='stability'?12:14); add('surv', mode==='stability'?10:mode==='all'?8:5);
   } else {
-    const quota = mode==='stability' ? {dps:12,sup:12,surv:12} : {dps:15,sup:14,surv:6};
+    const quota = mode==='stability' ? {dps:12,sup:12,surv:12} : mode==='all' ? {dps:14,sup:13,surv:10} : {dps:15,sup:14,surv:6};
     add('dps',quota.dps); add('sup',quota.sup); add('surv',quota.surv);
   }
   // 존 제공자 중 상위 딜러 속성과 맞는 캐릭터 보강
@@ -2133,6 +2152,7 @@ function modeWeights(mode, boss, cw, pl){
   if(mode==='burst' || mode==='opener') return {b:1,s:0,t:0};
   if(mode==='sustain') return {b:0,s:1,t:0};
   if(mode==='stability') return {b:0,s:0.4,t:0.6};
+  if(mode==='all') return {b:0.4,s:0.3,t:0.3}; // 종합(팔방미인, 기본): 실전 N턴 총딜 + 지속 딜(MP·버프 유지 포함) + 생존
   if(mode==='weak') return {b:0.5,s:0.5,t:0};
   if(mode==='boss'){
     const n = (boss&&boss.needs)||{};
@@ -2160,7 +2180,7 @@ async function optimize(input, onProgress){
   const S = Object.assign({}, DEFAULT_SETTINGS, settings||{});
   const ctx = buildCtx(input, owned);
   ctx.mode = mode;
-  if(mode==='opener' || mode==='weak' || mode==='boss' || mode==='kesshitsu' || mode==='custom') ctx.timeline = true; // 실전(N턴 총딜)의 1턴은 속도·선제 순서
+  if(mode==='opener' || mode==='weak' || mode==='boss' || mode==='kesshitsu' || mode==='custom' || mode==='all') ctx.timeline = true; // 실전(N턴 총딜)의 1턴은 속도·선제 순서
   const BR = ev => mode==='opener' ? ev.opener : mode==='burst' ? ev.dummyT : ev.burst; // 최고점 = 허수아비 어포딜, 실전(약점·보스 등) = N턴 시뮬
   if(mode==='burst') ctx.dummyFast = true; // 1단계 어림 → 상위 후보만 행동 단위 시뮬레이션
   const cap = input.cap;
@@ -2240,7 +2260,7 @@ async function optimize(input, onProgress){
   const w = modeWeights(mode, boss, input.weights, pl);
   // 상위 조합에서 한 명씩 바꿔 보기 (후보 풀 밖의 시너지 캐릭터 찾기)
   if(input.refine!==false && teams.length){
-    const scoreOf = (b,s,tt)=>{ let sc = w.b*b/mb + w.s*s/ms + w.t*tt/mt; if((mode==='sustain'||mode==='weak') && tt/mt<0.25) sc*=0.85; return sc; };
+    const scoreOf = (b,s,tt)=>{ let sc = w.b*b/mb + w.s*s/ms + w.t*tt/mt; if((mode==='sustain'||mode==='weak'||mode==='all') && tt/mt<0.25) sc*=0.85; return sc; };
     const order = teams.map((_,i)=>i).sort((a,b)=>scoreOf(raws[3*b],raws[3*b+1],raws[3*b+2])-scoreOf(raws[3*a],raws[3*a+1],raws[3*a+2]));
     const starts=[]; for(const i of order){ if(starts.length>=8) break; const ids=new Set(teams[i]); if(starts.some(s=>s.filter(x=>ids.has(x)).length>=3)) continue; starts.push(teams[i].slice()); }
     const cand = own.map(o=>Object.assign({},o,{pot:soloPotential(o.pc,o.prog,enemy,S,cap,ctx)})).sort((a,b)=>(b.pot.dps+b.pot.sup*0.5)-(a.pot.dps+a.pot.sup*0.5)).slice(0,90);
@@ -2301,7 +2321,7 @@ async function optimize(input, onProgress){
     if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue;
     const b=raws[3*i]/mb, s=raws[3*i+1]/ms, t=raws[3*i+2]/mt;
     let sc = w.b*b + w.s*s + w.t*t;
-    if(mode==='sustain'||mode==='weak'||mode==='opener') sc *= (t<0.25?0.85:1);
+    if(mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all') sc *= (t<0.25?0.85:1);
     scored.push([sc,i]);
   }
   scored.sort((a,b)=>b[0]-a[0]);
@@ -2360,7 +2380,7 @@ async function optimize(input, onProgress){
   const FOCL = ELEMS.map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
   const decks = [];
   deckIdx.forEach((L,fi)=>{ if(!L||!L.length) return; let bi=-1, bs=-1;
-    for(const i of L){ if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue; const b=raws[3*i]/mb, s=raws[3*i+1]/ms, tt=raws[3*i+2]/mt; let sc=w.b*b+w.s*s+w.t*tt; if((mode==='sustain'||mode==='weak') && tt<0.25) sc*=0.85; if(maxLv<4 && teamDifficulty(teams[i].map(k=>pool[k].pc)).lv>maxLv) continue; if(sc>bs){ bs=sc; bi=i; } }
+    for(const i of L){ if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue; const b=raws[3*i]/mb, s=raws[3*i+1]/ms, tt=raws[3*i+2]/mt; let sc=w.b*b+w.s*s+w.t*tt; if((mode==='sustain'||mode==='weak'||mode==='all') && tt<0.25) sc*=0.85; if(maxLv<4 && teamDifficulty(teams[i].map(k=>pool[k].pc)).lv>maxLv) continue; if(sc>bs){ bs=sc; bi=i; } }
     if(bi>=0){ const team=teams[bi].map(k=>pool[k].pc), progs=teams[bi].map(k=>pool[k].prog); const ev=evalTeam(team,progs,enemy,S,cap,ctx); const rv=pickReserves(team,progs,ev);
       decks.push({focus:FOCL[fi], team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); } });
   decks.sort((a,b)=>b.score-a.score);
@@ -2373,7 +2393,7 @@ async function perCharBest(input, onProgress){
   const S = Object.assign({}, DEFAULT_SETTINGS, settings||{});
   const ctx = buildCtx(input, owned);
   ctx.mode = mode;
-  if(mode==='opener' || mode==='weak' || mode==='boss' || mode==='kesshitsu' || mode==='custom') ctx.timeline = true; // 실전(N턴 총딜)의 1턴은 속도·선제 순서
+  if(mode==='opener' || mode==='weak' || mode==='boss' || mode==='kesshitsu' || mode==='custom' || mode==='all') ctx.timeline = true; // 실전(N턴 총딜)의 1턴은 속도·선제 순서
   const cap = input.cap, maxLv = input.maxDiff||4;
   if(mode==='burst') ctx.dummyFast = true; // 1단계 어림 → 캐릭터마다 상위 후보만 행동 단위 시뮬레이션
   const ex = new Set(excluded.concat(backLocked));
@@ -2381,7 +2401,7 @@ async function perCharBest(input, onProgress){
   if(own.length<4) return {error:'보유 캐릭터가 4명 이상 필요합니다.'};
   let pool = buildPool(own, [], {enemy,S,cap,ctx,mode});
   const maxD = Math.max(1e-9, ...pool.map(o=>o.pot.dps));
-  pool = pool.sort((a,b)=>(b.pot.dps/maxD + b.pot.sup*0.3 + (mode==='stability'?b.pot.surv*0.02:0))-(a.pot.dps/maxD + a.pot.sup*0.3 + (mode==='stability'?a.pot.surv*0.02:0))).slice(0,36);
+  pool = pool.sort((a,b)=>(b.pot.dps/maxD + b.pot.sup*0.3 + (mode==='stability'?b.pot.surv*0.02:mode==='all'?b.pot.surv*0.01:0))-(a.pot.dps/maxD + a.pot.sup*0.3 + (mode==='stability'?a.pot.surv*0.02:mode==='all'?a.pot.surv*0.01:0))).slice(0,36);
   const w = modeWeights(mode, boss, input.weights), recSet = new Set(recommendedIds);
   const idxOf = new Map(own.map((o,i)=>[o.pc.id,i]));
   const T=[], R=[]; // T: 멤버 인덱스(own 기준) 4개씩, R: burst,sustain,surv,penalty,diffLv
@@ -2433,7 +2453,7 @@ async function perCharBest(input, onProgress){
     if(R[5*i+4]>maxLv) continue;
     const b=R[5*i]/mb, sv=R[5*i+1]/ms, t=R[5*i+2]/mt;
     let sc = w.b*b + w.s*sv + w.t*t;
-    if(mode==='sustain'||mode==='weak'||mode==='opener') sc *= (t<0.25?0.85:1);
+    if(mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all') sc *= (t<0.25?0.85:1);
     sc *= R[5*i+3];
     for(let j=0;j<4;j++){ const k=T[4*i+j]; if(sc>bestSc[k]){ bestSc[k]=sc; bestI[k]=i; } }
   }
