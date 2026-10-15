@@ -925,7 +925,8 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 
   // 반복/재공격
   let rep = sk.repeat||0;
-  if(situation!=='sb' && rep>0 && (sk.condition||'').length>0) rep*=0.7;
+  if(situation==='af' && sk.repeat_af!=null) rep = +sk.repeat_af||0; // AF 중 재공격 횟수가 다른 스킬(이즈나 등 '非AF 시 재공격')
+  else if(situation!=='sb' && rep>0 && (sk.condition||'').length>0) rep*=0.7;
   const totHits = hits*(1+rep);
   // 대상 수
   const nT = tgt==='aoe' ? Math.max(1,S.enemyCount) : 1;
