@@ -1500,6 +1500,7 @@ const DEFAULT_SETTINGS = {
   afAuto: true,      // AF 행동 수를 게이지·속도로 계산 (위키 기준)
   afAnim: 2,         // AF 중 스킬 연출 시간(초) 가정
   sbFillBonus: true, // 성도 게이지 충전 보너스(강화): 성도 각성 캐릭터 행동마다 5%(조건 충족 가정)
+  dummyMule: true,   // 최고점(허수아비)은 후열 연성 P글래 셔틀을 가정(보유 표시가 있으면 그것만)
   comboCap: 0,       // AF 콤보 배율 상한(배). 0이면 없음 — 위키 Another Force/Combo에 상한 없음
   afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
   useStats: true,    // 캐릭터 기본 스탯(위키 Stats Index)으로 주 스탯 대미지·운 크리율·속도 반영
@@ -2932,7 +2933,11 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   out.bsim = battleSim(NB, simIn); out.bsim.afStart = st; out.bsim.s0 = simIn.s0;
   out.burstOld = out.burst; out.burst = out.bsim.total;
   out.opener = NB===1 ? out.bsim.total : battleSim(1, simIn).total;
-  out.dummy = dummySim({team, progs, A, enemy, S, cx, posSets, cap, fw, nz, awStart, awConst, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow});
+  // 허수아비 기록은 후열 연성 P글래 셔틀·풀장비로 잰다(사용자 확인): 보유 표시가 없으면 셔틀 2명을 가정(설정 dummyMule로 끔)
+  let Ad = A;
+  if(S.dummyMule!==false && !A.mule){ const m2 = muleShare(team, Object.assign({}, S, {pglAssumeAll:true}), ctx, progs); if(m2) Ad = Object.assign({}, A, {mule:m2}); }
+  out.dummy = dummySim({team, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz, awStart, awConst, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow});
+  out.dummy.mule = Ad.mule || null;
   out.dummy.S0 = A.tm.S0;
   out.dummyT = out.dummy.total;
   return out;
