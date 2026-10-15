@@ -1499,6 +1499,7 @@ const DEFAULT_SETTINGS = {
   afActions: 5,      // afAuto를 끄면 쓰는 고정 행동 수
   afAuto: true,      // AF 행동 수를 게이지·속도로 계산 (위키 기준)
   afAnim: 2,         // AF 중 스킬 연출 시간(초) 가정
+  sbFillBonus: true, // 성도 게이지 충전 보너스(강화): 성도 각성 캐릭터 행동마다 5%(조건 충족 가정)
   comboCap: 0,       // AF 콤보 배율 상한(배). 0이면 없음 — 위키 Another Force/Combo에 상한 없음
   afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
   useStats: true,    // 캐릭터 기본 스탯(위키 Stats Index)으로 주 스탯 대미지·운 크리율·속도 반영
@@ -2942,7 +2943,10 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
    - 버프·디버프는 그 캐릭터가 AF에서 한 번 행동한 뒤부터(패시브·자동은 처음부터). 버프 전용 캐릭터의 첫 행동은 버프만
    - ZONE: 개전 자동이면 처음부터, 아니면 펼치는 캐릭터가 행동한 뒤부터
    - 콤보: 75%에서 시작해 행동마다 그 행동의 타수만큼 오르고, 각 행동은 그 순간의 콤보로 계산
-   - 축적은 AF 중 행동 횟수만큼(stackFill), SB는 SB 게이지(시작 12.5%×같은 흐름 인원 + 행동당 2.5%)가 AF 안에서 100%가 되면 AF 끝 콤보로
+   - 축적은 AF 중 행동 횟수만큼(stackFill)
+   - SB(위키 Stellar Awakening): 게이지 시작 = 성향이 같은 전열 1명당 12.5%, 아군 행동마다 2.5%(성도 게이지 충전 보너스 강화가 켜진
+     캐릭터는 5%, 다단·복사는 추가 없음). AF 도중 100%가 되는 순간 SB — AF는 멈춰 시간을 안 쓰고, 그 순간 콤보로 계산, SB는 콤보를 안 올림.
+     AF가 끝나면 SB를 못 쓴다(사용자 확인). SB로 존이 각성하면 남은 AF 행동은 그 존으로
    요격(맞아야 발동)·체인(AF 밖)·EX 필살기(1턴 안에 EX 게이지가 안 참)는 없음 */
 function dummyPrio(team, progs){
   const giver = c => !(c.buffHow==='passive'||c.buffHow==='auto') && ((c.party&&c.party.scope!=='none'&&Object.keys(c.party).some(k=>{ const v=c.party[k]; return k!=='scope'&&k!=='restrict'&&(typeof v==='number'?v>0:v&&typeof v==='object'?Object.values(v).some(x=>x>0):v===true); })) || Object.values(c.deb||{}).some(v=>typeof v==='number'?v>0:v&&typeof v==='object'?Object.values(v).some(x=>x>0):false));
@@ -2958,12 +2962,13 @@ function dummySim(o){
   const zFrom0 = !!(nz && nz.level>0 && (awStart || nz.how==='개전 자동'));
   const zoneAt = acted => !nz || !nz.level ? nz : (zFrom0 || (zBy>=0 && acted[zBy])) ? nz : null;
   const memo = new Map();
-  const coresAt = (acted, z) => {
-    const key = acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-');
+  const coresAt = (acted, z, sit) => {
+    sit = sit || 'af';
+    const key = sit+'|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-');
     let cs = memo.get(key); if(cs) return cs;
     const upt = team.map((c,j)=> acted[j]||passive[j] ? 1 : 0);
-    const FX = buildBF(team, progs, 'af', z, A, posSets, upt, true);
-    cs = team.map((c,i)=>attackerCore(team, i, progs, A, enemy, S, 'af', cx, FX, z));
+    const FX = buildBF(team, progs, sit, z, A, posSets, upt, true);
+    cs = team.map((c,i)=>attackerCore(team, i, progs, A, enemy, S, sit, cx, FX, z));
     memo.set(key, cs); return cs;
   };
   const all = team.map(()=>true);
@@ -2973,26 +2978,30 @@ function dummySim(o){
   const cmax = S.comboCap>0 ? S.comboCap : Infinity;
   let combo = 0.75, af = 0, cw = 0, sbG = Math.min(50, 12.5*Math.max(o.light, o.shadow));
   const sbAct = S.sbPerAct!=null ? +S.sbPerAct : 2.5;
+  // 성도 게이지 충전 보너스(강화): 성도 각성한 캐릭터는 조건을 채운다고 보고 2배(설정으로 끔)
+  const sbRate = team.map((c,i)=> sbAct * (S.sbFillBonus!==false && c.stellar && progs[i] && progs[i].sbOK ? 2 : 1));
+  let sbAt = null, sb = 0, zOver = null; const sbPer = [];
   for(const a of afA.seq){
     const i = a.i, c = team[i];
     const buffOnly = cnt[i]===0 && c.buffAct;
+    const zNow = zOver || zoneAt(acted);
     if(!buffOnly){
-      const z = zoneAt(acted), co = coresAt(acted, z)[i];
-      if(co){ const d = applyZoneCap(co, z, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
+      const co = coresAt(acted, zNow)[i];
+      if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
         combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
     }
-    acted[i] = true; cnt[i]++; sbG += sbAct;
+    acted[i] = true; cnt[i]++; sbG += sbRate[i];
+    if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
+      sbAt = afA.seq.indexOf(a)+1;
+      const zSB = sbAw && sbz ? sbz : zNow, cs = coresAt(acted, zSB, 'sb');
+      for(const j of sbIdx){ const co = cs[j]; if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co); sb += d; per[j] += d; sbPer.push([j, d]); }
+      if(sbAw && sbz) zOver = sbz; // SB로 각성한 존은 남은 AF 동안
+    }
   }
-  const fin = Math.min(combo, cmax), zEnd = zoneAt(acted);
-  // SB: AF 안에서 SB 게이지가 차면 AF 끝 콤보로. SB로 각성하는 존이면 그 존으로
-  const sbOK = sbIdx.length>0 && sbG >= 100 - 1e-9;
-  const zSB = sbAw && sbz ? sbz : (sbz && sbz.level>0 ? sbz : zEnd);
-  const sbPer = sbOK ? sbIdx.map(i=>[i, applyZoneCap(sbCores[i], zSB, S, cap, fin)*fw(sbCores[i])]) : [];
-  const sb = sbPer.reduce((x,y)=>x+y[1],0);
-  sbPer.forEach(([i,v])=>{ per[i]+=v; });
-  return {total: af + sb, af, sb, afPer: per.map((v,i)=>v - (sbPer.find(x=>x[0]===i)||[0,0])[1]), per, n: cnt, avg: af>0 ? cw/af : 0.75, fin,
-    lv: nz && nz.level>=2 && zFrom0 ? 2 : (nz ? nz.level : 0), sbWhen: sbOK ? 'af' : null, sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && !sbOK,
-    acts: afA.seq.length, order: prio, ex: 0};
+  const fin = Math.min(combo, cmax);
+  return {total: af + sb, af, sb, afPer: per.map((v,i)=>v - sbPer.filter(x=>x[0]===i).reduce((q,x)=>q+x[1],0)), per, n: cnt, avg: af>0 ? cw/af : 0.75, fin,
+    sbCombo: sbAt!=null ? null : null, sbAt, lv: nz && nz.level>=2 && zFrom0 ? 2 : (nz ? nz.level : 0), sbWhen: sbAt!=null ? 'af' : null,
+    sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && sbAt==null, acts: afA.seq.length, order: prio, ex: 0};
 }
 /* 속성·공격 타입 지정: 지정과 맞는 공격만 화력으로 센다 */
 function focusMatch(co, f){
