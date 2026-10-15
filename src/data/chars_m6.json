@@ -398,7 +398,7 @@
   "tier": "",
   "score": 71,
   "roles": ["dps", "tank"],
-  "main": {"skill": "ツバメ返し", "target": "st", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "slash", "mult": 5, "size": "m", "hits": 2, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "랜덤 적 3~5회. 修羅の心 축적 수에 따라 효과 증가. 적 완력/속도 15%↓. 현현 시 疾駆刃嵐로도 修羅の心 축적, 도발 상태 적에 위력 증가 [알테마 대조(2026-10): 평턴 주력: ツバメ返し(무조건 중 5배 2회, 紅天狗 화속)]"},
+  "main": {"skill": "ツバメ返し", "target": "st", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "slash", "mult": 5, "size": "m", "hits": 2, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "랜덤 적 3~5회. 修羅の心 축적 수에 따라 효과 증가. 적 완력/속도 15%↓. 현현 시 疾駆刃嵐로도 修羅の心 축적, 도발 상태 적에 위력 증가 [알테마 대조(2026-10): 평턴 주력: ツバメ返し(무조건 중 5배 2회, 紅天狗 화속)]", "zone_set": true},
   "sb": null,
   "self_buff": {"pwr": 30, "int": 0, "spd": 0, "elem_atk": 50, "weapon_atk": 50, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "none", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},

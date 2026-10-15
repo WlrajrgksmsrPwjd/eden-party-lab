@@ -16,5 +16,8 @@
   "nonold": [{"f":["def"],"st":true}],
   "kuchinawa_as": [{"f":["def"],"st":true}],
   "fermina": [{"f":["def"],"st":true}],
-  "aldo": [{"f":["allres"],"when":{"sb":true}}]
+  "aldo": [{"f":["allres"],"when":{"sb":true}}],
+  "linaria": [{"f":["wres"],"st":true,"when":{"t":0.85}}],
+  "green_scythe_as": [{"f":["elres"],"st":true,"when":{"t":0.85}}],
+  "flammelapis_es": [{"f":["pres","wres"],"when":{"zone":["slash_magic"]},"e":0.5,"st":true}]
 }

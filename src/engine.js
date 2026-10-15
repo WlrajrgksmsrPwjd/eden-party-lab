@@ -259,7 +259,7 @@ const FG = {
   sf:['singular_focus'], mf:['mental_focus'], focus:['singular_focus','mental_focus'],
   ot:['overthrow'], eagle:['eagle_eyes'], oc:['over_crit'], mh:['multihit'], xhit:['extra_hit'],
   pierce:['barrier_pierce'], weak:['weak_dmg'], link:['link'],
-  kou:['crit_rate','over_crit','pwr_flat'], // 리나리아 巧撃: 크리율·오버크리·완력 고정값을 같은 조건으로
+  kou:['crit_rate','pwr_flat'], // 리나리아 巧撃: 크리율·완력 고정값을 같은 조건으로(오버크리는 オーソリゼーション에서 조건 없이)
   shinan:['shinan'], // 루나틱<심안>: 대미지 ×1.5, 약점 배율 +1 (딩 계산기 44·26행)
   kesshi:['kesshi'], // 루나틱<捨身>(결사): 대미지 ×1.7, 크리티컬 확정 (딩 계산기 44행)
   dmg:['dmg_up'],    // 주는 대미지 UP(기도·가창 등): 출처 종류마다 최댓값 하나, 종류끼리 곱
@@ -473,6 +473,7 @@ function prepChar(c){
     id:c.id, raw:c, name:c.name_kr, elem:(c.element&&c.element[0])||'none', elems:c.element||[], weapon:c.weapon, wt,
     align:c.align, stellar:!!c.stellar, tier:c.tier||'', score:c.score||0, roles:c.roles||[],
     main:c.main, sb:c.sb, afSk: c.af_skill || null,
+    zoneSet: !!((c.af_skill && c.af_skill.zone_set) || (!c.af_skill && c.main && c.main.zone_set)), // AF 행동 스킬이 자기 존을 전개(존은 하나뿐이라 기존 존을 덮어씀)
     // 횟수 제한 주력(main.uses, 예: 세스타(AS) 狼志 4): 다 쓰면 main.alt 로 (허수아비 AF 행동 단위에서만)
     mainAlt: c.main && c.main.uses && c.main.alt ? Object.assign({}, c.main, c.main.alt, {alt:null, uses:null}) : null,
     self:s, party:p, deb:d, sup:sp, tags:c.tags||[],
@@ -1720,7 +1721,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   let bestD = null;
   for(const zq of zc.slice(0, 4)){
     const zs2 = sameZ(res.normal.zones, zq), awC = zs2.some(q=>q.how!=='개전 자동' && q.how!=='SB 시'), awS = !awC && zs2.some(q=>q.how==='개전 자동');
-    const dd = dummySim({team, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow});
+    const dd = dummySim({team, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow, zcs:(res.normal.zones||[]).map(zAF)});
     if(!bestD || dd.total > bestD.total*1.0005) bestD = dd;
   }
   out.dummy = bestD;
@@ -1746,7 +1747,7 @@ function dummyPrio(team, progs){
   return team.map((_,i)=>i).sort((a,b)=>w[b]-w[a] || (team[a].id<team[b].id?-1:team[a].id>team[b].id?1:0)); // 같으면 id 순(편성 순서와 무관)
 }
 function dummySim(o){
-  const {team, progs, A, enemy, S, cx, posSets, cap, fw, nz, awStart, awConst, sbz, sbAw, sbIdx, sbCores} = o;
+  const {team, progs, A, enemy, S, cx, posSets, cap, fw, nz, awStart, awConst, sbz, sbAw, sbIdx, sbCores} = o, zcs = o.zcs || [];
   const n = team.length, prio = dummyPrio(team, progs);
   const passive = team.map(c=>c.buffHow==='passive'||c.buffHow==='auto');
   // ZONE: 개전 자동·상시 재각성은 처음부터, 그 밖엔 펼치는 사람이 행동한 뒤부터
@@ -1788,6 +1789,7 @@ function dummySim(o){
         combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
     }
     acted[i] = true; cnt[i]++; sbG += sbRate[i];
+    if(!buffOnly && c.zoneSet){ const zc = zcs.find(q=>q && q.by===c.id && q.level>0); const cur = zOver || zNow; if(zc && !(cur && cur.key===zc.key && cur.level>=zc.level)) zOver = zc; } // 존은 하나: 행동 스킬로 자기 존을 펴면 기존 존을 덮어씀(사용자 확인)
     if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
       sbAt = afA.seq.indexOf(a)+1;
       const zSB = sbAw && sbz ? sbz : zNow;

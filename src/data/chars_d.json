@@ -252,7 +252,7 @@
   "tier": "S",
   "score": 97,
   "roles": ["support", "zone"],
-  "main": {"skill": "サイキックジェム", "target": "st", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "mult": 20, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "월광진 전개 + 적아군 전체 뇌/음/정 속성 공격 50%UP, 화/수/풍/지 40%DOWN(5턴)"},
+  "main": {"skill": "サイキックジェム", "target": "st", "kind": "mag", "stat": "int", "element": "crystal", "weapon_type": "magic", "mult": 20, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "월광진 전개 + 적아군 전체 뇌/음/정 속성 공격 50%UP, 화/수/풍/지 40%DOWN(5턴)", "zone_set": true},
   "sb": null,
   "self_buff": {"pwr": 100, "int": 100, "spd": 100, "elem_atk": 150, "weapon_atk": 50, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "속성 대미지 100%(가창)는 뇌/음/정 속성 공격만. 攻奏(완력/지성 +100)는 오른쪽, 守奏(피해 20% 경감)는 왼쪽 인접", "pwr": 100, "int": 100, "spd": 100, "all_elem_atk": 0, "elem_atk": {"thunder": 150, "shade": 150, "crystal": 150}, "weapon_atk": {"all": 50}, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false, "pwr_flat": 100, "int_flat": 100},
