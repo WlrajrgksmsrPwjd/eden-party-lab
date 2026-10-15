@@ -556,10 +556,15 @@ const pglPRows = () => { const has = (x,k) => k==='all' ? E.PGL_ALL.includes(x) 
   const xs = [...E.PGL_ALL].sort((a,b)=>(E.PERS_KR[a]||a).localeCompare(E.PERS_KR[b]||b,'ko')).concat(Object.values(E.PGL_ELEMP));
   return xs.map(x=>({x, kr:E.PERS_KR[x]||x, cols:PGLP_COLS.map(([k])=>has(x,k))})); };
 const pglState = () => (state.pgl = state.pgl || {});
-function pglCount(){ let n=0; const P=state.pgl||{}; for(const w in P){ if(w==='_p') continue; for(const k in P[w]) if(P[w][k]>0) n++; } for(const x in (P._p||{})) for(const k in P._p[x]) if(P._p[x][k]>0) n++; return n; }
+function pglCount(){ let n=0; const P=state.pgl||{}; for(const w in P){ if(w==='_p'||w==='_a') continue; for(const k in P[w]) if(P[w][k]>0) n++; } for(const x in (P._p||{})) for(const k in P._p[x]) if(P._p[x][k]>0) n++; for(const k in (P._a||{})) if(P._a[k]>0) n++; return n; }
+/* 아군 전체 P글래(빌더 코어 '아군 전체'): 공명의 힘 천·명, 격진의 힘 <존>(일반 존), 극 격진의 힘 <존>(극 존 4종) */
+const PGLA_ROWS = [['r51_light','공명의 힘 <천>'],['r51_shadow','공명의 힘 <명>']]
+  .concat([['fire','불'],['water','물'],['earth','땅'],['wind','바람'],['thunder','번개'],['shade','그림자'],['crystal','결정'],['slash','베기'],['pierce','찌르기'],['blunt','타격'],['magic','마'],['slash_magic','참마'],['starsea','성해']].map(([z,n])=>['r50_'+z,`격진의 힘 <${n}>`]))
+  .concat([['crystal','결정'],['shade','그림자'],['thunder','번개'],['blunt','타격']].map(([z,n])=>['r49_'+z,`극 격진의 힘 <${n}>`]));
 /* 엔진 입력: 표시가 하나도 없으면 null(전부 있다고 가정). '2개 이상'은 셔틀 최대 수(4)로 */
 function pglInput(){ if(!pglCount()) return null; const o={}; for(const w of PGL_WEAP){ const r=(state.pgl||{})[w]||{}; o[w]={}; for(const [k] of PGL_COLS) o[w][k]= r[k]>=2 ? 2 : (r[k]||0); }
-  o._p={}; const PP=(state.pgl||{})._p||{}; for(const x in PP){ o._p[x]={}; for(const [k] of PGLP_COLS) o._p[x][k] = PP[x][k]>=2 ? 2 : (PP[x][k]||0); } return o; }
+  o._p={}; const PP=(state.pgl||{})._p||{}; for(const x in PP){ o._p[x]={}; for(const [k] of PGLP_COLS) o._p[x][k] = PP[x][k]>=2 ? 2 : (PP[x][k]||0); }
+  const PA=(state.pgl||{})._a||{}; o._a={}; for(const [k] of PGLA_ROWS) if(PA[k]>0) o._a[k]=PA[k]>=2?2:1; return o; }
 function renderPglTbl(){
   const t=$('#pglTbl'); if(!t) return;
   const P=state.pgl||{}, lab=['없음','1개','2개 이상'];
@@ -568,7 +573,16 @@ function renderPglTbl(){
   const t2=$('#pglTblP'); const PP=P._p||{};
   if(t2) t2.innerHTML = `<thead><tr><th scope="col">퍼스널리티</th>${PGLP_COLS.map(([k,n,s])=>`<th scope="col" title="${esc(n)}">${esc(s)}</th>`).join('')}</tr></thead><tbody>`
     + pglPRows().map(r=>`<tr><th scope="row">${esc(r.kr)}</th>${PGLP_COLS.map(([k,n],ci)=>{ if(!r.cols[ci]) return '<td class="na">·</td>'; const v=(PP[r.x]&&PP[r.x][k])||0; return `<td><button type="button" class="pgc v${v}" data-pp="${esc(r.x)}" data-pk="${k}" aria-label="${esc(n)} <${esc(r.kr)}>: ${lab[v]}">${v===0?'–':v===1?'1':'2+'}</button></td>`; }).join('')}</tr>`).join('') + '</tbody>';
+  const t3=$('#pglTblA'); const PA=P._a||{};
+  if(t3) t3.innerHTML = `<thead><tr><th scope="col">글래스터</th><th scope="col">보유</th></tr></thead><tbody>` + PGLA_ROWS.map(([k,n])=>{ const v=PA[k]||0; return `<tr><th scope="row">${esc(n)}</th><td><button type="button" class="pgc v${v}" data-pa="${k}" aria-label="${esc(n)}: ${lab[v]}">${v===0?'–':v===1?'1':'2+'}</button></td></tr>`; }).join('') + '</tbody>';
   const n=pglCount(); $('#pglN').textContent = n ? `${n}종 표시` : (settings().pglAssumeAll ? '표시 없음 · 전부 있다고 가정' : '표시 없음 · 셔틀 공유 없음');
+}
+/* 육성 수준(뉴비 옵션): 레벨 80/100, 글래스터 미개방, 아군 전체 P글래 없음, 전용 글래 일괄 */
+function renderGrow(){
+  const S=settings(); if(!$('#gLv')) return;
+  $('#gLv').value = S.lvMode==='80' ? '80' : 'auto'; $('#gGl').checked = !!S.glLocked; $('#gAura').checked = S.auraGl===false;
+  const t=[]; if(S.lvMode==='80') t.push('Lv80'); if(S.glLocked) t.push('글래 미개방'); else if(S.auraGl===false) t.push('아군 전체 P글래 없음');
+  $('#growN').textContent = t.length ? t.join(' · ') : '기본';
 }
 
 /* ---------- 결현현(결실 현현) 서약 ---------- */
@@ -1298,7 +1312,7 @@ function setupHtml(x, i){
     G.push(`<li>성도각성 없음 · 천명치는 120 배지 칸${dealer?' · 200 글래스터 4칸':''} · 255 전 스탯 <span class="hint">(현재 ${t})</span></li>`);
   }
   // 전용 글래스터
-  const g=o.g||'none', GK={none:'없음',vc:'상급(VC)',shin:'진',goku:'극'};
+  const g=o.g||'none', GK={none:'없음',sh:'수호성의 증표',vc:'상급(VC)',shin:'진',goku:'극'};
   if(c.zone && c.zoneAwak){
     const needGoku = zc && zc.unmet && zc.unmet.length && !(ev.sb.zone&&ev.sb.zone.by===c.id&&ev.sb.zone.level>=2&&ev.sb.zone.how!=='극 글래스터');
     G.push(`<li>${mark(needGoku ? g==='goku' : (g==='shin'||g==='goku'))} 전용 글래스터: <b>${needGoku?'극 권장':'진 이상'}</b>${needGoku?' — 극이면 조건 없이 개전 극존':' — 극존 조건은 편성으로 충족'} <span class="hint">(현재 ${GK[g]})</span></li>`);
@@ -1456,7 +1470,7 @@ function fcardHtml(f, k, r, cond){
 
 
 /* ---------- 목표 세팅 ---------- */
-const G_RANK={none:0,vc:1,shin:2,goku:3}, G_KR={none:'없음',vc:'상급(VC)',shin:'진',goku:'극'}, M_KR=['없음','현현','진현현'];
+const G_RANK={none:0,sh:0.5,vc:1,shin:2,goku:3}, G_KR={none:'없음',sh:'수호성의 증표',vc:'상급(VC)',shin:'진',goku:'극'}, M_KR=['없음','현현','진현현'];
 const BASE_OWN = ()=>({t:0,s:false,m:0,g:'none',gl:null});
 function planCtx(){
   const P=state.plan, boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
@@ -1676,7 +1690,7 @@ function rowHtml(c){
         <span class="tmbar" title="15·30·50·80 성도 포인트 / 200 글래스터 칸 / 255 전 스탯">${[15,30,50,80,200,255].map(v=>`<b style="left:${v/255*100}%"></b>`).join('')}<i style="width:${Math.min(t,255)/255*100}%"></i></span></span>
       <label><input type="checkbox" data-f="s" ${o.s?'checked':''} ${c.stellar?'':'disabled'}> 성도각성</label>
       <label>현현 <select data-f="m"><option value="0"${!o.m?' selected':''}>없음</option><option value="1"${o.m==1?' selected':''}>현현</option><option value="2"${o.m==2?' selected':''}>진현현</option></select></label>
-      <label>전용 글래 <select data-f="g">${[['none','없음'],['vc','상급(VC)'],['shin','진'],['goku','극']].map(([v,l])=>`<option value="${v}"${(o.g||'none')===v?' selected':''}>${l}</option>`).join('')}</select></label>
+      <label>전용 글래 <select data-f="g">${[['none','없음'],['sh','수호성의 증표'],['vc','상급(VC)'],['shin','진'],['goku','극']].map(([v,l])=>`<option value="${v}"${(o.g||'none')===v?' selected':''}>${l}</option>`).join('')}</select></label>
       <label>공격 글래 <select data-f="gl">${Object.entries(GL_PRESETS).map(([k,p])=>`<option value="${k}"${gk===k?' selected':''}>${p.label}</option>`).join('')}</select></label>
       <label title="잠재 광석: 장착 캐릭터가 공격으로 독·페인을 직접 부여"><input type="checkbox" data-f="ore" ${o.gl&&o.gl.ore?'checked':''} ${o.gl?'':'disabled'}> 잠재 광석</label>
       <span class="badge">${t>=200?'글래 4칸':'글래 3칸'}</span>${warn}
@@ -1948,7 +1962,18 @@ function bind(){
   $('#pglTblP').addEventListener('click',e=>{ const b=e.target.closest('[data-pp]'); if(!b) return; const P=pglState(), x=b.dataset.pp, k=b.dataset.pk; const Q=P._p=P._p||{};
     Q[x]=Q[x]||{}; Q[x][k]=(((Q[x][k]||0)+1)%3); if(!Q[x][k]) delete Q[x][k]; if(!Object.keys(Q[x]).length) delete Q[x]; if(!Object.keys(Q).length) delete P._p;
     touchRoster(); renderPglTbl(); const nb=$(`#pglTblP [data-pp="${x}"][data-pk="${k}"]`); if(nb) nb.focus(); });
+  $('#pglTblA').addEventListener('click',e=>{ const b=e.target.closest('[data-pa]'); if(!b) return; const P=pglState(), k=b.dataset.pa; const Q=P._a=P._a||{};
+    Q[k]=(((Q[k]||0)+1)%3); if(!Q[k]) delete Q[k]; if(!Object.keys(Q).length) delete P._a;
+    touchRoster(); renderPglTbl(); const nb=$(`#pglTblA [data-pa="${k}"]`); if(nb) nb.focus(); });
   $('#pglClear').addEventListener('click',()=>{ state.pgl={}; touchRoster(); renderPglTbl(); });
+  const growSet = (k, v) => { if(v===undefined) delete state.settings[k]; else state.settings[k]=v; cap=E.computeCap(prepped, settings()); touchRoster(); renderGrow(); renderRoster(); };
+  $('#gLv').addEventListener('change',e=>growSet('lvMode', e.target.value==='80' ? '80' : undefined));
+  $('#gGl').addEventListener('change',e=>growSet('glLocked', e.target.checked || undefined));
+  $('#gAura').addEventListener('change',e=>growSet('auraGl', e.target.checked ? false : undefined));
+  $('#gSpecial').addEventListener('click',e=>{ const b=e.target.closest('[data-gs]'); if(!b) return; const g=b.dataset.gs; let n=0;
+    for(const id in state.owned){ const o=state.owned[id]; if(!o) continue; o.g=g; n++; }
+    if(!n){ flash('보유한 캐릭터가 없습니다.'); return; } touchRoster(); renderRoster(); flash(`보유 ${n}명 전용 글래를 ${G_KR[g]}(으)로 바꿨습니다`); });
+  renderGrow();
   $('#budGrid').addEventListener('change',e=>{ const k=e.target.dataset.bud; if(!k) return; state.buddies=state.buddies||{}; if(e.target.checked) state.buddies[k]=true; else delete state.buddies[k]; touchRoster(); renderBudGrid(); renderPlanControls(); });
   renderBudGrid(); renderPglTbl();
   // 성향 직접 조절

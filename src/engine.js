@@ -42,6 +42,8 @@ const DEFAULT_SETTINGS = {
   dummyMule: true,   // 최고점(허수아비)은 후열 연성 P글래 셔틀을 가정(보유 표시가 있으면 그것만)
   afRepAnim: 0.5,    // AF 중 재공격(한 행동 안에서 이어 치기) 1회의 연출 시간 = 기본 연출 × 이 값
   auraGl: true,      // 후열 셔틀이 아군 전체 글래(공명의 힘 <천/명> 51행, 격진의 힘 <존> 50행)를 단다고 가정 (빌더 코어 기준)
+  lvMode: 'auto',    // 레벨: 'auto' = 성도각성 캐릭터는 천명치 15·30·50·80마다 최대 레벨 +5(Lv100까지, 6스탯 +1/레벨), '80' = 전원 Lv80·성도각성 없음(뉴비)
+  glLocked: false,   // 글래스터 미개방(뉴비): 공격·전용 글래스터·셔틀 P글래·아군 전체 글래 모두 없음
   comboCap: 0,       // AF 콤보 배율 상한(배). 0이면 없음 — 위키 Another Force/Combo에 상한 없음
   afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
   useStats: true,    // 캐릭터 기본 스탯(위키 Stats Index)으로 주 스탯 대미지·운 크리율·속도 반영
@@ -64,7 +66,10 @@ const DEFAULT_SETTINGS = {
   mulePct: 0.3       // 공유 1칸당 대미지 (속성 글래스터와 같은 가산 그룹)
 };
 const WEAPON_PERS = {sword:'剣', katana:'刀', ax:'斧', lance:'槍', bow:'弓', fist:'拳', hammer:'槌', staff:'杖'};
-const SPECIAL_GRASTA = {none:1, vc:1.03, shin:1.07, goku:1.12};
+const SPECIAL_GRASTA = {none:1, sh:1.02, vc:1.03, shin:1.07, goku:1.12}; // sh = 수호성의 증표(6스탯 +5, 빌더 기본 특수칸 대신)
+/* 성도각성 레벨: 스텔라 보드 'Max Level +5' 4칸(천명 15·30·50·80에서 SP) → Lv80→100. 6스탯은 레벨당 +1, MP는 약 +1.9%/레벨(위키·game-info 5명 대조) */
+const LV_STEPS = [15, 30, 50, 80];
+const lvBonusOf = (t, awake) => awake ? 5*LV_STEPS.filter(x=>(+t||0)>=x).length : 0;
 const MANIFEST = [1, 1.08, 1.15];
 /* 정신통일(마법)·심기일체(물리): 딩 계산기 30행 = 최대 MP × 계수(마법 0.23, 물리 0.16)%, 최대 250%.
    호시탐탐(31행)·하극상(32행, 대상 레벨²÷계수, 최대 100%)은 값 그대로. 셋은 한 묶음 감쇠(최대 +350%) */
@@ -539,13 +544,14 @@ function teamDifficulty(team){
    천명치 t: 단계 보너스(fate_tbl) 합 + 255에서 힘·지성·속도·내구·정신·운 +10 */
 const STAT_ORDER = ['hp','mp','pwr','int','spd','end','spr','lck'];
 const STAT_FATE_KEY = {lck:'luck'};
-function statsAt(stats, tbl, t, board){
+function statsAt(stats, tbl, t, board, lvB){
   if(!Array.isArray(stats) || stats.length!==8) return null;
   const o = {}, bs = board && board.stats || null;
   STAT_ORDER.forEach((k,i)=>{ let v = stats[i];
     if(tbl) for(const [lv,d] of tbl) if(t>=lv) v += (d[STAT_FATE_KEY[k]||k]||0);
     if(t>=255 && i>=2) v += 10;
     if(bs) v += (bs[k]||0) + (i>=2 ? (bs.all||0) : 0); // 성도각성 스텔라 보드 스탯(全能力 = HP·MP 외)
+    if(lvB>0){ if(i>=2) v += lvB; else if(i===1) v = Math.round(v*(1+0.019*lvB)); else v = Math.round(v*(1+0.015*lvB)); } // Lv80 → 80+lvB
     o[k] = v; });
   return o;
 }
@@ -560,7 +566,8 @@ const gearSpdOf = (pc, S) => (S && S.gearSpd!=null && S.gearSpd!=='') ? (+S.gear
 function charStats(pc, own, S){
   const t = own ? (+own.t||0) : 0;
   const b = own && own.build, bst = b && !isBuilderDefault(b.st) ? b.st : null;
-  const wiki = S && S.useStats===false ? null : statsAt(pc.stats, pc.fateTbl, t, pc.stellar && own && own.s ? pc.stBoard : null);
+  const aw = !!(pc.stellar && own && own.s && !(S && S.lvMode==='80'));
+  const wiki = S && S.useStats===false ? null : statsAt(pc.stats, pc.fateTbl, t, aw ? pc.stBoard : null, lvBonusOf(t, aw));
   if(!wiki && !bst) return null;
   const nk = bst ? {pwr:+bst.str, int:+bst.int, spd:+bst.spd, lck:+bst.luck, mp:+bst.mp} : wiki;
   const spdB = b && b.spdTot ? +b.spdTot : (nk.spd + gearSpdOf(pc, S));
@@ -569,7 +576,9 @@ function charStats(pc, own, S){
 
 /* ---------- 계정 상태(보유/육성) 반영 ---------- */
 function charProg(pc, own, S){
-  // own: {t:천명치, s:성도각성, m:현현 0/1/2, g:'none'|'vc'|'shin'|'goku', gl:공격 글래스터 배치|null}
+  // own: {t:천명치, s:성도각성, m:현현 0/1/2, g:'none'|'sh'|'vc'|'shin'|'goku', gl:공격 글래스터 배치|null}
+  if(own && S && S.lvMode==='80' && own.s) own = Object.assign({}, own, {s:false}); // 뉴비: 전원 Lv80 = 성도각성 없음
+  if(own && S && S.glLocked) own = Object.assign({}, own, {g:'none', gl:{mode:'none'}}); // 뉴비: 글래스터 미개방
   const t = own ? (+own.t||0) : 0;
   let f = 1, sbOK = false, sbMul = 1;
   const slots = t>=200 ? 4 : 3;
@@ -601,7 +610,7 @@ function charProg(pc, own, S){
   // q: 장비 완성도 (이 빌드에 맞는 파티 상황에서 최적 장비 대비 화력 비율)
   if(b && b.q>0){ gear = {q:Math.max(0.2, Math.min(1.1, +b.q)), ps:Array.isArray(b.ps)?b.ps:[]}; glx = {mode:'auto'}; }
   // 속도: 빌드 코드의 장비 포함 속도 > 빌드에 넣은 캐릭터 스탯 > 위키 기본 스탯(+장비 속도 설정)
-  return {f, sbOK, sbMul, goku: g==='goku', t, slots, gl:glx, gear, D,
+  return {f, sbOK, sbMul, goku: g==='goku', t, slots, gl:glx, gear, D, lvB: lvBonusOf(t, !!(pc.stellar && own && own.s)),
     spd: cs ? cs.spd : 0, spdSrc: cs ? cs.spdSrc : null, lck, msV, ms};
 }
 
@@ -807,7 +816,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const FK = stat==='int'?'int_flat':stat==='spd'?'spd_flat':'pwr_flat';
   let flatP = +me[FK]||0;
   // 루나틱<솔선(挺身)>: 처음 내구만큼 힘, 처음 정신만큼 지성(상태 효과 고정값, 딩 계산기 14·15행). 표준 장비엔 내구·정신이 없어 캐릭터 기본값(천명·스텔라 보드 포함)만
-  if(c.teishin && stat!=='spd'){ const p0 = progs[idx]; const s0 = statsAt(c.stats, c.fateTbl, p0 ? (p0.t||0) : 120, c.stellar && p0 && p0.sbOK ? c.stBoard : null); if(s0) flatP += stat==='int' ? s0.spr : s0.end; }
+  if(c.teishin && stat!=='spd'){ const p0 = progs[idx]; const s0 = statsAt(c.stats, c.fateTbl, p0 ? (p0.t||0) : 120, c.stellar && p0 && p0.sbOK ? c.stBoard : null, p0 ? p0.lvB||0 : 0); if(s0) flatP += stat==='int' ? s0.spr : s0.end; }
   let ocW = me.over_crit?1:0, mhW = me.multihit?1:0, xW = me.extra_hit?1:0, pierceW = (sk.barrier_pierce||me.barrier_pierce)?1:0;
   const fKey = kind==='phys' ? 'singular_focus' : 'mental_focus';
   let focW = me[fKey]?1:0, otW = me.overthrow?1:0, eaW = me.eagle_eyes?1:0;
@@ -982,8 +991,8 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let auraF = 1, auraR = null;
   if(plan){ if(plan.r51>0 || plan.r50>0){ auraF = (1+plan.r50)*(1+plan.r51); auraR = {r50:plan.r50, r51:plan.r51, nb:plan.nb}; dmg *= auraF; } }
   else if(A.aura && A.aura.nb>0){ const au=A.aura, zk = zone && zone.level>0 ? (zone.key||'') : ''; // 셔틀 배분이 없을 때: 종류마다 1개(사용자 확인) — 공명의 힘 <많은 쪽> → 격진의 힘 <존> 또는 공명의 힘 <적은 쪽>
-    let r51 = 0.05*au.nMaj, r50 = 0;
-    if(zk && AURA_Z.has(zk)) r50 = 0.15; else if(au.nMin>0) r51 += 0.05*au.nMin;
+    let r51 = auraCap(au, 'r51_'+au.maj)>0 ? 0.05*au.nMaj : 0, r50 = 0; const mn = au.maj==='light' ? 'shadow' : 'light';
+    if(zk && AURA_Z.has(zk) && auraCap(au, 'r50_'+auraZK(zk))>0) r50 = 0.15; else if(au.nMin>0 && auraCap(au, 'r51_'+mn)>0) r51 += 0.05*au.nMin;
     auraF = (1+r50)*(1+r51); auraR = {r50, r51, nb:au.nb}; dmg *= auraF; }
   if(pr.gear) dmg *= pr.gear.q; // 빌드 코드: 장비 완성도
 
@@ -1029,7 +1038,7 @@ function condP(cd, sit, team, c, A, zone, enemy, el, progs){
   // 스탯 비례 위력: {stat:'spr', full:500, buff:0.5, sum:'front'} — 기본 스탯(천명치 반영)·버프로 최대치 대비 비율
   if(cd.af_p!=null && sit!=='normal') return Math.max(0, Math.min(1, +cd.af_p)); // AF·SB(허수아비 1턴) 때 충족 비율을 직접 지정(축적이 AF 중 안 늘거나 개전 축적량이 정해진 경우)
   if(cd.noaf) return sit==='normal' ? 1 : 0;
-  if(cd.stat){ const k=cd.stat, val = m=>{ const j=team.indexOf(m), pr=progs&&progs[j]; const st=statsAt(m.stats, m.fateTbl, pr?(pr.t||0):120, m.stellar && pr && pr.sbOK ? m.stBoard : null); return st ? st[k] : (+cd.dflt||170); };
+  if(cd.stat){ const k=cd.stat, val = m=>{ const j=team.indexOf(m), pr=progs&&progs[j]; const st=statsAt(m.stats, m.fateTbl, pr?(pr.t||0):120, m.stellar && pr && pr.sbOK ? m.stBoard : null, pr ? pr.lvB||0 : 0); return st ? st[k] : (+cd.dflt||170); };
     const v = cd.sum==='front' ? team.reduce((a,m)=>a+val(m),0) : val(c);
     return Math.min(1, v*(1+(+cd.buff||0))/Math.max(1,+cd.full||500)); }
   if(cd.zone){ const ok = zoneMatch(cd.zone, zone) && (!cd.zlv || (zone && zone.level>=cd.zlv)); return ok?1:0; }
@@ -1174,7 +1183,7 @@ function simTeam(team, progs, S){
    자동 가정: 주딜 무기 퍼스널리티의 후열 셔틀(인원 서약 반영) + 같은 퍼스널리티의 전열 서포터(딜러 아님)의 글래스터 칸.
    칸 배분은 받는 캐릭터마다 가장 이득인 조합(존이 깔려 있으면 존 계 P글래를 섞는 쪽이 보통 이득). */
 function muleShare(team, S, ctx, progs){
-  if(S.muleOn===false) return null;
+  if(S.muleOn===false || S.glLocked) return null;
   let mules = ctx && ctx.mules && ctx.mules.length ? ctx.mules : null, auto=false, wp=null, front=[];
   if(!mules){
     if(S.muleAuto===false) return null;
@@ -1268,6 +1277,9 @@ const PGL_HPLOW = ['未来革命家'];                               // HP低下
 const PGL_ELEMP = {fire:'火',water:'水',earth:'地',wind:'風',thunder:'雷',shade:'陰',crystal:'晶'}; // HP最大時強化 <속성>: 같은 속성 파티원 +10%(잠재)
 const PGL_ELKR = {fire:'폭염의 힘',water:'격류의 힘',earth:'격진의 힘',wind:'열풍의 힘',thunder:'분뇌의 힘',shade:'검은 그림자의 힘',crystal:'결정의 힘',none:'허공의 힘'};
 const AURA49 = {thunder:{el:'thunder',v:30}, shade:{el:'shade',v:30}, crystal:{el:'crystal',v:30}, blunt:{el:'all',v:20}}; // 극 격진의 힘 <존>: 49행 +15% + 아군 전체 속성 공격
+/* 아군 전체 P글래 보유(보유 탭 표 _a): 한 칸이라도 표시했으면 표시한 것만(개수), 표시가 없으면 종류마다 1개 가정(사용자 확인: 공명의 힘 천/명을 안 가진 사람도 있음) */
+const auraZK = z => z==='stellar_sea'||z==='星海陣' ? 'starsea' : z;
+function auraCap(au, k){ const a = au && au.inv && au.inv._a; if(!a || !Object.values(a).some(v=>+v>0)) return 1; return Math.min(2, +a[k]||0); }
 /* 셔틀 칸 배분(파티 단위 탐욕): 종류마다 보유 수만큼, 장착 조건이 맞는 셔틀 칸에, 받는 사람들의 대미지 비중(pow)으로 가중한 이득이 큰 것부터.
    속성·HP 계는 공격 글래스터 속성 묶음과 합(35~37행), 각성의 힘은 49행 합, 공명의 힘 51행·격진의 힘 50행은 아군 전체(행끼리 곱) */
 function pglPlan(team, progs, A, S, zone){
@@ -1301,10 +1313,11 @@ function pglPlan(team, progs, A, S, zone){
   for(const el in PGL_ELEMP){ const x = PGL_ELEMP[el]; if(allP.has(x)) add({id:'HE:'+x, label:`HP 최대 시 강화<${PERS_KR[x]||x}>`, kind:'add', v:10, carrier:x, cap:capP(x,'hp'), recv: idxs(r=>r.pers.has(x) && !r.hpLow)}); }
   let r51=0, r50=0; const au = A.aura;
   if(au){ const all = R.map((r,i)=>i), zkey = zone && zone.level>0 ? (zone.key||'') : '';
-    add({id:'R51:maj', label:'공명의 힘<많은 쪽 천/명>', kind:'r51', v:0.05*au.nMaj, carrier:null, cap:1, recv:all});
-    if(au.nMin>0) add({id:'R51:min', label:'공명의 힘<적은 쪽 천/명>', kind:'r51', v:0.05*au.nMin, carrier:null, cap:1, recv:all});
-    if(zkey && AURA_Z.has(zkey)) add({id:'R50:'+zkey, label:`격진의 힘<${ZONE_KR[zkey]||zkey}>`, kind:'r50', v:0.15, carrier:null, cap:1, recv:all});
-    if(zOn && AURA49[zkey]){ const a=AURA49[zkey]; add({id:'R49:'+zkey, label:`극 격진의 힘<${ZONE_KR[zkey]||zkey}>`, kind:'r49', v:15, ev:a.v, carrier:null, cap:1, recv:all, erecv: idxs(r=> a.el==='all' ? r.el!=='none' : r.el===a.el)}); }
+    const mn = au.maj==='light' ? 'shadow' : 'light', AK = {light:'천', shadow:'명'};
+    add({id:'R51:'+au.maj, label:`공명의 힘<${AK[au.maj]}>`, kind:'r51', v:0.05*au.nMaj, carrier:null, cap:auraCap(au, 'r51_'+au.maj), recv:all});
+    if(au.nMin>0) add({id:'R51:'+mn, label:`공명의 힘<${AK[mn]}>`, kind:'r51', v:0.05*au.nMin, carrier:null, cap:auraCap(au, 'r51_'+mn), recv:all});
+    if(zkey && AURA_Z.has(zkey)) add({id:'R50:'+zkey, label:`격진의 힘<${ZONE_KR[zkey]||zkey}>`, kind:'r50', v:0.15, carrier:null, cap:auraCap(au, 'r50_'+auraZK(zkey)), recv:all});
+    if(zOn && AURA49[zkey]){ const a=AURA49[zkey]; add({id:'R49:'+zkey, label:`극 격진의 힘<${ZONE_KR[zkey]||zkey}>`, kind:'r49', v:15, ev:a.v, carrier:null, cap:auraCap(au, 'r49_'+zkey), recv:all, erecv: idxs(r=> a.el==='all' ? r.el!=='none' : r.el===a.el)}); }
   }
   // 셔틀 칸: 고정 셔틀이면 그 캐릭터 퍼스널리티. 자동 가정이면 후열 셔틀마다 무기 퍼스널리티 하나(예: 도 셔틀 + 도끼 셔틀, 사용자 확인: 이런 조합의 정배),
   // 무기 P글래는 그 무기 셔틀만, 그 밖의 퍼스널리티 P글래·아군 전체 글래는 어느 셔틀이든 단다고 본다. 셔틀 무기 조합은 이득이 가장 큰 쪽으로 고른다
@@ -1618,7 +1631,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   A.painAny = A.inf.poison>0 || A.inf.pain>0;
   A.mule = muleShare(team, S, ctx, progs);
   { const nb = ctx && ctx.maxBack!=null ? ctx.maxBack : 2, lt = team.filter(c=>c.align==='light').length, sh = team.length-lt;
-    A.aura = S.auraGl===false ? null : {nb, nMaj: Math.max(lt, sh) + nb, nMin: Math.min(lt, sh)}; } // 후열은 많은 쪽 성향으로 가정
+    A.aura = S.auraGl===false || S.glLocked ? null : {nb, nMaj: Math.max(lt, sh) + nb, nMin: Math.min(lt, sh), maj: lt>=sh ? 'light' : 'shadow', inv: ctx && ctx.pgl || null}; } // 후열은 많은 쪽 성향으로 가정
   const light = team.filter(c=>c.align==='light').length, shadow = team.length-light;
   const flux = light>shadow?'light':shadow>light?'shadow':'both';
   const hasSB = team.some((c,i)=>c.stellar && progs[i].sbOK);

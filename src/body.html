@@ -158,7 +158,24 @@
       <div class="pglwrap"><table class="pgltbl" id="pglTbl"></table></div>
       <p class="hint" style="margin-bottom:0"><b>그 밖의 퍼스널리티·속성</b> — 전능의 힘(모든 속성 공격 +25%), HP 최대 시 강화(+30%, 속성은 +10%), 각성의 힘(+5%), HP 저하 시 강화(+40%)</p>
       <div class="pglwrap"><table class="pgltbl" id="pglTblP"></table></div>
+      <p class="hint" style="margin-bottom:0"><b>아군 전체 P글래</b> — 공명의 힘 &lt;천·명&gt;(그 성향 아군 1명당 +5%), 일반 존 격진의 힘 &lt;존&gt;(그 존 전개 시 +15%), 극 존 극 격진의 힘 &lt;존&gt;(극존 시 +15%·속성 공격 +30%). 이 표에 하나도 표시하지 않으면 종류마다 1개 있다고 봅니다.</p>
+      <div class="pglwrap"><table class="pgltbl" id="pglTblA"></table></div>
       <p><button type="button" class="btn small" id="pglClear">표시 전부 지우기</button></p>
+    </details>
+    <details class="fold quick" id="growFold">
+      <summary>육성 수준 (뉴비 옵션) <span class="num" id="growN">기본</span></summary>
+      <p class="hint">아직 키우는 중이면 여기서 맞춰 두세요. 덱 추천과 대미지 계산이 이 조건으로 바뀝니다.</p>
+      <div class="growgrid">
+        <label class="lbl" for="gLv">레벨</label>
+        <select id="gLv"><option value="auto">성도각성 캐릭터는 천명치에 따라 Lv100까지 (기본)</option><option value="80">전원 Lv80 · 성도각성 없음</option></select>
+        <label class="lbl" for="gGl">글래스터</label>
+        <label class="checkrow" style="align-items:center"><input type="checkbox" id="gGl"> 아직 미개방 (공격·전용 글래스터, 셔틀 P글래 모두 없음)</label>
+        <label class="lbl" for="gAura">아군 전체 P글래</label>
+        <label class="checkrow" style="align-items:center"><input type="checkbox" id="gAura"> 하나도 없음 (공명의 힘·격진의 힘·극 격진의 힘)</label>
+        <span class="lbl">전용 글래 일괄</span>
+        <span class="btnrow" id="gSpecial"><button type="button" class="btn small" data-gs="none">전원 없음</button> <button type="button" class="btn small" data-gs="sh">수호성의 증표</button> <button type="button" class="btn small" data-gs="shin">진</button> <button type="button" class="btn small" data-gs="goku">극</button></span>
+      </div>
+      <p class="hint">레벨: 성도각성하면 스텔라 보드의 최대 레벨 +5 네 칸(천명치 15·30·50·80)으로 Lv100까지 오르고, 레벨당 힘·지성·속도·내구·정신·운 +1, MP는 약 +1.9%입니다. 전용 글래 일괄은 보유한 캐릭터 전원을 한 번에 바꾸고, 캐릭터마다 아래 목록에서 따로 바꿀 수 있습니다. 수호성의 증표는 6스탯 +5입니다.</p>
     </details>
     <details class="fold quick" id="quickFold">
       <summary>이름으로 한 번에 체크</summary>

@@ -1,5 +1,5 @@
 {
-  "_doc": "캐릭터 기본 스탯(레벨 최대, 천명치 0, 장비 없음). 순서 hp,mp,pwr,int,spd,end,spr,lck. 천명치 단계 보너스는 fate.json, 천명치 255에서 힘·지성·속도·내구·정신·운 +10. 출처: anothereden.wiki Stats Index (2026-10-14, 사용자 제공 PDF). 영문 이름 대응은 천명 보너스 순서로 검증",
+  "_doc": "캐릭터 기본 스탯(Lv80, 천명치 0, 장비 없음 — game-info Lv80 행과 일치). 성도각성 Lv100은 엔진이 레벨당 6스탯 +1·MP 약 +1.9%로 더함. 순서 hp,mp,pwr,int,spd,end,spr,lck. 천명치 단계 보너스는 fate.json, 천명치 255에서 힘·지성·속도·내구·정신·운 +10. 출처: anothereden.wiki Stats Index (2026-10-14, 사용자 제공 PDF). 영문 이름 대응은 천명 보너스 순서로 검증",
   "_order": ["hp","mp","pwr","int","spd","end","spr","lck"],
   "akane": [3363,494,235,137,232,150,155,192],
   "akanesode_no_tabishonin": [3444,413,228,174,185,182,190,142],
