@@ -1108,6 +1108,17 @@ function debuffSummary(c){
 }
 const SUP_KR={heal:'회복',barrier:'배리어',cleanse:'해제',guard:'수호',taunt:'도발',status_immune:'상태이상 무효',mp_recover:'MP 회복'};
 function whoHas(team, f){ return team.filter(f).map(c=>c.name); }
+/* 부활·전투불능 방지(data/revive.json): 등급 높은 순으로 이름(가장 센 효과 — 종류·시점) */
+const RV_W = {any:'평소', auto:'자동', sb:'SB 때', once:'전투 중 1회', stack:'축적 후'};
+function reviveTxt(team){
+  const xs = team.filter(c=>(+c.sup.revive||0)>=0.5).sort((a,b)=>(+b.sup.revive||0)-(+a.sup.revive||0));
+  return xs.map(c=>{
+    const fx = (c.sup.reviveFx||[]).filter(e=>e.t!=='self');
+    const top = fx.find(e=>e.k==='prevent' && (e.w==='any'||e.w==='auto')) || fx.find(e=>e.w==='any'||e.w==='auto') || fx[0];
+    if(!top) return esc(c.name);
+    return `${esc(c.name)}(${esc(top.s ? top.s.replace(/[（(【].*$/,'').trim() : '')}${top.s?' — ':''}${top.k==='prevent'?'쓰러지기 전 방지':'부활'}${RV_W[top.w]?' · '+RV_W[top.w]:''})`;
+  }).join(', ');
+}
 function turnPlanHtml(x, boss){
   const team=x.team, ev=x.ev, ex=x.ex, sbz=ev.sb.zone, nz=ev.normal.zone;
   const sum=a=>a.reduce((q,v)=>q+v,0)||1;
@@ -1181,7 +1192,7 @@ function turnPlanHtml(x, boss){
   // 유지·생존
   const o4=[];
   for(const k of ['heal','barrier','cleanse','guard','status_immune']){ const w=whoHas(team,c=>(c.sup[k]||0)>=2); if(w.length) o4.push(`${SUP_KR[k]}: ${w.map(esc).join(', ')}`); }
-  if(team.some(c=>c.sup.revive)) o4.push(`부활: ${whoHas(team,c=>c.sup.revive).map(esc).join(', ')}`);
+  const rvT = reviveTxt(team); if(rvT) o4.push(`부활·전투불능 방지: ${rvT}`);
   if(!o4.length) o4.push('<span class="ng">회복·배리어 담당이 약함 → 후열 교대로 보강</span>');
   const sim = ev.sim;
   if(sim){
@@ -1203,7 +1214,8 @@ function turnPlanHtml(x, boss){
     const healer = whoHas(team,c=>(c.sup.heal||0)>=2).map(esc);
     const res = (x.reserves||[]).map(c=>esc(c.name));
     const pick=(arr,alt)=>arr.length?arr.join(', '):`<span class="ng">없음</span>${alt?` → ${alt}`:''}`;
-    const guardRule = ()=>`대비: ${pick(guard)} 배리어·수호, ${pick(healer)} 회복으로 HP 채워 두기`;
+    const rvB = reviveTxt(team);
+    const guardRule = ()=>`대비: ${pick(guard)} 배리어·수호, ${pick(healer)} 회복으로 HP 채워 두기${rvB?` · 쓰러져도 ${rvB}`:''}`;
     const RULES=[
       [/소환|분신|부하/, ()=>`전체 공격으로 소환체부터 정리: ${pick(aoe)}`],
       [/피격 1회|연격|다단|스택.*(감소|깎)/, ()=>`연타로 스택 깎기: ${pick(multi,'후열 다단 캐릭터 교대')}`],

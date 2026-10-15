@@ -24,7 +24,7 @@
     "stat": "pwr",                     // pwr / int / spd
     "element": "fire",
     "weapon_type": "blunt",            // slash pierce blunt magic
-    "mult": 15,                        // 위력 배수 (특대=1x 기준으로 "威力15倍" 이면 15, "極大"는 1.25, 표기 없으면 1)
+    "mult": 15,                        // 위력 배수 (특대=1x 기준으로 "威力15倍" 이면 15, "極大"는 1.25, 표기 없으면 1). 크기×배율은 스킬 한 번의 전체 위력(타수 합) — 1타 = ÷ hits
     "size": "xl",                      // s m l xl xxl (威力 小中大特大極大 -> s m l xl xxl)
     "hits": 3,
     "repeat": 1,                       // 재공격/재행동 횟수 (없으면 0). 조건 있으면 condition에 기술
@@ -196,3 +196,12 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 # 스텔라 보드 (`stellar.json`)
 
 키 = 캐릭터 id. `stats`: 성도각성 스텔라 보드 스탯 합계(hp mp pwr int spd end spr lck, `all` = HP·MP 외 전 스탯). 성도각성한 캐릭터의 기본 스탯에 더한다(자료가 있으면 천명 30·50·80 근사 배율은 쓰지 않음). `fill`: 天冥 어빌리티(행동할 때 쌓이는 天/冥의 힘 증가 = SB 게이지 충전 보너스) 조건, parseReq 형식(`align`·`pers`). 조건이 안 맞으면 충전 보너스 없음. `tenmei`: 원문 요약.
+
+## revive.json
+키 = 캐릭터 id, 값 = `{"g": 등급 0~3, "fx": [{"k": "revive|prevent", "t": "all|front|single|back|self", "w": "any|auto|sb|once|stack|null", "s": "스킬 이름", "c": "조건"}]}`. g = 3×min(1, 최고 효과 + 0.3×둘째), 효과값 = 종류(부활 0.8·방지 1.0) × 대상(전체 1·한 명 0.6·후열만 0.3·자신 0.25) × 시점(평소·턴 자동 1, 개전 1회 0.7, SB 0.55, 1회 0.45, 축적 0.35, 미상 0.4). 빌드 때 `c.revive`로, 엔진 `sup.revive`(숫자)·`sup.reviveFx`.
+
+## lunatic.json
+`teishin`: 루나틱<솔선(挺身)> 캐릭터 id → 출처. 엔진은 자신의 기본 내구(힘 공격)·정신(지성 공격)을 고정값으로 더함.
+
+## inflict.json `dummy`
+허수아비 1턴에서 독·페인이 걸리는 시점: `start`(개전 자동), `start_sb`(성도보드 개전 자동 — 성도각성 시만), `main`(주력 공격 뒤), `skill`(주력이 아닌 스킬, AF 행동 한 번 필요).

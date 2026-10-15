@@ -441,7 +441,7 @@ function skillPow(sk){
   let m = Math.max(sk.mult||1,1);
   if(sk.mcond){ const b=Math.max(0.1, sk.mcond.base!=null?+sk.mcond.base:1); m = b + (m-b)*0.6; }
   else if(isCharge(sk.condition) && m>=30){ m*=0.4; if(m>25) m=25+(m-25)*0.2; }
-  return sv*m*Math.max(1, sk.hits||1)*(1+(sk.repeat||0)*0.7); // 배율은 1타당 → 타수만큼
+  return sv*m*(1+(sk.repeat||0)*0.7); // 크기×배율 = 스킬 전체 위력(타수 합)
 }
 function prepChar(c){
   // 요격 세팅 스킬이 주력기로 잡힌 경우: 반격 화력은 요격으로 따로 세므로 주력기 자체 배율은 1로
@@ -478,7 +478,9 @@ function prepChar(c){
     zoneSet: !!((c.af_skill && c.af_skill.zone_set) || (!c.af_skill && c.main && c.main.zone_set)), // AF 행동 스킬이 자기 존을 전개(존은 하나뿐이라 기존 존을 덮어씀)
     // 횟수 제한 주력(main.uses, 예: 세스타(AS) 狼志 4): 다 쓰면 main.alt 로 (허수아비 AF 행동 단위에서만)
     mainAlt: c.main && c.main.uses && c.main.alt ? Object.assign({}, c.main, c.main.alt, {alt:null, uses:null}) : null,
-    self:s, party:p, deb:d, sup:sp, tags:c.tags||[],
+    self:s, party:p, deb:d, tags:c.tags||[], teishin: !!c.teishin,
+    // 부활·전투불능 방지 등급(data/revive.json g, 0~3). 조사 밖이면 예전 true/false → 1/0
+    sup: Object.assign({}, sp, {revive: c.revive && c.revive.g!=null ? +c.revive.g : (sp.revive ? 1 : 0), reviveFx: (c.revive && c.revive.fx) || null}),
     zone, zoneTypes, zspec, zoneAwak: !!(zone&&zone.awakened),
     breakT: (d.break||'').toLowerCase(),
     weakExpose: (d.weak_expose||'').split(/[(\s]/)[0],
@@ -486,7 +488,7 @@ function prepChar(c){
     // 독·페인 부여: 평상 턴 가동률(주력기·패시브로 매번 걸면 1, 따로 걸면 지속 턴에 따라)
     inflict: (()=>{ const x=c.inflict; if(!x){ return d.pain_poison ? {poison:0.6, pain:0.6, st:false} : null; }
       const u = x.on_main ? 1 : (x.turns>=99 ? 0.95 : x.turns>=3 ? 0.85 : x.turns>=1 ? 0.6 : 0.75);
-      return {poison: x.poison?u:0, pain: x.pain?u:0, st: x.target==='st'}; })(),
+      return {poison: x.poison?u:0, pain: x.pain?u:0, st: x.target==='st', when: x.dummy || (x.on_main ? 'main' : 'skill')}; })(), // when: 허수아비 1턴에서 걸리는 시점(inflict.json dummy)
     selfDamage: (c.tags||[]).includes('self_damage'),
     chain: Array.isArray(c.chain) && c.chain.some(e=>e&&e.atk) ? c.chain.filter(e=>e&&e.atk) : null,
     echange: c.echange || null,
@@ -787,8 +789,9 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   else if(situation!=='sb' && isCharge(sk.condition) && mult>=30){ mult*=0.4; if(mult>25) mult = 25 + (mult-25)*0.2; } // 축적형 큰 한 방은 평상시 평균으로 낮춤
   if(usingSB) mult*=pr.sbMul;
   if(situation!=='normal' && sk.af_x!=null) mult *= Math.max(0, +sk.af_x); // 1턴 AF 허수아비에서 나가는 몫(턴 종료 공격·요격형·축적 부족 등, af_timing 대조)
-  // 위력: 크기×배율은 1타당(알테마 표기·데이터 기준), 타수만큼 들어간다 · 단일 공격 ×1.1. 기본 대미지(스탯·속성 보정)는 아래 딩 계산식
-  let dmg = sizeV*mult*(tgt==='st'?1.1:1)*Math.max(1, sk.hits||1);
+  // 위력: 크기×배율은 스킬 한 번의 전체 위력(타수 합)이고 1타는 그 값 ÷ 타수(사용자 확인 2026-10-15: '5대에 9600배'는 5타를 다 맞혀서 9600%) · 단일 공격 ×1.1.
+  // 기본 대미지(스탯·속성 보정)는 아래 딩 계산식. 25억 경감·99.99억 상한은 1타 기준이라 타수가 많을수록 덜 깎인다
+  let dmg = sizeV*mult*(tgt==='st'?1.1:1);
 
   // 스탯 버프 (완력/지성/속도)
   const stat = sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
@@ -803,6 +806,8 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let critA=0, critD = pct(me.crit_dmg), shinW = selfOn(me.shinan)?1:0;
   const FK = stat==='int'?'int_flat':stat==='spd'?'spd_flat':'pwr_flat';
   let flatP = +me[FK]||0;
+  // 루나틱<솔선(挺身)>: 처음 내구만큼 힘, 처음 정신만큼 지성(상태 효과 고정값, 딩 계산기 14·15행). 표준 장비엔 내구·정신이 없어 캐릭터 기본값(천명·스텔라 보드 포함)만
+  if(c.teishin && stat!=='spd'){ const p0 = progs[idx]; const s0 = statsAt(c.stats, c.fateTbl, p0 ? (p0.t||0) : 120, c.stellar && p0 && p0.sbOK ? c.stBoard : null); if(s0) flatP += stat==='int' ? s0.spr : s0.end; }
   let ocW = me.over_crit?1:0, mhW = me.multihit?1:0, xW = me.extra_hit?1:0, pierceW = (sk.barrier_pierce||me.barrier_pierce)?1:0;
   const fKey = kind==='phys' ? 'singular_focus' : 'mental_focus';
   let focW = me[fKey]?1:0, otW = me.overthrow?1:0, eaW = me.eagle_eyes?1:0;
@@ -948,11 +953,11 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   if(xh) dmg *= hits/Math.max(1,hits-1);
 
   // 장비: 공격 글래스터 (속성/HP계 가산 +30%, 페인·독 곱연산 ×1.3)
-  const inf = A.inf || (A.painAny ? {poison:1, pain:1} : {poison:0, pain:0});
+  const inf = A.infPick || A.inf || (A.painAny ? {poison:1, pain:1} : {poison:0, pain:0}), infN = A.infNow || null; // 허수아비: 장착은 기대 가동률, 효과는 지금 걸렸는지
   const zOn = !!(zone && zone.level>=2); // 각성의 힘: ZONE 각성(극·절) 중
   const hpLow = !!c.selfDamage, noEl = el==='none';
-  const gk = '_gq'+Math.round(inf.poison*20)+'_'+Math.round(inf.pain*20)+(zOn?'z':'')+(hpLow?'h':'')+(noEl?'n':'');
-  let gq = pr[gk] || (pr[gk] = grastaFactor(pr, inf, zOn, hpLow, noEl));
+  const gk = '_gq'+Math.round(inf.poison*20)+'_'+Math.round(inf.pain*20)+(infN?'N'+Math.round(infN.poison*20)+'_'+Math.round(infN.pain*20):'')+(zOn?'z':'')+(hpLow?'h':'')+(noEl?'n':'');
+  let gq = pr[gk] || (pr[gk] = grastaFactor(pr, inf, zOn, hpLow, noEl, infN));
   const share = A.mule ? A.mule.k[idx] : 0, sd = A.mule && A.mule.kd ? A.mule.kd[idx] : null;
   const plan = A.mule && A.mule.plan ? pglPlan(team, progs, A, S, zone) : null;
   if(plan){ const p = plan.per[idx];
@@ -1007,7 +1012,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
       if(L.zone && !zoneMatch(L.zone, zone)) continue;
       const lk = 'st_'+kind+'_'+(L.el==='none'?'no':'el'), lsz = (SIZE_TABLE[lk]||SIZE_TABLE.st_phys_el)[SIZE_IDX[L.size]??3]/100;
       let lm = +L.mult||1; if(L.stack) lm = 1 + (lm-1)*stackFill(+L.stack, situation, A, false);
-      let rho = lsz*lm*1.1/Math.max(1e-9, sizeV*mult*(tgt==='st'?1.1:1));
+      let rho = lsz*lm*1.1/Math.max(1e-9, sizeV*mult*(tgt==='st'?1.1:1)/Math.max(1, sk.hits||1)); // 연계 1타 ÷ 스킬 1타
       if(L.el==='none' && el!=='none') rho /= 1.8; else if(L.el!=='none' && el==='none') rho *= 1.8; // 속성 보정(약 ×1.8) 차이
       const n = Math.max(1, +sk.execs||1)*(1+rep)*Math.min(1,fL); // 연계는 연속 실행마다 터짐(사용자 확인 2026-10-15)
       (links=links||[]).push({rho, el:L.el==='none'?'none':L.el, n}); linkHits += n;
@@ -1038,7 +1043,7 @@ function condP(cd, sit, team, c, A, zone, enemy, el, progs){
   if(cd.mp) return 0.8;
   if(cd.af!=null) return (sit!=='normal') === !!cd.af ? 1 : 0; // SB도 AF 안에서 쓰는 것으로 본다(허수아비·시뮬의 SB는 AF 도중)
   if(cd.enemy){ const e=cd.enemy;
-    if(e==='poison'||e==='pain'){ const f=A.inf; if(!f) return A.painAny?1:0; return e==='poison' ? f.poison : Math.max(f.pain, f.poison); } // 'pain'은 '독/페인 중 하나'로 쓰인 경우가 있음
+    if(e==='poison'||e==='pain'){ const f=A.infNow||A.inf; if(!f) return A.painAny?1:0; return e==='poison' ? f.poison : Math.max(f.pain, f.poison); } // 'pain'은 '독/페인 중 하나'로 쓰인 경우가 있음
     if(e==='weak') return A.weakAdd.includes(el) || (enemy && enemyRel(enemy, el)==='weak') ? 1 : enemy ? 0 : 0.4;
     if(e==='break') return A.breaks.length ? 1 : 0.3;
     return 0.8; }
@@ -1067,28 +1072,31 @@ const AURA_Z = new Set(['fire','water','earth','wind','thunder','shade','crystal
 /* HP가 낮은 캐릭터(스킬마다 자해): 반역의 힘(그 속성 +15%·HP 80% 이하 +30%, 속성마다 하나), HP 저하 시 강화(+40%, 무기종마다 하나)가
    같은 합연산 묶음에 들어가 속성 글래스터(+30%)보다 크다 → 합연산 칸 값 [0.45, 0.40, 0.30…] (무속성이면 반역은 HP 몫 0.30만) */
 const GL_ADD = {norm:[0.3,0.3,0.3,0.3], low:[0.45,0.4,0.3,0.3], lowNoEl:[0.4,0.3,0.3,0.3]};
-function grastaFactor(pr, inf, zOn, hpLow, noEl){
+function grastaFactor(pr, inf, zOn, hpLow, noEl, infNow){
   const AV = hpLow ? (noEl ? GL_ADD.lowNoEl : GL_ADD.low) : GL_ADD.norm, addOf = e => { let v=0; for(let k=0;k<e;k++) v+=AV[Math.min(k,AV.length-1)]; return v; };
   const gl = pr.gl||DEFAULT_SETTINGS.grastaDefault, n = pr.slots||3;
   if(inf===true) inf={poison:1, pain:1}; else if(!inf) inf={poison:0, pain:0};
   let upo = +inf.poison||0, upa = +inf.pain||0;
-  if(gl.ore){ upo=Math.max(upo,0.9); upa=Math.max(upa,0.9); }
+  if(gl.ore && !infNow){ upo=Math.max(upo,0.9); upa=Math.max(upa,0.9); } // 허수아비(infNow)는 광석 부여 시점까지 이미 넣어서 옴
   const painOK = upo>0 || upa>0;
   const mPo = 1+0.3*upo, mPa = 1+0.3*upa;
   if(gl.mode==='none') return {f:1,e:0,pa:0,po:0,z:0,add:0,painOK,n,upo,upa};
+  // 허수아비 1턴: 장착은 AF 전체 기대 가동률(inf)로 고르고, 그 행동의 대미지는 지금 걸려 있는지(infNow)로
+  const nowF = r => { if(!infNow) return r; const p2=1+0.3*(+infNow.pain||0), o2=1+0.3*(+infNow.poison||0);
+    return Object.assign(r, {f:(1+addOf(r.e))*Math.pow(p2,r.pa)*Math.pow(o2,r.po)*(1+GL_Z*r.z), painNow: (+infNow.pain||0)>0 || (+infNow.poison||0)>0}); };
   if(gl.mode==='auto'){
     let best={f:0};
     for(let z=0;z<=(zOn&&n>0?1:0);z++) for(let pa=0;pa+z<=n;pa++) for(let po=0;po+pa+z<=n;po++){
       const e=n-pa-po-z, f=(1+addOf(e))*Math.pow(mPa,pa)*Math.pow(mPo,po)*(1+GL_Z*z);
       if(f>best.f+1e-9) best={f,e,pa,po,z,add:addOf(e),rebel:!!hpLow};
     }
-    return Object.assign(best,{painOK,n,auto:true,upo,upa});
+    return nowF(Object.assign(best,{painOK,n,auto:true,upo,upa}));
   }
   let e=Math.max(0,+gl.e||0), pa=Math.max(0,+gl.pa||0), po=Math.max(0,+gl.po||0), z=zOn?Math.min(1,Math.max(0,+gl.z||0)):0;
   let over = e+pa+po+z-n;
   while(over>0){ if(po>0) po--; else if(pa>0) pa--; else if(z>0) z--; else e--; over--; }
   const f=(1+addOf(e))*Math.pow(mPa,pa)*Math.pow(mPo,po)*(1+GL_Z*z);
-  return {f,e,pa,po,z,add:addOf(e),rebel:!!hpLow,painOK,n,upo,upa};
+  return nowF({f,e,pa,po,z,add:addOf(e),rebel:!!hpLow,painOK,n,upo,upa});
 }
 
 /* 1타 대미지 = 일반타·크리타(·오버크리)를 나눠 각각 25억 초과 경감(딩 계산기)을 건 기대값.
@@ -1116,7 +1124,9 @@ function survival(team, progs, bud){
     const val = (v[0]||0) + 0.35*(v[1]||0);
     det[k]=v[0]||0; s += W[k]*val;
   }
-  const rev = team.some(c=>c.sup.revive) || !!bs.revive; det.revive=rev; if(rev) s+=6;
+  // 부활·전투불능 방지: 등급(0~3) 최고 + 둘째 0.35. 예전엔 있으면 +6 하나뿐이라 애니(血の誓約)·가넷(레이즈) 같은 상시형과 SB 때만 부활이 같았음
+  const rv = team.map(c=>+(c.sup.revive===true?1:c.sup.revive||0)).concat(bs.revive?[bs.revive===true?1:+bs.revive||0]:[]).sort((a,b)=>b-a);
+  det.revive = rv[0]||0; s += 5*((rv[0]||0) + 0.35*(rv[1]||0));
   const bd0 = bud ? bud.enemyDown||0 : 0;
   const pd = dimin(team.map(c=>pct(c.deb.pwr)).concat([bd0]),1), id = dimin(team.map(c=>pct(c.deb.int)).concat([bd0]),1);
   det.enemyDown = Math.max(pd,id); s += 12*(pd+id)/2;
@@ -1789,57 +1799,89 @@ function dummySim(o){
   // ZONE: 개전 자동·상시 재각성은 처음부터, 그 밖엔 펼치는 사람이 행동한 뒤부터
   const zBy = nz && nz.level>0 ? team.findIndex(c=>c.id===nz.by) : -1;
   const zFrom0 = !!(nz && nz.level>0 && (awStart || nz.how==='개전 자동'));
-  const zoneAt = acted => !nz || !nz.level ? nz : (zFrom0 || (zBy>=0 && acted[zBy])) ? nz : null;
-  const fxMemo = new Map(), coMemo = new Map();
-  const coreAt = (acted, z, sit, i) => { // 그 순간 깔린 버프로 i의 공격 1회 (필요한 것만 계산)
-    sit = sit || 'af';
-    const key = sit+'|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(A.postSB?'|P':'');
-    const ck = key+'|'+i; if(coMemo.has(ck)) return coMemo.get(ck);
-    let FX = fxMemo.get(key);
-    if(FX===undefined){ const upt = team.map((c,j)=> acted[j]||passive[j] ? 1 : 0); FX = buildBF(team, progs, sit, z, A, posSets, upt, true); fxMemo.set(key, FX); }
-    const co = attackerCore(team, i, progs, A, enemy, S, sit, cx, FX, z); coMemo.set(ck, co); return co;
-  };
-  const altCoreAt = (acted, z, i) => { // 횟수를 다 쓴 뒤의 주력(같은 버프 상태)
-    const key = 'alt|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(A.postSB?'|P':'')+'|'+i; if(coMemo.has(key)) return coMemo.get(key);
-    coreAt(acted, z, 'af', i); const FX = fxMemo.get('af|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(A.postSB?'|P':''));
-    const tAlt = team.map((m,k)=> k===i ? Object.assign({}, m, {main:m.mainAlt}) : m);
-    const co = attackerCore(tAlt, i, progs, A, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
+  // 존은 하나(사용자 확인): 비어 있으면 펴고, 일반 존이 깔려 있으면 극(각성) 존만 덮어씀, 극 존은 존 파괴 없이는 못 바꿈
+  const zoneOK = (cur, q) => !!(q && q.level>0) && (!cur || !cur.level || (cur.level<2 && q.level>=2));
+  // 독·페인(글래스터 39·40행·'독 시 ○배' 스킬): 허수아비 1턴에선 실제로 건 뒤부터. inflict.json dummy —
+  // start=개전 자동, main=주력 공격 뒤, skill=주력이 아닌 스킬이라 AF 행동 한 번을 그 스킬에 써야 함, 잠재 광석=그 캐릭터가 공격한 뒤
+  const nE = Math.max(1, S.enemyCount||1);
+  const infT = team.map((c,j)=>{ const f=c.inflict, ore=!!(progs[j] && progs[j].gl && progs[j].gl.ore);
+    if(!f && !ore) return null; const k = f && f.st && nE>1 ? 0.6 : 1;
+    let w = f ? (f.when||'skill') : null; if(w==='start_sb') w = progs[j] && progs[j].sbOK ? 'start' : 'skill';
+    return {w, po: f && f.poison>0 ? k : 0, pa: f && f.pain>0 ? k : 0, ore}; });
+  const infAt = (atk, ia) => { let po=0, pa=0;
+    infT.forEach((t,j)=>{ if(!t) return; const on = t.w==='start' || (t.w==='main' && atk[j]) || (t.w==='skill' && ia[j]);
+      if(on){ po=Math.max(po,t.po); pa=Math.max(pa,t.pa); } if(t.ore && (atk[j]||ia[j])){ po=Math.max(po,0.9); pa=Math.max(pa,0.9); } });
+    return {poison:po, pain:pa}; };
+  const infK = q => '|i'+Math.round(q.poison*10)+Math.round(q.pain*10);
   const all = team.map(()=>true);
-  const full = team.map((c,i)=>coreAt(all, nz, 'af', i));
-  const afA = afActionsOf(team, progs, full, nz, enemy, S, 100, prio);
-  const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0);
+  const full0 = team.map((c,i)=>attackerCore(team, i, progs, A, enemy, S, 'af', cx, buildBF(team, progs, 'af', nz, A, posSets, team.map(()=>1), true), nz));
+  const afA = afActionsOf(team, progs, full0, nz, enemy, S, 100, prio);
   const cmax = S.comboCap>0 ? S.comboCap : Infinity;
-  let combo = 0.75, af = 0, cw = 0, sbG = Math.min(50, 12.5*Math.max(o.light, o.shadow));
   const sbAct = S.sbPerAct!=null ? +S.sbPerAct : 2.5;
   // 성도 게이지 충전 보너스(강화): 성도 각성한 캐릭터는 조건을 채운다고 보고 2배(설정으로 끔)
   const sbRate = team.map((c,i)=> sbAct * (sbFillOK(team, i, progs, S) ? 2 : 1));
-  let sbAt = null, sb = 0, zOver = null; const sbPer = [], sbCo = {};
-  for(const a of afA.seq){
-    const i = a.i, c = team[i];
-    const buffOnly = cnt[i]===0 && c.buffAct;
-    const zNow = zOver || zoneAt(acted);
-    if(!buffOnly){
-      const useAlt = c.mainAlt && cnt[i] >= c.main.uses && !c.afSk;
-      const co = useAlt ? altCoreAt(acted, zNow, i) : coreAt(acted, zNow, 'af', i);
-      if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
-        combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
+  const run = kAct => { // kAct: 주력이 아닌 독·페인 스킬에 첫 공격 행동을 쓰는 캐릭터(없으면 null)
+    // 글래스터 장착은 AF 전체에서 걸려 있는 비율(뒤 행동일수록 콤보가 커서 가중)로 고름
+    { const c2=team.map(()=>0), at=team.map(()=>false), ia=team.map(()=>false); let w=0, sp=0, sa=0; const L=afA.seq.length;
+      afA.seq.forEach((a,q)=>{ const i=a.i, bo = c2[i]===0 && team[i].buffAct, isInf = i===kAct && !ia[i] && !bo;
+        if(!bo && !isInf){ const st=infAt(at, ia), wq = 1 + q/Math.max(1,L); w+=wq; sp+=wq*st.poison; sa+=wq*st.pain; }
+        c2[i]++; if(isInf) ia[i]=true; else if(!bo) at[i]=true; });
+      var Av = Object.assign({}, A, {infPick:{poison: w>0?sp/w:0, pain: w>0?sa/w:0}, postSB:false}); }
+    const fxMemo = new Map(), coMemo = new Map();
+    const coreAt = (acted, z, sit, i, inow) => { // 그 순간 깔린 버프·독페인으로 i의 공격 1회 (필요한 것만 계산)
+      sit = sit || 'af';
+      const key = sit+'|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow);
+      const ck = key+'|'+i; if(coMemo.has(ck)) return coMemo.get(ck);
+      Av.infNow = inow;
+      let FX = fxMemo.get(key);
+      if(FX===undefined){ const upt = team.map((c,j)=> acted[j]||passive[j] ? 1 : 0); FX = buildBF(team, progs, sit, z, Av, posSets, upt, true); fxMemo.set(key, FX); }
+      const co = attackerCore(team, i, progs, Av, enemy, S, sit, cx, FX, z); coMemo.set(ck, co); return co;
+    };
+    const altCoreAt = (acted, z, i, inow) => { // 횟수를 다 쓴 뒤의 주력(같은 버프 상태)
+      const k0 = 'af|'+acted.map((v,j)=>v||passive[j]?1:0).join('')+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow), key = 'alt|'+k0+'|'+i; if(coMemo.has(key)) return coMemo.get(key);
+      coreAt(acted, z, 'af', i, inow); const FX = fxMemo.get(k0); Av.infNow = inow;
+      const tAlt = team.map((m,k)=> k===i ? Object.assign({}, m, {main:m.mainAlt}) : m);
+      const co = attackerCore(tAlt, i, progs, Av, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
+    const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false);
+    let combo = 0.75, af = 0, cw = 0, sbG = Math.min(50, 12.5*Math.max(o.light, o.shadow));
+    let sbAt = null, sb = 0, zCur = zFrom0 ? nz : null; const sbPer = [], sbCo = {};
+    for(const a of afA.seq){
+      const i = a.i, c = team[i];
+      const buffOnly = cnt[i]===0 && c.buffAct, isInf = i===kAct && !ia[i] && !buffOnly;
+      const zNow = zCur, inow = infAt(atk, ia);
+      if(!buffOnly && !isInf){
+        const useAlt = c.mainAlt && cnt[i] >= c.main.uses && !c.afSk;
+        const co = useAlt ? altCoreAt(acted, zNow, i, inow) : coreAt(acted, zNow, 'af', i, inow);
+        if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
+          combo += co.hitsPerAct*0.025*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
+      }
+      acted[i] = true; cnt[i]++; sbG += sbRate[i]; if(isInf) ia[i] = true; else if(!buffOnly) atk[i] = true;
+      if(i===zBy && nz && zoneOK(zCur, nz) && !(zCur && zCur.key===nz.key && zCur.level>=nz.level)) zCur = nz;
+      if(!buffOnly && !isInf && c.zoneSet){ const zc = zcs.find(q=>q && q.by===c.id && q.level>0); if(zoneOK(zCur, zc)) zCur = zc; }
+      if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
+        sbAt = afA.seq.indexOf(a)+1;
+        const sbZOK = !!(sbAw && sbz) && (zoneOK(zCur, sbz) || (zCur && zCur.key===sbz.key)); // 극 존은 다른 존으로 못 바꿈
+        const zSB = sbZOK ? sbz : zCur, inow2 = infAt(atk, ia);
+        for(const j of sbIdx){ const co = coreAt(acted, zSB, 'sb', j, inow2); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
+        if(sbZOK) zCur = sbz; // SB로 각성한 존은 남은 AF 동안
+        Av.postSB = true; // SB로 건 버프(연격수+1·심안·크리 대미지 등)는 남은 AF 행동에도
+      }
     }
-    acted[i] = true; cnt[i]++; sbG += sbRate[i];
-    if(!buffOnly && c.zoneSet){ const zc = zcs.find(q=>q && q.by===c.id && q.level>0); const cur = zOver || zNow; if(zc && !(cur && cur.level>=2) && !(cur && cur.key===zc.key && cur.level>=zc.level)) zOver = zc; } // 존은 하나: 행동 스킬로 자기 존을 펴면 기존 존을 덮어씀(사용자 확인). 각성(극)한 존은 덮어쓸 수 없음(위키)
-    if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
-      sbAt = afA.seq.indexOf(a)+1;
-      const zSB = sbAw && sbz ? sbz : zNow;
-      for(const j of sbIdx){ const co = coreAt(acted, zSB, 'sb', j); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
-      if(sbAw && sbz) zOver = sbz; // SB로 각성한 존은 남은 AF 동안
-      A.postSB = true; // SB로 건 버프(연격수+1·심안·크리 대미지 등)는 남은 AF 행동에도
-    }
-  }
-  A.postSB = false;
-  const fin = Math.min(combo, cmax);
-  return {total: af + sb, af, sb, afPer: per.map((v,i)=>v - sbPer.filter(x=>x[0]===i).reduce((q,x)=>q+x[1],0)), per, n: cnt, avg: af>0 ? cw/af : 0.75, fin,
-    sbCombo: sbAt!=null ? null : null, sbAt, lv: nz && nz.level>=2 && zFrom0 ? 2 : (nz ? nz.level : 0), sbWhen: sbAt!=null ? 'af' : null,
-    sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && sbAt==null, acts: afA.seq.length, order: prio, ex: 0,
-    full, zFull: nz, sbCo}; // 계산 근거 화면용: 버프가 다 깔린 AF 중 1회 공격(평상 존), SB 공격
+    Av.postSB = false;
+    const full = team.map((c,i)=>coreAt(all, nz, 'af', i, infAt(all, team.map((_,j)=>j===kAct))));
+    const fin = Math.min(combo, cmax);
+    return {total: af + sb, af, sb, afPer: per.map((v,i)=>v - sbPer.filter(x=>x[0]===i).reduce((q,x)=>q+x[1],0)), per, n: cnt, avg: af>0 ? cw/af : 0.75, fin,
+      sbCombo: null, sbAt, lv: nz && nz.level>=2 && zFrom0 ? 2 : (nz ? nz.level : 0), sbWhen: sbAt!=null ? 'af' : null,
+      sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && sbAt==null, acts: afA.seq.length, order: prio, ex: 0,
+      full, zFull: nz, sbCo, inf: {pick: Av.infPick, act: kAct}}; // 계산 근거 화면용: 버프가 다 깔린 AF 중 1회 공격(평상 존), SB 공격
+  };
+  // 주력이 아닌 스킬로 독·페인을 거는 캐릭터: 첫 공격 행동을 그 스킬에 쓰는 쪽과 안 쓰는 쪽 중 높은 것
+  const base = infAt(all, team.map(()=>false));
+  const cands = infT.map((t,j)=>t && t.w==='skill' && ((t.po>0 && base.poison<t.po) || (t.pa>0 && base.pain<t.pa)) ? j : -1).filter(j=>j>=0)
+    .sort((x,y)=>(infT[y].po+infT[y].pa)-(infT[x].po+infT[x].pa) || prio.indexOf(x)-prio.indexOf(y)).slice(0,2);
+  let best = run(null);
+  for(const k of cands){ const r = run(k); if(r.total > best.total*1.0005) best = r; }
+  return best;
 }
 /* 계산 근거: 공격 1회의 1타 (존 배율 → 일반·크리·오버크리 → 25억 경감 → AF 콤보 → 99.99억 상한) */
 function hitInfo(co, z, S, combo){
@@ -2214,7 +2256,7 @@ async function optimize(input, onProgress){
     fixedBack.forEach(c=>baseIn.add(c.base||c.id));
     const mw = ev.mule && ev.mule.auto ? ev.mule.wp : null; // 셔틀 가정이면 그 무기 퍼스널리티 캐릭터를 후열 우선
     const needComp = compM ? Math.max(0, pl.comp.n - team.filter(compM).length) : 0;
-    const reserves = fixedBack.concat(own.filter(o=>!inTeam.has(o.pc.id) && !baseIn.has(o.pc.base||o.pc.id)).map(o=>({o, v:survival(team.concat([o.pc]),progs.concat([o.prog]),ev.A&&ev.A.bud).score - ev.surv + (o.pc.sup.revive?3:0) + (mw && o.pc.pers.has(mw) ? 8 + ((o.prog&&o.prog.slots)||3) : 0) + (needComp && compM(o.pc) ? 100 : 0)}))
+    const reserves = fixedBack.concat(own.filter(o=>!inTeam.has(o.pc.id) && !baseIn.has(o.pc.base||o.pc.id)).map(o=>({o, v:survival(team.concat([o.pc]),progs.concat([o.prog]),ev.A&&ev.A.bud).score - ev.surv + (+o.pc.sup.revive||0) + (mw && o.pc.pers.has(mw) ? 8 + ((o.prog&&o.prog.slots)||3) : 0) + (needComp && compM(o.pc) ? 100 : 0)}))
       .sort((a,b)=>b.v-a.v).filter(x=>{ const b=x.o.pc.base||x.o.pc.id; if(baseIn.has(b)) return false; baseIn.add(b); return true; }).slice(0,Math.max(0,nRes-fixedBack.length)).map(x=>x.o.pc));
     return {reserves, fixedBack};
   }

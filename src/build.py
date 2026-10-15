@@ -65,6 +65,14 @@ for c in chars:
 aft=json.load(open(P('data','af_timing.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in aft and not c['id'].startswith('_'): c['af_t']={k:v for k,v in aft[c['id']].items() if k in ('party','self','deb','zone')}
+# 루나틱<솔선(挺身)>: 내구→힘·정신→지성 고정값(딩 14·15행)
+lun=json.load(open(P('data','lunatic.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in lun.get('teishin',{}): c['teishin']=True
+# 부활·전투불능 방지 등급(알테마 대조): 생존 점수와 덱 설명에 씀
+rvv=json.load(open(P('data','revive.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in rvv and not c['id'].startswith('_'): c['revive']={'g':rvv[c['id']]['g'],'fx':[{k:v for k,v in e.items() if k in ('k','t','w','s')} for e in rvv[c['id']]['fx']]}
 lnk=json.load(open(P('data','link.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in lnk and not c['id'].startswith('_'): c['links']=lnk[c['id']]
