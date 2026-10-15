@@ -40,6 +40,7 @@ const DEFAULT_SETTINGS = {
   afAnim: 2,         // AF 중 스킬 연출 시간(초) 가정
   sbFillBonus: true, // 성도 게이지 충전 보너스(강화): 성도 각성 캐릭터 행동마다 5%(조건 충족 가정)
   dummyMule: true,   // 최고점(허수아비)은 후열 연성 P글래 셔틀을 가정(보유 표시가 있으면 그것만)
+  afRepAnim: 0.5,    // AF 중 재공격(한 행동 안에서 이어 치기) 1회의 연출 시간 = 기본 연출 × 이 값
   auraGl: true,      // 후열 셔틀이 아군 전체 글래(공명의 힘 <천/명> 51행, 격진의 힘 <존> 50행)를 단다고 가정 (빌더 코어 기준)
   comboCap: 0,       // AF 콤보 배율 상한(배). 0이면 없음 — 위키 Another Force/Combo에 상한 없음
   afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
@@ -949,7 +950,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     }
   }
   return {perHit: pN*critX, pN, cR, p, oc:ocP, totHits, links, linkHits, nT, el, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
-    afx: sk.af_combo_x||1, hitsPerAct: totHits + linkHits, rep, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
+    afx: sk.af_combo_x||1, hitsPerAct: totHits + linkHits, rep, execs: Math.max(1, +sk.execs||1)*(1+rep), // 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
     bh, defR, flatP, lunaF, auraF, auraR, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st'};
 }
 
@@ -1205,10 +1206,13 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio){
   const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
     const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
     const byHit = Math.min(30, co.totHits + (co.linkHits||0))*(weak?3.5:1.5);
-    const za = zoneAF(z, co); if(za!=null) return za>0 ? Math.max(za, byHit) : za; // 맞는 존은 행동당 7.5%(타수 충전보다 적으면 타수 기준), 상극·안 맞는 존은 0
+    // 재공격은 실행마다 행동 한 번처럼 AF 게이지가 찬다(사용자 확인 — 루나틱 복사는 예외): 맞는 존은 실행당 7.5%, 그 밖은 타수 기준(재공격 타수 포함)
+    const ex = co.execs || (1 + Math.max(0, co.rep||0)), za = zoneAF(z, co); if(za!=null) return za>0 ? Math.max(za*ex, byHit) : za; // 상극·안 맞는 존은 0
     return byHit; });
-  // 연출 시간: 캐릭터별 값(af_anim)이 있으면 그 값, 재행동·연속 실행 스킬은 실행 횟수만큼 (게이지도 실행마다 참 — refill은 총 타수 기준)
-  const animOf = team.map((c,i)=>(c.afAnim||anim) * (1 + Math.max(0, (cores[i]&&cores[i].rep)||0)));
+  // 연출 시간: 캐릭터별 값(af_anim)이 있으면 그 값. 재공격은 한 행동 안에서 이어 치므로 쿨타임은 행동당 한 번만 늘고(사용자 확인),
+  // 이어 치는 연출은 실행당 S.afRepAnim배(기본 0.5)로 셈
+  const repA = S.afRepAnim!=null ? +S.afRepAnim : 0.5;
+  const animOf = team.map((c,i)=>{ const co=cores[i]; const ex = co ? (co.execs || 1+Math.max(0,co.rep||0)) : 1; return (c.afAnim||anim) * (1 + repA*Math.max(0, ex-1)); });
   const next = team.map(()=>0), cnt = team.map(()=>0), seq = [];
   const ord = prio && prio.length===n ? prio : team.map((_,k)=>k); // 같은 시각이면 왼쪽(우선순위)부터 — AF 자동 선택
   let g = g0, t = 0;
@@ -1518,8 +1522,8 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     team.forEach((c,i)=>{ const co=cs[i]; if(!co) return; const pAct = simUse ? (sim.act[i]+sim.alt[i]) : 1;
       const za = zoneAF(z, co);
       const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
-      const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5);
-      afGain += pAct * (za!=null ? (za>0 ? Math.max(za, byHit) : za) : byHit);
+      const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5), ex = co.execs || (1 + Math.max(0, co.rep||0));
+      afGain += pAct * (za!=null ? (za>0 ? Math.max(za*ex, byHit) : za) : byHit);
       afGain += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)];
     });
     if(A.bud && ctx && ctx.buddy && ctx.buddy.main && ['moke','korobo','gansu_as'].includes(ctx.buddy.main.id)) afGain += 5;

@@ -28,6 +28,7 @@
     "size": "xl",                      // s m l xl xxl (威力 小中大特大極大 -> s m l xl xxl)
     "hits": 3,
     "repeat": 1,                       // 재공격/재행동 횟수 (없으면 0). 조건 있으면 condition에 기술
+    "execs": 1,                        // (선택) 한 행동의 실행 수(다른 스킬 연속 실행 포함, 재공격 제외). AF 게이지는 실행마다 찬다
     "crit_sure": false,                // 확정 크리티컬
     "def_ignore": false,
     "barrier_pierce": false,

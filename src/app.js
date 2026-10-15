@@ -1831,6 +1831,7 @@ function renderConsts(){
     <div class="crow"><span>후열 P글래 셔틀 반영</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cMule" ${S.muleOn!==false?'checked':''}> 사용</label><label class="checkrow" style="align-items:center" title="후열 고정이 없을 때 주딜 무기 퍼스널리티 셔틀 2명 가정"><input type="checkbox" id="cMuleAuto" ${S.muleAuto!==false?'checked':''}> 자동 가정</label><label class="checkrow" style="align-items:center" title="자동 가정일 때 같은 퍼스널리티의 전열 서포터도 셔틀로"><input type="checkbox" id="cMuleFront" ${S.muleFront!==false?'checked':''}> 전열 서포터도</label></div>
     <div class="crow"><span>연성 P글래 표시가 없을 때</span><label class="checkrow" style="align-items:center" title="보유 탭에서 연성 P글래를 하나도 표시하지 않았을 때 전부 가졌다고 보고 셔틀 공유를 계산 (끄면 공유 없음)"><input type="checkbox" id="cPglAll" ${S.pglAssumeAll?'checked':''}> 전부 있다고 가정</label><span></span><span></span></div>
     <div class="crow"><span>셔틀 1명 글래스터 칸 / 속성·HP P글래 1개 수치</span><input type="number" step="1" min="1" max="4" id="cMuleSl" value="${S.muleSlots}"><input type="number" step="0.05" min="0" max="1" id="cMulePct" value="${S.mulePct}"><span></span></div>
+    <div class="crow"><span>AF 재공격 1회 연출 (기본 연출의 배수)</span><input type="number" step="0.1" min="0" max="1.5" id="cRepAnim" value="${S.afRepAnim!=null?S.afRepAnim:0.5}" title="재공격·연속 실행은 한 행동 안에서 이어 쳐서 쿨타임은 행동당 한 번만 늘고, AF 게이지는 실행마다 찹니다. 이어 치는 연출 시간을 기본 연출의 몇 배로 볼지"><span></span><span></span></div>
     <div class="crow"><span>아군 전체 글래 (공명의 힘·격진의 힘)</span><label class="checkrow" style="align-items:center" title="빌더 코어의 '아군 전체' 글래스터. 후열 셔틀 1명당 남는 칸(일반 존 2칸, 극존 1칸)에 공명의 힘 <많은 쪽 천/명>(전후방 그 성향 1명당 +5%, 51행)과 격진의 힘 <펼친 존>(+15%, 50행)을 단다고 봅니다"><input type="checkbox" id="cAura" ${S.auraGl!==false?'checked':''}> 후열 셔틀이 장착</label><span></span><span></span></div>
     <div class="crow"><span>소비 MP 배율 (MP 감소 글래스터면 0.85·0.75)</span><input type="number" step="0.05" min="0.3" max="1.5" id="cMpMul" value="${S.mpCostMul}"><span></span><span></span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn small" id="constReset">기본값으로</button><span class="hint">바꾸면 다음 계산부터 반영됩니다. 절존 배율은 극존과 같습니다.</span></div>`;
@@ -1853,6 +1854,7 @@ function onConst(e){
   else if(t.id==='cAfAnim') S.afAnim=Math.max(0.5,Math.min(5,+t.value||2));
   else if(t.id==='cSim') S.simOn=t.checked;
   else if(t.id==='cAura') S.auraGl=t.checked;
+  else if(t.id==='cRepAnim') S.afRepAnim=Math.max(0,Math.min(1.5,+t.value||0));
   else if(t.id==='cMule') S.muleOn=t.checked;
   else if(t.id==='cMuleAuto') S.muleAuto=t.checked;
   else if(t.id==='cMuleFront') S.muleFront=t.checked;
@@ -2022,7 +2024,7 @@ function bind(){
   $('#bossList').addEventListener('click',e=>{ const b=e.target.closest('[data-boss]'); if(!b) return; curBoss=b.dataset.boss; renderBossList(); });
   $('#bossDetail').addEventListener('click',e=>{ if(e.target.id==='bossGo'){ applyBoss(curBoss); showTab('plan'); runPlan(); } });
   $('#constBox').addEventListener('change',onConst);
-  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','useStats','gearSpd','enemyHits','enemyAoE','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','pglAssumeAll','afStart','burstTurns','sbPerAct','muleSlots','mulePct','auraGl'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
+  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','useStats','gearSpd','enemyHits','enemyAoE','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','pglAssumeAll','afStart','burstTurns','sbPerAct','muleSlots','mulePct','auraGl','afRepAnim'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
 function renderAll(){ renderPlanControls(); renderRoster(); renderBudGrid(); renderPglTbl(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
 
