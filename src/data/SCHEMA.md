@@ -70,6 +70,7 @@
     "extra_hit": false,                // 연격수 +1 부여
     "mp_cost_zero": false,
     "dmg_up": 0, "dmg_src": "prayer",  // 주는 대미지 %UP(与ダメージ). dmg_src: prayer(기도)·song(가창)·other — 같은 종류는 최댓값 하나, 종류끼리 곱
+    "dmg_el": "fire",                  // (선택) 그 속성 공격에만 주는 대미지 UP (○属性で与えるダメージ)
     "kesshi": false,                   // 루나틱<捨身>(결사) 부여: 대미지 ×1.7·크리 확정
     "shinan": false,                   // 루나틱<心眼>(심안) 부여: 대미지 ×1.5·약점 배율 +1
     "mp_up": 0,                        // 최대 MP %UP (정신통일·심기일체 계산에 들어감)
@@ -175,3 +176,7 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 # 스킬 위력 조건 추가 (`skill_cond.json`)
 
 `top`: 최대 배율을 스킬 데이터 대신 이 값으로. 조건 `{"stat":"spr","full":500,"buff":0.5,"sum":"front"}`: 기본 스탯(천명치 반영)×(1+buff) ÷ full 비율(sum이 front면 전열 합).
+
+# 스텔라 보드 (`stellar.json`)
+
+키 = 캐릭터 id. `stats`: 성도각성 스텔라 보드 스탯 합계(hp mp pwr int spd end spr lck, `all` = HP·MP 외 전 스탯). 성도각성한 캐릭터의 기본 스탯에 더한다(자료가 있으면 천명 30·50·80 근사 배율은 쓰지 않음). `fill`: 天冥 어빌리티(행동할 때 쌓이는 天/冥의 힘 증가 = SB 게이지 충전 보너스) 조건, parseReq 형식(`align`·`pers`). 조건이 안 맞으면 충전 보너스 없음. `tenmei`: 원문 요약.

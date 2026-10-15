@@ -58,6 +58,10 @@ for c in chars:
 afan=json.load(open(P('data','af_anim.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in afan and not c['id'].startswith('_'): c['af_anim']=afan[c['id']]
+# 성도각성 스텔라 보드: 스탯 합계·天冥 어빌리티(SB 게이지 충전 증가) 조건
+stb=json.load(open(P('data','stellar.json'),encoding='utf-8'))
+for c in chars:
+    if c['id'] in stb and not c['id'].startswith('_'): c['stellar_board']=stb[c['id']]
 lnk=json.load(open(P('data','link.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in lnk and not c['id'].startswith('_'): c['links']=lnk[c['id']]

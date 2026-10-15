@@ -786,118 +786,25 @@
   "name_kr": "노나(AS)",
   "name_jp": "ノーナ(AS)",
   "style": "AS",
-  "element": [
-   "water"
-  ],
+  "element": ["water"],
   "weapon": "bow",
   "align": "shadow",
   "stellar": false,
   "release_jp": "",
   "tier": "",
   "score": 92,
-  "roles": [
-   "support",
-   "healer",
-   "zone"
-  ],
-  "main": {
-   "skill": "カスティーゴ",
-   "target": "st",
-   "kind": "phys",
-   "stat": "pwr",
-   "element": "water",
-   "weapon_type": "pierce",
-   "mult": 1,
-   "size": "xl",
-   "hits": 6,
-   "repeat": 0,
-   "crit_sure": false,
-   "def_ignore": false,
-   "barrier_pierce": false,
-   "af_combo_x": 1,
-   "condition": "기본 3히트, 献身 대상 전방 시 공격 횟수 +3·献身 대상 속성으로 변화(変幻自在/臨機応変). 아군 물 공격 30%·크리율 100%"
-  },
+  "roles": ["support", "healer", "zone"],
+  "main": {"skill": "カスティーゴ", "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "pierce", "mult": 1, "size": "xl", "hits": 6, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "기본 3히트, 献身 대상 전방 시 공격 횟수 +3·献身 대상 속성으로 변화(変幻自在/臨機応変). 아군 물 공격 30%·크리율 100%"},
   "sb": null,
-  "self_buff": {
-   "pwr": 0,
-   "int": 0,
-   "spd": 0,
-   "elem_atk": 0,
-   "weapon_atk": 0,
-   "crit_rate": 0,
-   "crit_dmg": 0,
-   "over_crit": false,
-   "singular_focus": false,
-   "mental_focus": false,
-   "overthrow": false,
-   "eagle_eyes": false,
-   "weak_dmg": 0,
-   "multihit": false
-  },
-  "party_buff": {
-   "scope": "all",
-   "restrict": "献身 대상 1명: 노나 스탯 30% 가산+버프 효과량 2배",
-   "pwr": 0,
-   "int": 0,
-   "spd": 0,
-   "all_elem_atk": 35,
-   "elem_atk": {
-    "water": 30
-   },
-   "weapon_atk": {
-    "all": 30
-   },
-   "crit_rate": 100,
-   "crit_dmg": 30,
-   "over_crit": false,
-   "singular_focus": false,
-   "mental_focus": false,
-   "overthrow": false,
-   "eagle_eyes": false,
-   "weak_dmg": 0,
-   "multihit": false,
-   "link": false,
-   "barrier_pierce": false,
-   "extra_hit": false,
-   "mp_cost_zero": false
-  },
-  "debuff": {
-   "pwr": 0,
-   "int": 0,
-   "spd": 0,
-   "all_elem_res": 0,
-   "elem_res": {},
-   "phys_res": 0,
-   "mag_res": 0,
-   "weapon_res": {},
-   "break": "",
-   "weak_expose": "",
-   "pain_poison": true
-  },
-  "zone": {
-   "type": "献身 대상 무기종",
-   "awakened": false,
-   "condition": "コンコルディア: 献身 대상이 전방이면 그 무기종에 맞는 ZONE 전개"
-  },
-  "support": {
-   "heal": 3,
-   "barrier": 3,
-   "cleanse": 2,
-   "revive": false,
-   "guard": 0,
-   "taunt": 0,
-   "mp_recover": 0,
-   "af_gauge": 0,
-   "status_immune": 1
-  },
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "献身 대상 1명: 노나 스탯 30% 가산+버프 효과량 2배", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"water": 30}, "weapon_atk": {"all": 30}, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": true},
+  "zone": {"type": "献身 대상 무기종", "awakened": false, "condition": "コンコルディア: 献身 대상이 전방이면 그 무기종에 맞는 ZONE 전개"},
+  "support": {"heal": 3, "barrier": 3, "cleanse": 2, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 1},
   "req": "献身 대상(아군 1명) 전방 배치",
-  "tags": [
-   "devotion",
-   "preemptive_barrier",
-   "lunatic"
-  ],
+  "tags": ["devotion", "preemptive_barrier", "lunatic"],
   "note_kr": "献身(1회)으로 아군 1명에게 HP·MP 외 스탯 30% 가산+버프 2배. カルテロズウォルタ 선제 전체 피해 50% 경감 배리어(루나틱)+전속성 공격 35%. コンコルディア 전무기종 30%·크리데미지 30%(5턴)+献身 대상 무기종 ZONE. プレギエーラ HP 최대 2,000 UP, 피격·턴 종료 시 HP 최대 50% 회복+상태이상 회복. VC 전속성내성 30%+날려버리기 무효."
- },
+},
  {
   "id": "pizzica_as",
   "name_kr": "피치카(AS)",

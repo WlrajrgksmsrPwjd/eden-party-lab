@@ -133,7 +133,7 @@ function buildInput(items, s, wt) {
         case 'tstat': push(40, e.v); break;
         case 'fallen': push(42, Math.min(e.per * s.fallen, e.max)); break;
         case 'zone': push(49, e.v); break;
-        case 'zonet': push(50, e.v); break;
+        case 'zonet': push(e.z.startsWith('극 ') ? 49 : 50, e.v); break;   // 빌더 코어: '극 ○○진 전개 시'는 ZONE 각성 상태라 49행(ZONE 각성 중 대미지와 합), 그 외 특정 ZONE은 50행
         case 'fateally': push(51, e.per * (e.who === '명' ? s.meiAllies : s.fateAllies)); break;
         case 'gekoku': push(52, e.d); break;
         case 'growth': push(53, Math.min(e.per * s.turns, e.max)); break;

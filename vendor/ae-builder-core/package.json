@@ -1,0 +1,22 @@
+{
+  "name": "ae-builder-core",
+  "version": "1.0.0",
+  "description": "어나더 에덴 장비 빌드 대미지 계산·최적 빌드 탐색 라이브러리 (어나더에덴 빌더 코어, 화면 없음). 계산 공식: AE 대미지 계산기 v4.016 (원작자: 딩) · 장비 데이터: 딩",
+  "private": true,
+  "main": "ae-core.js",
+  "browser": "ae-core.js",
+  "types": "ae-core.d.ts",
+  "exports": {
+    ".": { "types": "./ae-core.d.ts", "default": "./ae-core.js" },
+    "./package.json": "./package.json"
+  },
+  "files": ["ae-core.js", "ae-core.d.ts", "README.md", "FIELDS.md", "CLAUDE.md", "example.js", "test/"],
+  "scripts": {
+    "test": "node test/check.js",
+    "test:quick": "node test/check.js --quick",
+    "example": "node example.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "SEE LICENSE IN README.md",
+  "keywords": ["another-eden", "어나더에덴", "damage-calculator"]
+}

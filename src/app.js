@@ -908,6 +908,7 @@ function basisHtml(x){
   ln.push(row('존', X(h1.zf), esc(z&&z.level?z.label:'없음')+(useD?' (허수아비 AF에서 고른 존)':'')));
   const gq=co.gq||{};
   ln.push(row('글래스터 · 장비', `${X(gq.f||1)} · ${X(co.gearF||1)}`, `${esc(glText(gq))}${gq.share?` (셔틀 P글래 공유)`:''} · 장비는 무기종 표준 풀장비(딩 빌더 최적 빌드)`));
+  if(co.auraR) ln.push(row('아군 전체 글래', X(co.auraF||1), `후열 셔틀 ${co.auraR.nb}명: 공명의 힘 +${P(co.auraR.r51)}(51행)${co.auraR.r50?` · 격진의 힘 +${P(co.auraR.r50)}(50행)`:''}`));
   if(co.linkHits) ln.push(row('연계 추가타', `${+co.linkHits.toFixed(2)}회/행동`, '연계를 받은 공격마다 1타씩, 각자 속성·존 배율'));
   const hit = (h,lab)=>`${lab} 경감 전 ${fmtN(h.pre.n)} / 크리 ${fmtN(h.pre.c)}${h.oc>0?` / 오버크리 ${fmtN(h.pre.oc)}`:''} → 25억 경감 ${fmtN(h.cap.n)} / ${fmtN(h.cap.c)} → 콤보 ${Math.round(h.combo*100)}% ${fmtN(h.fin.n)} / ${fmtN(h.fin.c)}${h.oc>0?` / ${fmtN(h.fin.oc)}`:''}`;
   ln.push(row('1타', `${fmtN(h0.avg)} → ${fmtN(h1.avg)}`, `기대값(크리율 반영), AF 콤보 75% → ${Math.round(fin*100)}%. 99.99억 상한`));
@@ -1414,13 +1415,14 @@ function fcardHtml(f, k, r, cond){
     const key=`f${k}-${x.rank}`; RES.set(key,{x, focus:f, mode:cond.mode, bossId:cond.bossId});
     const ex = x.ex = E.explainTeam(x.team, x.progs, x.ev, settings(), {});
     const order = ex.order;
-    const z=x.ev.sb.zone, bad=ex.notes.filter(n=>n.lvl==='off').length;
-    const sbTot=x.ev.sb.per.reduce((a,b)=>a+b,0)||1;
+    const dm = cond.mode==='burst' && x.ev.dummy && !x.ev.dummy.fast && x.ev.dummy.per ? x.ev.dummy : null; // 최고점 모드: 허수아비 기준
+    const z = dm ? dm.zFull : x.ev.sb.zone, bad=ex.notes.filter(n=>n.lvl==='off').length;
+    const shr = dm ? dm.per : x.ev.sb.per, sbTot=shr.reduce((a,b)=>a+b,0)||1;
     return `<div class="frow">
       <div class="frank">${x.rank}</div>
       <div class="fmain">
-        <div class="fmem">${order.map(i=>{ const c=x.team[i], sh=x.ev.sb.per[i]/sbTot; return `<span class="mchip${sh>=0.35?' main':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="추천 세팅 보기">${elChip(c.elem)} ${esc(c.name)}</span>`; }).join('')}</div>
-        <div class="fmeta"><span>${esc(z&&z.level?z.label:'존 없음')}</span> · <span class="diff lv${x.diff.lv}">Lv${x.diff.lv}</span> · SB 턴 <span class="num">${fmtN(x.ev.sbTurn)}</span> · 평상 <span class="num">${fmtN(x.ev.sustain)}</span>${bad?` · <span class="ng">버프 조건 미충족 ${bad}</span>`:''} · <button type="button" class="linkbtn" data-goalsave="${key}">목표로 저장</button> · <button type="button" class="linkbtn" data-share="${key}">링크 복사</button></div>
+        <div class="fmem">${order.map(i=>{ const c=x.team[i], sh=shr[i]/sbTot; return `<span class="mchip${sh>=0.35?' main':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="추천 세팅 보기">${elChip(c.elem)} ${esc(c.name)}</span>`; }).join('')}</div>
+        <div class="fmeta"><span>${esc(z&&z.level?z.label:'존 없음')}</span> · <span class="diff lv${x.diff.lv}">Lv${x.diff.lv}</span> · ${dm?`최고점 <span class="num">${fmtN(x.ev.dummyT)}</span> <span class="hint">(허수아비 어포딜${dm.sbAt?` · AF ${dm.sbAt}번째에 SB`:''})</span>`:`SB 턴 <span class="num">${fmtN(x.ev.sbTurn)}</span> · 평상 <span class="num">${fmtN(x.ev.sustain)}</span>`}${bad?` · <span class="ng">버프 조건 미충족 ${bad}</span>`:''} · <button type="button" class="linkbtn" data-goalsave="${key}">목표로 저장</button> · <button type="button" class="linkbtn" data-share="${key}">링크 복사</button></div>
         <div class="setup" data-for="${key}" hidden></div>
       </div></div>`;
   }).join('');
@@ -1829,6 +1831,7 @@ function renderConsts(){
     <div class="crow"><span>후열 P글래 셔틀 반영</span><label class="checkrow" style="align-items:center"><input type="checkbox" id="cMule" ${S.muleOn!==false?'checked':''}> 사용</label><label class="checkrow" style="align-items:center" title="후열 고정이 없을 때 주딜 무기 퍼스널리티 셔틀 2명 가정"><input type="checkbox" id="cMuleAuto" ${S.muleAuto!==false?'checked':''}> 자동 가정</label><label class="checkrow" style="align-items:center" title="자동 가정일 때 같은 퍼스널리티의 전열 서포터도 셔틀로"><input type="checkbox" id="cMuleFront" ${S.muleFront!==false?'checked':''}> 전열 서포터도</label></div>
     <div class="crow"><span>연성 P글래 표시가 없을 때</span><label class="checkrow" style="align-items:center" title="보유 탭에서 연성 P글래를 하나도 표시하지 않았을 때 전부 가졌다고 보고 셔틀 공유를 계산 (끄면 공유 없음)"><input type="checkbox" id="cPglAll" ${S.pglAssumeAll?'checked':''}> 전부 있다고 가정</label><span></span><span></span></div>
     <div class="crow"><span>셔틀 1명 글래스터 칸 / 속성·HP P글래 1개 수치</span><input type="number" step="1" min="1" max="4" id="cMuleSl" value="${S.muleSlots}"><input type="number" step="0.05" min="0" max="1" id="cMulePct" value="${S.mulePct}"><span></span></div>
+    <div class="crow"><span>아군 전체 글래 (공명의 힘·격진의 힘)</span><label class="checkrow" style="align-items:center" title="빌더 코어의 '아군 전체' 글래스터. 후열 셔틀 1명당 남는 칸(일반 존 2칸, 극존 1칸)에 공명의 힘 <많은 쪽 천/명>(전후방 그 성향 1명당 +5%, 51행)과 격진의 힘 <펼친 존>(+15%, 50행)을 단다고 봅니다"><input type="checkbox" id="cAura" ${S.auraGl!==false?'checked':''}> 후열 셔틀이 장착</label><span></span><span></span></div>
     <div class="crow"><span>소비 MP 배율 (MP 감소 글래스터면 0.85·0.75)</span><input type="number" step="0.05" min="0.3" max="1.5" id="cMpMul" value="${S.mpCostMul}"><span></span><span></span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn small" id="constReset">기본값으로</button><span class="hint">바꾸면 다음 계산부터 반영됩니다. 절존 배율은 극존과 같습니다.</span></div>`;
 }
@@ -1849,6 +1852,7 @@ function onConst(e){
   else if(t.id==='cGearSpd') S.gearSpd = t.value==='' ? null : Math.max(0,Math.min(200,Math.round(+t.value||0)));
   else if(t.id==='cAfAnim') S.afAnim=Math.max(0.5,Math.min(5,+t.value||2));
   else if(t.id==='cSim') S.simOn=t.checked;
+  else if(t.id==='cAura') S.auraGl=t.checked;
   else if(t.id==='cMule') S.muleOn=t.checked;
   else if(t.id==='cMuleAuto') S.muleAuto=t.checked;
   else if(t.id==='cMuleFront') S.muleFront=t.checked;
@@ -2018,7 +2022,7 @@ function bind(){
   $('#bossList').addEventListener('click',e=>{ const b=e.target.closest('[data-boss]'); if(!b) return; curBoss=b.dataset.boss; renderBossList(); });
   $('#bossDetail').addEventListener('click',e=>{ if(e.target.id==='bossGo'){ applyBoss(curBoss); showTab('plan'); runPlan(); } });
   $('#constBox').addEventListener('change',onConst);
-  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','useStats','gearSpd','enemyHits','enemyAoE','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','pglAssumeAll','afStart','burstTurns','sbPerAct','muleSlots','mulePct'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
+  $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','useStats','gearSpd','enemyHits','enemyAoE','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','pglAssumeAll','afStart','burstTurns','sbPerAct','muleSlots','mulePct','auraGl'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
 function renderAll(){ renderPlanControls(); renderRoster(); renderBudGrid(); renderPglTbl(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
 

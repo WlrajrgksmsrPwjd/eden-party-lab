@@ -40,6 +40,7 @@ const DEFAULT_SETTINGS = {
   afAnim: 2,         // AF 중 스킬 연출 시간(초) 가정
   sbFillBonus: true, // 성도 게이지 충전 보너스(강화): 성도 각성 캐릭터 행동마다 5%(조건 충족 가정)
   dummyMule: true,   // 최고점(허수아비)은 후열 연성 P글래 셔틀을 가정(보유 표시가 있으면 그것만)
+  auraGl: true,      // 후열 셔틀이 아군 전체 글래(공명의 힘 <천/명> 51행, 격진의 힘 <존> 50행)를 단다고 가정 (빌더 코어 기준)
   comboCap: 0,       // AF 콤보 배율 상한(배). 0이면 없음 — 위키 Another Force/Combo에 상한 없음
   afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
   useStats: true,    // 캐릭터 기본 스탯(위키 Stats Index)으로 주 스탯 대미지·운 크리율·속도 반영
@@ -245,7 +246,7 @@ function reqText(req){
 
 /* 팀 구성에 따라 속성이 바뀌는 캐릭터 (존 종류와 주력 속성) */
 const ELEM_SWITCH = {
-  jilfany_as: {need:{kind:'elem', vals:['crystal'], n:3, others:false}, yes:'crystal', no:'water'}
+  jilfany_as: {need:{kind:'elem', vals:['crystal'], n:3, others:false}, yes:'crystal', no:'water', zone:['crystal']} // 공격 속성은 輝晶陣이 깔려 있으면(누가 폈든) 결정, 자기 존 종류는 전방 결정 3명이면 輝晶陣
 };
 /* ---------- 파티 버프 조건 규칙 (data/buff_rules.json → party_rules) ---------- */
 const FG = {
@@ -319,6 +320,12 @@ function ruleAct(r, j, team, progs, sit, z, A){
    A.tm = {S0: AF 전 세팅 턴(허수아비: AF 게이지가 100%가 되는 턴 수), H: 평상 턴 평균 구간}. AF 중 1인 행동은 약 AF_N_EST회.
    평상 턴 t의 공격 때 자기 행동 t회, AF k번째 행동 때 S0+k회, AF 끝 SB 때 S0+AF 행동 수만큼 쌓였다고 본다 */
 const AF_N_EST = 4.5;
+/* 성도 게이지 충전 보너스: 天冥 어빌리티(행동할 때 쌓이는 天/冥의 힘 증가, 강화 후 '중')는 스텔라 보드 조건(전열 구성)이 맞을 때만. 자료가 없거나 판정 불가면 충족으로 봄 */
+function sbFillOK(team, i, progs, S){
+  const c = team[i]; if(S.sbFillBonus===false || !c.stellar || !(progs[i] && progs[i].sbOK)) return false;
+  const b = c.stBoard; if(!b || !b.fill) return true;
+  return reqMet(b.fill, team, c);
+}
 function stackFill(need, sit, A, consume){
   need = Math.max(1, need); const tm = A.tm || {S0:2, H:6};
   if(sit==='normal'){
@@ -482,6 +489,7 @@ function prepChar(c){
     cover: c.cover || null,
     links: Array.isArray(c.links) && c.links.length ? c.links : null, // 연계 부여(data/link.json) // 아군 대신 맞기: 'aoe'(수세·전체공격 대신 받기) | 'sb'(SB 턴만)
     fateTbl: Array.isArray(c.fate_tbl) && c.fate_tbl.length ? c.fate_tbl : null,
+    stBoard: c.stellar_board || null, // 스텔라 보드: stats(합계), fill(天冥 어빌리티 조건 → SB 게이지 충전 증가)
     stats: Array.isArray(c.stats) && c.stats.length===8 ? c.stats : null,
     mainStat: (m0.stat==='int'||m0.stat==='spd') ? m0.stat : 'pwr',
     mzone: (()=>{ const L=[]; for(const sk of [c.main, c.sb]) if(sk && sk.mcond) for(const cd of [].concat(sk.mcond.need||[], ...((sk.mcond.steps||[]).map(s=>s[1]||[])))) if(cd && cd.zone) L.push(cd); return L.length?L:null; })()
@@ -518,12 +526,13 @@ function teamDifficulty(team){
    천명치 t: 단계 보너스(fate_tbl) 합 + 255에서 힘·지성·속도·내구·정신·운 +10 */
 const STAT_ORDER = ['hp','mp','pwr','int','spd','end','spr','lck'];
 const STAT_FATE_KEY = {lck:'luck'};
-function statsAt(stats, tbl, t){
+function statsAt(stats, tbl, t, board){
   if(!Array.isArray(stats) || stats.length!==8) return null;
-  const o = {};
+  const o = {}, bs = board && board.stats || null;
   STAT_ORDER.forEach((k,i)=>{ let v = stats[i];
     if(tbl) for(const [lv,d] of tbl) if(t>=lv) v += (d[STAT_FATE_KEY[k]||k]||0);
     if(t>=255 && i>=2) v += 10;
+    if(bs) v += (bs[k]||0) + (i>=2 ? (bs.all||0) : 0); // 성도각성 스텔라 보드 스탯(全能力 = HP·MP 외)
     o[k] = v; });
   return o;
 }
@@ -538,7 +547,7 @@ const gearSpdOf = (pc, S) => (S && S.gearSpd!=null && S.gearSpd!=='') ? (+S.gear
 function charStats(pc, own, S){
   const t = own ? (+own.t||0) : 0;
   const b = own && own.build, bst = b && !isBuilderDefault(b.st) ? b.st : null;
-  const wiki = S && S.useStats===false ? null : statsAt(pc.stats, pc.fateTbl, t);
+  const wiki = S && S.useStats===false ? null : statsAt(pc.stats, pc.fateTbl, t, pc.stellar && own && own.s ? pc.stBoard : null);
   if(!wiki && !bst) return null;
   const nk = bst ? {pwr:+bst.str, int:+bst.int, spd:+bst.spd, lck:+bst.luck, mp:+bst.mp} : wiki;
   const spdB = b && b.spdTot ? +b.spdTot : (nk.spd + gearSpdOf(pc, S));
@@ -554,7 +563,7 @@ function charProg(pc, own, S){
   const gl = Object.assign({}, (S&&S.grastaDefault)||DEFAULT_SETTINGS.grastaDefault, (own&&own.gl)||{});
   if(pc.stellar && own && own.s){
     if(t>=15){ sbOK=true; sbMul = t>=30?1:0.8; }
-    if(t>=80) f*=1.15; else if(t>=50) f*=1.08; else if(t>=30) f*=1.04;
+    if(!pc.stBoard){ if(t>=80) f*=1.15; else if(t>=50) f*=1.08; else if(t>=30) f*=1.04; } // 스텔라 보드 스탯 자료가 없을 때만 근사
   }
   // 주 스탯(천명치 보너스 포함): 기본 스탯이 있으면 실제 값, 없으면 기준값 + 천명 표의 주 스탯 보너스
   const kind = pc.atkKind==='mag' ? 'mag' : 'phys', ms = pc.mainStat || 'pwr';
@@ -656,29 +665,40 @@ function zoneAF(z, co){
   if(z.types.some(t=>OPP[t]===el)) return 0;
   return null;
 }
-function zoneFactor(z, el, wt, S){
+function zoneFactor(z, el, wt, S, rel){
+  // 빌더 코어(ae-core zoneEffect, 계산기 56행) 기준. 괄호는 극(ZONE 각성, 절 포함)
   if(!z || z.kind==='none' || z.level===0) return 1;
-  const L = z.level-1;
+  const L = Math.min(1, z.level-1), K = L>=1; // 극·절
+  const up = S.zoneWeap[L], up0 = S.zoneWeap[0], dn = S.zoneOffWeap, dnK = 1-2*(1-S.zoneOffWeap); // +30(+60) / −30(−60)
   if(z.kind==='elem'){
     const key = z.key || z.types[0];
-    if(key==='moonlight'){ if(z.types.includes(el)) return S.zoneWeap[L]; return ELEM4.includes(el) ? S.zoneOffWeap : 1; }
-    if(key==='crystal'){ if(el==='crystal') return S.zoneWeap[L]; return el!=='none' ? S.zoneOffWeap : 1; }
-    if(key==='thunder'){ if(el==='thunder') return S.zoneWeap[L]; return el==='shade' ? S.zoneOffWeap : 1; }
-    if(key==='shade'){ if(el==='shade') return S.zoneElem[L]; return el!=='none' ? S.zoneWeap[0] : 1; }
-    if(z.types.includes(el)) return S.zoneElem[L];
+    if(key==='moonlight') return z.types.includes(el) ? up0 : ELEM4.includes(el) ? dn : 1;          // 월광진: 극이어도 +30
+    if(key==='crystal'){ if(el==='none') return 1; const wk = rel==='weak';                          // 휘정진: 약점이면 결정 +110(+220), 그 외 +50(+130)
+      if(el==='crystal') return wk ? (K?3.2:2.1) : up; return wk ? (K?2.3:1.5) : dn; }
+    if(key==='thunder') return el==='thunder' ? up : el==='shade' ? dn : 1;                            // 초뢰진
+    if(key==='shade'){ if(el==='none') return 1; const rs = rel==='resist';                            // 각음진: 저항이면 그림자 +100(+200), 그 외 +60(+90)
+      if(el==='shade') return rs ? (K?3.0:2.0) : S.zoneElem[L]; return rs ? (K?1.9:1.6) : up0; }
+    if(z.types.includes(el)) return S.zoneElem[L];                                                       // 열화·수천·지열·풍왕 +50(+100), 상극 −50
     if(z.types.some(t=>OPP[t]===el)) return S.zoneOppElem;
     return 1;
   }
   if(z.kind==='weap'){
-    return z.types.includes(wt) ? S.zoneWeap[L] : S.zoneOffWeap;
+    const key = z.key || z.types.join('_'), hit = z.types.includes(wt);
+    if(key==='slash_magic') return hit ? up0 : dn;           // 쌍격진 참마: 극이어도 +30, 그 외 −30
+    if(key==='slash_pierce') return hit ? up : dn;           // 쌍격진 참돌: +30(+60), 그 외 −30
+    return hit ? up : (K ? dnK : dn);                        // 황참·순돌·굉타·환마: +30(+60), 그 외 −30(−60)
   }
-  if(z.kind==='all') return S.zoneWeap[0];
+  if(z.kind==='all'){
+    const key = z.key||'';
+    if(key==='starsea'||key==='stellar_sea'||key==='星海陣') return 1; // 성해진: AF 게이지 100%일 때 AF 밖에서만 +100% → AF 중엔 효과 없음
+    return up0;                                              // 섬격진 +30
+  }
   return 1;
 }
-function zoneFactorEff(z, el, wt, S){
-  const f = zoneFactor(z, el, wt, S);
+function zoneFactorEff(z, el, wt, S, rel){
+  const f = zoneFactor(z, el, wt, S, rel);
   if(z && z.level>=2 && z.how==='스킬 각성'){ // 각성 준비 턴이 필요한 극존은 85%만 인정
-    const f1 = zoneFactor(Object.assign({}, z, {level:1}), el, wt, S);
+    const f1 = zoneFactor(Object.assign({}, z, {level:1}), el, wt, S, rel);
     return f1 + 0.85*(f-f1);
   }
   return f;
@@ -707,7 +727,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   if(!sk) return null;
   let el = sk.element||c.elem; const kind = sk.kind==='mag'?'mag':'phys';
   const swc = ELEM_SWITCH[c.id];
-  if(swc && (el===swc.yes || el===swc.no)) el = reqMet(swc.need, team, c) ? swc.yes : swc.no;
+  if(swc && (el===swc.yes || el===swc.no)) el = (swc.zone ? zoneMatch(swc.zone, zone) : reqMet(swc.need, team, c)) ? swc.yes : swc.no;
   if(A.echg) el = echgElem(A.echg, team, idx, el, situation, zone, enemy);
   const wt = sk.weapon_type || (kind==='mag'?'magic':c.wt);
   const tgt = sk.target==='st'?'st':'aoe';
@@ -762,7 +782,7 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     if(p[FK]) flatP += (+p[FK]||0)*F(j,FK);
     if(p.shinan) shinW = Math.max(shinW, F(j,'shinan'));
     if(p.kesshi) kessW = Math.max(kessW, F(j,'kesshi'));
-    if(p.dmg_up){ const v = pct(p.dmg_up)*F(j,'dmg_up'), s = p.dmg_src||'other'; if(v>(dmgS[s]||0)) dmgS[s]=v; }
+    if(p.dmg_up && !(p.dmg_el && p.dmg_el!==el)){ const v = pct(p.dmg_up)*F(j,'dmg_up'), s = p.dmg_src||'other'; if(v>(dmgS[s]||0)) dmgS[s]=v; } // dmg_el: 그 속성 공격만(○属性で与えるダメージ)
     if(p.mp_up && !(own && has('mp_up'))) mpv.push(pct(p.mp_up)*F(j,'mp_up'));
     if(!(own && has('crit_dmg'))) critD += pct(p.crit_dmg)*F(j,'crit_dmg');
     if(p.over_crit) ocW=Math.max(ocW, F(j,'over_crit'));
@@ -889,6 +909,13 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     gq = Object.assign({}, gq, {f: gq.f*f, share, alloc:al});
   }
   dmg *= gq.f * pr.f;
+  // 아군 전체 글래(빌더 코어 '아군 전체' 효과): 후열 셔틀 1명당 남는 칸(일반 존 2칸, 극존 1칸 — 극존이면 각성의 힘 P에 1칸 더 씀)에
+  // 공명의 힘 <많은 쪽 천/명>(51행, 전후방 그 성향 1명당 +5%) → 격진의 힘 <펼친 존>(50행, +15%) 순서로. 같은 행은 합, 행끼리 곱
+  let auraF = 1, auraR = null;
+  if(A.aura && A.aura.nb>0){ const au=A.aura, zk = zone && zone.level>0 ? (zone.key||'') : '', k = zone && zone.level>=2 ? 1 : 2;
+    let r51 = au.nb*0.05*au.nMaj, r50 = 0;
+    if(k>=2){ if(zk && AURA_Z.has(zk)) r50 = au.nb*0.15; else if(au.nMin>0) r51 += au.nb*0.05*au.nMin; }
+    auraF = (1+r50)*(1+r51); auraR = {r50, r51, nb:au.nb}; dmg *= auraF; }
   if(pr.gear) dmg *= pr.gear.q; // 빌드 코드: 장비 완성도
 
   // 방어 무시/배리어
@@ -923,14 +950,14 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   }
   return {perHit: pN*critX, pN, cR, p, oc:ocP, totHits, links, linkHits, nT, el, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
     afx: sk.af_combo_x||1, hitsPerAct: totHits + linkHits, rep, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
-    bh, defR, flatP, lunaF, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st'};
+    bh, defR, flatP, lunaF, auraF, auraR, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st'};
 }
 
 /* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
 function condP(cd, sit, team, c, A, zone, enemy, el, progs){
   const nrm = sit==='normal';
   // 스탯 비례 위력: {stat:'spr', full:500, buff:0.5, sum:'front'} — 기본 스탯(천명치 반영)·버프로 최대치 대비 비율
-  if(cd.stat){ const k=cd.stat, val = m=>{ const j=team.indexOf(m), pr=progs&&progs[j]; const st=statsAt(m.stats, m.fateTbl, pr?(pr.t||0):120); return st ? st[k] : (+cd.dflt||170); };
+  if(cd.stat){ const k=cd.stat, val = m=>{ const j=team.indexOf(m), pr=progs&&progs[j]; const st=statsAt(m.stats, m.fateTbl, pr?(pr.t||0):120, m.stellar && pr && pr.sbOK ? m.stBoard : null); return st ? st[k] : (+cd.dflt||170); };
     const v = cd.sum==='front' ? team.reduce((a,m)=>a+val(m),0) : val(c);
     return Math.min(1, v*(1+(+cd.buff||0))/Math.max(1,+cd.full||500)); }
   if(cd.zone){ const ok = zoneMatch(cd.zone, zone) && (!cd.zlv || (zone && zone.level>=cd.zlv)); return ok?1:0; }
@@ -967,6 +994,8 @@ function condMult(sk, mc, sit, team, c, progs, idx, A, zone, enemy, el){
    inf: 이 조합의 독·페인 가동률 {poison, pain} (true/false도 받음). 잠재 광석을 달면 본인이 직접 부여(가동률 0.9)
    zOn: ZONE 각성(극·절) 중이면 각성의 힘 후보 */
 const GL_Z = 0.25;
+/* 격진의 힘 <존>이 있는 존(빌더 코어 글래스터 목록): 쌍격진 참돌·월광진·섬격진은 없음 */
+const AURA_Z = new Set(['fire','water','earth','wind','thunder','shade','crystal','slash','pierce','blunt','magic','slash_magic','starsea','stellar_sea','星海陣']);
 /* HP가 낮은 캐릭터(스킬마다 자해): 반역의 힘(그 속성 +15%·HP 80% 이하 +30%, 속성마다 하나), HP 저하 시 강화(+40%, 무기종마다 하나)가
    같은 합연산 묶음에 들어가 속성 글래스터(+30%)보다 크다 → 합연산 칸 값 [0.45, 0.40, 0.30…] (무속성이면 반역은 HP 몫 0.30만) */
 const GL_ADD = {norm:[0.3,0.3,0.3,0.3], low:[0.45,0.4,0.3,0.3], lowNoEl:[0.4,0.3,0.3,0.3]};
@@ -999,7 +1028,7 @@ function grastaFactor(pr, inf, zOn, hpLow, noEl){
 const HIT_MAX = 9999999999;
 function applyZoneCap(core, z, S, cap, combo){
   if(!core) return 0;
-  const zf = zoneFactorEff(z, core.el, core.wt, S), c = combo||1, p = core.p, oc = core.oc||0;
+  const zf = zoneFactorEff(z, core.el, core.wt, S, core.rel), c = combo||1, p = core.p, oc = core.oc||0;
   const H = v => Math.min(HIT_MAX, v*c);
   const E1 = x => S.capOn ? (1-p)*H(dingCap(x)) + p*((1-oc)*H(dingCap(x*core.cR)) + oc*H(dingCap(2*x*core.cR)))
                           : x*c*((1-p) + p*core.cR*(1+oc));
@@ -1174,9 +1203,10 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio){
   const fast = team.map((c,i)=> !fromBuild(i) && S.afFastDefault ? true : (spdOf(i) ? spdOf(i)>=249 : false));
   const known = team.map((c,i)=> progs[i] && progs[i].spdSrc ? progs[i].spdSrc : null);
   const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
-    const za = zoneAF(z, co); if(za!=null) return za;
     const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
-    return Math.min(30, co.totHits + (co.linkHits||0))*(weak?3.5:1.5); });
+    const byHit = Math.min(30, co.totHits + (co.linkHits||0))*(weak?3.5:1.5);
+    const za = zoneAF(z, co); if(za!=null) return za>0 ? Math.max(za, byHit) : za; // 맞는 존은 행동당 7.5%(타수 충전보다 적으면 타수 기준), 상극·안 맞는 존은 0
+    return byHit; });
   // 연출 시간: 캐릭터별 값(af_anim)이 있으면 그 값, 재행동·연속 실행 스킬은 실행 횟수만큼 (게이지도 실행마다 참 — refill은 총 타수 기준)
   const animOf = team.map((c,i)=>(c.afAnim||anim) * (1 + Math.max(0, (cores[i]&&cores[i].rep)||0)));
   const next = team.map(()=>0), cnt = team.map(()=>0), seq = [];
@@ -1415,6 +1445,8 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   A.bud = ctx && ctx.buddy ? budAgg(ctx.buddy, team, enemy, A) : null;
   A.painAny = A.inf.poison>0 || A.inf.pain>0;
   A.mule = muleShare(team, S, ctx, progs);
+  { const nb = ctx && ctx.maxBack!=null ? ctx.maxBack : 2, lt = team.filter(c=>c.align==='light').length, sh = team.length-lt;
+    A.aura = S.auraGl===false ? null : {nb, nMaj: Math.max(lt, sh) + nb, nMin: Math.min(lt, sh)}; } // 후열은 많은 쪽 성향으로 가정
   const light = team.filter(c=>c.align==='light').length, shadow = team.length-light;
   const flux = light>shadow?'light':shadow>light?'shadow':'both';
   const hasSB = team.some((c,i)=>c.stellar && progs[i].sbOK);
@@ -1486,7 +1518,8 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     team.forEach((c,i)=>{ const co=cs[i]; if(!co) return; const pAct = simUse ? (sim.act[i]+sim.alt[i]) : 1;
       const za = zoneAF(z, co);
       const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
-      afGain += pAct * (za!=null ? za : Math.min(30, co.totHits) * (weak?3.5:1.5));
+      const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5);
+      afGain += pAct * (za!=null ? (za>0 ? Math.max(za, byHit) : za) : byHit);
       afGain += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)];
     });
     if(A.bud && ctx && ctx.buddy && ctx.buddy.main && ['moke','korobo','gansu_as'].includes(ctx.buddy.main.id)) afGain += 5;
@@ -1543,7 +1576,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   } else { out.bsim = {total:0, turns:[], N:NB, afStart:st, s0:simIn.s0}; }
   if(needDummy && ctx && ctx.dummyFast){ // 탐색 1단계: 허수아비를 빠르게 어림(버프 다 깔린 AF + AF 끝 콤보 SB), 상위 후보만 2단계에서 정밀 계산
     const totA = Math.max(1, afA.n.reduce((x,y)=>x+y,0)), sb0 = Math.min(50, 12.5*Math.max(light, shadow)), sa = S.sbPerAct!=null ? +S.sbPerAct : 2.5;
-    const rateAvg = team.reduce((x,c,i)=>x + afA.n[i]*sa*(S.sbFillBonus!==false && c.stellar && progs[i].sbOK ? 2 : 1), 0)/totA;
+    const rateAvg = team.reduce((x,c,i)=>x + afA.n[i]*sa*(sbFillOK(team, i, progs, S) ? 2 : 1), 0)/totA;
     const needA = (100 - sb0)/Math.max(0.1, rateAvg), sbOK = sbIdx.length>0 && needA <= totA + 1e-9;
     const cAt = Math.min(0.75 + gain*Math.min(1, needA/totA), S.comboCap>0?S.comboCap:Infinity);
     out.dummyT = af*0.85 + (sbOK ? simIn.sbBurst*cAt : 0); out.dummy = {total:out.dummyT, fast:true, per:team.map(()=>0), order:team.map((_,i)=>i), n:afA.n}; return out; }
@@ -1606,7 +1639,7 @@ function dummySim(o){
   let combo = 0.75, af = 0, cw = 0, sbG = Math.min(50, 12.5*Math.max(o.light, o.shadow));
   const sbAct = S.sbPerAct!=null ? +S.sbPerAct : 2.5;
   // 성도 게이지 충전 보너스(강화): 성도 각성한 캐릭터는 조건을 채운다고 보고 2배(설정으로 끔)
-  const sbRate = team.map((c,i)=> sbAct * (S.sbFillBonus!==false && c.stellar && progs[i] && progs[i].sbOK ? 2 : 1));
+  const sbRate = team.map((c,i)=> sbAct * (sbFillOK(team, i, progs, S) ? 2 : 1));
   let sbAt = null, sb = 0, zOver = null; const sbPer = [], sbCo = {};
   for(const a of afA.seq){
     const i = a.i, c = team[i];
@@ -1636,7 +1669,7 @@ function dummySim(o){
 /* 계산 근거: 공격 1회의 1타 (존 배율 → 일반·크리·오버크리 → 25억 경감 → AF 콤보 → 99.99억 상한) */
 function hitInfo(co, z, S, combo){
   if(!co) return null;
-  const zf = zoneFactorEff(z, co.el, co.wt, S), c = combo||1, p = co.p, oc = co.oc||0;
+  const zf = zoneFactorEff(z, co.el, co.wt, S, co.rel), c = combo||1, p = co.p, oc = co.oc||0;
   const n = co.pN*zf, cr = n*co.cR, o2 = 2*cr, on = S.capOn!==false;
   const K = v => on ? dingCap(v) : v, H = v => Math.min(HIT_MAX, K(v)*c);
   return {zf, combo:c, p, oc, pre:{n, c:cr, oc:o2}, cap:{n:K(n), c:K(cr), oc:K(o2)}, fin:{n:H(n), c:H(cr), oc:H(o2)},
