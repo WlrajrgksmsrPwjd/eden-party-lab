@@ -12,40 +12,18 @@
   "tier": "C",
   "score": 95,
   "roles": ["support", "zone", "debuffer"],
-  "main": {
-    "skill": "虹華万暁",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "pierce",
-    "mult": 7, "size": "xl", "hits": 1, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "아군 전체 고무(鼓舞) 누적 수에 따라 위력 증가(최대 12누적/7배). 열화진 시 크리티컬 대미지 2배"
-  },
+  "main": {"skill": "虹華万暁", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "pierce", "mult": 14, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "아군 전체 鼓舞 누적 수에 따라 위력 증가(최대 12누적/7배) × 烈火陣 시 크리 대미지 2배 = 최대 14. 아군 전체 크리율 100%(1회 행동). 鼓舞는 통상 공격으로만 쌓임(AF 중 통상 공격은 突攻撃(小)라 안 쌓임)"},
   "sb": null,
-  "self_buff": {
-    "pwr": 70, "int": 70, "spd": 0, "elem_atk": 100, "weapon_atk": 60,
-    "crit_rate": 100, "crit_dmg": 60,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "무기종 대미지UP은 고무 보유 아군만",
-    "pwr": 70, "int": 70, "spd": 0,
-    "all_elem_atk": 0, "elem_atk": {"fire": 100}, "weapon_atk": {"all": 60},
-    "crit_rate": 100, "crit_dmg": 60,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 0, "int": 0, "spd": 50,
-    "all_elem_res": 0, "elem_res": {"fire": 100},
-    "phys_res": 30, "mag_res": 0, "weapon_res": {},
-    "break": "", "weak_expose": "", "pain_poison": true
-  },
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "무기종 대미지UP은 鼓舞 보유 아군만. 완력·지성·화 공격·크리 대미지·무기종은 烈火陣 중 2배 값", "pwr": 70, "int": 70, "spd": 0, "all_elem_atk": 0, "elem_atk": {"fire": 100}, "weapon_atk": {"all": 60}, "crit_rate": 100, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 0, "int": 0, "spd": 50, "all_elem_res": 0, "elem_res": {"fire": 100}, "phys_res": 30, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": true},
   "zone": {"type": "fire", "awakened": true, "condition": "爆蓮之哭 선제 전개 / VC 전개. 고유스킬로 존 각성, 어나더 센스로 각성 3턴 연장"},
-  "support": {"heal": 2, "barrier": 2, "cleanse": 1, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 3, "barrier": 3, "dmg_cut": 0, "cleanse": 2, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "불 ZONE(烈火陣) 전개 중, 아군에 고무 누적",
   "tags": ["zone_extend", "element_convert", "fire_zone"],
-  "note_kr": "불 존 전개·각성 및 연장 담당 서포터. 통상공격으로 아군에 고무 누적+공격속성 불 변환. 열화진 중 버프/디버프 2배(불내성 100%, 불공격 100%)."
+  "note_kr": "불 존 전개·각성 및 연장 담당 서포터. 통상공격으로 아군에 고무 누적+공격속성 불 변환. 열화진 중 버프/디버프 2배(불내성 100%, 불공격 100%).",
+  "support_src": {"heal": "庇護癒波 / 烈火陣時(固有アビリティ)", "barrier": "庇護癒波 / VC", "cleanse": "烈火陣時(固有アビリティ)", "mp_recover": "庇護癒波"},
+  "play_kr": "爆蓮之哭(선제)으로 烈火陣을 깔고 雀煉乱舞로 존을 각성시키며 아군 화 공격 100%·적 화 내성 100% 감소(6턴)를 거는 화 속성 서포터입니다. 燎焔怒涛로 완력·지성 70%·크리 대미지 60%를 주고, 통상 공격으로 아군에게 鼓舞를 쌓아 공격 속성을 화로 바꾸고 무기 대미지 60%를 받게 합니다. 鼓舞가 12까지 쌓이면 虹華万暁가 최대 7배(烈火陣이면 크리 2배)가 되지만 AF 중엔 鼓舞가 쌓이지 않고, 庇護癒波로 치유·경감 배리어도 줍니다."
 },
 {
   "id": "ashtear",
@@ -66,10 +44,13 @@
   "party_buff": {"scope": "all", "restrict": "크리티컬 관련은 머티리얼 4 이상 시", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 30, "int": 30, "spd": 0, "all_elem_res": 30, "elem_res": {}, "phys_res": 0, "mag_res": 90, "weapon_res": {"slash": 90}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "堅守陣", "awakened": false, "condition": "전투 개시 시 / 가드포스 계열 사용 시 자동 전개"},
-  "support": {"heal": 2, "barrier": 3, "cleanse": 3, "revive": true, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 2, "status_immune": 2},
+  "support": {"heal": 3, "barrier": 3, "dmg_cut": 3, "cleanse": 3, "status_immune": 2, "debuff_guard": 0, "knockback_immune": 2, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 2, "revive": true},
   "req": "머티리얼 4 이상 누적",
   "tags": ["fixed_damage", "zone_break", "buff_dispel", "sleep"],
-  "note_kr": "견수진 전개형 방어 서포터. 전속성내성 40% UP+40% 경감 배리어(3회), 상태이상 회복/무효. 성도스킬은 고정 대미지(SB 시 6천만×3)와 전체 부활·전회복. 미라클포스로 적 버프 해제·존 파괴·AF 50% 회복(전투 1회)."
+  "note_kr": "견수진 전개형 방어 서포터. 전속성내성 40% UP+40% 경감 배리어(3회), 상태이상 회복/무효. 성도스킬은 고정 대미지(SB 시 6천만×3)와 전체 부활·전회복. 미라클포스로 적 버프 해제·존 파괴·AF 50% 회복(전투 1회).",
+  "af_skill": {"skill": "ミステリーバレット", "target": "st", "kind": "mag", "stat": "pwr", "element": "fire", "weapon_type": "magic", "size": "xl", "mult": 36, "hits": 1, "repeat": 0, "execs": 1, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "mcond": {"base": 3.6, "need": [{"other": "堅守陣 유지(전열 개전 자동 전개, 다른 존이 덮으면 해제)"}]}, "condition": "[AF 1턴 대조 2026-10-15] 주력 次元爆弾은 턴 종료 공격이라 AF 대미지 0 → AF 행동은 ミステリーバレット(단일 火 魔 특대, 자신 완력 의존). 위력 랜덤 2.5/3/3.5/4/5배(평균 3.6)×堅守陣 10배=36. AF 중엔 マテリアル 미소비라 2배·재공격 없음"},
+  "support_src": {"heal": "リペアキット / コズミックフレア(SB)", "barrier": "バリアフォース", "dmg_cut": "バリアフォース / 堅守陣", "cleanse": "リペアキット", "status_immune": "リペアキット", "knockback_immune": "リペアキット", "mp_recover": "コズミックフレア(SB)", "af_gauge": "ミラクルフォース"},
+  "play_kr": "전열 개전 시 堅守陣과 マテリアル 3을 얻고, バリアフォース(40% 경감 배리어 3회·전속성 내성 40%)와 リペアキット(전체 HP 50~100% 회복·상태이상 회복·무효)로 파티를 지키는 방어 서포터입니다. 次元爆弾을 깔아 두면 턴 종료마다 남은 폭탄 수만큼 큰 화속성 폭발과 참·마법 내성 −90%가 들어가고, AF에서는 堅守陣 아래 위력 10배인 ミステリーバレット로 딜합니다. 堅守陣은 주고받는 피해를 모두 줄이고 다른 존과 겹치지 않으니 파티 존 구성에 주의하세요."
 },
 {
   "id": "gekka_no_reijo",
@@ -84,40 +65,18 @@
   "tier": "A",
   "score": 95,
   "roles": ["support", "debuffer", "breaker"],
-  "main": {
-    "skill": "ライフシュトルツ",
-    "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "slash",
-    "mult": 8, "size": "xl", "hits": 4, "repeat": 1,
-    "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "자신의 버프 종류 수에 따라 위력 증가(최대 8배). ANOTHER ZONE 중 재공격"
-  },
+  "main": {"skill": "ライフシュトルツ", "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "slash", "mult": 8, "size": "xl", "hits": 4, "repeat": 1, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "확정 크리. 자신의 버프 종류 수에 따라 위력 증가(최대 8배, 단계 미기재). ANOTHER ZONE(극 존) 중일 때만 재공격"},
   "sb": null,
-  "self_buff": {
-    "pwr": 0, "int": 0, "spd": 0, "elem_atk": 50, "weapon_atk": 50,
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "",
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_atk": 50, "elem_atk": {}, "weapon_atk": {"all": 50},
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 60, "int": 60, "spd": 0,
-    "all_elem_res": 0, "elem_res": {"water": 75},
-    "phys_res": 75, "mag_res": 0, "weapon_res": {},
-    "break": "slash", "weak_expose": "", "pain_poison": false
-  },
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 50, "weapon_atk": 50, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 50, "elem_atk": {}, "weapon_atk": {"all": 50}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 60, "int": 60, "spd": 0, "all_elem_res": 0, "elem_res": {"water": 75}, "phys_res": 75, "mag_res": 0, "weapon_res": {}, "break": "slash", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "", "awakened": true, "condition": "직접 전개 불가. 속성/공격종 ZONE 중 고유스킬로 ZONE 각성 실행"},
-  "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "status_immune": 1},
+  "support": {"heal": 0, "barrier": 0, "dmg_cut": 0, "cleanse": 0, "status_immune": 1, "debuff_guard": 0, "knockback_immune": 1, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "revive": false},
   "req": "ANOTHER ZONE 전개 중",
   "tags": ["weapon_break", "zone_awaken", "flexible"],
-  "note_kr": "임기응변으로 다양한 파티에 편성 가능한 범용 서포터. 어나더센스로 전무기종 대미지 50% UP, 선제 참 웨폰브레이크, 전속성공격 50%+약점대미지 UP(존 중 횟수 2배). 존 중 물리/수내성 75% DOWN."
+  "note_kr": "임기응변으로 다양한 파티에 편성 가능한 범용 서포터. 어나더센스로 전무기종 대미지 50% UP, 선제 참 웨폰브레이크, 전속성공격 50%+약점대미지 UP(존 중 횟수 2배). 존 중 물리/수내성 75% DOWN.",
+  "support_src": {"status_immune": "VC", "knockback_immune": "VC", "mp_recover": "VC"},
+  "play_kr": "アナザーセンス로 아군 전체 무기종 대미지 50%, 전투 시작 시 크리율을 주고, アデルグナーデ로 전 속성 공격 50%·약점 대미지를 거는 범용 서포터 겸 단일 딜러입니다. 존이 깔려 있을 때 ドルンタンツ(선제)를 쓰면 존을 ANOTHER ZONE으로 각성시키고 웨폰 브레이크를 6 쌓으며, 이때 ツュッヒティゲン의 물리·수 내성 감소가 75%, ライフシュトルツ(확정 크리, 버프 종류 수만큼 최대 8배)가 재공격까지 합니다. 공격 종류가 전열의 최다 종류로 바뀌니 파티 공격 종류를 맞추면 좋습니다."
 },
 {
   "id": "lovely_as",
@@ -132,16 +91,18 @@
   "tier": "C",
   "score": 95,
   "roles": ["tank", "debuffer", "dps"],
-  "main": {"skill": "ラブリンフルコース", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "blunt", "mult": 4, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "대상이 독 상태면 대미지 4배. AF 중 공격 횟수 +2, AF 콤보 배율 증가량 UP"},
+  "main": {"skill": "ラブリンフルコース", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "blunt", "mult": 4, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "대상이 독 상태면 대미지 4배. AF 중 공격 횟수 +2(repeat_af 2), AF 콤보 배율 증가량 UP(수치 미기재)", "repeat_af": 2},
   "sb": null,
   "self_buff": {"pwr": 100, "int": 0, "spd": 100, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "", "pwr": 15, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 15, "int": 0, "spd": 0, "all_elem_res": 150, "elem_res": {"fire": 0}, "phys_res": 0, "mag_res": 0, "weapon_res": {"blunt": 100}, "break": "", "weak_expose": "", "pain_poison": true},
   "zone": {"type": "blunt", "awakened": false, "condition": "お仕置きバイキング 사용 시 굉타진 전개"},
-  "support": {"heal": 1, "barrier": 0, "cleanse": 1, "revive": false, "guard": 2, "taunt": 0, "mp_recover": 0, "af_gauge": 2, "status_immune": 1},
+  "support": {"heal": 2, "barrier": 0, "dmg_cut": 1, "cleanse": 3, "status_immune": 2, "debuff_guard": 0, "knockback_immune": 1, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 2, "revive": false},
   "req": "전투 개시 3턴 이내(버프/디버프 2배), 수호 중 피격",
   "tags": ["poison", "counter", "opening_burst"],
-  "note_kr": "전투 1회 한정 수호(2턴)+물리/마법 요격으로 전속성내성 50% DOWN(최대 3누적=150%)·맹독·AF 게이지 회복. 개막 3턴 내 타내성 100% DOWN, 자신 완력/속도 100% UP. 단기 AF 운용용."
+  "note_kr": "전투 1회 한정 수호(2턴)+물리/마법 요격으로 전속성내성 50% DOWN(최대 3누적=150%)·맹독·AF 게이지 회복. 개막 3턴 내 타내성 100% DOWN, 자신 완력/속도 100% UP. 단기 AF 운용용.",
+  "support_src": {"heal": "VC(グリルでじっくりいくです！ 등)", "dmg_cut": "秘密のレシピ / 本日の日替わり！", "cleanse": "秘密のレシピ", "status_immune": "VC", "knockback_immune": "素早くソテーです！", "af_gauge": "本日の日替わり！"},
+  "play_kr": "주력 ラブリンフルコース로 맹독을 걸고 독 상태 적에게 4배, AF 중엔 3회 공격하는 화 타격 AF 딜러 겸 디버퍼입니다. 개전 3턴 안에 素早くソテーです！를 쓰면 적 타 내성 100% 감소와 자기 완력·속도 100%가 붙고, お仕置きバイキング으로 轟打陣을 깝니다. 本日の日替わり！(전투 중 1회)로 2턴 동안 맞을 때마다 적 전체 전 속성 내성 50%(최대 3번)·맹독·AF 게이지 회복을 얻으니, 첫 AF 전에 피격을 받아 두는 게 좋습니다."
 },
 {
   "id": "benedict",
@@ -158,14 +119,17 @@
   "roles": ["dps", "debuffer"],
   "main": {"skill": "普通の一撃", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "none", "weapon_type": "slash", "mult": 1, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "자신의 완력에 따라 위력 증가(완력의 3배 가산, 완력 상한 999) [알테마 대조(2026-10): 극대 크기에 이미 반영, 腕力 3배 가산은 배율 아님]"},
   "sb": null,
-  "self_buff": {"pwr": 35, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "self_buff": {"pwr": 35, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "pwr_flat": 500},
   "party_buff": {"scope": "all", "restrict": "VC 1턴", "pwr": 35, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {"slash": 70}, "break": "slash", "weak_expose": "", "pain_poison": true},
   "zone": null,
-  "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 0, "barrier": 0, "dmg_cut": 0, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 1, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "revive": false},
   "req": "턴 경과(완력 고정치 +50/턴, 최대 +500)",
   "tags": ["flat_stat_stack", "weapon_break", "no_element"],
-  "note_kr": "무속성 참 딜러. 턴마다 완력 +50(최대 500) 고정치 누적, 참내성 70% DOWN+참 웨폰브레이크 3누적, 전체 극대 확정크리 '普通の一撃'(완력 3배 가산). 버프 수치는 VC 완력 35%뿐."
+  "note_kr": "무속성 참 딜러. 턴마다 완력 +50(최대 500) 고정치 누적, 참내성 70% DOWN+참 웨폰브레이크 3누적, 전체 극대 확정크리 '普通の一撃'(완력 3배 가산). 버프 수치는 VC 완력 35%뿐.",
+  "support_to": {"knockback_immune": {"pos": "self"}},
+  "support_src": {"knockback_immune": "縄鋸神断"},
+  "play_kr": "턴이 지날수록 강해지는 무속성 참격 딜러입니다. 매 턴 縄鋸神断 상태가 되어 힘이 고정값 +50씩(최대 +500) 오르고 날리기를 무시하며, 주력 普通の一撃(전체 극대·확정 크리)은 힘의 3배를 위력에 더합니다. 巨木倒し로 적 참 내성 70% 다운과 웨폰 브레이크(참)를 걸어 참격 아군을 지원합니다. 첫 턴 AF에서는 힘 증가가 거의 없습니다."
 },
 {
   "id": "kamlanage",
@@ -180,16 +144,18 @@
   "tier": "C",
   "score": 95,
   "roles": ["dps", "zone"],
-  "main": {"skill": "イレクトテラス", "target": "aoe", "kind": "mag", "stat": "int", "element": "thunder", "weapon_type": "magic", "mult": 15, "size": "xxl", "hits": 4, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "극대 5배×속도에 따른 위력 증가(속도 600에서 최대 3배). 뇌제 상태 시 공격 횟수 2배(4회). 뇌속성내성 50% DOWN(3턴, 최대 5누적) [알테마 대조(2026-10): 雷帝(極・招雷陣 턴 종료 진입) 중 공격 횟수 2배]", "af_x": 0.5, "af_note": "[AF 1턴 대조 2026-10-15] 雷帝(턴 종료 진입) 없음 → 공격 횟수 절반"},
-  "sb": {"skill": "クロノ・レイ", "target": "aoe", "kind": "mag", "stat": "int", "element": "thunder", "weapon_type": "magic", "mult": 30, "size": "xxl", "hits": 6, "repeat": 0, "crit_sure": false, "def_ignore": true, "barrier_pierce": true, "af_combo_x": 1, "condition": "전위 雷·陰·晶 퍼스널리티 수에 따라 위력 증가(통상 최대 15배, SB 시 최대 30배). 뇌제 시 횟수 2배. 배리어 관통은 스텔라보드 SB 강화(3회 행동) [알테마 대조(2026-10): 雷帝 중 6회]", "af_x": 0.5, "af_note": "[AF 1턴 대조 2026-10-15] 雷帝 없음 → 공격 횟수 절반"},
+  "main": {"skill": "イレクトテラス", "target": "aoe", "kind": "mag", "stat": "int", "element": "thunder", "weapon_type": "magic", "mult": 15, "size": "xl", "hits": 4, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "특대 5배×속도에 따른 위력 증가(속도 600에서 최대 3배)=15배, 2타. 雷帝 상태 시 공격 횟수 2배(4회). 뇌속성내성 50% DOWN(3턴, 최대 5누적), 자신에게 현재 HP 1% 자해 2회", "af_x": 1, "af_note": "[2026-10-15 재대조] 15배는 雷帝 없는 기본 2타 값 → AF 보정 없음(雷帝 4타는 타수만 늘어남으로 처리)"},
+  "sb": {"skill": "クロノ・レイ", "target": "aoe", "kind": "mag", "stat": "int", "element": "thunder", "weapon_type": "magic", "mult": 30, "size": "xl", "hits": 6, "repeat": 0, "crit_sure": false, "def_ignore": true, "barrier_pierce": true, "af_combo_x": 1, "condition": "전위 雷·陰·晶 퍼스널리티 수에 따라 위력 증가(통상 최대 15배, SB 시 최대 30배). 뇌제 시 횟수 2배. 배리어 관통은 스텔라보드 SB 강화(3회 행동) [알테마 대조(2026-10): 雷帝 중 6회]", "af_x": 1, "af_note": "[2026-10-15 재대조] 30배는 SB 최대치, 雷帝는 타수만 2배 → AF 보정 없음"},
   "self_buff": {"pwr": 0, "int": 75, "spd": 75, "elem_atk": 75, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "spd_flat": 100},
   "party_buff": {"scope": "none", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 0, "int": 0, "spd": 30, "all_elem_res": 0, "elem_res": {"thunder": 250}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "thunder", "awakened": true, "condition": "プネウマフィプニス/VC로 초뢰진 전개. 전위 陰·晶 2인 이상이면 월광진으로 변화. 전개 시 ZONE 각성 실행"},
-  "support": {"heal": 0, "barrier": 1, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 1, "barrier": 2, "dmg_cut": 0, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "revive": false},
   "req": "극·초뢰진 또는 극·월광진 전개 중(뇌제 상태), 속도 600 이상",
   "tags": ["lunatic", "speed_scaling", "moonlight_zone", "thunder_zone"],
-  "note_kr": "속도 스케일링 뇌속성 마법 딜러. 극존 중 뇌제 상태로 공격 횟수 2배·속도 +150. 루나틱(대전)으로 히트마다 추가 대미지. 뇌내성 50%×5누적. 성도스킬은 방어 무시 극대 3회, SB 시 최대 30배."
+  "note_kr": "속도 스케일링 뇌속성 마법 딜러. 극존 중 뇌제 상태로 공격 횟수 2배·속도 +150. 루나틱(대전)으로 히트마다 추가 대미지. 뇌내성 50%×5누적. 성도스킬은 방어 무시 극대 3회, SB 시 최대 30배.",
+  "support_src": {"heal": "シティシィ", "barrier": "アンディスタ"},
+  "play_kr": "イレクトテラス(특대 5배, 속도 600에서 최대 3배, 전체 2타)로 적 雷 내성을 50%씩(최대 5누적) 깎으며 때리는 속도 의존 雷 지팡이 마법 딜러입니다. 극・招雷陣(전열 陰·晶 2명 이상이면 극・月光陣)이 깔린 채 전열에서 턴을 마치면 雷帝가 되어 イレクト 타수 2배·속도 +100·ブロンテクラトール 1.5배·매 턴 帯電(히트마다 추가타)을 받습니다. 雷帝는 턴 종료에 들어가므로 개전 1턴 AF에선 없고, 극 존이 사라지면 풀리니 존 유지가 핵심입니다."
 },
 {
   "id": "venefica",
@@ -206,14 +172,16 @@
   "roles": ["dps", "debuffer", "zone"],
   "main": {"skill": "愛を呪いし怨鳥", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "shade", "weapon_type": "pierce", "mult": 15, "size": "xl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "적에게 누적된 저주 종류 수에 따라 위력 증가(최대 15배). 전속성내성 50% DOWN(3턴, 최대 3누적)"},
   "sb": {"skill": "イユンクス", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "shade", "weapon_type": "pierce", "mult": 0, "size": "", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": true, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제로 누적 저주 즉시 발동. SB 시 적 전체에 죽음의 저주(턴 종료 시 그 턴 받은 대미지와 같은 고정 대미지, 최대 999,999,999)+극·각음진 전개+주저 50 누적"},
-  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 50, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
-  "party_buff": {"scope": "all", "restrict": "흡명의 저주 고정치(완력/지성/속도 +10×최대5=50) 및 MP최대치 50% UP", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"shade": 50}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 50, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": true, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "흡명의 저주 고정치(완력/지성/속도 +10×최대5=50) 및 MP최대치 50% UP", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"shade": 50}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": true, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false, "pwr_flat": 50, "int_flat": 50, "spd_flat": 50, "mp_up": 50},
   "debuff": {"pwr": 25, "int": 25, "spd": 0, "all_elem_res": 150, "elem_res": {"shade": 50}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": true, "end": 25, "spr": 25},
-  "zone": {"type": "shade", "awakened": true, "condition": "전위 음속성 2인 이상 시 전투 개시 각음진, 4인이면 극·각음진. SB 시 극·각음진 전개"},
-  "support": {"heal": 2, "barrier": 0, "cleanse": 2, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 0},
+  "zone": {"type": "shade", "awakened": true, "condition": "전투 개시 시 전위 음속성 2명 이상이면 刻陰陣, 4명이면 極・刻陰陣. 死の呪い 발동 시 極・刻陰陣(턴 종료) — AF 중 불가"},
+  "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 3, "status_immune": 0, "debuff_guard": 3, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "전위 음속성 4인(극·각음진), 주저(呪詛) 50 이상",
   "tags": ["curse", "dot", "shade_zone", "fixed_damage", "counter_damage"],
-  "note_kr": "저주 누적형 음속성 딜러 겸 디버퍼. 전속성내성 50%×3누적, 쇠약 저주로 적 완력/지성/내구/정신 25% DOWN. 존 '주저' 누적으로 음속성 대미지 증가. SB 시 죽음의 저주로 받은 대미지 반사 고정 대미지."
+  "note_kr": "저주 누적형 음속성 딜러 겸 디버퍼. 전속성내성 50%×3누적, 쇠약 저주로 적 완력/지성/내구/정신 25% DOWN. 존 '주저' 누적으로 음속성 대미지 증가. SB 시 죽음의 저주로 받은 대미지 반사 고정 대미지.",
+  "support_src": {"heal": "アナテマ", "dmg_cut": "カターラエヴォギア / 衰弱の呪い", "cleanse": "アナテマ", "debuff_guard": "カターラエヴォギア", "mp_recover": "ヴァリアブルチャント / 吸命の呪い"},
+  "play_kr": "전열에 陰 아군을 2명(4명이면 極) 두면 개전에 刻陰陣을 까는 음·수 활 디버퍼입니다. 주력 愛を呪いし怨鳥은 적에 걸린 저주 종류가 많을수록 최대 15배이고 적 전 속성 내성을 최대 150%까지 깎습니다. 저주(독·페인, 추격, 스탯 다운, 아군 스탯·MP 증가)는 그녀가 전열에서 턴을 마칠 때 발동하고 イユンクス로 즉시 터뜨릴 수 있으며, SB의 死の呪い는 그 턴 받은 대미지만큼 추가 대미지를 줍니다. カターラエヴォギア로 아군 虎視眈眈(후수 대미지 60%)·전 속성 내성 50%를, アナテマ로 회복을 맡지만 그녀가 쓰러지면 저주가 모두 사라집니다."
 },
 {
   "id": "akanesode_no_tabishonin",
@@ -234,10 +202,13 @@
   "party_buff": {"scope": "all", "restrict": "크리대미지 30%·연격수+1·임기응변(참)·배리어관통은 전위 왼쪽 아군(퍼스널리티 3종 이상 시)", "pwr": 15, "int": 0, "spd": 0, "all_elem_atk": 50, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": true, "extra_hit": true, "mp_cost_zero": false},
   "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 30, "mag_res": 30, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": true},
   "zone": {"type": "slash", "awakened": true, "condition": "師範の旗本/VC로 황참진 선제 전개. 성도스킬로 극·황참진"},
-  "support": {"heal": 2, "barrier": 1, "cleanse": 1, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 2},
+  "support": {"heal": 3, "barrier": 0, "dmg_cut": 2, "cleanse": 3, "status_immune": 2, "debuff_guard": 0, "knockback_immune": 2, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "참 ZONE(황참진), 전위 퍼스널리티 3종 이상, 번성기원 보유 아군",
   "tags": ["slash_zone", "left_ally_buff", "crit_dmg_scaling", "first_use_bonus"],
-  "note_kr": "참 존 전개형 딜러/서포터. 왼쪽 아군에 크리대미지·연격수+1·배리어관통 부여. 성도스킬은 SB 시 확정크리+크리대미지 40배 극·황참진 전체 공격. 어나더센스로 아군 HP/MP 최대치 10% UP."
+  "note_kr": "참 존 전개형 딜러/서포터. 왼쪽 아군에 크리대미지·연격수+1·배리어관통 부여. 성도스킬은 SB 시 확정크리+크리대미지 40배 극·황참진 전체 공격. 어나더센스로 아군 HP/MP 최대치 10% UP.",
+  "sb_normal": {"skill": "プライドオブフゲン", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "earth", "weapon_type": "slash", "size": "xxl", "mult": 10, "hits": 1, "execs": 1, "repeat": 0, "crit_sure": false, "def_ignore": true, "barrier_pierce": false, "af_combo_x": 1, "condition": "[성도 스킬 일반 사용, 알테마 대조 2026-10-15] 적 전체 地 斬 극대, 대상 방어 무시, 크리티컬 시 대미지 10배(배율 표기는 크리 시 증가뿐 → 크리 전제 10). 확정 크리·40배는 SB 한정. 煌斬陣이 깔려 있으면 공격 전 極・煌斬陣. 타수 미기재(1)"},
+  "support_src": {"heal": "快癒の傷薬", "dmg_cut": "牙城の秘薬", "cleanse": "快癒の傷薬", "status_immune": "牙城の秘薬", "knockback_immune": "牙城の秘薬", "mp_recover": "師範の旗本"},
+  "play_kr": "땅 검 딜러 겸 서포터입니다. 我流剣術로 자신과 전열 왼쪽 아군에 繁盛祈願·크리 대미지 30%를 주고(자신 외 전열 속성 3종 이상이면 왼쪽 아군에 연격수 UP·배리어 관통도), 繁盛祈願 보유자가 전열에 있으면 麒麟裂破斬이 10배가 되며 아군 전체 전 속성 공격 50%·크리율 100%를 겁니다. AF에선 성도 스킬 プライドオブフゲン(방어 무시, 크리 시 10배)도 연타 후보이고, SB 때는 확정 크리 40배입니다. 개전 적 전체 영구 독과 아군 HP 30% 회복·상태이상 회복도 있어 지원 폭이 넓습니다."
 },
 {
   "id": "aoiro_no_chushin",
@@ -258,10 +229,13 @@
   "party_buff": {"scope": "all", "restrict": "", "pwr": 0, "int": 0, "spd": 100, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 45, "int": 45, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 90, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": true},
   "zone": null,
-  "support": {"heal": 1, "barrier": 3, "cleanse": 1, "revive": false, "guard": 0, "taunt": 3, "mp_recover": 0, "af_gauge": 0, "status_immune": 2},
+  "support": {"heal": 1, "barrier": 3, "dmg_cut": 3, "cleanse": 1, "status_immune": 2, "debuff_guard": 0, "knockback_immune": 2, "guard": 0, "taunt": 3, "mp_recover": 0, "af_gauge": 0, "revive": false},
   "req": "수성(獣性) 5 누적",
   "tags": ["taunt", "countdown", "stack_consume", "shield", "stun"],
-  "note_kr": "도발 탱커 겸 수성 누적 소비형 음속성 딜러. 매 턴 개시 적 전체 도발(내성 무시), 40% 경감 배리어/고정 6000 실드, 속도 100% UP. 카르네이지는 수성 5소비 시 최대 100배+4턴 카운트다운 추가 대미지. 물리내성 60% DOWN(5턴)."
+  "note_kr": "도발 탱커 겸 수성 누적 소비형 음속성 딜러. 매 턴 개시 적 전체 도발(내성 무시), 40% 경감 배리어/고정 6000 실드, 속도 100% UP. 카르네이지는 수성 5소비 시 최대 100배+4턴 카운트다운 추가 대미지. 물리내성 60% DOWN(5턴).",
+  "sb_normal": {"skill": "ハウリングビート", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "shade", "weapon_type": "slash", "size": "xxl", "mult": 1, "hits": 1, "execs": 1, "repeat": 0, "condition": "[성도 스킬 일반 사용, 알테마 대조 2026-10-15] MP 95, 적 전체 陰 斬 극대(배율 표기 없음)+자신 HP 회복·HP 최대 50%·心技一体(3턴)·상태이상 회복·獣性 1. 20배·獣性 3은 SB 때만"},
+  "support_src": {"heal": "ハウリングビート", "barrier": "備えの計：先守 / 備えの計：予防", "dmg_cut": "ラヴェナスサージ / ステラバースト強化 / アビリティ獲得", "cleanse": "ハウリングビート", "status_immune": "備えの計：予防", "knockback_immune": "備えの計：予防", "taunt": "アビリティ獲得(ステラボード) / VC"},
+  "play_kr": "陰·도끼 탱커 겸 딜러로, 전열에 있으면 매 턴 적 전체를 도발하고 備えの計(아군 40% 경감 배리어·6,000 실드·상태이상/날리기 무효)로 지키면서, 아군이 맞을 때마다 獣性을 쌓습니다. 獣性 5개로 カルネイジ(단일 극대 최대 100배+추가 5타)를 쏘면 4턴 カウントダウン 동안 턴 종료 추가 공격이 들어갑니다. 獣性이 0이면 カルネイジ가 불발하니, 맞아 주는 탱커 운용이 전제이고 1턴 AF에선 화력이 거의 안 나옵니다."
 },
 {
   "id": "toova",
@@ -276,46 +250,18 @@
   "tier": "B",
   "score": 94,
   "roles": ["dps", "support", "zone"],
-  "main": {
-    "skill": "グレイトウォール",
-    "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic",
-    "mult": 10, "size": "xl", "hits": 1, "repeat": 0,
-    "crit_sure": true, "def_ignore": true, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "진현현 후: HP 50% 이상 대상 대미지 2배, 연속 사용 시 위력 상승(2회째부터 2배). 사령공명 시 사령의 수 4누적+적 전체 엘리멘탈 브레이크(지) 3누적"
-  },
-  "sb": {
-    "skill": "地塊滅葬",
-    "target": "st", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic",
-    "mult": 40, "size": "xxl", "hits": 1, "repeat": 0,
-    "crit_sure": true, "def_ignore": false, "barrier_pierce": true, "af_combo_x": 1,
-    "condition": "사령의 수(死霊の髄) 누적 수에 따라 최대 40배(통상 시 전부 소비). SB 시 소비 없이 확정 크리티컬"
-  },
-  "self_buff": {
-    "pwr": 0, "int": 100, "spd": 0, "elem_atk": 50, "weapon_atk": 60,
-    "crit_rate": 0, "crit_dmg": 30,
-    "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "지팡이 장비자 대미지 60%는 SB 강화(턴 종료까지)",
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_atk": 0, "elem_atk": {"earth": 50}, "weapon_atk": {"staff": 60},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_res": 0, "elem_res": {"earth": 30},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {},
-    "break": "earth", "weak_expose": "", "pain_poison": true
-  },
+  "main": {"skill": "グレイトウォール", "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic", "mult": 20, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": true, "def_ignore": true, "barrier_pierce": false, "af_combo_x": 1, "condition": "진현현 후: HP 50% 이상 대상 대미지 2배, 연속 사용 시 위력 상승(2회째부터 2배). 사령공명 시 사령의 수 4누적+적 전체 엘리멘탈 브레이크(지) 3누적"},
+  "sb": {"skill": "地塊滅葬", "target": "st", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic", "mult": 40, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": true, "def_ignore": false, "barrier_pierce": true, "af_combo_x": 1, "condition": "사령의 수(死霊の髄) 누적 수에 따라 최대 40배(통상 시 전부 소비). SB 시 소비 없이 확정 크리티컬"},
+  "self_buff": {"pwr": 0, "int": 100, "spd": 0, "elem_atk": 50, "weapon_atk": 60, "crit_rate": 0, "crit_dmg": 30, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "지팡이 장비자 대미지 60%는 SB 강화(턴 종료까지)", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"earth": 50}, "weapon_atk": {"staff": 60}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {"earth": 30}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "earth", "weak_expose": "", "pain_poison": true},
   "zone": {"type": "earth", "awakened": false, "condition": "ダブルクラッシュ 사용 시 지열진 전개"},
-  "support": {"heal": 2, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 2, "barrier": 0, "dmg_cut": 1, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "revive": false},
   "req": "전위 전원 지속성(사령공명), 사령의 수 누적",
   "tags": ["true_manifest", "stack_consume", "self_hp_cost", "elemental_break"],
-  "note_kr": "진현현으로 강화된 지속성 마법 딜러. 전체 특대 10배 방어무시 확정크리 그레이트월(HP50% 이상 2배), 성도스킬은 사령의 수 누적으로 최대 40배 배리어 관통. 지공격 50%·정신통일·치유 지원, 엘리멘탈 브레이크(지) 3누적."
+  "note_kr": "진현현으로 강화된 지속성 마법 딜러. 전체 특대 10배 방어무시 확정크리 그레이트월(HP50% 이상 2배), 성도스킬은 사령의 수 누적으로 최대 40배 배리어 관통. 지공격 50%·정신통일·치유 지원, 엘리멘탈 브레이크(지) 3누적.",
+  "support_src": {"heal": "冥界の導き(真・顕現)", "dmg_cut": "霊の呼び声(체인)"},
+  "play_kr": "地 지팡이 마법 딜러입니다. 진현현 グレイトウォール(전체 특대 10배, 방어 무시·확정 크리)가 HP 50% 이상이면 2배라 デビルディール(지성 100%, 현재 HP 30% 소모)을 써도 HP를 절반 위로 유지하는 게 중요합니다. 冥界の導き로 아군 전체 地 속성 공격 50%·정신통일과 치유 1,500×3을 주고, 아군의 地 공격 체인으로 死霊の髄를 모아 성도 스킬 地塊滅葬(최대 40배)으로 터뜨립니다. 전열을 地 캐릭터로만 채우면 死霊共鳴이 되어 브레이크(地)와 髄 축적이 붙습니다."
 },
 {
   "id": "aldo",
@@ -336,10 +282,12 @@
   "party_buff": {"scope": "all", "restrict": "크리대미지는 천 아군 45%, 그 외 30%", "pwr": 30, "int": 0, "spd": 0, "all_elem_atk": 50, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 45, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 25, "int": 25, "spd": 0, "all_elem_res": 40, "elem_res": {}, "phys_res": 70, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": null,
-  "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 0, "barrier": 0, "dmg_cut": 2, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 2, "revive": false},
   "req": "천 수치 255, 전위 천명 합계 500(SB 시)",
   "tags": ["tenmei_scaling", "mp_cost_down", "weakness_adaptive"],
-  "note_kr": "천 수치 스케일링 참 딜러. 전체 전속성공격 50% UP(3회 행동), 물리내성 70% DOWN, MP 회복 30+소비 MP 35% DOWN. 성도스킬은 SB 시 전위 천명 합계에 따라 최대 50배, 약점 속성으로 변화."
+  "note_kr": "천 수치 스케일링 참 딜러. 전체 전속성공격 50% UP(3회 행동), 물리내성 70% DOWN, MP 회복 30+소비 MP 35% DOWN. 성도스킬은 SB 시 전위 천명 합계에 따라 최대 50배, 약점 속성으로 변화.",
+  "support_src": {"dmg_cut": "ヴァリアブルチャント", "mp_recover": "ブレイズソード", "af_gauge": "アビリティ獲得(ステラボード)"},
+  "play_kr": "竜神斬・號(무속성 참 특대 단일)로 적 물리 내성을 70% 깎고, AF 중엔 위력 6배+天 수치 2배분이 더해져 강해지는 검 딜러 겸 지원입니다. エックス斬り・天으로 아군 전속성 공격 50%(3회 행동), ボルケーノブレイド로 크리 대미지 30%(천 아군 45%)를 주고, 전열에 천 캐릭터가 3명 이상이면 전투 시작 AF 게이지를 100%로 채웁니다. 성도 스킬 星竜斬은 SB 때 전열 천명 합계(최대 500)에 비례해 최대 50배·약점 속성으로 바뀌어 천명치를 올린 천 파티에서 진가가 나옵니다."
 },
 {
   "id": "amy",
@@ -360,10 +308,13 @@
   "party_buff": {"scope": "all", "restrict": "초회 사용 시 2배(50%)", "pwr": 50, "int": 0, "spd": 50, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 20, "int": 20, "spd": 0, "all_elem_res": 0, "elem_res": {"wind": 35}, "phys_res": 35, "mag_res": 0, "weapon_res": {"blunt": 50}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": null,
-  "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 1, "status_immune": 0},
+  "support": {"heal": 0, "barrier": 0, "dmg_cut": 0, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 1, "revive": false},
   "req": "AF 중(배율 1000% 이상), 버스트부스터 10누적",
   "tags": ["af_specialist", "crit_multiplier", "stun", "speed_scaling"],
-  "note_kr": "AF 특화 타격 딜러. 크리 시 대미지 4~6배 스킬, AF 중 트리플다운 연속 실행·슈퍼콤보. 버스트부스터 10누적으로 완력/속도 +100, 속격속공 속도 +300. 풍/물리내성 35% DOWN, SB 시 타내성 50% DOWN."
+  "note_kr": "AF 특화 타격 딜러. 크리 시 대미지 4~6배 스킬, AF 중 트리플다운 연속 실행·슈퍼콤보. 버스트부스터 10누적으로 완력/속도 +100, 속격속공 속도 +300. 풍/물리내성 35% DOWN, SB 시 타내성 50% DOWN.",
+  "af_skill": {"skill": "ブラストヘヴン→トリプルダウン(AF 연속 실행)", "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "blunt", "mult": 14, "size": "xl", "hits": 4, "repeat": 0, "execs": 2, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1.75, "condition": "[알테마 대조 2026-10-15] AF 중 ブラストヘヴン(바람 특대 1타, 자기 크리율 100%라 크리 4배, AF 콤보 300%에서 2배 → 8) 뒤 トリプルダウン(무속성 특대 3타, 크리 시 6배 → 6)을 연속 실행 = 2실행 4타 합 14배. 콤보 증가량 2배는 トリプルダウン 3타에만이라 행동 평균 1.75. トリプルダウン 부분은 실제로 무속성(바람 버프·내성 적용 안 됨)"},
+  "support_src": {"af_gauge": "ゲイルクラッシャー(SB)"},
+  "play_kr": "AF 특화 바람·권갑 딜러입니다. AF 중 ブラストヘヴン(바람 타 특대, 크리 시 4배, AF 콤보 300%면 2배)을 쓰면 トリプルダウン(무속성 특대 3타, 크리 시 6배, AF 콤보 증가량 2배)이 이어서 나가 콤보를 빠르게 올리고, 콤보 1000% 이상이면 통상 공격이 スーパーコンボ(トリプルダウン 5배×3연속, AF 1회 1번)로 바뀝니다. ブラストヘヴン이 자기 크리율 100%를 주므로 크리 배율이 늘 들어가고, チャージスタンス(첫 사용 2배)로 아군 완력·속도도 올립니다. 평상 턴엔 성도 스킬 ゲイルクラッシャー(극대 3배, 비AF 재공격)도 강하지만 MP 소비가 큽니다."
 },
 {
   "id": "helena",
@@ -379,15 +330,17 @@
   "score": 94,
   "roles": ["debuffer", "support", "dps"],
   "main": {"skill": "グランフェネラル", "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic", "mult": 8, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "연속 사용 시 위력 증가(최대 8배). 지속성내성 50% DOWN(3턴, 최대 3누적)"},
-  "sb": {"skill": "コメットテイル", "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic", "mult": 6, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "엘리멘탈 브레이크(지) 3누적. 저녁샛별(宵の明星) 상태 시 위력 3배·버프 2배. SB 시 적 디버프 종류 수에 따라 위력 증가(최대 6배)+지 ZONE 전개+그랑페네랄 최대 위력으로 재실행 [알테마 대조(2026-10): グランフェネラル 연속 실행은 재공격 아님]"},
+  "sb": {"skill": "コメットテイル", "target": "aoe", "kind": "mag", "stat": "int", "element": "earth", "weapon_type": "magic", "mult": 24, "size": "xxl", "hits": 2, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "엘리멘탈 브레이크(지) 3누적. 宵の明星(개전 자동) 위력 3배·버프 2배. SB 시 적 디버프 종류 수(최대 5종)에 따라 최대 6배 → 극대 18배 + 地烈陣 전개 + 최대 위력 グランフュネラル(특대 8배, 극대 환산 6) 연속 실행 = 24. 디버프 0종이면 3+6=9 [알테마 대조 2026-10-15: '最大増加数5/6倍', 본문 '最大18倍']", "execs": 2},
   "self_buff": {"pwr": 50, "int": 50, "spd": 50, "elem_atk": 50, "weapon_atk": 50, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "완력/지성/속도 50%는 저녁샛별 상태 시(기본 25%)", "pwr": 50, "int": 50, "spd": 50, "all_elem_atk": 0, "elem_atk": {"earth": 50}, "weapon_atk": {"all": 50}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 25, "int": 25, "spd": 30, "all_elem_res": 35, "elem_res": {"earth": 150}, "phys_res": 35, "mag_res": 0, "weapon_res": {"pierce": 30}, "break": "earth", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "earth", "awakened": false, "condition": "SB 시 코멧테일로 지 ZONE 전개"},
-  "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 0, "barrier": 0, "dmg_cut": 2, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "revive": false},
   "req": "저녁샛별 상태(전투 개시 3~7턴, 전위 인조인간 2인 이상 시 연장)",
   "tags": ["elemental_break", "all_weapon_dmg_taken", "stacking_debuff", "stun"],
-  "note_kr": "지속성 디버퍼. 지내성 50%×3누적, 물리/전속성내성 35% DOWN, 전체 크리율/마크리율 100% UP. 성도스킬로 엘리멘탈 브레이크(지) 3누적+전무기종 피해 25% 증가, 저녁샛별 상태 시 위력 3배·버프 2배."
+  "note_kr": "지속성 디버퍼. 지내성 50%×3누적, 물리/전속성내성 35% DOWN, 전체 크리율/마크리율 100% UP. 성도스킬로 엘리멘탈 브레이크(지) 3누적+전무기종 피해 25% 증가, 저녁샛별 상태 시 위력 3배·버프 2배.",
+  "support_src": {"dmg_cut": "ウィングシュート"},
+  "play_kr": "地 속성 지팡이 디버퍼입니다. グランフェネラル(전체 특대, 연속 사용 최대 8배)로 적 地 내성 −50%를 3번까지 쌓고, スターバースト로 물리·전속성 내성 −35%, ロックボール로 아군 크리율 100%, アースエッジ로 아군 地 공격 +50%를 줍니다. 개전부터 宵の明星이라 성도 スキル コメットテイル이 위력 3배·아군 완력·지성·속도·전 무기 +50%(4턴)가 되고, SB 땐 적 디버프 종류가 많을수록 최대 18배에 최대 위력 グランフュネラル까지 이어 칩니다. 宵の明星이 끝나기 전(3~7턴)에 SB를 쓰세요."
 },
 {
   "id": "guildna",
@@ -402,46 +355,18 @@
   "tier": "C",
   "score": 94,
   "roles": ["dps", "debuffer"],
-  "main": {
-    "skill": "カラミティ",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "slash",
-    "mult": 20, "size": "xl", "hits": 1, "repeat": 0,
-    "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "특대 2배×마황주 누적 수에 따라 최대 10배. 자신 명 수치의 1/2을 위력에 가산. 누적 10일 때 디스토션 실행"
-  },
-  "sb": {
-    "skill": "ディモスセイバー",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "slash",
-    "mult": 50, "size": "xxl", "hits": 3, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "통상 극대 3배, SB 시 극대 50배. 자신 현재 HP 40% 소모, 명 수치 1/2 가산. 완력/속도 100% UP(3턴), 마황주 2누적(SB 시 최대 5)+버티기"
-  },
-  "self_buff": {
-    "pwr": 100, "int": 0, "spd": 100, "elem_atk": 0, "weapon_atk": 0,
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "none", "restrict": "",
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 60, "int": 60, "spd": 0,
-    "all_elem_res": 0, "elem_res": {"fire": 35},
-    "phys_res": 60, "mag_res": 0, "weapon_res": {},
-    "break": "", "weak_expose": "", "pain_poison": false
-  },
+  "main": {"skill": "カラミティ", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "slash", "mult": 20, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "특대 2배×마황주 누적 수에 따라 최대 10배. 자신 명 수치의 1/2을 위력에 가산. 누적 10일 때 디스토션 실행"},
+  "sb": {"skill": "ディモスセイバー", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "slash", "mult": 50, "size": "xxl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "통상 극대 3배, SB 시 극대 50배. 자신 현재 HP 40% 소모, 명 수치 1/2 가산. 완력/속도 100% UP(3턴), 마황주 2누적(SB 시 최대 5)+버티기"},
+  "self_buff": {"pwr": 100, "int": 0, "spd": 100, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "none", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 60, "int": 60, "spd": 0, "all_elem_res": 0, "elem_res": {"fire": 35}, "phys_res": 60, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": null,
-  "support": {"heal": 1, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 1, "barrier": 0, "dmg_cut": 3, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "revive": false},
   "req": "마황주 10 누적, 명 수치 255",
   "tags": ["tenmei_scaling", "self_hp_cost", "stack_scaling", "auto_debuff"],
-  "note_kr": "마황주 누적형 불속성 참 딜러. 매 턴 개시 디스토션 자동 실행(완력/지성/물리내성 30%, 누적에 따라 최대 2배=60% DOWN). 칼라미티 전체 특대 2배×최대 10배 확정크리, SB 시 디모스세이버 극대 50배×3회."
+  "note_kr": "마황주 누적형 불속성 참 딜러. 매 턴 개시 디스토션 자동 실행(완력/지성/물리내성 30%, 누적에 따라 최대 2배=60% DOWN). 칼라미티 전체 특대 2배×최대 10배 확정크리, SB 시 디모스세이버 극대 50배×3회.",
+  "support_src": {"heal": "フォボスセイバー / フレアブレイク", "dmg_cut": "ディストーション(アビリティ獲得)", "mp_recover": "フレアブレイク"},
+  "play_kr": "フォボスセイバー(크리 시 3개)·ディモスセイバー로 魔煌珠를 10까지 모아 カラミティ(火 斬 전체 특대, 확정 크리, 최대 2×10배)로 딜합니다. 전열에 있으면 턴 시작마다 ディストーション이 자동으로 적 전체 힘·지성·물리 내성을 −30%(魔煌珠로 최대 −60%) 깎습니다. SB ディモスセイバー는 극대 50배·버티기를 주지만 현재 HP 40%를 깎습니다."
 },
 {
   "id": "lovely",
@@ -456,40 +381,18 @@
   "tier": "C",
   "score": 94,
   "roles": ["dps", "debuffer"],
-  "main": {
-    "skill": "ラブリンクッキング",
-    "target": "st", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "blunt",
-    "mult": 10, "size": "xl", "hits": 3, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "현현무기 강화 후: 대상 독 시 대미지 2배, 자신 독 시 위력 5배. 전위 불속성 4인 시 엘리멘탈 브레이크(불) 3누적, AF 콤보 배율 증가량 UP"
-  },
+  "main": {"skill": "ラブリンクッキング", "target": "st", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "blunt", "mult": 10, "size": "xl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "현현무기 강화 후: 대상 독 시 대미지 2배, 자신 독 시 위력 5배. 전위 불속성 4인 시 엘리멘탈 브레이크(불) 3누적, AF 콤보 배율 증가량 UP"},
   "sb": null,
-  "self_buff": {
-    "pwr": 15, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0,
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "",
-    "pwr": 15, "int": 0, "spd": 0,
-    "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 20, "int": 0, "spd": 0,
-    "all_elem_res": 0, "elem_res": {"fire": 90},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {},
-    "break": "fire", "weak_expose": "", "pain_poison": true
-  },
+  "self_buff": {"pwr": 15, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "", "pwr": 15, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 20, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {"fire": 90}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "fire", "weak_expose": "", "pain_poison": true},
   "zone": {"type": "blunt", "awakened": false, "condition": "お仕置きバイキング 사용 시 굉타진 전개"},
-  "support": {"heal": 2, "barrier": 0, "cleanse": 1, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 2, "barrier": 0, "dmg_cut": 2, "cleanse": 3, "status_immune": 1, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "revive": false},
   "req": "전위 불속성 4인, 적/자신 독 상태, 현현무기(ドワーフリムニル) 강화",
   "tags": ["manifest_weapon", "poison", "self_poison", "elemental_break"],
-  "note_kr": "현현무기로 강화된 독 시너지형 불속성 타격 딜러. 烈火로 전체 불내성 50% DOWN(전위 불 캐릭 수에 따라 최대 90%)+적아군 맹독(내성 무시)+아군 HP최대치 25% UP. 쿠킹은 자신 독 시 5배, 불 4인 시 엘리멘탈 브레이크(불) 3누적."
+  "note_kr": "현현무기로 강화된 독 시너지형 불속성 타격 딜러. 烈火로 전체 불내성 50% DOWN(전위 불 캐릭 수에 따라 최대 90%)+적아군 맹독(내성 무시)+아군 HP최대치 25% UP. 쿠킹은 자신 독 시 5배, 불 4인 시 엘리멘탈 브레이크(불) 3누적.",
+  "support_src": {"heal": "ラブリンパワー烈火(현현) / 턴 종료 어빌리티", "dmg_cut": "秘密のレシピ / VC", "cleanse": "秘密のレシピ", "status_immune": "固有アビリティ", "mp_recover": "턴 종료 어빌리티"},
+  "play_kr": "현현 무기(ドワーフリムニル) 강화 후 ラブリンパワー烈火로 적 전체 불 내성을 50%(전열 불 캐릭터 수에 따라 최대 90%) 깎고 적·아군 모두에 맹독을 건 뒤, 자신이 독이면 위력 5배·대상이 독이면 대미지 2배가 되는 ラブリンクッキング(불 타격 특대 3타)으로 딜합니다. 전열이 불 4명이면 불 엘리멘탈 브레이크도 쌓고, お仕置きバイキング으로 굉타진을 펼칩니다. 아군도 맹독에 걸리므로 秘密のレシピ(상태이상 회복·힘 15%)로 정리해 주고, 핵심 효과는 모두 현현 무기 강화가 있어야 나옵니다."
 },
 {
   "id": "pizzica",
@@ -507,13 +410,15 @@
   "main": {"skill": "レチタティーヴォ", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "pierce", "mult": 1, "size": "l", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "아군 전체 크리티컬 시 위력 30% UP+창/활 장비자 대미지 30% UP(3턴). 모든 ZONE 전개 시 버프량과 지속 턴 2배"},
   "sb": null,
   "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 60, "crit_rate": 100, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
-  "party_buff": {"scope": "all", "restrict": "가창(歌唱) 중 아군 전체 주는 대미지 100% UP(3턴). 무기종 60%는 ZONE 중 창/활 장비자", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"lance": 60, "bow": 60}, "crit_rate": 100, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false, "dmg_up": 100, "dmg_src": "song"},
+  "party_buff": {"scope": "all", "restrict": "가창(歌唱) 중 아군 전체 주는 대미지 100% UP(3턴). 창/활 장비자 대미지·크리 시 위력은 기본 30%, ZONE 중 2배(60)", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"lance": 60, "bow": 60}, "crit_rate": 100, "crit_dmg": 60, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false, "dmg_up": 100, "dmg_src": "song"},
   "debuff": {"pwr": 20, "int": 0, "spd": 0, "all_elem_res": 30, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "all", "weak_expose": "", "pain_poison": true},
   "zone": null,
-  "support": {"heal": 3, "barrier": 2, "cleanse": 2, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 2, "status_immune": 1},
+  "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 3, "status_immune": 1, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 2, "revive": false},
   "req": "가창(歌唱) 지속 중(3턴), 임의의 ZONE 전개",
   "tags": ["song", "damage_dealt_up", "damage_taken_down", "auto_break", "sleep"],
-  "note_kr": "가창(노래) 버프형 서포터/힐러. 그랜드피날레로 아군 주는 대미지 100% UP+받는 대미지 30% DOWN, 턴 종료 HP 20% 회복. 랩소디 아리아로 크리율 100%+대미지 100% UP, 턴 종료 시 적 전체 브레이크. 가창 중 턴 종료 AF 10% 회복. 전속성내성 30% DOWN+독/페인/수면."
+  "note_kr": "가창(노래) 버프형 서포터/힐러. 그랜드피날레로 아군 주는 대미지 100% UP+받는 대미지 30% DOWN, 턴 종료 HP 20% 회복. 랩소디 아리아로 크리율 100%+대미지 100% UP, 턴 종료 시 적 전체 브레이크. 가창 중 턴 종료 AF 10% 회복. 전속성내성 30% DOWN+독/페인/수면.",
+  "support_src": {"heal": "オラトリオ / グランドフィナーレ", "dmg_cut": "オラトリオ / グランドフィナーレ", "cleanse": "オラトリオ", "status_immune": "ヴァリアブルチャント", "mp_recover": "オラトリオ / VC", "af_gauge": "固有アビリティ(歌唱中)"},
+  "play_kr": "歌唱(3턴, 존과 함께 가능) 버프 서포터로, ラプソディ・アリア로 아군 전체 크리율 100%·주는 대미지 +100%를 주고 턴 종료 시 적 전체 브레이크를 겁니다. 위험한 턴엔 オラトリオ(받는 피해 −50%·턴 종료 HP 30%·MP 회복·상태이상 회복)로 바꿔 부르고, 歌唱 중엔 매 턴 AF 게이지가 10% 찹니다. レチタティーヴォ는 창·활 대미지·크리 위력 30%(존 중 60%)를 주며, 歌唱은 하나만 유지되는 점에 주의하세요."
 },
 {
   "id": "suzette_es",
@@ -528,40 +433,18 @@
   "tier": "",
   "score": 94,
   "roles": ["dps", "support"],
-  "main": {
-    "skill": "爆砕する心火の鉄鎚",
-    "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "blunt",
-    "mult": 8, "size": "xl", "hits": 5, "repeat": 0,
-    "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "파티 내 망치/권갑 장비자 수에 따라 위력 증가(최대 5인/4배). 자신 HP 80% 이상 시 추가 2배+확정 크리티컬"
-  },
+  "main": {"skill": "爆砕する心火の鉄鎚", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "fire", "weapon_type": "blunt", "mult": 8, "size": "xl", "hits": 5, "repeat": 0, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "파티 내 망치/권갑 장비자 수에 따라 위력 증가(최대 5인/4배). 자신 HP 80% 이상 시 추가 2배+확정 크리티컬"},
   "sb": null,
-  "self_buff": {
-    "pwr": 130, "int": 0, "spd": 130, "elem_atk": 30, "weapon_atk": 0,
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": true
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "다단강화(연격수에 따라 위력 증가, 최대 5hit/3배) 3턴. 불공격 60%는 ZONE 중. 소비MP 70% DOWN·물리내성 50% UP은 개막 3턴 이내",
-    "pwr": 30, "int": 0, "spd": 30,
-    "all_elem_atk": 0, "elem_atk": {"fire": 60}, "weapon_atk": {},
-    "crit_rate": 0, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": true,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 30, "int": 30, "spd": 0,
-    "all_elem_res": 0, "elem_res": {},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {"blunt": 25},
-    "break": "", "weak_expose": "", "pain_poison": false
-  },
+  "self_buff": {"pwr": 130, "int": 0, "spd": 130, "elem_atk": 30, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": true},
+  "party_buff": {"scope": "all", "restrict": "다단강화(연격수에 따라 위력 증가, 최대 5hit/3배) 3턴. 불공격 60%는 ZONE 중(존이 없으면 30%). 완력·속도 30%는 VC Lv3 1턴. 소비MP 70% DOWN·물리내성 50% UP은 개막 3턴 이내", "pwr": 30, "int": 0, "spd": 30, "all_elem_atk": 0, "elem_atk": {"fire": 60}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": true, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 30, "int": 30, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {"blunt": 25}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "blunt", "awakened": false, "condition": "VC Lv3로 굉타진 전개"},
-  "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 1, "barrier": 0, "dmg_cut": 2, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "revive": false},
   "req": "파티 망치/권갑 5인, 자신 HP 80% 이상, 타 ZONE",
   "tags": ["ex_skill", "multihit_buff", "hammer_fist_party", "opening_burst"],
-  "note_kr": "망치/권갑 파티용 불속성 타격 딜러. 전체 특대 5회(장비자 5인 4배×HP80% 이상 2배 확정크리). 테트라비블로스로 아군 전체 다단강화(최대 3배). EX 필살기로 자신 HP/MP 전회복+완력/속도 100% UP(5턴)."
+  "note_kr": "망치/권갑 파티용 불속성 타격 딜러. 전체 특대 5회(장비자 5인 4배×HP80% 이상 2배 확정크리). 테트라비블로스로 아군 전체 다단강화(최대 3배). EX 필살기로 자신 HP/MP 전회복+완력/속도 100% UP(5턴).",
+  "support_src": {"heal": "EX必殺技", "dmg_cut": "ロストエデン", "mp_recover": "EX必殺技 / ロストエデン"},
+  "play_kr": "망치·권갑 파티 전용 불 타격 딜러입니다. 고유 爆砕する心火の鉄鎚(적 전체 특대 5타)는 파티의 망치·권갑 장비자 수(최대 5명 4배)와 자신 HP 80% 이상(2배+확정 크리)을 모두 채우면 8배가 됩니다. テトラビブロス로 아군 전체에 다단강화(최대 5히트 3배)를, ディゾルブゴモラ로 불 공격 30%(존이 있으면 60%)를 줍니다. HP를 80% 이상으로 지켜야 하니 힐러와 같이 쓰세요."
 },
 {
   "id": "orleya",
@@ -576,40 +459,18 @@
   "tier": "",
   "score": 94,
   "roles": ["support", "dps", "zone"],
-  "main": {
-    "skill": "オラージュアッシュ",
-    "target": "st", "kind": "phys", "stat": "pwr", "element": "thunder", "weapon_type": "slash",
-    "mult": 1, "size": "xl", "hits": 4, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "AF 콤보 배율 증가량 UP, 아군 전체 크리율 100% UP(3회 행동). ZONE 전개 시 ZONE 각성 실행, 자신이 각성 발동 시 루나틱 발동"
-  },
+  "main": {"skill": "オラージュアッシュ", "target": "st", "kind": "phys", "stat": "pwr", "element": "thunder", "weapon_type": "slash", "mult": 1, "size": "xl", "hits": 4, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "AF 콤보 배율 증가량 UP, 아군 전체 크리율 100% UP(3회 행동). ZONE 전개 시 ZONE 각성 실행, 자신이 각성 발동 시 루나틱 발동"},
   "sb": null,
-  "self_buff": {
-    "pwr": 100, "int": 100, "spd": 100, "elem_atk": 0, "weapon_atk": 30,
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "완력/지성/속도 100%·전무기종 대미지 30%는 초뢰진 전개 시(기본 50%)",
-    "pwr": 100, "int": 100, "spd": 100,
-    "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"all": 30},
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 0, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 50, "int": 50, "spd": 0,
-    "all_elem_res": 0, "elem_res": {},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {},
-    "break": "all", "weak_expose": "", "pain_poison": false
-  },
+  "self_buff": {"pwr": 100, "int": 100, "spd": 100, "elem_atk": 0, "weapon_atk": 30, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "완력/지성/속도 100%·전무기종 대미지 30%는 초뢰진 전개 시(기본 50%)", "pwr": 100, "int": 100, "spd": 100, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"all": 30}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 50, "int": 50, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "all", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "thunder", "awakened": true, "condition": "デューヴ・ベニス/VC로 초뢰진 선제 전개. 고유스킬로 ZONE 각성"},
-  "support": {"heal": 2, "barrier": 0, "cleanse": 1, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 3, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "revive": false},
   "req": "뇌 ZONE(초뢰진) 전개 중",
   "tags": ["lunatic", "thunder_zone", "endure", "zone_awaken", "all_res_up"],
-  "note_kr": "뇌 존 전개형 버퍼. 초뢰진 중 아군 완력/지성/속도 100% UP+전무기종 대미지 30% UP, 크리율 100%, 전속성내성 50% UP. 루미에르시엘로 적 완력/지성 50% DOWN(5턴)+브레이크, HP 3000 회복. 전투 개시 시 아군 전체 버티기 부여."
+  "note_kr": "뇌 존 전개형 버퍼. 초뢰진 중 아군 완력/지성/속도 100% UP+전무기종 대미지 30% UP, 크리율 100%, 전속성내성 50% UP. 루미에르시엘로 적 완력/지성 50% DOWN(5턴)+브레이크, HP 3000 회복. 전투 개시 시 아군 전체 버티기 부여.",
+  "support_src": {"heal": "ルミエールシエル", "dmg_cut": "デューヴ・ベニス / ルミエールシエル", "cleanse": "ルミエールシエル", "mp_recover": "ドゥーフランム"},
+  "play_kr": "雷 속성 도끼 서포터입니다. デューヴ・ベニス(선제, 아군 전속성 내성 50%) 또는 VC로 招雷陣을 깔고 アリュマージュ로 아군 전체 완력·지성·속도 100%·전 무기 대미지 30%를 줍니다. 고유 オラージュアッシュ는 아군 크리율 100%와 AF 콤보 증가량 UP, 존 각성(자신이 각성하면 루나틱 帯電)까지 한 번에 하고, ルミエールシエル은 후공으로 적 완력·지성 −50%·브레이크·아군 HP 3,000 회복·상태이상 회복입니다. 개전 아군 전원 踏ん張る로 한 번의 큰 공격을 버팁니다."
 },
 {
   "id": "sumizome_no_gunshi",
@@ -624,39 +485,17 @@
   "tier": "B",
   "score": 94,
   "roles": ["dps", "support", "zone"],
-  "main": {
-    "skill": "朱雀爆焔匣",
-    "target": "st", "kind": "mag", "stat": "int", "element": "fire", "weapon_type": "magic",
-    "mult": 15, "size": "xl", "hits": 3, "repeat": 0,
-    "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1,
-    "condition": "약점 보유 적에게 위력 3배, ZONE 각성 실행 시 추가 5배(합산 최대 15배). 통상공격(調虎離山)으로 적 약점/내성 교체 가능"
-  },
+  "main": {"skill": "朱雀爆焔匣", "target": "st", "kind": "mag", "stat": "int", "element": "fire", "weapon_type": "magic", "mult": 15, "size": "xl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "약점을 가진 적에게 3배 × 속성/공격 종류 ZONE 전개 중 5배(이때 ZONE 각성 실행) = 최대 15배. 상성 중립 적엔 5배까지. 調虎離山(통상 공격 변화)은 적 내성↔약점 교환이라 내성 보스에만 약점이 생김"},
   "sb": null,
-  "self_buff": {
-    "pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0,
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false
-  },
-  "party_buff": {
-    "scope": "all", "restrict": "정신통일은 ANOTHER ZONE 전개 시. ZONE 전개 시 마법 수만큼 전체 강화",
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {},
-    "crit_rate": 100, "crit_dmg": 0,
-    "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false,
-    "weak_dmg": 30, "multihit": false,
-    "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false
-  },
-  "debuff": {
-    "pwr": 0, "int": 0, "spd": 0,
-    "all_elem_res": 0, "elem_res": {"fire": 60},
-    "phys_res": 0, "mag_res": 0, "weapon_res": {},
-    "break": "all", "weak_expose": "fire", "pain_poison": false
-  },
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false},
+  "party_buff": {"scope": "all", "restrict": "정신통일은 ANOTHER ZONE 전개 시. ZONE 전개 시 마법 수만큼 전체 강화", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 30, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
+  "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {"fire": 60}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "all", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "magic", "awakened": true, "condition": "攻勢の狼煙/VC로 환마진 선제 전개. 고유스킬로 ZONE 각성"},
-  "support": {"heal": 0, "barrier": 0, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "status_immune": 0},
+  "support": {"heal": 0, "barrier": 0, "dmg_cut": 0, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "마법 ZONE(환마진), 적 약점 보유(내성 교체 포함)",
   "tags": ["magic_zone", "weakness_swap", "auto_crit_party", "mp_cost_down", "break_bonus"],
-  "note_kr": "마법 존 전개형 불속성 마법 딜러. 통상공격으로 적 내성과 약점을 교체해 약점 강제, 고유스킬 약점 3배×각성 5배. 아군 전체 크리율/마크리율 100% 상시, 소비MP 50% DOWN, 약점대미지 UP+정신통일. 선제 환마진+전체 브레이크."
+  "note_kr": "마법 존 전개형 불속성 마법 딜러. 통상공격으로 적 내성과 약점을 교체해 약점 강제, 고유스킬 약점 3배×각성 5배. 아군 전체 크리율/마크리율 100% 상시, 소비MP 50% DOWN, 약점대미지 UP+정신통일. 선제 환마진+전체 브레이크.",
+  "support_src": {"mp_recover": "ヴァリアブルチャント / 紅蓮砲火"},
+  "play_kr": "攻勢の狼煙(선제)이나 VC로 幻魔陣(마법 존)을 깔고 적 전체를 브레이크한 뒤, 朱雀爆焔匣(火 마법 단일 특대 3타, 존 중 5배·ZONE 각성, 약점 가진 적 3배)으로 딜합니다. 패시브로 아군 전체 크리율·마법 크리율 100%, ANOTHER ZONE 중엔 정신통일(마법)·약점 대미지 UP을 줍니다. 調虎離山은 내성↔약점 교환이라 火 내성 보스에만 쓰고, 약점이 있는 적에겐 쓰지 않습니다."
 }
 ]

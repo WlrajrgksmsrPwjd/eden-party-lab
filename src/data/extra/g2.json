@@ -354,7 +354,7 @@
    "雷"
   ],
   "mp": {
-   "main": 40,
+   "main": 53,
    "sb": null,
    "buff": null
   },
@@ -398,7 +398,7 @@
    "水"
   ],
   "mp": {
-   "main": 52,
+   "main": 54,
    "sb": 66,
    "buff": 25
   },
@@ -461,7 +461,7 @@
    "地"
   ],
   "mp": {
-   "main": 46,
+   "main": 40,
    "sb": null,
    "buff": null
   },

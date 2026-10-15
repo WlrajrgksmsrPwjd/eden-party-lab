@@ -901,7 +901,8 @@ function cardHtml(x, key, o){
         ${basisHtml(x)}
         <div class="grid">
           <div><span>존 (SB / 평상)</span><span class="num">${esc(sbz&&sbz.level?sbz.label:'없음')} / ${esc(nz&&nz.level?nz.label:'없음')}</span></div>
-          <div><span>회복/배리어/해제/수호</span><span class="num">${ev.survDet.heal}/${ev.survDet.barrier}/${ev.survDet.cleanse}/${ev.survDet.guard}</span></div>
+          <div><span>회복/배리어/피해 경감/수호</span><span class="num">${fmtG(ev.survDet.heal)}/${fmtG(ev.survDet.barrier)}/${fmtG(ev.survDet.dmg_cut)}/${fmtG(ev.survDet.guard)}</span></div>
+          <div><span>상태이상 회복/무효 · 날리기 무효</span><span class="num">${fmtG(ev.survDet.cleanse)}/${fmtG(ev.survDet.status_immune)} · ${fmtG(ev.survDet.knockback_immune)}</span></div>
         </div>
         ${ex.notes.length?`<ul class="ops">${ex.notes.map(n=>`<li><b>${esc(n.name)}</b> <span class="cond ${n.lvl}">${n.lvl==='ok'?'조건 충족':n.lvl==='off'?'조건 미충족':'일부 적용'}</span> ${esc(n.text)}${n.to.length?` → 대상 ${esc(n.to.join(', '))}`:''}</li>`).join('')}</ul>`:''}
         <ul class="ops">${x.team.filter(c=>c.cxWhy&&c.cxWhy.length).map(c=>`<li><b>${esc(c.name)}</b>: ${esc(c.cxWhy.join(' · '))}</li>`).join('')}${x.diff.noHeal?'<li>회복 수단이 없어 피격 관리 부담 +</li>':''}${x.team.every(c=>!(c.cxWhy&&c.cxWhy.length))?'<li>특별히 신경 쓸 조작 요소가 적습니다.</li>':''}</ul>
@@ -1126,8 +1127,11 @@ function debuffSummary(c){
   if(c.pain) out.push('독·페인');
   return out;
 }
-const SUP_KR={heal:'회복',barrier:'배리어',cleanse:'해제',guard:'수호',taunt:'도발',status_immune:'상태이상 무효',mp_recover:'MP 회복'};
+const SUP_KR={heal:'회복',barrier:'배리어',dmg_cut:'피해 경감',cleanse:'상태이상 회복',guard:'수호',taunt:'도발',status_immune:'상태이상 무효',debuff_guard:'디버프 해제',knockback_immune:'날리기 무효',mp_recover:'MP 회복',af_gauge:'AF 게이지'};
+/* 생존 담당: 이름(스킬) — 등급이 min 이상인 사람 */
+function whoSup(team, k, min){ return team.filter(c=>(c.sup[k]||0)>=min).map(c=>{ const s=c.supSrc&&c.supSrc[k]; const to=c.supTo&&c.supTo[k]; return esc(c.name)+(s?` <span class="hint">(${esc(String(s).split(/\s*[\/／]\s*/)[0].slice(0,20))}${to?' · 대상 제한':''})</span>`:''); }); }
 function whoHas(team, f){ return team.filter(f).map(c=>c.name); }
+const fmtG = v => v==null ? '0' : (Math.round(v*10)/10).toString(); // 생존 등급(0~3, 대상 제한이면 받는 사람 비율만큼)
 /* 부활·전투불능 방지(data/revive.json): 등급 높은 순으로 이름(가장 센 효과 — 종류·시점) */
 const RV_W = {any:'평소', auto:'자동', sb:'SB 때', once:'전투 중 1회', stack:'축적 후'};
 function reviveTxt(team){
@@ -1211,7 +1215,7 @@ function turnPlanHtml(x, boss){
   T.push(['3턴~ · 폭딜', o3]);
   // 유지·생존
   const o4=[];
-  for(const k of ['heal','barrier','cleanse','guard','status_immune']){ const w=whoHas(team,c=>(c.sup[k]||0)>=2); if(w.length) o4.push(`${SUP_KR[k]}: ${w.map(esc).join(', ')}`); }
+  for(const k of ['heal','barrier','dmg_cut','cleanse','status_immune','knockback_immune','guard','taunt']){ const w=whoSup(team,k,k==='knockback_immune'||k==='status_immune'||k==='guard'?1:2); if(w.length) o4.push(`${SUP_KR[k]}: ${w.join(', ')}`); }
   const rvT = reviveTxt(team); if(rvT) o4.push(`부활·전투불능 방지: ${rvT}`);
   if(!o4.length) o4.push('<span class="ng">회복·배리어 담당이 약함 → 후열 교대로 보강</span>');
   const sim = ev.sim;
@@ -1242,6 +1246,7 @@ function turnPlanHtml(x, boss){
       [/배리어|장벽/, ()=>`배리어 관통: ${pick(pierceW,'다단 공격으로 먼저 벗기기')}`],
       [/버프\s*해제|버프.*(초기화|지움)|초기화/, ()=>`해제 직후 1턴 재세팅: ${team.map((c,i)=>i).filter(i=>buffSummary(team[i]).length).map(nm).join(', ')||'—'}`],
       [/혼란|암흑|기절|수면|봉인|석화|마비|공포|매혹|상태이상|독/, ()=>`해제·무효: ${pick(cleanse,res.length?'후열 '+res.join(', '):'')}`],
+      [/날려|날리|吹き飛|후열로|교대 강제|강제 교대/, ()=>`날리기 무효: ${pick(whoSup(team,'knockback_immune',1),'후열에 같은 역할 대기')}`],
       [/즉사|息吹|숨결|전체.*(피해|공격)|고정 피해|대미지 대폭|강력/, guardRule],
       [/존|ZONE/, ()=>sbz&&sbz.level?`존이 깨지면 ${esc(sbz.byName)} 재전개`:'존 담당 없음'],
       [/반격|카운터|반사/, ()=>'반격 조건을 피해 한 방이 큰 공격 위주로'],
@@ -1373,7 +1378,7 @@ function setupHtml(x, i){
       <p><button type="button" class="btn small" data-eqrec="${esc(x._key||'')}" data-i="${i}">추천 장비 찾기</button> <span class="hint">이 조합의 버프·존·약점·P글래 공유 조건에서 기대 대미지가 가장 높은 무기·방어구·배지·글래스터·광석을 찾습니다 (몇 초)</span></p>
       <div class="eqout"></div>
       <p><a href="${esc((()=>{ const cd=eqCondFromTeam(x,i); return cd?builderUrl(cd, o.build&&o.build.code||'', c.id):'builder.html'; })())}" target="_blank" rel="noopener">장비 빌더에서 직접 비교 ↗</a> <span class="hint">이 조합 조건을 채워서 엽니다</span></p></div>
-    <div><h4>운용 포인트</h4><ul>${O.join('')}${r.note_kr?`<li class="hint">${esc(r.note_kr)}</li>`:''}</ul></div>`;
+    <div><h4>운용 포인트</h4><ul>${r.play_kr?`<li>${esc(r.play_kr)}</li>`:''}${O.join('')}${r.note_kr?`<li class="hint">${esc(r.note_kr)}</li>`:''}</ul></div>`;
 }
 function toggleSetup(memEl){
   const key=memEl.dataset.sk, i=+memEl.dataset.i, rec=RES.get(key); if(!rec) return;
@@ -1691,7 +1696,7 @@ function rowHtml(c){
     <label class="who" for="own-${esc(c.id)}"><span class="n">${esc(c.name)}${r._custom?' <span class="badge">직접 추가</span>':''}</span>
     <span class="m">${(c.elems.length?c.elems:['none']).map(elChip).join('')} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)}${c.align==='light'?'천':'명'} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span></label>`;
   const stBtn = `<button type="button" class="lnk" data-stat aria-expanded="false" title="기본 스탯과 천명치별 값">스탯</button>`;
-  if(!o) return `<div class="row off" data-id="${esc(c.id)}">${head}<div class="ctl">${stBtn}<span class="hint">${esc((r.note_kr||'').slice(0,70))}${(r.note_kr||'').length>70?'…':''}</span></div><div class="stwrap" hidden></div></div>`;
+  if(!o) return `<div class="row off" data-id="${esc(c.id)}">${head}<div class="ctl">${stBtn}<span class="hint"${r.play_kr?` title="${esc(r.play_kr)}"`:''}>${esc((r.note_kr||'').slice(0,70))}${(r.note_kr||'').length>70?'…':''}</span></div><div class="stwrap" hidden></div></div>`;
   const t=+o.t||0;
   const warn = c.stellar && o.s && t<15 ? `<span class="badge warn">15 미만: 성도 스킬 잠김</span>` : '';
   const gk = glKey(o.gl);
@@ -1816,7 +1821,7 @@ function addCustom(e){
     party_buff:{scope:'all', restrict:'', pwr:n('cPStat'), int:n('cPStat'), spd:0, all_elem_atk:n('cPEl'), elem_atk:{}, weapon_atk:{}, crit_rate:0, crit_dmg:0, over_crit:false, singular_focus:false, mental_focus:false, overthrow:false, eagle_eyes:false, weak_dmg:0, multihit:false, link:false, barrier_pierce:false, extra_hit:false, mp_cost_zero:false},
     debuff:{pwr:0,int:0,spd:0, all_elem_res:n('cDEl'), elem_res:{}, phys_res:n('cDPh'), mag_res:n('cDMg'), weapon_res:{}, break:'', weak_expose:'', pain_poison:$('#cPain').checked},
     zone: ztype ? {type: ztype==='elem'?el:ztype==='weap'?wt:ztype, awakened:$('#cZoneAw').checked, condition: $('#cZoneAw').checked?'ZONE 각성 가능':''} : null,
-    support:{heal:n('cHeal'), barrier:n('cBar'), cleanse:n('cCln'), revive:false, guard:n('cGrd'), taunt:0, mp_recover:0, af_gauge:0, status_immune:0},
+    support:{heal:n('cHeal'), barrier:n('cBar'), cleanse:n('cCln'), revive:false, guard:n('cGrd'), taunt:0, mp_recover:0, af_gauge:0, status_immune:0, dmg_cut:0, debuff_guard:0, knockback_immune:0},
     req:'', tags:[], note_kr:'직접 추가한 캐릭터'};
   state.custom.push(c);
   state.owned[c.id]={t:n('cT'), s:c.stellar, m:0, g:'none', gl:null};

@@ -9,5 +9,10 @@
   "kuchinawa_as": [{"el": "earth", "size": "xl", "mult": 5, "to": {"adj": true}}],
   "havoc": [{"el": "crystal", "size": "xl", "mult": 4, "to": {"weap": ["fist", "hammer"]}}],
   "elina_as": [{"el": "shade", "size": "xl", "mult": 8, "to": {"one": true}}],
-  "shanie_ac": [{"el": "wind", "size": "xl", "mult": 3, "to": {"self": true, "one": true}, "note": "공격하는 아군 HP가 낮을수록 최대 5배 → 평균 3"}]
+  "shanie_ac": [{"el": "wind", "size": "xl", "mult": 3, "to": {"self": true, "one": true}, "note": "공격하는 아군 HP가 낮을수록 최대 5배 → 평균 3"}],
+  "gariyu": [{"el": "fire", "size": "xxl", "mult": 2, "to": {"self": true}, "note": "焔撃・ヴァシュタル 자신 連携(3턴): 공격 시 화 마법 극대 2배"}],
+  "m6_ruvi": [{"el": "none", "size": "xl", "mult": 1, "to": {"self": true}}],
+  "matsurika": [{"el": "water", "size": "xl", "mult": 15, "to": {"all": true}}],
+  "raven_as": [{"el": "earth", "size": "xl", "mult": 2, "to": {"self": true}, "note": "鴉眼(성도 스킬, 통상 5턴·SB 10턴): 자신이 공격할 때마다 지 마법 특대 2배 추가타+지 내성 30%↓(최대 5누적)"}],
+  "senya_as": [{"el": "fire", "size": "l", "mult": 1, "to": {"self": true}, "note": "桜下の誓い・白宵(白宵纏 중 復仇の誓い 변화): 자신 연계, 공격 시 火 斬(大) 추가타, 배율 미기재, 3턴"}]
 }

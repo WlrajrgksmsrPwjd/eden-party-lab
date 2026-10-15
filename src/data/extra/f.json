@@ -74,10 +74,10 @@
   "mp": {
    "main": 57,
    "sb": 88,
-   "buff": 88
+   "buff": 35
   },
   "turns": {
-   "buff": 1,
+   "buff": 4,
    "debuff": 99
   },
   "buff_how": "skill",
@@ -203,7 +203,7 @@
    "火"
   ],
   "mp": {
-   "main": 72,
+   "main": 38,
    "sb": 72,
    "buff": 38
   },
@@ -313,9 +313,9 @@
    "晶"
   ],
   "mp": {
-   "main": 70,
+   "main": 59,
    "sb": 76,
-   "buff": 52
+   "buff": 44
   },
   "turns": {
    "buff": 5,

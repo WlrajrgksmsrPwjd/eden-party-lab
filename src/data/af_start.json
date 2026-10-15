@@ -3,5 +3,6 @@
   "myrus_es": {"start": 100},
   "izuna": {"start": 100, "need": {"elem": "thunder", "n": 3}},
   "jilfany_as": {"start": 100, "buddy": ["pitan", "pitan_as"]},
-  "_refill": {"hismena_es": {"on": "sb", "to": 100, "cost": 50}}
+  "_refill": {"hismena_es": {"on": "sb", "to": 100, "cost": 50}},
+  "aldo": {"start": 100, "need": {"align": "light", "n": 3}}
 }

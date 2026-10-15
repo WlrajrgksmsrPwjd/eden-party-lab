@@ -190,7 +190,7 @@
   "mp": {
    "main": 42,
    "sb": 100,
-   "buff": 0
+   "buff": 25
   },
   "turns": {
    "buff": 1,

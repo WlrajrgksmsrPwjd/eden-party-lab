@@ -1,18 +1,18 @@
 {
   "_doc": "요격(피격 시 반격). 맞은 타수마다 1번 발동(사용자 확인), 행동불능 상태이상에 걸리면 발동 안 함. trig: phys(물리 피격)/any(물리·마법)/fire(화속성 피격), taunt: 스스로 도발, copy: 루나틱<복사>로 반격 2번, atk: 반격 공격(배율 미기재면 1). 출처 altema",
-  "_cover": {"_doc": "아군 대신 맞기. aoe: 수세(守勢)·전체공격 대신 받기 — 적 전체공격 1번이 전열 수만큼 이 캐릭터에게 들어옴, sb: SB 턴에만", "kagurame": "aoe", "mugin_no_shijin": "aoe", "m2_hiina_as": "aoe", "hoshinoko": "sb"},
+  "_cover": {"_doc":"아군 대신 맞기. aoe: 수세(守勢)·전체공격 대신 받기 — 적 전체공격 1번이 전열 수만큼 이 캐릭터에게 들어옴, sb: SB 턴에만","kagurame":"aoe","mugin_no_shijin":"aoe","m2_hiina_as":"aoe","hoshinoko":"sb","craghorn":"sb","dunarith_ac_as":"aoe","galliard":"aoe","soira_as":"aoe"},
   "kagurame": {"trig":"any","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"shade","weapon_type":"blunt","size":"xl","mult":10,"hits":1}},
   "shigure_es": {"trig":"phys","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"wind","weapon_type":"slash","size":"xl","mult":3,"hits":4}},
   "minalca_as": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"fire","weapon_type":"slash","size":"xl","mult":1,"hits":3}},
   "m6_shion_as": {"trig":"phys","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"fire","weapon_type":"slash","size":"xl","mult":1,"hits":1}},
-  "mugin_no_shijin": {"trig":"any","taunt":true,"atk":{"target":"aoe","kind":"mag","stat":"int","element":"water","weapon_type":"blunt","size":"xl","mult":16,"hits":1}},
+  "mugin_no_shijin": {"trig":"any","taunt":true,"atk":{"target":"aoe","kind":"phys","stat":"int","element":"water","weapon_type":"blunt","size":"xl","mult":16,"hits":1}},
   "dunarith_ac_as": {"trig":"any","taunt":true,"atk":{"target":"aoe","kind":"mag","stat":"int","element":"water","weapon_type":"blunt","size":"l","mult":10,"hits":1}},
   "hismena": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"water","weapon_type":"pierce","size":"xl","mult":10,"hits":1}},
   "cyrus": {"trig":"any","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"water","weapon_type":"slash","size":"xxl","mult":3,"hits":1}},
   "philo_as": {"trig":"any","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"water","weapon_type":"slash","size":"xl","mult":15,"hits":1}},
   "jilfany_as": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"water","weapon_type":"slash","size":"xl","mult":10,"hits":1}},
   "hoshinoko": {"trig":"phys","taunt":true,"atk":{"target":"aoe","kind":"mag","stat":"int","element":"crystal","weapon_type":"magic","size":"xl","mult":2,"hits":1}},
-  "alma_as": {"trig":"any","taunt":true,"copy":true,"atk":{"target":"aoe","kind":"mag","stat":"int","element":"crystal","weapon_type":"magic","size":"xl","mult":1,"hits":1}},
+  "alma_as": {"trig":"any","taunt":true,"copy":true,"atk":{"target":"aoe","kind":"mag","stat":"pwr","element":"crystal","weapon_type":"magic","size":"xl","mult":1,"hits":1}},
   "anabel_es": {"trig":"any","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"fire","weapon_type":"pierce","size":"xl","mult":10,"hits":2}},
   "hanasaki_no_himegimi_as": {"trig":"any","taunt":true,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"fire","weapon_type":"slash","size":"xl","mult":1,"hits":1}},
   "nonold": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"mag","stat":"int","element":"none","weapon_type":"magic","size":"xl","mult":5,"hits":1}},
@@ -23,5 +23,6 @@
   "roberta": {"trig":"any","taunt":false,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"water","weapon_type":"blunt","size":"xl","mult":5,"hits":2}},
   "m2_terry_bogard": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"none","weapon_type":"blunt","size":"l","mult":1,"hits":1}},
   "m3_kula": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"none","weapon_type":"blunt","size":"l","mult":1,"hits":1}},
-  "m3_mai_shiranui": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"none","weapon_type":"blunt","size":"l","mult":1,"hits":1}}
+  "m3_mai_shiranui": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"none","weapon_type":"blunt","size":"l","mult":1,"hits":1}},
+  "utsuhara": {"trig":"any","taunt":false,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"thunder","weapon_type":"slash","size":"xl","mult":1,"hits":2},"note":"顕加の纏(3턴) 迎撃: 물리·마법 피격 시 단일 뇌 참 특대 2회+残魂 1. 竜の爪痕 비례 최대 10배는 미반영(1배)"}
 }

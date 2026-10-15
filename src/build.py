@@ -29,8 +29,9 @@ for c in chars:
     pb=c.get('party_buff') or {}
     if has_jp(pb.get('restrict')): pb['restrict']=ko(pb['restrict'])
     if c.get('ex') and c['ex'].get('personality'): c['ex']['pers_ko']=[ko(x) for x in c['ex']['personality']]
-    for k in ('note_kr','name_kr'):
+    for k in ('note_kr','name_kr','play_kr'):
         if has_jp(c.get(k)): c[k]=ko(c[k])
+    if c.get('support_src'): c['support_src']={k:(ko(v) if has_jp(v) else v) for k,v in c['support_src'].items() if isinstance(v,str)}
 rules=json.load(open(P('data','buff_rules.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in rules: c['party_rules']=rules[c['id']]
@@ -68,7 +69,7 @@ for c in chars:
 # AF 버프·디버프 행동(알테마 대조 299명): 버프 스킬 하나에 AF 행동 1번
 bac=json.load(open(P('data','buff_acts.json'),encoding='utf-8'))
 for c in chars:
-    if c['id'] in bac and not c['id'].startswith('_'): c['bact']=[{k:v for k,v in a.items() if k in ('s','k','g','h','mp')} for a in bac[c['id']]['acts']]
+    if c['id'] in bac and not c['id'].startswith('_'): c['bact']=[{k:v for k,v in a.items() if k in ('s','k','g','h','mp','el','wt','size','mult','hits')} for a in bac[c['id']]['acts']]
 # 루나틱<솔선(挺身)>: 내구→힘·정신→지성 고정값(딩 14·15행)
 lun=json.load(open(P('data','lunatic.json'),encoding='utf-8'))
 for c in chars:
@@ -92,6 +93,11 @@ inflict=json.load(open(P('data','inflict.json'),encoding='utf-8'))
 for c in chars:
     x=inflict.get(c['id'])
     if x: c['inflict']={k:x[k] for k in ('poison','pain','target','turns','on_main') if k in x}
+tend=json.load(open(P('data','turn_end.json'),encoding='utf-8')) if os.path.exists(P('data','turn_end.json')) else {}
+sstk=json.load(open(P('data','self_stk.json'),encoding='utf-8')) if os.path.exists(P('data','self_stk.json')) else {}
+for c in chars:
+    if tend.get(c['id']) and not c['id'].startswith('_'): c['turn_end']=[{k:e[k] for k in ('name','atk','fixed','when','up','sb_only') if k in e} for e in tend[c['id']]]
+    if sstk.get(c['id']) and not c['id'].startswith('_'): c['self_stk']={k:{x:v[x] for x in ('stack','turns','start','af_grows','af_p','sb_fill') if x in v} for k,v in sstk[c['id']].items()}
 scond=json.load(open(P('data','skill_cond.json'),encoding='utf-8'))
 for c in chars:
     for k,v in (scond.get(c['id']) or {}).items():

@@ -28,6 +28,7 @@
     "size": "xl",                      // s m l xl xxl (威力 小中大特大極大 -> s m l xl xxl)
     "hits": 3,
     "repeat": 1,                       // 재공격/재행동 횟수 (없으면 0). 조건 있으면 condition에 기술
+    "rep_p": {"n": 1, "af": 1},         // (선택) 재공격 조건이 맞을 확률(숫자 또는 평상 n·AF af). 없고 condition이 있으면 0.7
     "execs": 1,                        // (선택) 한 행동의 실행 수(다른 스킬 연속 실행 포함, 재공격 제외). AF 게이지는 실행마다 찬다
     "repeat_af": 0,                    // (선택) AF 중 재공격 횟수가 다를 때
     "uses": 4, "alt": {…},             // (선택) 전투 중 횟수 제한(예: 狼志 4) — 허수아비 AF에서 다 쓰면 alt(스킬 필드 덮어쓰기, mcond 가능)로
@@ -97,10 +98,13 @@
     "awakened": true,                  // 極/絶 존 전개 가능
     "condition": "전방 불 속성 3명 이상"
   },
-  "support": {                         // 0~3 등급 (0 없음, 1 소소, 2 쓸만, 3 전담급)
-    "heal": 1, "barrier": 2, "cleanse": 0, "revive": false, "guard": 0, "taunt": 0,
-    "mp_recover": 0, "af_gauge": 0, "status_immune": 0
+  "support": {                         // 0~3 등급 (2026-10-15 알테마 전수 재조사 기준: 3 아군 전체에 반복·강하게, 2 전체지만 제한적(SB·1회·적은 양)이거나 한 명에게 강하게, 1 자신만·아주 작음, 0 없음)
+    "heal": 1, "barrier": 2, "dmg_cut": 2, "cleanse": 0, "status_immune": 0, "debuff_guard": 0,
+    "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "revive": false
   },
+  "support_to": {"knockback_immune": {"pers": ["拳","槌"]}}, // (선택) 받는 사람 조건(buff_rules to 형식 또는 pos) — 생존 점수는 전열 중 해당 비율만큼
+  "support_src": {"knockback_immune": "ツィタデーリ"},     // (선택) 담당 스킬(화면 표시)
+  "play_kr": "운용 요약 2~4문장(화면 '운용 포인트')",
   "req": "",                           // 본령 발휘 조건 (예: "전방 권갑 4명", "불 ZONE", "AF 중")
   "tags": ["self_damage","fixed_damage"], // 자유 태그
   "note_kr": "자상 기반 초고화력 전체 딜러. 양옆 아군에 버프."
@@ -205,3 +209,15 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 
 ## inflict.json `dummy`
 허수아비 1턴에서 독·페인이 걸리는 시점: `start`(개전 자동), `start_sb`(성도보드 개전 자동 — 성도각성 시만), `main`(주력 공격 뒤), `skill`(주력이 아닌 스킬, AF 행동 한 번 필요).
+
+## turn_end.json
+턴 종료(행동을 쓰지 않고 자동으로 나가는) 공격·고정 대미지. 키 = 캐릭터 id, 값 = `[{name, atk: 스킬 형식(target kind stat element weapon_type size mult hits) | null, fixed: {v: 1타 고정 대미지, n: 타수, target} | null, when: 규칙 when 형식, up: 평상 턴 발동 비율, sb_only, note}]`. 평상 턴(실전 N턴·지속)에만 더함(허수아비 1턴 AF엔 없음 — 턴 종료는 AF 뒤). 고정 대미지는 버프·내성 무관, 1타 상한만. 엔진 `turnEndCalc`.
+
+## self_stk.json
+자기 스택 → 자기 버프. 키 = 캐릭터 id, 값 = `{self_buff 키: skill_cond stack 조건 형식(stack·turns·start·af_grows·af_p)}`. 그 self_buff 최대치에 축적 채움 비율(condP)을 곱함(숫자는 곱, true/조건은 0.5 이상이면 켬).
+
+## buff_acts.json attack 행동 위력
+`k: "attack"` 행동에 `el`(속성/none) `wt`(slash/pierce/blunt/magic) `size` `mult` `hits`가 있으면 그 위력으로 계산(허수아비 AF 행동, 평상 턴 시뮬은 주력 대비 위력 비율, 최대 1). 없으면 특대 1배.
+
+## 아군 挺身
+`party_buff.teishin: true` + buff_rules `f:["teishin"]`(조건: 絶 존·가창 등) → 받는 사람 기본 내구(힘 공격)·정신(지성 공격)을 고정값으로 더함(자기 挺身과 겹치지 않음).
