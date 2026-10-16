@@ -157,7 +157,7 @@
   "shisou_no_yaritsukai_as": [{"f":["shinan"],"when":{"zone":"any","zlv":3}}],
   "dunarith_ac_as": [{"f":["flat"],"when":{"zone":["water"],"zlv":2},"e":0.5},{"f":["elat:water"],"when":{"req":{"kind":"elem","vals":["water"],"n":4}},"e":0.7},{"f":["teishin"],"when":{"zlv":3}}],
   "aldo_as": [{"f":["critd"],"to":{"align":"light"},"e":0.667,"me":1},{"f":["critd"],"to":{"kind":"phys"}}],
-  "alma_as": [{"f":["link","pierce"],"when":{"sb":true},"e":0.25}],
+  "alma_as": [{"f":["link","pierce"],"to":{"pos":"one","side":"r"},"sb_all":true,"note":"カレイドスコープ: 평소 1명(AF 중 전열 오른쪽 끝), SB 때 아군 전체(딩 DB) — 예전 '전원 0.25'(e)는 주 딜러 과소·서포터 과대"}],
   "fiene_as": [{"f":["pierce"],"when":{"af":true}}],
   "flammelapis": [{"f":["elat"],"when":{"t":0.75}}],
   "galliard": [{"f":["pwr"],"when":{"t":0.4}}],

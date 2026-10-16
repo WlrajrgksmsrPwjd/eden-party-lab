@@ -325,3 +325,14 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 
 - '최고 누적 N회' 버프·디버프의 최대치 = 1회분 × (N+1)/2(첫 회 전량, 2회째부터 절반씩: 3누적 2배, 4누적 2.5배, 5누적 3배). party_buff·self_buff·debuff에는 이 최대치를 넣는다(1회분×N 아님).
 - 누적 진행 비율(af_timing `self/party/deb`·`real`, self_stk·skill_cond `af_p`·`af_r`)은 k누적 = (k+1)/(N+1). self_stk `turns`/`start`로 쓸 때는 turns N+1·start 1/(N+1)(0회는 주력 행동 마스크가 맡음).
+
+## 2026-10-17 엔진 6차
+
+- once.json 항목 `combo: N`(+`per: "af"`): AF 콤보 배율이 N(엔진 콤보 단위, 600% = 6) 이상이면 통상 공격이 바뀌는 공격 — AF 1회에 한 번, 평상 턴엔 없음. atk에 `af_combo_x`도 받음.
+- counter.json: atk `crit_sure`·`def_ignore`·`barrier_pierce`가 이제 계산에 들어감. modes 원소에 `trig`(phys·fire·slash·pierce·blunt — 한 물리 타입은 0.3)·`atk`(그 상태의 요격 공격 필드 덮어쓰기).
+- party_buff `elem_down: {fire: 40, …}`: 같은 스킬(elem_atk와 같은 마스크)로 아군 그 속성 공격 DOWN — 버프와 따로 ×(1−값).
+- debuff `side: [{src: "mag_res", ally: {pwr: 50}, enemy: {phys_res: 50}}]`: 그 디버프(src)가 켜진 만큼 아군 스탯 DOWN(버프에서 뺌)·적 저항 UP(내성 다운에서 뺌).
+- link 항목 `follow: true`: 연계 속성이 연계를 일으킨 공격 속성(무속성이면 el).
+- buff_rules `sb_all: true`: 위치 규칙(pos one 등)이 SB 때(그 AF의 SB 뒤 포함)는 아군 전원.
+- zone `sb_fresh: true`: SB 극 전개가 '그 존이 아닐 때'만 — 평상 턴 같은 존(일반)이면 SB로 극 안 됨, 허수아비는 AF 중 그 존이 이미 깔려 있으면 안 됨.
+- 스킬 `no_aw {필드}`: 성도각성 전(prog.sbOK·sbAw 둘 다 없음)일 때 바뀌는 필드.

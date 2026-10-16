@@ -2,7 +2,7 @@
   "_doc": "요격(피격 시 반격). 맞은 타수마다 1번 발동(사용자 확인), 행동불능 상태이상에 걸리면 발동 안 함. trig: phys(물리 피격)/any(물리·마법)/fire(화속성 피격), taunt: 스스로 도발, copy: 루나틱<복사>로 반격 2번, atk: 반격 공격(배율 미기재면 1). 출처 altema",
   "_cover": {"_doc":"아군 대신 맞기. aoe: 수세(守勢)·전체공격 대신 받기 — 적 전체공격 1번이 전열 수만큼 이 캐릭터에게 들어옴, sb: SB 턴에만","kagurame":"aoe","mugin_no_shijin":"aoe","m2_hiina_as":"aoe","hoshinoko":"sb","craghorn":"sb","dunarith_ac_as":"aoe","galliard":"aoe","soira_as":"aoe"},
   "kagurame": {"trig":"any","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"shade","weapon_type":"blunt","size":"xl","mult":10,"hits":1}},
-  "shigure_es": {"trig":"phys","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"wind","weapon_type":"slash","size":"xl","mult":3,"hits":4}},
+  "shigure_es": {"trig":"phys","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"wind","weapon_type":"slash","size":"xl","mult":3,"hits":4,"crit_sure":true},"modes":[{"p":0.6,"trig":"slash","atk":{"target":"aoe","hits":1,"mult":35,"crit_sure":true}}],"note":"딩 DB: 금강의 자세(焉 뒤) 요격 = 물리 피격 시 단일 風 斬 150%×4(위력합 6)·크리 확정. 夜叉の構え(裂空阿修羅 뒤, 영구) 요격 = 베기 피격 시 적 전체 風 斬 5600% 1타·크리 확정(전체 물리 속성 특대 160 기준 35배). 평상 턴은 裂空阿修羅(alts normal)가 한 행동 대미지가 커서 夜叉の構え 쪽이 많다고 보고 p 0.6, 베기 피격은 물리 피격의 한 타입이라 trig slash(0.3)"},
   "minalca_as": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"fire","weapon_type":"slash","size":"xl","mult":1,"hits":3},"skill":"ドゥーム","modes":[{"p":0.65,"mult":15,"heal_x":2,"what":"心火 50 이상: 요격 위력 15배·회복 2배"}]},
   "m6_shion_as": {"trig":"phys","taunt":true,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"fire","weapon_type":"slash","size":"xl","mult":1.5625,"hits":1},"skill":"臥龍の構え"},
   "mugin_no_shijin": {"trig":"any","taunt":true,"atk":{"target":"aoe","kind":"phys","stat":"int","element":"water","weapon_type":"blunt","size":"xl","mult":16,"hits":1}},
@@ -24,6 +24,6 @@
   "m2_terry_bogard": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"none","weapon_type":"blunt","size":"l","mult":1,"hits":1},"skill":"挑発"},
   "m3_kula": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"none","weapon_type":"blunt","size":"l","mult":1,"hits":1},"skill":"挑発"},
   "m3_mai_shiranui": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"none","weapon_type":"blunt","size":"l","mult":1,"hits":1},"skill":"挑発"},
-  "utsuhara": {"trig":"any","taunt":false,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"thunder","weapon_type":"slash","size":"xl","mult":1,"hits":2},"note":"顕加の纏(3턴) 迎撃: 물리·마법 피격 시 단일 뇌 참 특대 2회+残魂 1. 竜の爪痕 비례 최대 10배는 미반영(1배)","skill":"顕加の纏"},
+  "utsuhara": {"trig":"any","taunt":false,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"thunder","weapon_type":"slash","size":"xl","mult":5,"hits":2},"note":"顕加の纏(3턴) 迎撃: 물리·마법 피격 시 단일 뇌 참 2회+残魂 1. 1타 ⌈100+90×竜の爪痕⌉%(10개에서 1000%, 딩 DB). 爪痕은 턴 종료 추격(残魂 소비)이 맞힐 때마다 1(평상 턴 약 1.5/턴) → 3턴 전투 평균 약 4.5개 = 1타 500% → mult 5(특대 200 기준 2타 합 1000%)","skill":"顕加の纏"},
   "m5_shionne": {"trig":"phys","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"thunder","weapon_type":"pierce","size":"s","mult":1,"hits":1}}
 }
