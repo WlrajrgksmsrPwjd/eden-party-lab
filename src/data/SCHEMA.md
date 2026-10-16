@@ -301,3 +301,4 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - turn_end.json `act`: 그 턴 종료 공격을 거는 스킬 이름 — 버프 행동이면 장착·유지율만큼(buff_acts 행동 g에 'te<번호>').
 - 스킬 `self_on.on`의 `mult`(대미지 비율로)·불리언 필드(crit_sure·barrier_pierce·def_ignore는 켜진 비율로 섞음). self_buff 상태 키는 `{req}`·`{zone, zlv}`만 있어도 됨(행동 출처가 없으면 조건만으로 0/1).
 - self_stk 조건 키: stack·turns·start·af_grows·af_p·af_r·sb_fill·req·cnt·zone·zlv·per·e + hp·mp·af·enemy·turn·other·noaf·stat(condP 형식, 빌드가 넘김).
+- (4차) self_buff 상태 키에 `e`(조건 밖 비율)·`af1`(1턴째 허수아비·실전 1턴째 AF는 늘 충족). VC 행동 `dur`(평상 턴 VC 1/6 × dur, 최대 1). zone.awaken_any.kinds에 존 키(water 등)도. 약점 부여를 조건으로 쓰는 skill_cond `{enemy:'weak'}`·버디 약점 오라는 약점 부여의 켜진 비율(weak_expose_up·noaf·SB 그 턴)을 따름.

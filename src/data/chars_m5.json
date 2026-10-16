@@ -40,7 +40,7 @@
   "roles": ["support", "dps", "healer", "zone"],
   "main": {"skill": "聖賢の颯", "target": "st", "kind": "mag", "stat": "int", "element": "wind", "weapon_type": "magic", "mult": 1, "size": "xl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "ヴラスタリ 축적 수(최대 3)에 따라 위력 증가·소비 MP 경감. 축적 3이면 아군 전체 크리율 100%(3회 행동)"},
   "sb": null,
-  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 80, "weapon_atk": 0, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 80, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "크리율 100%는 ヴラスタリ 3에서 聖賢の颯을 쓸 때 아군 전체 3회 행동(쌓는 데 3번, 쓰면 해제) — 평상 가동률 약 75%·AF는 4번째 사용 뒤. 風 공격 80%는 聖賢の颯 20%×4 누적", "pwr": 0, "int": 40, "spd": 30, "all_elem_atk": 0, "elem_atk": {"wind": 80}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {"wind": 30}, "phys_res": 15, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": true},
   "zone": {"type": "wind", "awakened": false, "condition": "VC로 風王陣 전개", "vc_only": true},
@@ -118,7 +118,7 @@
   "roles": ["support", "dps"],
   "main": {"skill": "ティンクルストーム", "target": "st", "kind": "mag", "stat": "int", "element": "wind", "weapon_type": "magic", "mult": 1, "size": "xl", "hits": 4, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "지정 적 기준 랜덤 4회. 파티 무기종 수에 따라 위력·효과 증가. 아군 전체 크리율/마법 크리율 40%(1회 행동)"},
   "sb": null,
-  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 30, "weapon_atk": 0, "crit_rate": 40, "crit_dmg": 55, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
+  "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 30, "weapon_atk": 0, "crit_rate": 40, "crit_dmg": 41, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "무기종이 다양할수록 효과 증가", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"wind": 30}, "weapon_atk": {}, "crit_rate": 40, "crit_dmg": 55, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 15, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},
   "zone": null,
@@ -282,7 +282,8 @@
   "tags": ["low_hp", "af_only", "self_damage", "taunt", "stack"],
   "note_kr": "수 검 AF 딜러. 스킬로 水天陣 전개 가능. AF 중 エーギルセーバー 단일 특대 2회+자상 30%+자신 완력·속도 30%×3 누적+聖騎士の魂 축적, ディライトブレイク로 HP 30% 이하 대폭발. 固有 小/大 단일 斬+완력 20%DOWN+도발. ガーディアンソウル 전체 물리내성 35%·HP최대 UP, エレメントウォール 전속성내성 30%+치유. VC 전체 MP 소비 50%DOWN+상태이상 회복.",
   "support_src": {"heal": "エレメントウォール", "dmg_cut": "ガーディアンソウル / エレメントウォール", "cleanse": "VC", "mp_recover": "VC"},
-  "play_kr": "AF 전용 딜러입니다. AF 중 エーギルセーバー(水 斬 特大 2회)로 자기 HP를 3할씩 깎으며 완력·속도 30%(최대 3중첩)와 聖騎士の魂을 쌓고, HP 30% 이하에서 AF판 ディライトブレイク로 크게 마무리합니다(배율 미기재라 계산기엔 미반영). 평상 턴엔 エーギルセーバー로 水天陣을 깔고, ガーディアンソウル·エレメントウォール로 아군 전체 물리 35%·전속성 30% 내성과 치유를 줍니다. AF판 ディライトブレイク는 깔린 ZONE을 지우니 존 파티에선 마지막에 쓰세요."
+  "play_kr": "AF 전용 딜러입니다. AF 중 エーギルセーバー(水 斬 特大 2회)로 자기 HP를 3할씩 깎으며 완력·속도 30%(최대 3중첩)와 聖騎士の魂을 쌓고, HP 30% 이하에서 AF판 ディライトブレイク로 크게 마무리합니다(배율 미기재라 계산기엔 미반영). 평상 턴엔 エーギルセーバー로 水天陣을 깔고, ガーディアンソウル·エレメントウォール로 아군 전체 물리 35%·전속성 30% 내성과 치유를 줍니다. AF판 ディライトブレイク는 깔린 ZONE을 지우니 존 파티에선 마지막에 쓰세요.",
+  "af_skill": {"skill": "エーギルセーバー", "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "slash", "mult": 2, "size": "xl", "hits": 2, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "[AF 전용] AF時 エーギルセーバー: 단일 水 斬 特大 2회(배율 미기재 → 1배씩), 자신 현재 HP 3할 자해·완력/속도 30%(3중첩)·聖騎士の魂 축적. 水天陣 전개는 평상판만"}
 },
 {
   "id": "m5_velvet",

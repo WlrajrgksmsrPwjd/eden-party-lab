@@ -496,7 +496,7 @@ function bfOne(team, progs, sit, z, A, posSets, u0in, debToo, j){
 
 /* ---------- 캐릭터 전처리 ---------- */
 const SRC_R = {auto:0, main:1, step:2, sb:3, vc:4};
-const VC_RE = /ヴァリアブルチャント|^VC/, VC_UP = 1/6; // VC(교대 시 발동, 1턴): 평상 턴 6턴 중 1턴, AF·SB·허수아비엔 없음(2026-10-16 점검: 약 140명이 '개전 자동'으로 늘 켜져 있었음)
+const VC_RE = /ヴァリアブルチャント|^VC/, VC_UP = 1/6, vcUp = (b, x) => Math.min(1, VC_UP*Math.max(1, (b && b.vcDur && b.vcDur[x]) || 1)); // VC(교대 시 발동, 1턴): 평상 턴 6턴 중 1턴, AF·SB·허수아비엔 없음(2026-10-16 점검: 약 140명이 '개전 자동'으로 늘 켜져 있었음)
 function skillPow(sk){
   if(!sk) return 0;
   const tgt = sk.target==='st'?'st':'aoe', kind = sk.kind==='mag'?'mag':'phys', el=(sk.element||'none')==='none'?'no':'el';
@@ -547,7 +547,7 @@ function prepChar(c){
     // AF 버프·디버프 행동(buff_acts.json): auto·main·sb 항목 묶음 + buff/attack 행동 목록(순서대로). 데이터에 있는데 행동에 없는 항목은 main
     bact: (()=>{ const L = Array.isArray(c.bact) ? c.bact : null; if(!L) return null;
       const key = g => g.indexOf('party.')===0 ? g.slice(6) : g.indexOf('self.')===0 ? 's.'+g.slice(5) : g==='debuff.break' ? 'brk' : g==='debuff.weak_expose' ? 'weak' : g.indexOf('debuff.')===0 ? 'd_'+g.slice(7) : null;
-      const auto=new Set(), main=new Set(), sb=new Set(), vc=new Set(), sb1=new Set(), steps=[], seen=new Set(), selfSrc={}; let zActs = null, mainActs = 0, mainActK = null;
+      const auto=new Set(), main=new Set(), sb=new Set(), vc=new Set(), sb1=new Set(), steps=[], seen=new Set(), selfSrc={}, vcDur={}; let zActs = null, mainActs = 0, mainActK = null;
       for(const a of L){ const g=(a.g||[]).map(key).filter(Boolean);
         if(c.echange && c.echange.skill && a.s===c.echange.skill) g.push('echg'); // 속성 변환(変幻自在 등)도 그 스킬의 항목(2026-10-16: 실전·지속 계산에서 칸·행동 없이 늘 켜져 있던 문제)
         if(c.counter && c.counter.skill && a.s===c.counter.skill) g.push('ctr'); // 요격을 거는 스킬(알마(AS) リフレクトバレット 3턴): 장착·사용해야 요격(2026-10-16)
@@ -555,7 +555,7 @@ function prepChar(c){
         if(!g.length && !a.z) continue; g.forEach(x=>seen.add(x));
         const isVC = a.k==='auto' && VC_RE.test(String(a.s||''));
         for(const x of g) if(x.indexOf('s.')===0){ const q = x.slice(2), kk = isVC ? 'vc' : a.k==='buff'||a.k==='attack' ? 'step' : a.k; if(!selfSrc[q] || SRC_R[kk] < SRC_R[selfSrc[q]]) selfSrc[q] = kk; }
-        if(isVC){ g.forEach(x=>vc.add(x)); continue; }
+        if(isVC){ g.forEach(x=>{ vc.add(x); if(+a.dur>1) vcDur[x] = Math.max(vcDur[x]||1, +a.dur); }); continue; } // VC 지속 턴(dur, 알마 자신 완력 3턴): 평상 턴 VC_UP×dur
         if(a.k==='sb' && +a.dur>0 && +a.dur<=1) g.forEach(x=>sb1.add(x)); // SB 그 턴만(ターン終了まで): 평상 턴에 안 남음 // 자기 버프 출처(여럿이면 auto > main > 행동 > sb 순으로 먼저 켜지는 쪽)
         if(a.k==='auto') g.forEach(x=>auto.add(x)); else if(a.k==='main'){ g.forEach(x=>main.add(x)); if(+a.acts>0){ mainActs = Math.max(mainActs, +a.acts); mainActK = (mainActK||[]).concat(g.filter(x=>x.indexOf('s.')===0).map(x=>x.slice(2))); } } else if(a.k==='sb') g.forEach(x=>sb.add(x));
         else if(a.k==='buff'||a.k==='attack') steps.push({k:a.k, g:new Set(g), h:+a.h||0, s:a.s||'', mp:+a.mp||0, mp0: a.mp===0, na:!!a.na, once:!!a.once, dur:+a.dur||0, z:a.z||null, zk:a.zk||null, zlv:+a.lv||0, zreq:a.req||null,
@@ -576,7 +576,7 @@ function prepChar(c){
       const sbOnly = new Set([...sb].filter(x=>!main.has(x) && !auto.has(x) && !steps.some(st=>st.g.has(x)))); // SB로만 거는 항목
       const vcOnly = new Set([...vc].filter(x=>!main.has(x) && !auto.has(x) && !sb.has(x) && !steps.some(st=>st.g.has(x)))); // VC로만 거는 항목
       for(const x of vcOnly) main.delete(x);
-      return {auto, main, sb, sbOnly, vcOnly, sb1: new Set([...sb1].filter(x=>sbOnly.has(x))), steps, selfSrc, selfKeys: Object.keys(selfSrc), zActs, mainActs, mainActK: mainActK ? new Set(mainActK) : null}; })(),
+      return {auto, main, sb, sbOnly, vcOnly, sb1: new Set([...sb1].filter(x=>sbOnly.has(x))), steps, selfSrc, selfKeys: Object.keys(selfSrc), vcDur, zActs, mainActs, mainActK: mainActK ? new Set(mainActK) : null}; })(),
     // 부활·전투불능 방지 등급(data/revive.json g, 0~3). 조사 밖이면 예전 true/false → 1/0
     sup: Object.assign({}, sp, {revive: c.revive && c.revive.g!=null ? +c.revive.g : (sp.revive ? 1 : 0), reviveFx: (c.revive && c.revive.fx) || null}),
     supTo: c.support_to || null, supSrc: c.support_src || null, play: c.play_kr || '',
@@ -784,8 +784,8 @@ function zoneCandidates(team, progs, situation){
     cands.push({kind:best.kind, types:best.types, key:best.key, level:lvl, by:c.id, byName:c.name, how, unmet, brk: !!c.zoneBreaks && c.zoneBreaks!=='sb',
       label: pre + zname});
     if(lvl===1 && best.kind!=='all'){ // 남이 편 일반 존을 극으로 올리는 아군(zone.awaken_any, 2026-10-16)
-      const aw = team.filter((m,k)=>k!==i && m.zoneAwAny && [].concat(m.zoneAwAny.kinds||[]).some(t=>t==='any' || t===best.kind)).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0)[0]; // 각성해 줄 아군이 둘이면 id 순(넣은 순서 무관, 2026-10-16)
-      if(aw) cands.push({kind:best.kind, types:best.types, key:best.key, level:2, by:c.id, byName:c.name, how:'타인 각성', awBy:aw.id, awSkill:aw.zoneAwAny.skill||null, unmet:[], brk:false, label:'극·'+zname}); }
+      const aw = team.filter((m,k)=>k!==i && m.zoneAwAny && [].concat(m.zoneAwAny.kinds||[]).some(t=>t==='any' || t===best.kind || t===best.key)).sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0)[0]; // 각성해 줄 아군이 둘이면 id 순(넣은 순서 무관, 2026-10-16) · kinds에 존 키(water 등)도(월화의 영애(AS) 水天陣만)
+      if(aw) cands.push({kind:best.kind, types:best.types, key:best.key, level:2, by:c.id, byName:c.name, how:'타인 각성', once: !!(aw.raw && aw.raw.zone && aw.raw.zone.awaken_once), awBy:aw.id, awSkill:aw.zoneAwAny.skill||null, unmet:[], brk:false, label:'극·'+zname}); } // 전투 중 1회 각성기(루나틱)면 1회 각성
   }
   return cands;
 }
@@ -1110,7 +1110,10 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const selfOn = q => q===true || (!!q && typeof q==='object' && (!q.sb || situation==='sb' || (situation==='af' && A.postSB))
     && (!q.req || reqMet(q.req, team, c)) && (!q.zone || zoneMatch(q.zone, zone)) && (!q.zlv || (zone && zone.level>=q.zlv)));
   // 자기 상태 키가 켜진 비율(2026-10-16, 미스트레아 ユニゾン: 전열에 다른 歌唱 캐릭터(req) + エルの唄・ユニゾン 행동을 달고 쓴 뒤) — 0~1
-  const selfW = k => { const q = c.self && c.self[k]; if(!q || !selfOn(typeof q==='object' ? q : true) || (k==='unison' && pr && pr.uniOff)) return 0; const o = onK && onK[k]!=null ? onK[k] : 1; return Math.max(0, Math.min(1, +o||0)); };
+  const selfW = k => { const q = c.self && c.self[k]; if(!q || (k==='unison' && pr && pr.uniOff)) return 0;
+    let base = selfOn(typeof q==='object' ? q : true) ? 1 : (typeof q==='object' && q.e!=null ? Math.max(0, Math.min(1, +q.e||0)) : 0); // e: 조건 밖 비율(국화의 검객 胆力: 전열 도 3명 미만이면 몇 턴에 한 번)
+    if(typeof q==='object' && q.af1 && situation!=='normal' && !(A.realT>1)) base = 1; // af1: 1턴째(허수아비·실전 1턴째 AF)는 개전 축적으로 늘 충족
+    if(!(base>0)) return 0; const o = onK && onK[k]!=null ? onK[k] : 1; return base*Math.max(0, Math.min(1, +o||0)); };
   // 상태 중에만 바뀌는 스킬 필드(skill self_on {k, on}: 미스트레아 オウル・ナカル 재공격·AF 콤보 증가량 2배는 ユニゾン 중만) — 켜진 비율만큼 섞음(재공격은 확률 rep_p)
   if(sk.self_on && sk.self_on.k){ const w = selfW(sk.self_on.k), on = sk.self_on.on||{}, s2 = Object.assign({}, sk, {self_on:null});
     for(const f in on){ const v1 = +on[f]||0, v0 = +sk[f]||(f==='af_combo_x'||f==='mult'?1:0);
@@ -1217,7 +1220,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
       const dv = kind==='phys' ? d.end : d.spr; if(dv) dfv.push(pct(dv));
       continue;
     }
-    const D = k=>{ let v = fr&&fr[k]!=null ? fr[k] : 1; if(st && st.has(k)) v/=nTg; if(off && off[k]===0) v = situation==='normal' && m.bact && m.bact.vcOnly && m.bact.vcOnly.has(k) && !A.noBack ? v*VC_UP : 0; return v*sbG(j,k); };
+    const D = k=>{ let v = fr&&fr[k]!=null ? fr[k] : 1; if(st && st.has(k)) v/=nTg; if(off && off[k]===0) v = situation==='normal' && m.bact && m.bact.vcOnly && m.bact.vcOnly.has(k) && !A.noBack ? v*vcUp(m.bact, k) : 0; return v*sbG(j,k); };
     tv.push(pct(d.all_elem_res)*D('d_all_elem_res')); if(d.elem_res && el!=='none') tv.push(pct(d.elem_res[el])*D('d_elem_res'));
     if(kind==='phys'){ phv.push(pct(d.phys_res)*D('d_phys_res')); if(d.weapon_res) phv.push(pct(d.weapon_res[wt])*D('d_weapon_res')); }
     else mgv.push(pct(d.mag_res)*D('d_mag_res'));
@@ -1370,6 +1373,14 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 }
 
 /* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
+/* 약점 부여가 지금 켜진 비율(2026-10-16 점검 검증: skill_cond '약점 시'·버디 약점 오라가 SB 그 턴만·평상 턴 0인 약점 간파도 늘 켜진 것으로 보던 문제) */
+function weakFrac(A, el, sit){ let best = 0;
+  for(const w of (A.weakInfo||[])){ if(w.t!==el) continue; let f = 1;
+    if(w.up) f = sit==='normal' ? +w.up.n||0 : (A.realT>1 && w.up.real!=null ? +w.up.real||0 : (w.up.af!=null ? +w.up.af||0 : 1));
+    if(w.noaf && sit!=='normal' && !(A.realT>1)) f = 0;
+    if(w.sbOnly || w.sb) f *= sit==='normal' ? (w.sb1 ? 0 : 0.3) : (sit==='sb' || A.postSB) ? 1 : 0;
+    best = Math.max(best, Math.max(0, Math.min(1, f))); }
+  return best; }
 function condP(cd, sit, team, c, A, zone, enemy, el, progs){
   const nrm = sit==='normal';
   // per: 축적 속도가 전열 조건 인원수에 비례(턴마다 그 수만큼, full개에서 가득 — 프레메아(AS) サジタ·멜로디(AS) デザイア) → 가득 차는 턴 = full ÷ 인원수
@@ -1395,7 +1406,7 @@ function condP(cd, sit, team, c, A, zone, enemy, el, progs){
   if(cd.af!=null) return (sit!=='normal') === !!cd.af ? 1 : 0; // SB도 AF 안에서 쓰는 것으로 본다(허수아비·시뮬의 SB는 AF 도중)
   if(cd.enemy){ const e=cd.enemy;
     if(e==='poison'||e==='pain'){ const f=A.infNow||A.inf; if(!f) return A.painAny?1:0; return e==='poison' ? f.poison : Math.max(f.pain, f.poison); } // 'pain'은 '독/페인 중 하나'로 쓰인 경우가 있음
-    if(e==='weak') return A.weakAdd.includes(el) || (enemy && enemyRel(enemy, el)==='weak') ? 1 : enemy ? 0 : 0.4;
+    if(e==='weak'){ if(enemy && enemyRel(enemy, el)==='weak') return 1; const wf = weakFrac(A, el, sit); return enemy ? wf : Math.max(wf, 0.4); }
     if(e==='break') return A.breaks.length ? 1 : 0.3;
     return 0.8; }
   if(cd.turn){ if(nrm) return 0.3; const T = A.realT>1 ? A.realT : 1, m=String(cd.turn).match(/>=\s*(\d+)/), m2=String(cd.turn).match(/<=\s*(\d+)/); return m ? (+m[1]<=T ? 1 : 0) : m2 ? (T<=+m2[1] ? 1 : 0) : 0.5; } // AF·SB = 허수아비 1턴(실전 N턴은 그 AF의 턴)
@@ -1589,7 +1600,7 @@ function simTeam(team, progs, S, stepV){
       for(const x of b.sb) kup[x] = 0;
       steps.forEach((st,q)=>{ if(st.g) for(const x of st.g) kup[x] = Math.max(kup[x]||0, act[q]/H); });
       for(const x of b.main) kup[x] = 1; for(const x of b.auto) kup[x] = 1;
-      for(const x of (b.vcOnly||[])) kup[x] = Math.max(kup[x]||0, progs.noBack ? 0 : VC_UP); // VC로만 거는 항목: 평상 턴 1/6(후열이 없으면 교대가 없어 0)
+      for(const x of (b.vcOnly||[])) kup[x] = Math.max(kup[x]||0, progs.noBack ? 0 : vcUp(b, x)); // VC로만 거는 항목: 평상 턴 1/6(후열이 없으면 교대가 없어 0)
       if(Object.values(kup).some(v=>v<1)) R.kupAny = true; else kup = null; }
     R.kup.push(kup);
     { // 장착 못 한 버프 행동만 주는 항목(2026-10-16): 실전·지속 계산의 AF·SB에서도 끔(예전엔 평상 턴에서만 뺐음 — 엑코코 神鏡·騎猫之勢가 칸이 없어도 AF에 들어가던 문제)
@@ -2014,7 +2025,7 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
 /* 버디: 메인은 오토 스킬+오라(+폭딜 턴 차지 스킬), 서브는 오라 발동 안 함(계산 없음). 약점 조건 오라는 상대 정보가 없으면 반반 */
 function budAgg(bd, team, enemy, A){
   if(!bd || (!bd.main && !bd.sub)) return null;
-  const weakP = enemy ? (team.some(c=>c.elems.some(e=>enemyRel(enemy,e)==='weak') || enemyRel(enemy,c.wt)==='weak') || A.weakAdd.length ? 1 : 0) : 0.5;
+  const weakP = enemy ? (team.some(c=>c.elems.some(e=>enemyRel(enemy,e)==='weak') || enemyRel(enemy,c.wt)==='weak') ? 1 : Math.max(0, ...A.weakAdd.map(t=>weakFrac(A, t, 'normal')))) : 0.5;
   const parts=[], sup={}; let enemyDown=0;
   const add = (x, extra)=>{ if(!x) return; const p = x.when==='weak' ? weakP : 1; parts.push(Object.assign({party:x.party||null, deb:x.deb||null, p, zone:x.when==='zone'?x.zone:null, st:!!x.st}, extra||{}));
     if(x.deb) enemyDown = Math.max(enemyDown, pct(Math.max(x.deb.pwr||0, x.deb.int||0))*p); };
@@ -2347,7 +2358,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   // 같은 존을 여러 명이 펼 수 있으면(예: 리나리아 개전 자동 + 히스메나(ES) SB 각성) 각성 경로를 모두 센다 — 편성 순서와 무관하게
   const sameZ = (zs, z) => z && z.level>=2 ? (zs||[]).filter(q=>q.key===z.key && q.level>=2) : [];
   const nzs = sameZ(res.normal.zones, nz);
-  const awConst = nzs.some(q=>q.how!=='개전 자동' && q.how!=='SB 시' && q.how!=='1회 각성'), awStart = !awConst && nzs.some(q=>q.how==='개전 자동' || q.how==='1회 각성');
+  const awConst = nzs.some(q=>q.how!=='개전 자동' && q.how!=='SB 시' && q.how!=='1회 각성' && !q.once), awStart = !awConst && nzs.some(q=>q.how==='개전 자동' || q.how==='1회 각성' || q.once);
   const sbz = res.sb.zone, sbAw = sameZ(res.sb.zones, sbz).some(q=>q.how==='SB 시');
   const afMemo = {};
   const afRun = (g0, lv, t)=>{ g0 = Math.max(50, Math.min(100, Math.round(g0/10)*10)); const lv2 = !(nz && nz.level>=2) || lv>=2, tc = t>=3 ? 3 : t===2 ? 2 : 1; const k=g0+(lv2?'a':'b')+tc; if(afMemo[k]) return afMemo[k];
@@ -2444,7 +2455,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   // 존 후보마다 버프 행동을 다 쓰는 계획으로 먼저 재고, 가장 높은 존에서만 버프 행동 개수를 바꿔 봄(계산량)
   let bestD = null, bestO = null;
   for(const zq of zc.slice(0, 4)){
-    const zs2 = sameZ(res.normal.zones, zq), awC = zs2.some(q=>q.how!=='개전 자동' && q.how!=='SB 시' && q.how!=='1회 각성'), awS = !awC && zs2.some(q=>q.how==='개전 자동');
+    const zs2 = sameZ(res.normal.zones, zq), awC = zs2.some(q=>q.how!=='개전 자동' && q.how!=='SB 시' && q.how!=='1회 각성' && !q.once), awS = !awC && zs2.some(q=>q.how==='개전 자동');
     const teamD = Object.keys(P1.pick).length ? team.map((c,i)=> P1.pick[i]===undefined ? c : P1.pick[i] ? Object.assign({}, c, {afSk:c.sbN, _sbN:true}) : Object.assign({}, c, {sbN:null})) : team; // AF 스킬 고르기(위)를 허수아비에도
     const o = {team:teamD, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw, sbIdx, sbCores:res.sb.cores, light, shadow, zcs:(res.normal.zones||[]).map(zAF), quick:true};
     const dd = dummySim(o);
