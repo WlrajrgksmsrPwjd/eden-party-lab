@@ -134,6 +134,11 @@ head='''<!doctype html>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}
 '''
+# 계산 버전: 엔진·데이터가 같으면 같은 결과 → 앱이 저장해 둔 편성 결과를 다시 쓸지 정하는 기준(2026-10-16)
+import hashlib
+_bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); _bfx.pop('_doc',None)
+calc_ver=hashlib.sha1((js(chars)+js(bosses)+js(_bfx)+rd('engine.js')).encode('utf-8')).hexdigest()[:12]
+head=head.replace('<title>','<meta name="eden-calc" content="'+calc_ver+'">\n<title>',1)
 out=head+rd('app.css')+'\n</style></head><body>\n'+rd('body.html')
 out+='<script type="application/json" id="db-chars">'+js(chars)+'</script>\n'
 out+='<script type="application/json" id="db-bosses">'+js(bosses)+'</script>\n'
@@ -147,6 +152,12 @@ for dk in mdk:
 out+='<script type="application/json" id="db-decks">'+js(mdk)+'</script>\n'
 bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); bfx.pop('_doc',None)
 out+='<script type="application/json" id="db-buddies">'+js(bfx)+'</script>\n'
+# 처음 방문(예시 보유) 결과: src/tools/sample_cache.js가 만든 것. 계산 버전이 다르면 앱이 무시한다
+_sc=P('data','sample_cache.json')
+if os.path.exists(_sc):
+    _scd=json.load(open(_sc,encoding='utf-8'))
+    out+='<script type="application/json" id="db-samplecache">'+js(_scd)+'</script>\n'
+    if _scd.get('b')!=calc_ver: print('※ sample_cache.json이 지난 계산 버전입니다 → node src/tools/sample_cache.js 후 다시 빌드')
 # 엔진 코드는 app.js가 textContent를 읽어 Web Worker로도 띄운다
 # 장비 추천: 빌더의 계산기(AECalc)와 장비 탐색(eqopt) — 장비 데이터(ae-data.json)는 쓸 때 받아 온다
 out+='<script id="aecalc-js">\n'+open(os.path.join(here,'..','vendor','ae-builder','ae-engine.js'),encoding='utf-8').read()+'\n</script>\n'

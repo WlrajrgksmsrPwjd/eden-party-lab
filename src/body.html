@@ -4,12 +4,17 @@
     <nav class="tabs" role="tablist" aria-label="화면">
       <button class="tab" role="tab" data-tab="plan" aria-selected="true">편성 추천</button>
       <button class="tab" role="tab" data-tab="roster" aria-selected="false">보유 캐릭터 <span class="num" id="tabOwnN">0</span></button>
-      <button class="tab" role="tab" data-tab="perchar" aria-selected="false">캐릭터별 최적</button>
-      <button class="tab" role="tab" data-tab="focus" aria-selected="false">속성·타입별</button>
-      <button class="tab" role="tab" data-tab="goal" aria-selected="false">목표 세팅 <span class="num" id="tabGoalN">0</span></button>
       <button class="tab" role="tab" data-tab="boss" aria-selected="false">보스 공략</button>
-      <button class="tab" role="tab" data-tab="method" aria-selected="false">계산 방식</button>
-      <a class="tab tablink" href="builder.html" target="_blank" rel="noopener" title="장비 대미지 비교·최적 빌드 (계산 공식·장비 데이터 출처: 딩)">장비 빌더 ↗</a>
+      <button class="tab" role="tab" data-tab="goal" aria-selected="false">목표 세팅 <span class="num" id="tabGoalN">0</span></button>
+      <details class="tabmore" id="tabMore">
+        <summary class="tab" id="tabMoreS">더보기 ▾</summary>
+        <div class="tabmenu">
+          <button class="tab" role="tab" data-tab="perchar" aria-selected="false">캐릭터별 최적</button>
+          <button class="tab" role="tab" data-tab="focus" aria-selected="false">속성·타입별</button>
+          <button class="tab" role="tab" data-tab="method" aria-selected="false">계산 방식</button>
+          <a class="tab tablink" href="builder.html" target="_blank" rel="noopener" title="장비 대미지 비교·최적 빌드 (계산 공식·장비 데이터 출처: 딩)">장비 빌더 ↗</a>
+        </div>
+      </details>
     </nav>
     <span class="save" id="saveState">불러오는 중…</span>
   </div>
@@ -22,20 +27,20 @@
     <div class="planner">
       <form class="controls" id="planForm" onsubmit="return false">
         <div>
-          <label class="lbl">성향</label>
-          <div class="seg" id="modeSeg">
-            <button type="button" data-mode="all">종합</button>
-            <button type="button" data-mode="burst">최고점(허수아비)</button>
-            <button type="button" data-mode="opener">개전 속공</button>
-            <button type="button" data-mode="sustain">지속 딜</button>
-            <button type="button" data-mode="stability">안정성</button>
-            <button type="button" data-mode="weak">약점 맞춤</button>
+          <label class="lbl">어떤 편성을 찾을까요?</label>
+          <div class="seg modeseg" id="modeSeg">
+            <button type="button" data-mode="all">종합 <span class="rec">추천</span></button>
             <button type="button" data-mode="boss">보스 맞춤</button>
-            <button type="button" data-mode="kesshitsu">결현현</button>
-            <button type="button" data-mode="custom">직접 조절</button>
+            <button type="button" data-mode="weak">약점 맞춤</button>
+            <button type="button" data-mode="burst">최고점</button>
+            <button type="button" class="m2" data-mode="opener">개전 속공</button>
+            <button type="button" class="m2" data-mode="sustain">지속 딜</button>
+            <button type="button" class="m2" data-mode="stability">안정성</button>
+            <button type="button" class="m2" data-mode="kesshitsu">결현현</button>
+            <button type="button" class="m2" data-mode="custom">직접 조절</button>
+            <button type="button" class="more" id="modeMore" aria-expanded="false">다른 기준 ▾</button>
           </div>
-          <div class="nturn" id="nturnRow"><label for="burstN">실전 기준</label> <select id="burstN"><option value="1">1턴</option><option value="2">2턴</option><option value="3">3턴</option><option value="4">4턴</option><option value="5">5턴</option><option value="7">7턴</option><option value="10">10턴</option></select> <span class="hint">종합·약점·보스·직접 조절의 화력 = 개전부터 이 턴 수 안에 넣는 총 대미지 (AF·SB는 게이지가 찰 때)</span></div>
-          <p class="hint" style="margin:6px 0 0"><b>종합(기본)</b> = 실전에서 쓸 팔방미인 덱: 개전부터 N턴 총딜 40% + 지속 딜 30%(MP·버프를 다시 거는 턴까지 반영) + 생존력 30%, 생존이 너무 약하면 감점 · 최고점(허수아비) = 기록·재미용 1턴 최대치: 1턴, AF 100%로 시작해 AF 한 번을 행동 단위로 계산(버퍼부터 행동하며 버프를 깔고, SB는 AF 도중 SB 게이지가 차는 순간, 후열 연성 P글래 셔틀 가정) · 약점 맞춤·보스 맞춤 = 그 상대 기준 실전(개전부터 N턴 총딜) · 개전 속공 = 1턴 총 대미지(시작 게이지로 쓸 수 있는 AF 포함) · 지속 = 일반 턴 평균 · 안정성 = 회복·수호·해제 위주 · 약점 맞춤 = 아래 상대 약점 기준 화력 · 결현현 = 결실 현현 서약 조건 · 직접 조절 = 공격성·유지력·안정성 비율</p>
+          <p class="hint modedesc" id="modeDesc"></p>
         </div>
         <div id="weightRow" hidden>
           <label class="lbl">성향 직접 조절 <span class="hint" style="letter-spacing:0;font-weight:400">1~100, 비율로 섞어서 점수를 매깁니다</span></label>
@@ -60,55 +65,65 @@
             <p class="hint" style="margin:6px 0 0">속성은 캐릭터의 속성 퍼스널리티 기준, 인원은 후열까지 셉니다. <button type="button" class="lnk" id="plExample">이 보스 페이지의 서약 예시 불러오기</button></p>
           </fieldset>
         </div>
-        <div>
-          <label class="lbl">속성·타입 지정 <span class="hint" style="letter-spacing:0;font-weight:400">고르면 그 속성·공격 타입 화력만 셉니다</span></label>
-          <div class="seg focusseg" id="focusSeg"></div>
-        </div>
         <div id="bossRow" hidden>
           <label class="lbl" for="bossSel">보스</label>
           <select id="bossSel" style="width:100%"></select>
         </div>
+        <div id="enemyMain"></div>
         <div>
-          <label class="lbl">상대 약점·내성 <span class="hint" style="letter-spacing:0;font-weight:400">(눌러서 보통→약점→내성→무효→흡수)</span></label>
-          <div class="enemy-grid" id="enemyGrid"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">
-            <div class="seg" id="countSeg" aria-label="적 수"><button type="button" data-n="1">적 1</button><button type="button" data-n="2">2</button><button type="button" data-n="3">3</button><button type="button" data-n="4">4</button></div>
-            <button type="button" class="btn small" id="enemyClear">상대 초기화</button>
-          </div>
-        </div>
-        <div id="budRow">
-          <label class="lbl">버디 <span class="hint" style="letter-spacing:0;font-weight:400">보유 탭에서 체크한 버디 중에서 · 메인은 오토 스킬+오라, 서브는 오라만</span></label>
-          <div class="plrow"><label for="budMain">메인</label><select id="budMain"></select><label for="budSub">서브</label><select id="budSub"></select></div>
-          <p class="hint" id="budHint" style="margin:4px 0 0"></p>
-        </div>
-        <div>
-          <label class="lbl" for="lockIn">꼭 쓸 캐릭터 (최대 3)</label>
+          <label class="lbl" for="lockIn">꼭 쓸 캐릭터 <span class="hint" style="letter-spacing:0;font-weight:400">최대 3명 · 비워 두면 보유 전체에서</span></label>
           <div class="picker"><input type="text" id="lockIn" placeholder="보유 캐릭터 이름 검색" autocomplete="off"><div class="drop" id="lockDrop" hidden></div></div>
           <div class="chips" id="lockChips"></div>
         </div>
-        <div>
-          <label class="lbl" for="exIn">빼고 싶은 캐릭터</label>
-          <div class="picker"><input type="text" id="exIn" placeholder="이름 검색" autocomplete="off"><div class="drop" id="exDrop" hidden></div></div>
-          <div class="chips" id="exChips"></div>
-        </div>
-        <div>
-          <label class="lbl" for="backIn">후열 고정 (최대 2) <span class="hint" style="letter-spacing:0;font-weight:400">글래스터 연성 셔틀 등</span></label>
-          <div class="picker"><input type="text" id="backIn" placeholder="후열에 넣어둘 캐릭터" autocomplete="off"><div class="drop" id="backDrop" hidden></div></div>
-          <div class="chips" id="backChips"></div>
-        </div>
-        <div>
-          <label class="lbl">운용 난이도 상한</label>
-          <div class="seg" id="diffSeg">
-            <button type="button" data-lv="1">Lv1 쉬움</button><button type="button" data-lv="2">Lv2 보통</button><button type="button" data-lv="3">Lv3 중간</button><button type="button" data-lv="4">Lv4 고인물용</button>
+        <details class="adv" id="advFold">
+          <summary>세부 조건 <span class="advn" id="advN"></span></summary>
+          <div class="advbody">
+            <div class="nturn" id="nturnRow"><label for="burstN">실전 기준</label> <select id="burstN"><option value="1">1턴</option><option value="2">2턴</option><option value="3">3턴</option><option value="4">4턴</option><option value="5">5턴</option><option value="7">7턴</option><option value="10">10턴</option></select> <span class="hint">개전부터 이 턴 수 안에 넣는 총 대미지로 화력을 잽니다</span></div>
+            <div>
+              <label class="lbl">속성·타입 지정 <span class="hint" style="letter-spacing:0;font-weight:400">고르면 그 속성·공격 타입 화력만 셉니다</span></label>
+              <div class="seg focusseg" id="focusSeg"></div>
+            </div>
+            <div id="enemyAdv">
+              <div id="enemyBlock">
+                <label class="lbl">상대 약점·내성 <span class="hint" style="letter-spacing:0;font-weight:400">(눌러서 보통→약점→내성→무효→흡수)</span></label>
+                <div class="enemy-grid" id="enemyGrid"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">
+                  <div class="seg" id="countSeg" aria-label="적 수"><button type="button" data-n="1">적 1</button><button type="button" data-n="2">2</button><button type="button" data-n="3">3</button><button type="button" data-n="4">4</button></div>
+                  <button type="button" class="btn small" id="enemyClear">상대 초기화</button>
+                </div>
+              </div>
+            </div>
+            <div id="budRow">
+              <label class="lbl">버디 <span class="hint" style="letter-spacing:0;font-weight:400">메인은 오토 스킬+오라, 서브는 오라만</span></label>
+              <div class="plrow"><label for="budMain">메인</label><select id="budMain"></select><label for="budSub">서브</label><select id="budSub"></select></div>
+              <p class="hint" id="budHint" style="margin:4px 0 0"></p>
+            </div>
+            <div>
+              <label class="lbl" for="exIn">빼고 싶은 캐릭터</label>
+              <div class="picker"><input type="text" id="exIn" placeholder="이름 검색" autocomplete="off"><div class="drop" id="exDrop" hidden></div></div>
+              <div class="chips" id="exChips"></div>
+            </div>
+            <div>
+              <label class="lbl" for="backIn">후열 고정 (최대 2) <span class="hint" style="letter-spacing:0;font-weight:400">글래스터 연성 셔틀 등</span></label>
+              <div class="picker"><input type="text" id="backIn" placeholder="후열에 넣어둘 캐릭터" autocomplete="off"><div class="drop" id="backDrop" hidden></div></div>
+              <div class="chips" id="backChips"></div>
+            </div>
+            <div>
+              <label class="lbl">운용 난이도 상한</label>
+              <div class="seg" id="diffSeg">
+                <button type="button" data-lv="1">Lv1 쉬움</button><button type="button" data-lv="2">Lv2 보통</button><button type="button" data-lv="3">Lv3 중간</button><button type="button" data-lv="4">Lv4 고인물용</button>
+              </div>
+              <p class="hint" style="margin:6px 0 0">축적·모드 전환·자상·요격·존 각성 타이밍처럼 손이 가는 요소가 많을수록 단계가 올라갑니다.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <label class="checkrow"><input type="checkbox" id="optDiverse"> <span>순위끼리 2명 이상 다른 조합만 보여주기</span></label>
+              <label class="checkrow"><input type="checkbox" id="optCap"> <span>1타 25억 초과 경감·상한 반영 (딩 계산기)</span></label>
+            </div>
           </div>
-          <p class="hint" style="margin:6px 0 0">고른 단계 이하의 조합만 추천합니다. 축적·모드 전환·자상·요격·존 각성 타이밍처럼 손이 가는 요소가 많을수록 단계가 올라갑니다.</p>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <label class="checkrow"><input type="checkbox" id="optDiverse"> <span>순위끼리 2명 이상 다른 조합만 보여주기</span></label>
-          <label class="checkrow"><input type="checkbox" id="optCap"> <span>1타 25억 초과 경감·상한 반영 (딩 계산기)</span></label>
-        </div>
+        </details>
         <button type="button" class="btn primary" id="runBtn">편성 계산</button>
         <div class="progress" id="prog" hidden><i></i></div>
+        <p class="hint progtxt" id="progTxt" role="status"></p>
       </form>
       <div class="rcol">
         <div id="shareBox" hidden></div>
@@ -147,24 +162,18 @@
       <button type="button" class="btn small" id="bulkNone">보유 전부 해제</button>
       <span id="bulkConfirm" hidden class="hint">정말 해제할까요? <button type="button" class="btn small" id="bulkNoneYes">해제</button> <button type="button" class="btn small" id="bulkNoneNo">취소</button></span>
     </div>
-    <details class="fold quick" id="budFold">
-      <summary>보유 버디 <span class="num" id="budN">0</span></summary>
-      <p class="hint">버디는 파티 칸을 차지하지 않는 메인·서브 2칸입니다. 체크한 버디로 편성 계산에 버디 효과를 넣습니다(환경 한정 오라는 제외). 데이터 출처: altema 등.</p>
-      <div class="budgrid" id="budGrid"></div>
-    </details>
-    <details class="fold quick" id="pglFold">
-      <summary>연성 P글래 보유 <span class="num" id="pglN">표시 없음</span></summary>
-      <p class="hint">잠재 연성한 퍼스널리티 글래스터 중 대미지를 올리는 것(딩 님 빌더 목록 기준)을 표시하세요. 칸을 누를 때마다 <b>없음 → 1개 → 2개 이상</b>. 【P】 효과는 그 글래스터의 장착 조건(무기종·퍼스널리티·속성)이 같은 아군 전원에게 갑니다. 획득 방법마다 1개씩만 얻을 수 있어(딩 님 빌더 목록 기준: HP 최대 시 강화는 무기마다 2~3개, 권갑 격진의 힘·HP 저하 시 강화 2개, 나머지는 1개), 셔틀 칸(후열 2명 × 칸 수)에 종류마다 가진 수만큼 나눠 달고 같은 이름은 중첩된다고 봅니다. 하나도 표시하지 않으면 셔틀 공유는 없다고 보고 계산합니다(계산 방식 탭에서 '전부 있다고 가정'으로 바꿀 수 있음, 최고점 딜은 획득 가능한 수만큼 전부 있다고 가정).</p>
-      <p class="hint" style="margin-bottom:0"><b>무기 퍼스널리티</b></p>
-      <div class="pglwrap"><table class="pgltbl" id="pglTbl"></table></div>
-      <p class="hint" style="margin-bottom:0"><b>그 밖의 퍼스널리티·속성</b> — 전능의 힘(모든 속성 공격 +25%), HP 최대 시 강화(+30%, 속성은 +10%), 각성의 힘(+5%), HP 저하 시 강화(+40%)</p>
-      <div class="pglwrap"><table class="pgltbl" id="pglTblP"></table></div>
-      <p class="hint" style="margin-bottom:0"><b>아군 전체 P글래</b> — 공명의 힘 &lt;천·명&gt;(그 성향 아군 1명당 +5%), 일반 존 격진의 힘 &lt;존&gt;(그 존 전개 시 +15%), 극 존 극 격진의 힘 &lt;존&gt;(극존 시 +15%·속성 공격 +30%). 이 표에 하나도 표시하지 않으면 종류마다 1개 있다고 봅니다.</p>
-      <div class="pglwrap"><table class="pgltbl" id="pglTblA"></table></div>
-      <p><button type="button" class="btn small" id="pglClear">표시 전부 지우기</button></p>
+    <details class="fold quick" id="quickFold">
+      <summary>이름으로 한 번에 체크</summary>
+      <p class="hint">캐릭터 이름을 줄바꿈이나 쉼표로 나눠 붙여 넣으세요. 띄어쓰기·괄호 차이는 무시하고, 이름 뒤에 숫자를 붙이면 천명치로 넣습니다. 예: <span class="num">질퍼니(AS) 80, 하보크, 메릿 120</span></p>
+      <textarea id="quickText" aria-label="보유 캐릭터 이름 목록" placeholder="질퍼니(AS) 80&#10;하보크&#10;메릿 120"></textarea>
+      <div class="quickbar">
+        <button type="button" class="btn small" id="quickGo">보유로 체크</button>
+        <label class="checkrow" id="quickResetRow"><input type="checkbox" id="quickReset"> <span>지금 체크된 보유를 모두 풀고 이 목록만 보유로</span></label>
+      </div>
+      <div class="hint quickmsg" id="quickMsg" role="status"></div>
     </details>
     <details class="fold quick" id="growFold">
-      <summary>육성 수준 (뉴비 옵션) <span class="num" id="growN">기본</span></summary>
+      <summary>육성 수준 <span class="hint">아직 키우는 중이면 (레벨·글래스터 미개방)</span> <span class="num" id="growN">기본</span></summary>
       <p class="hint">아직 키우는 중이면 여기서 맞춰 두세요. 덱 추천과 대미지 계산이 이 조건으로 바뀝니다.</p>
       <div class="growgrid">
         <label class="lbl" for="gLv">레벨</label>
@@ -178,22 +187,32 @@
       </div>
       <p class="hint">레벨: 성도각성하면 스텔라 보드의 최대 레벨 +5 네 칸(천명치 15·30·50·80)으로 Lv100까지 오르고, 레벨당 힘·지성·속도·내구·정신·운 +1, MP는 약 +1.9%입니다. 전용 글래 일괄은 보유한 캐릭터 전원을 한 번에 바꾸고, 캐릭터마다 아래 목록에서 따로 바꿀 수 있습니다. 수호성의 증표는 6스탯 +5입니다.</p>
     </details>
-    <details class="fold quick" id="quickFold">
-      <summary>이름으로 한 번에 체크</summary>
-      <p class="hint">캐릭터 이름을 줄바꿈이나 쉼표로 나눠 붙여 넣으세요. 띄어쓰기·괄호 차이는 무시하고, 이름 뒤에 숫자를 붙이면 천명치로 넣습니다. 예: <span class="num">질퍼니(AS) 80, 하보크, 메릿 120</span></p>
-      <textarea id="quickText" aria-label="보유 캐릭터 이름 목록" placeholder="질퍼니(AS) 80&#10;하보크&#10;메릿 120"></textarea>
-      <div class="quickbar">
-        <button type="button" class="btn small" id="quickGo">보유로 체크</button>
-        <label class="checkrow" id="quickResetRow"><input type="checkbox" id="quickReset"> <span>지금 체크된 보유를 모두 풀고 이 목록만 보유로</span></label>
+    <details class="fold" id="advRoster">
+      <summary>고급 설정 <span class="hint">버디 · 연성 P글래 · 공격 글래스터 기본값 (몰라도 계산됩니다)</span></summary>
+      <details class="fold quick sub" id="budFold">
+        <summary>보유 버디 <span class="num" id="budN">0</span></summary>
+        <p class="hint">버디는 파티 칸을 차지하지 않는 메인·서브 2칸입니다. 체크한 버디로 편성 계산에 버디 효과를 넣습니다(환경 한정 오라는 제외). 데이터 출처: altema 등.</p>
+        <div class="budgrid" id="budGrid"></div>
+      </details>
+      <details class="fold quick sub" id="pglFold">
+        <summary>연성 P글래 보유 <span class="num" id="pglN">표시 없음</span></summary>
+        <p class="hint">잠재 연성한 퍼스널리티 글래스터 중 대미지를 올리는 것(딩 님 빌더 목록 기준)을 표시하세요. 칸을 누를 때마다 <b>없음 → 1개 → 2개 이상</b>. 【P】 효과는 그 글래스터의 장착 조건(무기종·퍼스널리티·속성)이 같은 아군 전원에게 갑니다. 획득 방법마다 1개씩만 얻을 수 있어(딩 님 빌더 목록 기준: HP 최대 시 강화는 무기마다 2~3개, 권갑 격진의 힘·HP 저하 시 강화 2개, 나머지는 1개), 셔틀 칸(후열 2명 × 칸 수)에 종류마다 가진 수만큼 나눠 달고 같은 이름은 중첩된다고 봅니다. 하나도 표시하지 않으면 셔틀 공유는 없다고 보고 계산합니다(계산 방식 탭에서 '전부 있다고 가정'으로 바꿀 수 있음, 최고점 딜은 획득 가능한 수만큼 전부 있다고 가정).</p>
+        <p class="hint" style="margin-bottom:0"><b>무기 퍼스널리티</b></p>
+        <div class="pglwrap"><table class="pgltbl" id="pglTbl"></table></div>
+        <p class="hint" style="margin-bottom:0"><b>그 밖의 퍼스널리티·속성</b> — 전능의 힘(모든 속성 공격 +25%), HP 최대 시 강화(+30%, 속성은 +10%), 각성의 힘(+5%), HP 저하 시 강화(+40%)</p>
+        <div class="pglwrap"><table class="pgltbl" id="pglTblP"></table></div>
+        <p class="hint" style="margin-bottom:0"><b>아군 전체 P글래</b> — 공명의 힘 &lt;천·명&gt;(그 성향 아군 1명당 +5%), 일반 존 격진의 힘 &lt;존&gt;(그 존 전개 시 +15%), 극 존 극 격진의 힘 &lt;존&gt;(극존 시 +15%·속성 공격 +30%). 이 표에 하나도 표시하지 않으면 종류마다 1개 있다고 봅니다.</p>
+        <div class="pglwrap"><table class="pgltbl" id="pglTblA"></table></div>
+        <p><button type="button" class="btn small" id="pglClear">표시 전부 지우기</button></p>
+      </details>
+      <div class="defgl">
+        <label class="lbl" style="margin:0" for="defGl">공격 글래스터 기본값</label>
+        <select id="defGl"></select>
+        <label class="checkrow" style="align-items:center"><input type="checkbox" id="defOre"> 잠재 광석 있음 (독·페인을 스스로 부여)</label>
+        <span class="hint">캐릭터별로 따로 정하려면 아래 행의 "공격 글래"를 바꾸세요. 천명치 200 이상이면 4칸으로 계산합니다.</span>
       </div>
-      <div class="hint quickmsg" id="quickMsg" role="status"></div>
     </details>
-    <div class="defgl">
-      <label class="lbl" style="margin:0" for="defGl">공격 글래스터 기본값</label>
-      <select id="defGl"></select>
-      <label class="checkrow" style="align-items:center"><input type="checkbox" id="defOre"> 잠재 광석 있음 (독·페인을 스스로 부여)</label>
-      <span class="hint">캐릭터별로 따로 정하려면 아래 행의 "공격 글래"를 바꾸세요. 천명치 200 이상이면 4칸으로 계산합니다.</span>
-    </div>
+    <label class="checkrow rowadv"><input type="checkbox" id="rowAdv"> <span>캐릭터마다 현현·전용 글래·공격 글래·장비 빌드까지 입력 <span class="hint">(끄면 천명치·성도각성만 보임)</span></span></label>
     <div class="roster" id="roster"></div>
 
     <details class="fold">
@@ -277,7 +296,7 @@
       </div>
     </div>
     <div class="progress" id="fxProg" hidden style="margin-top:10px"><i></i></div>
-    <div class="fgrid" id="fxGrid"><div class="empty">계산을 누르면 속성·타입별 상위 조합을 차례로 채웁니다. (11가지를 여러 워커로 나눠 동시에 계산, PC 기준 1~3분)</div></div>
+    <div class="fgrid" id="fxGrid"><div class="empty">계산을 누르면 속성·타입별 상위 조합을 차례로 채웁니다. (11가지를 여러 워커로 나눠 동시에 계산)</div></div>
   </section>
 
   <!-- 목표 세팅 -->
@@ -371,6 +390,7 @@
         </tbody></table></div>
         <h2>성향별 점수</h2>
         <ul>
+          <li><b>종합(기본)</b>: 실전에서 쓸 팔방미인 덱. 개전부터 N턴(기본 3턴) 총딜 40% + 지속 딜 30%(MP·버프를 다시 거는 턴까지 반영) + 생존력 30%이고, 생존력이 후보 중 최고의 25% 미만이면 ×0.85입니다. 최고점(허수아비)은 기록·재미용입니다.</li>
           <li><b>최고점 딜</b>: <b>허수아비(대두타) 기준 어포딜</b>. 허수아비는 1턴만 칠 수 있고 AF 게이지 100%로 시작합니다(그래서 세팅 턴이 없습니다). AF 한 번을 행동 하나씩 따라갑니다. 첫 바퀴는 왼쪽(버퍼·디버퍼·ZONE 담당)부터 움직이고, 버프·디버프는 그 효과가 붙은 스킬을 쓴 뒤부터 붙습니다(알테마 대조 299명): 패시브·개전 자동은 처음부터, 주력 공격에 붙은 것은 그 공격 뒤부터, 따로 쓰는 버프 스킬은 하나마다 AF 행동 1번을 쓰고 그 행동은 게이지를 채우지 않습니다(사용자 확인). 버프 스킬이 여러 개면 차례로 써야 해서 그만큼 AF가 빨리 끝나므로, 캐릭터마다 버프 스킬을 다 쓰는 것·일부만 쓰는 것·안 쓰는 것 중 AF 딜이 높은 쪽을 고릅니다. 행동할 때마다 쿨타임이 늘고(속도 249 미만 2→3→4초…, 이상 1→2→3초…), 게이지는 연출 중에도 초당 10%씩 줄고 타격으로 찹니다. 각 행동은 그 순간의 콤보로 계산하고, 연계 추가타도 1타씩 더합니다. SB는 SB 게이지(같은 성향 전열 1명당 12.5%로 시작, 행동마다 2.5%, 성도 각성 캐릭터는 충전 보너스로 5%)가 AF 도중 100%가 되는 순간 쓰고, SB로 건 효과(연격수+1·심안·존 각성 등)는 남은 AF 행동에도 붙습니다. AF가 끝나면 SB는 못 씁니다. 축적(스택)은 개전 축적량과 AF 중 자기 행동으로 쌓이는 만큼만 셉니다(턴 종료·피격·회피·MP 소비·체인으로 쌓이는 것은 AF 중 늘지 않음). 후열 연성 P글래 셔틀 2명과 표준 장비(딩 님 빌더 최적 빌드)를 가정합니다. 요격·카운터(맞아야 발동)·체인 어빌리티·오더 스킬(AF 중 발동 안 함)과 그것들이 거는 버프·브레이크·축적, 턴 종료 효과는 들어가지 않고, SB(성도 스킬·스텔라 버스트 강화)로만 붙는 효과는 SB를 쓴 뒤 행동에만 붙습니다. 캐릭터별 보정은 알테마 전수 대조(2026-10-15) 기준입니다.</li>
           <li><b>실전(약점 맞춤·보스 맞춤·직접 조절)</b>: 그 상대 기준으로 개전부터 <b>N턴(기본 3턴) 동안 넣는 총 대미지</b>를 씁니다. 1턴은 속도·선제 순서로 버프가 들어가는 만큼, AF는 게이지 50% 이상이면 쓸지 말지(100%면 더 오래감), SB는 게이지가 차면 AF 안(그 시점 콤보 배율로) 또는 평상 턴에 — 이 순서 중 총합이 가장 큰 것을 고릅니다. 게이지: AF는 전투 시작 50%(뮬루스(ES), 이즈나+전위 雷 3명, 질퍼니(AS)+피탄 버디면 100%), 평상 턴 타수·존으로 충전. SB는 성향이 같은 전열 1명당 12.5%(최대 50%)로 시작해 아군 행동 1회당 2.5%(AF 중 행동 포함). AF·SB는 턴을 쓰지 않습니다. 히스메나(ES)처럼 SB로 AF 게이지를 다시 채우는 캐릭터도 반영합니다. 결현현의 'N턴 이내' 서약이면 그 턴 수로 셉니다.</li>
           <li><b>스킬 칸·상태·1회 공격</b>(2026-10-16): 장착할 수 있는 스킬은 천명치 80 미만 3개, 이상 4개라(사용자 확인) 주력·AF 전용 공격·성도 스킬을 뺀 남는 칸에만 버프 스킬을 넣고, 장착 못 한 스킬의 효과는 계산에서 뺍니다. 자기 버프도 그 스킬을 쓴 뒤부터만 붙습니다. 루나틱(전투 중 1회 3턴)·개전 N턴 상태·모드처럼 켜지는 시간이 정해진 상태는 실전 N턴에서 켜진 턴 비율만큼만, 허수아비 1턴은 그 AF에서 켤 수 있는지대로 섞습니다(테오도로스 全盛期는 闘魂이 재공격마다 3씩 깎여 약 5행동). 전투 중 1회·첫 사용 강공격은 첫 공격에, 턴 종료 자동 공격·고정 대미지는 실전 턴에만 더합니다. AF 콤보에 비례하는 스킬은 그 순간 콤보로 계산합니다. 스탯은 위키 Stats Index(천명 단계·성도 보드·Lv100 성장분·다른 스타일 보드 완성 보너스 — 보유하면 완성으로 봄)를 씁니다.</li>
@@ -388,6 +408,7 @@
         </ul>
         <h2>조합 탐색</h2>
         <p>보유 캐릭터 중 혼자 힘·버프 기여가 큰 30여 명으로 4인 조합을 전부 평가한 뒤, 속성 7종·공격 타입 4종마다 작은 후보 풀로 조합을 더 만들고(속성덱·타입덱), 상위 조합에서 한 명씩 다른 보유 캐릭터로 바꿔 보며 더 좋아지는 조합을 찾습니다. 혼자서는 약하지만 편성 시너지로 강해지는 캐릭터를 놓치지 않기 위해서입니다. 결과 아래의 <b>속성덱 · 타입덱</b>은 전방 3명 이상이 같은 속성·타입으로 싸우는 조합 중 1위입니다.</p>
+        <p><b>계산 속도</b>(2026-10-16): 이 탐색을 기기의 CPU 코어 수에 맞춰 워커 여러 개(최대 6개)로 나눠 돌립니다. 단계(전체 조합 → 한 명씩 바꿔 보기 → 상위 정밀 계산)마다 워커들이 나눠 계산한 값을 모아 다음 단계로 넘기므로, 워커 수와 관계없이 한 워커로 계산한 것과 같은 결과가 나옵니다. 같은 보유·조건·사이트 버전이면 이 기기에 저장해 둔 결과를 바로 보여 주고, 처음 방문(예시 보유)은 미리 계산해 둔 결과를 씁니다. 사이트가 업데이트되면(엔진·데이터가 바뀌면) 다시 계산합니다.</p>
         <h2>스킬 위력 조건 · 디버프 지속 · 체인 어빌리티</h2>
         <ul>
           <li><b>스킬 위력 조건</b>: "輝晶陣 전개 시 30배", "축적 50이면 30배"처럼 조건이 붙은 배율은 조건이 맞을 때만 최대 배율을 쓰고, 아니면 기본 배율로 계산합니다. 축적형은 필요한 턴 수에 따라 SB·AF 턴과 평상 턴의 달성률을 다르게 둡니다(약 200개 스킬).</li>

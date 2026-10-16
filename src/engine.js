@@ -2602,24 +2602,44 @@ async function optimize(input, onProgress){
   const nRes = pl && pl.size ? Math.max(0, Math.min(2, pl.size-4)) : 2;
   const compM = pl && pl.comp && pl.comp.n>0 ? (m=>(pl.comp.elem||[]).some(e=>(m.persEl||m.elems).includes(e)) || (pl.comp.weap||[]).includes(m.weapon)) : null;
   const compOK = compM ? (team=>{ const ids=new Set(team.map(m=>m.id)); const f=team.filter(compM).length; if(f>=pl.comp.n) return true; const extra=own.filter(o=>!ids.has(o.pc.id)&&compM(o.pc)).length; return f+Math.min(nRes,extra)>=pl.comp.n; }) : null;
-  const pool = buildPool(own, lockIds, {enemy,S,cap,ctx,mode,maxPool:input.maxPool});
+  const pool = buildPool(own, lockIds, {enemy,S,cap,ctx,mode,maxPool:input.maxPool||22}); // 후보 22명(2026-10-16: 44 → 22, 9개 시나리오에서 1위 같고 상위 5개 점수 98~103% — 풀 밖 시너지는 한 명씩 바꾸기가 찾음)
   const lockIdx = lockIds.map(id=>pool.findIndex(o=>o.pc.id===id));
   const free = pool.map((_,i)=>i).filter(i=>!lockIdx.includes(i));
   const need = 4-lockIdx.length;
-  const teams=[], raws=[];
+  // 여러 워커로 나눠 계산(2026-10-16): 조합 값은 조합(+계산 단계 플래그)마다 정해지므로 다른 워커가 낸 값(pre)을 그대로 쓴다.
+  // shard {stage:'scan'|'dprec'|'climb'|'prec', k, n}: 앞 단계는 pre로 채우고, 그 단계에선 자기 몫(k번째/n)만 계산해 새 값만 돌려준다.
+  // 워커 수와 관계없이 결과가 같다(오르기 탐색은 시작점마다 따로, 이미 계산한 조합도 이동 후보로 봄).
+  const shard = input.shard || null, STG = {scan:1, dprec:2, climb:3, prec:4};
+  const preI = new Map(), preV = input.pre && input.pre.vals;
+  if(input.pre && input.pre.keys){ const K = input.pre.keys; for(let i=0;i<K.length;i++) preI.set(K[i], i); }
+  const newK = [], newV = [];
+  const flg = () => (ctx.dummyFast?'d':'')+(ctx.stFast?'f':'');
+  const evalRaw = (idxs, key) => {
+    const ck = key+'|'+flg(), pi = preI.get(ck);
+    if(pi!=null) return [preV[3*pi], preV[3*pi+1], preV[3*pi+2]];
+    const tm = idxs.map(i=>pool[i]), ev = evalTeam(tm.map(o=>o.pc), tm.map(o=>o.prog), enemy, S, cap, ctx);
+    const r = [BR(ev), ev.sustain, ev.surv];
+    if(shard){ newK.push(ck); newV.push(r[0], r[1], r[2]); }
+    return r;
+  };
+  const mine = (stage, c) => !shard || STG[shard.stage]!==stage || c % shard.n === shard.k;
+  const shardOut = () => ({shard:true, stage:shard.stage, keys:newK, vals:Float64Array.from(newV), evaluated:newK.length, poolSize:pool.length});
+  const teams=[], raws=[], tfl=[], tkey=[];
+  const addT = (idxs, key, r) => { teams.push(idxs); raws.push(r[0], r[1], r[2]); tfl.push(flg()); tkey.push(key); seen.set(key, teams.length-1); return teams.length-1; };
   let total = 1; for(let i=0;i<need;i++) total = total*(free.length-i)/(i+1);
   total = Math.round(total)||1;
   let done=0, lastYield=Date.now();
   const recSet = new Set(recommendedIds);
   const it = need>0 ? combos(free.length, need) : [[]][Symbol.iterator]();
-  const seen = new Map(); // 조합 키 → teams 인덱스
+  const seen = new Map(); // 조합 키 → teams 인덱스 (다른 워커 몫이면 -1)
+  let ci = 0;
   for(const cmb of it){
     const idxs = lockIdx.concat(cmb.map(k=>free[k]));
-    const team = idxs.map(i=>pool[i].pc), progs = idxs.map(i=>pool[i].prog);
+    const team = idxs.map(i=>pool[i].pc);
     if(dupBase(team)){ done++; continue; }
-    const ev = evalTeam(team, progs, enemy, S, cap, ctx);
-    teams.push(idxs); raws.push(BR(ev), ev.sustain, ev.surv);
-    seen.set(idxs.map(i=>pool[i].pc.id).sort().join(), teams.length-1);
+    const key = team.map(c=>c.id).sort().join();
+    if(!mine(1, ci++)){ seen.set(key, -1); done++; continue; }
+    addT(idxs, key, evalRaw(idxs, key));
     done++;
     if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(Math.min(0.85, done/total*0.85)); await new Promise(r=>setTimeout(r,0)); }
   }
@@ -2629,10 +2649,11 @@ async function optimize(input, onProgress){
   const deckIdx = []; // 속성덱·타입덱 후보 (전방 3명 이상이 그 속성·타입으로 공격)
   if(!ctx.focus && input.deckSeeds!==false){
     const FOC = ELEMS.map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
+    let di = 0;
     for(let fi=0; fi<FOC.length; fi++){
       const F=FOC[fi];
       if(!own.some(o=>charFocusMatch(o.pc,F))) continue;
-      const fp = buildPool(own, lockIds, {enemy,S,cap,ctx:Object.assign({},ctx,{focus:F}),mode,maxPool:14});
+      const fp = buildPool(own, lockIds, {enemy,S,cap,ctx:Object.assign({},ctx,{focus:F}),mode,maxPool:input.deckPool||10});
       for(const o of fp) if(!posOf.has(o.pc.id)){ posOf.set(o.pc.id,pool.length); pool.push(o); }
       const lk = lockIds.map(id=>fp.findIndex(o=>o.pc.id===id)).filter(i=>i>=0);
       const fr = fp.map((_,i)=>i).filter(i=>!lk.includes(i));
@@ -2643,25 +2664,26 @@ async function optimize(input, onProgress){
         const nMatch = mem.filter(o=>charFocusMatch(o.pc,F)).length; if(!nMatch) continue;
         const key = mem.map(o=>o.pc.id).sort().join();
         if(seen.has(key)){ if(nMatch>=3){ const ti=seen.get(key); if(ti>=0) (deckIdx[fi]=deckIdx[fi]||[]).push(ti); } continue; }
-        seen.set(key, teams.length);
-        const team=mem.map(o=>o.pc), progs=mem.map(o=>o.prog);
-        if(dupBase(team)) continue;
-        const ev = evalTeam(team, progs, enemy, S, cap, ctx);
-        teams.push(mem.map(o=>posOf.get(o.pc.id))); raws.push(BR(ev), ev.sustain, ev.surv);
-        if(nMatch>=3) (deckIdx[fi]=deckIdx[fi]||[]).push(teams.length-1);
+        const team=mem.map(o=>o.pc);
+        if(dupBase(team)){ seen.set(key, -1); continue; }
+        if(!mine(1, ci++)){ seen.set(key, -1); continue; }
+        const idxs = mem.map(o=>posOf.get(o.pc.id)), ti = addT(idxs, key, evalRaw(idxs, key));
+        if(nMatch>=3) (deckIdx[fi]=deckIdx[fi]||[]).push(ti);
         if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(0.85+0.15*fi/FOC.length); await new Promise(r=>setTimeout(r,0)); }
       }
     }
   }
-  if(ctx.dummyFast){ // 2단계: 어림 상위 400개만 허수아비 1턴 AF를 행동 단위로 다시 계산
+  if(shard && shard.stage==='scan') return shardOut();
+  if(ctx.dummyFast){ // 2단계: 어림 상위 250개만 허수아비 1턴 AF를 행동 단위로 다시 계산
     ctx.dummyFast = false;
     const top = teams.map((_,i)=>i).sort((a,b)=>raws[3*b]-raws[3*a]);
     for(let r=0; r<top.length; r++){
       const i = top[r];
-      if(r<250){ const tm=teams[i].map(k=>pool[k]); const ev=evalTeam(tm.map(o=>o.pc), tm.map(o=>o.prog), enemy, S, cap, ctx); raws[3*i]=BR(ev); }
+      if(r<250){ if(mine(2, r)){ raws[3*i]=evalRaw(teams[i], tkey[i])[0]; tfl[i]=flg(); } }
       else raws[3*i] *= 0.5; // 정밀 계산 안 한 조합은 뒤로
       if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r2=>setTimeout(r2,0)); }
     }
+    if(shard && shard.stage==='dprec') return shardOut();
   }
   let mb=1e-9, ms=1e-9, mt=1e-9;
   for(let i=0;i<teams.length;i++){ mb=Math.max(mb,raws[3*i]); ms=Math.max(ms,raws[3*i+1]); mt=Math.max(mt,raws[3*i+2]); }
@@ -2669,15 +2691,17 @@ async function optimize(input, onProgress){
   // 상위 조합에서 한 명씩 바꿔 보기 (후보 풀 밖의 시너지 캐릭터 찾기)
   if(input.refine!==false && teams.length){
     const scoreOf = (b,s,tt)=>{ let sc = w.b*b/mb + w.s*s/ms + w.t*tt/mt; if((mode==='sustain'||mode==='weak'||mode==='all') && tt/mt<0.25) sc*=0.85; return sc; };
-    const order = teams.map((_,i)=>i).sort((a,b)=>scoreOf(raws[3*b],raws[3*b+1],raws[3*b+2])-scoreOf(raws[3*a],raws[3*a+1],raws[3*a+2]));
+    const scI = i=>scoreOf(raws[3*i],raws[3*i+1],raws[3*i+2]);
+    const order = teams.map((_,i)=>i).sort((a,b)=>scI(b)-scI(a));
     const starts=[]; for(const i of order){ if(starts.length>=8) break; const ids=new Set(teams[i]); if(starts.some(s=>s.filter(x=>ids.has(x)).length>=3)) continue; starts.push(teams[i].slice()); }
     const cand = own.map(o=>Object.assign({},o,{pot:soloPotential(o.pc,o.prog,enemy,S,cap,ctx)})).sort((a,b)=>(b.pot.dps+b.pot.sup*0.5)-(a.pot.dps+a.pot.sup*0.5)).slice(0,90);
     for(const o of cand) if(!posOf.has(o.pc.id)){ posOf.set(o.pc.id,pool.length); pool.push(o); }
     const lockSet=new Set(lockIds);
-    for(const st of starts){
-      let cur=st, curEv=null;
-      { const tm=cur.map(i=>pool[i]); curEv=evalTeam(tm.map(o=>o.pc),tm.map(o=>o.prog),enemy,S,cap,ctx); }
-      let curSc=scoreOf(BR(curEv),curEv.sustain,curEv.surv);
+    // 조합 nt의 teams 인덱스 (없으면 계산해 추가). 다른 단계 값(어림·×0.5)으로만 있으면 그 값 그대로(예전처럼 이동 후보로 거의 안 뽑힘)
+    const valT = nt => { const key=nt.map(i=>pool[i].pc.id).sort().join(), ti=seen.get(key); if(ti!=null && ti>=0) return ti; return addT(nt, key, evalRaw(nt, key)); };
+    for(let si=0; si<starts.length; si++){
+      if(!mine(3, si)) continue;
+      let cur=starts[si], curSc=scI(valT(cur));
       for(let pass=0;pass<4;pass++){ // 한 명씩 바꾸기를 더 나아지지 않을 때까지(최대 4번)
         let best=null;
         for(let k=0;k<4;k++){
@@ -2685,34 +2709,30 @@ async function optimize(input, onProgress){
           for(const o of cand){
             const pi=posOf.get(o.pc.id); if(cur.includes(pi)) continue;
             const nt=cur.slice(); nt[k]=pi;
-            const key=nt.map(i=>pool[i].pc.id).sort().join(); if(seen.has(key)) continue; seen.set(key, teams.length);
-            const tm=nt.map(i=>pool[i]); if(dupBase(tm.map(x=>x.pc))) continue;
-            const ev=evalTeam(tm.map(x=>x.pc),tm.map(x=>x.prog),enemy,S,cap,ctx);
-            teams.push(nt); raws.push(BR(ev), ev.sustain, ev.surv);
-            const sc=scoreOf(BR(ev),ev.sustain,ev.surv); if(sc>curSc+1e-9 && (!best||sc>best.sc)) best={nt,sc};
+            if(dupBase(nt.map(i=>pool[i].pc))) continue;
+            const sc=scI(valT(nt)); if(sc>curSc+1e-9 && (!best||sc>best.sc)) best={nt,sc};
             if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r=>setTimeout(r,0)); }
           }
         }
         if(!best) break; cur=best.nt; curSc=best.sc;
       }
     }
+    if(shard && shard.stage==='climb') return shardOut();
     // 마무리: 지금까지의 상위 5개 조합에서 다시 한 명씩 바꿔 보기 (상위가 더 나아지지 않을 때까지, 최대 3번)
-    const scI = i=>scoreOf(raws[3*i],raws[3*i+1],raws[3*i+2]);
+    const tried = new Set();
     for(let round=0; round<3; round++){
       const top5 = teams.map((_,i)=>i).sort((a,b)=>scI(b)-scI(a)).slice(0,5);
       let improved=false;
       for(const ti of top5){
+        if(tried.has(tkey[ti])) continue; tried.add(tkey[ti]);
         const cur=teams[ti], curSc=scI(ti);
         for(let k=0;k<4;k++){
           if(lockSet.has(pool[cur[k]].pc.id)) continue;
           for(const o of cand){
             const pi=posOf.get(o.pc.id); if(cur.includes(pi)) continue;
             const nt=cur.slice(); nt[k]=pi;
-            const key=nt.map(i=>pool[i].pc.id).sort().join(); if(seen.has(key)) continue; seen.set(key, teams.length);
-            const tm=nt.map(i=>pool[i]); if(dupBase(tm.map(x=>x.pc))) continue;
-            const ev=evalTeam(tm.map(x=>x.pc),tm.map(x=>x.prog),enemy,S,cap,ctx);
-            teams.push(nt); raws.push(BR(ev), ev.sustain, ev.surv);
-            if(scoreOf(BR(ev),ev.sustain,ev.surv)>curSc+1e-9) improved=true;
+            if(dupBase(nt.map(i=>pool[i].pc))) continue;
+            if(scI(valT(nt))>curSc+1e-9) improved=true;
             if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r=>setTimeout(r,0)); }
           }
         }
@@ -2725,8 +2745,9 @@ async function optimize(input, onProgress){
   if(ctx.stFast){ ctx.stFast = false; const w0 = modeWeights(mode, boss, input.weights, pl);
     const sc0 = i => { let v = w0.b*raws[3*i]/mb + w0.s*raws[3*i+1]/ms + w0.t*raws[3*i+2]/mt; if((mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all') && raws[3*i+2]/mt<0.25) v*=0.85; return v; };
     const top = teams.map((_,i)=>i).sort((a,b)=>sc0(b)-sc0(a)).slice(0, 80);
-    for(const i of top){ const tm=teams[i].map(k=>pool[k]); const ev=evalTeam(tm.map(o=>o.pc), tm.map(o=>o.prog), enemy, S, cap, ctx); raws[3*i]=BR(ev); raws[3*i+1]=ev.sustain; raws[3*i+2]=ev.surv;
+    for(let r=0; r<top.length; r++){ if(!mine(4, r)) continue; const i=top[r], v=evalRaw(teams[i], tkey[i]); raws[3*i]=v[0]; raws[3*i+1]=v[1]; raws[3*i+2]=v[2]; tfl[i]=flg();
       if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r2=>setTimeout(r2,0)); } }
+    if(shard && shard.stage==='prec') return shardOut();
     mb=1e-9; ms=1e-9; mt=1e-9; for(let i=0;i<teams.length;i++){ mb=Math.max(mb,raws[3*i]); ms=Math.max(ms,raws[3*i+1]); mt=Math.max(mt,raws[3*i+2]); } }
   const scored = [];
   const maxLv = input.maxDiff||4;
@@ -2798,7 +2819,7 @@ async function optimize(input, onProgress){
     if(bi>=0){ const team=teams[bi].map(k=>pool[k].pc), progs=teams[bi].map(k=>pool[k].prog); const ev=evalTeam(team,progs,enemy,S,cap,ctx); const rv=pickReserves(team,progs,ev);
       decks.push({focus:FOCL[fi], team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); } });
   decks.sort((a,b)=>b.score-a.score);
-  return {results, decks, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus};
+  return {results, decks, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus, nmax:{b:mb, s:ms, t:mt}};
 }
 
 /* ---------- 캐릭터별 최적 조합 ---------- */
