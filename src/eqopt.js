@@ -58,6 +58,7 @@ function init(data) {
   DATA.gl.forEach((x, i) => { x.id = x.id || 'g' + i; x.slot = 'glaster'; ITEMS[x.id] = x; });
   ORES = { '': { id: '', n: '각성', fx: [] }, pot: { id: 'pot', n: '각성 + 잠재 연성 (잠재 광석)', fx: [] } };
   DATA.ores.forEach((x, i) => { if (x.n === '잠재 광석') return; x.id = x.id || 'o' + i; ORES[x.id] = x; });
+  uOre = {}; const uv = {}; for (const o of Object.values(ORES)) for (const e of (o.fx || [])) if (UNIQUE[e.k] && o.id && o.id !== 'pot' && (+e.v || +e.per || 0) > (uv[e.k] || 0)) { uv[e.k] = +e.v || +e.per || 0; uOre[e.k] = o.id; }
   for (const id in ITEMS) { const x = ITEMS[id]; (BYNAME[x.n] = BYNAME[x.n] || []).push(id); }
   ready = true;
 }
@@ -117,6 +118,8 @@ function buildInput(items, s, wt) {
   const st = { str: s.str, int: s.int, spd: s.spd, luck: s.luck, mp: s.mp };
   const rows = {}; const push = (r, v) => { (rows[r] = rows[r] || []).push(v); };
   let crit = phys ? s.bCrit : s.bMcrit; const cpow = [], elemE = [], uniq = {};
+  // 스킬로 이미 받는 중복 불가 효과(MP消費攻撃·약점 대미지 강화 등, s.uSk): 장비·광석의 같은 효과는 더 클 때만 (사용자 확인 2026-10-16: 같은 옵은 스킬이든 배지든 중복 안 됨)
+  if (s.uSk) for (const k in s.uSk) { const v = +s.uSk[k] || 0; if (v <= 0) continue; if (k === 'aim' && s.af) continue; if (k === 'weak' && s.aff !== '약점') continue; uniq[k] = { k, v, sk: true }; }
   let atk = 0, mag = 0;
   for (const it of items) {
     if (it.slot === 'weapon') { atk = it.atk || 0; mag = it.mag || 0; }
@@ -255,6 +258,8 @@ const oresOfAll = gid => {
   return Object.values(ORES).filter(o => (o.id !== 'pot' || g.canPot) && (o.id === '' || o.id === 'pot' || (o.fx || []).some(e => !(e.k === 'stat' && SOL_STAT(e.s))))).map(o => o.id);
 };
 const clone = st => ({ equip: Object.assign({}, st.equip), ore: Object.assign({}, st.ore) });
+const uniqOf = id => { const it = ITEMS[id]; return it ? [...new Set((it.fx || []).filter(e => UNIQUE[e.k]).map(e => e.k))] : []; };
+let uOre = {}; // 중복 불가 효과 → 그 효과를 주는 광석 중 값이 가장 큰 것
 const nameOf = id => ITEMS[id] ? ITEMS[id].n : id;
 function dup(st, slot, id) {
   if (!id || slot === 'weapon' || slot === 'armor') return false;
@@ -267,7 +272,10 @@ async function optimize(sIn, wt, opts) {
   const P = pools(s, wt), SL = OPT_ALL.filter(k => !lockOf(k, s.fate));
   let evals = 0; const memo = new Map();
   const keyOf = st => OPT_ALL.map(k => (st.equip[k] || '-') + (GS.includes(k) ? '@' + (st.ore[k] || '') : '')).join('|');
-  const ev = st => { const key = keyOf(st); const hit = memo.get(key); if (hit !== undefined) return hit; evals++; const v = evalState(st, s, wt)[opts.metric || 'exp']; memo.set(key, v); return v; };
+  // AF 비중(opts.afW, 2026-10-16): 실전 대미지 대부분이 AF면 겨누어 쏘기(AF 밖에서만) 같은 효과는 그만큼만 — 평상·AF 조건을 비중대로 섞음
+  const afW = Math.max(0, Math.min(1, +opts.afW || 0)), sAF = afW > 0 ? Object.assign({}, s, { af: true }) : null;
+  const ev = st => { const key = keyOf(st); const hit = memo.get(key); if (hit !== undefined) return hit; evals++; const m = opts.metric || 'exp';
+    const v = afW > 0 ? (1 - afW) * evalState(st, s, wt)[m] + afW * evalState(st, sAF, wt)[m] : evalState(st, s, wt)[m]; memo.set(key, v); return v; };
   let last = Date.now();
   const tick = async () => { if (opts.signal && opts.signal.aborted) return true; if (Date.now() - last > 60) { last = Date.now(); if (opts.onTick) opts.onTick(evals); await new Promise(r => setTimeout(r, 0)); } return false; };
   const poolOf = k => k === 'weapon' ? P.weapon : k === 'armor' ? P.armor : k.startsWith('badge') ? P.badge : k === 'gs' ? P.gs : P.gl;
@@ -288,6 +296,19 @@ async function optimize(sIn, wt, opts) {
           let bo = null;
           for (const o of oresOf(st.equip[k])) { if (o === st.ore[k]) continue; const t = clone(st); t.ore[k] = o; const v = ev(t); if (v > val + 1e-6) { val = v; bo = t; } }
           if (bo) { st = bo; moved = true; }
+        }
+      }
+      // 중복 불가 효과(겨누어 쏘기·약점·MP 소비·적 수·인핸스)를 배지·방어구 대신 글래스터 광석으로 받고 그 칸을 다른 장비로 (한 칸씩 바꾸기로는 못 찾는 이동, 사용자 지적 2026-10-16)
+      for (const k of SL) {
+        if (k === 'weapon' || GS.includes(k) || !st.equip[k]) continue;
+        for (const q of uniqOf(st.equip[k])) {
+          const oid = uOre[q]; if (!oid) continue;
+          for (const g of GS) {
+            if (!SL.includes(g) || !st.equip[g] || !oresOfAll(st.equip[g]).includes(oid) || st.ore[g] === oid) continue;
+            let bt = null, bv2 = val;
+            for (const id of [null, ...poolOf(k)]) { if (id === st.equip[k] || dup(st, k, id)) continue; const t = clone(st); t.ore[g] = oid; t.equip[k] = id; const v = ev(t); if (v > bv2 + 1e-6) { bv2 = v; bt = t; } if (await tick()) return [st, val]; }
+            if (bt) { st = bt; val = bv2; moved = true; break; }
+          }
         }
       }
       if (!moved) break;

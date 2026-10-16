@@ -196,6 +196,10 @@
       </details>
       <details class="fold quick sub" id="pglFold">
         <summary>연성 P글래 보유 <span class="num" id="pglN">표시 없음</span></summary>
+        <p class="hint" style="margin:6px 0">후열 캐릭터에 달아 앞줄 아군을 강하게 하는 퍼스널리티 글래스터(셔틀)입니다. 잘 모르면 '아직 없음'으로 두세요.</p>
+        <div class="seg pglmode" id="pglMode"><button type="button" data-pm="none">아직 없음</button><button type="button" data-pm="all">대부분 있음</button><button type="button" data-pm="mark">직접 표시</button></div>
+        <p class="hint" id="pglModeHint" style="margin:6px 0 0"></p>
+        <div id="pglTables">
         <p class="hint">잠재 연성한 퍼스널리티 글래스터 중 대미지를 올리는 것(딩 님 빌더 목록 기준)을 표시하세요. 칸을 누를 때마다 <b>없음 → 1개 → 2개 이상</b>. 【P】 효과는 그 글래스터의 장착 조건(무기종·퍼스널리티·속성)이 같은 아군 전원에게 갑니다. 획득 방법마다 1개씩만 얻을 수 있어(딩 님 빌더 목록 기준: HP 최대 시 강화는 무기마다 2~3개, 권갑 격진의 힘·HP 저하 시 강화 2개, 나머지는 1개), 셔틀 칸(후열 2명 × 칸 수)에 종류마다 가진 수만큼 나눠 달고 같은 이름은 중첩된다고 봅니다. 하나도 표시하지 않으면 셔틀 공유는 없다고 보고 계산합니다(계산 방식 탭에서 '전부 있다고 가정'으로 바꿀 수 있음, 최고점 딜은 획득 가능한 수만큼 전부 있다고 가정).</p>
         <p class="hint" style="margin-bottom:0"><b>무기 퍼스널리티</b></p>
         <div class="pglwrap"><table class="pgltbl" id="pglTbl"></table></div>
@@ -204,12 +208,13 @@
         <p class="hint" style="margin-bottom:0"><b>아군 전체 P글래</b> — 공명의 힘 &lt;천·명&gt;(그 성향 아군 1명당 +5%), 일반 존 격진의 힘 &lt;존&gt;(그 존 전개 시 +15%), 극 존 극 격진의 힘 &lt;존&gt;(극존 시 +15%·속성 공격 +30%). 이 표에 하나도 표시하지 않으면 종류마다 1개 있다고 봅니다.</p>
         <div class="pglwrap"><table class="pgltbl" id="pglTblA"></table></div>
         <p><button type="button" class="btn small" id="pglClear">표시 전부 지우기</button></p>
+        </div>
       </details>
       <div class="defgl">
         <label class="lbl" style="margin:0" for="defGl">공격 글래스터 기본값</label>
         <select id="defGl"></select>
         <label class="checkrow" style="align-items:center"><input type="checkbox" id="defOre"> 잠재 광석 있음 (독·페인을 스스로 부여)</label>
-        <span class="hint">캐릭터별로 따로 정하려면 아래 행의 "공격 글래"를 바꾸세요. 천명치 200 이상이면 4칸으로 계산합니다.</span>
+        <span class="hint">기본은 자동(조합마다 최적). 캐릭터별로 정하려면 아래 "캐릭터마다 … 입력"을 켜고 행의 "공격 글래"를 바꾸세요. 천명치 200 이상이면 4칸입니다.</span>
       </div>
     </details>
     <label class="checkrow rowadv"><input type="checkbox" id="rowAdv"> <span>캐릭터마다 현현·전용 글래·공격 글래·장비 빌드까지 입력 <span class="hint">(끄면 천명치·성도각성만 보임)</span></span></label>
@@ -280,7 +285,7 @@
     <div class="toolbar" style="margin-top:12px">
       <div class="grp grow"><label class="lbl" for="pcQ">이름 검색</label><input type="text" id="pcQ" placeholder="보유 캐릭터 이름"></div>
     </div>
-    <div class="tblwrap" id="pcTable"><div class="empty">계산을 누르면 보유 캐릭터별 최적 조합을 보여줍니다. (보유 수에 따라 30초~2분)</div></div>
+    <div class="tblwrap" id="pcTable"><div class="empty">계산을 누르면 보유 캐릭터별 최적 조합을 보여줍니다. (기기의 코어 수만큼 나눠 계산)</div></div>
   </section>
 
   <!-- 속성·타입별 -->

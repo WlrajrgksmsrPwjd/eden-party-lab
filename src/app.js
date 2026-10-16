@@ -107,6 +107,7 @@ function showTab(name){
 }
 
 /* ---------- 공용 렌더 조각 ---------- */
+const roJ = w => { const k = String(w).charCodeAt(String(w).length-1)-0xAC00; if(k<0||k>11171) return w+'로'; const j = k%28; return w+(j===0||j===8?'로':'으로'); }; // 받침에 맞춘 '(으)로'
 const elChip = e => `<span class="el ${esc(e)}">${esc(E.ELEM_KR[e]||e)}</span>`;
 const elChips = c => ((c && c.elems && c.elems.length) ? c.elems : [(c && c.elem) || 'none']).map(elChip).join(''); // 다속성(질퍼니(AS) 물·결정 등)은 전부(사용자 요청 2026-10-16)
 const alDot = a => `<span class="al ${a==='light'?'light':'shadow'}" title="${a==='light'?'천':'명'}"></span>`;
@@ -145,7 +146,7 @@ function workerMain(){
       const prog = f=>self.postMessage({type:'progress', id, f});
       let r;
       if(m.type==='optimize'){ const r0 = await E.optimize(input, prog); r = r0 && r0.shard ? r0 : liteOpt(r0); } // shard: 나눠 계산한 조각(조합 키·값)
-      else if(m.type==='perChar') r = litePc(await E.perCharBest(input, prog));
+      else if(m.type==='perChar'){ const r0 = await E.perCharBest(Object.assign({noEv:true}, input), prog); r = r0 && r0.shard ? r0 : litePc(r0); }
       else throw new Error('알 수 없는 요청');
       self.postMessage({type:'done', id, r});
     }catch(err){ self.postMessage({type:'error', id, msg:String(err&&err.message||err)}); }
@@ -216,10 +217,10 @@ const ownedJ = J => J.ids.filter(id=>byId.has(id)).map(id=>({pc:byId.get(id), pr
    마지막에 워커 하나가 모은 값으로 전체를 다시 돌리면(거의 다 계산된 값) 한 워커로 계산한 것과 같은 결과가 나온다. */
 const NW = (()=>{ try{ const hc = navigator.hardwareConcurrency||2; let n = Math.max(1, Math.min(6, hc-1)); if(navigator.deviceMemory && navigator.deviceMemory<4) n = Math.min(n, 2); return n; }catch(e){ return 1; } })();
 const SHARD_TOK = {};
-async function viaShards(chan, msg, onProgress){
+async function viaShards(chan, msg, onProgress, stagesIn){
   const n = NW, tok = SHARD_TOK[chan] = (SHARD_TOK[chan]||0)+1;
   if(n<2) return viaWorker(chan, msg, onProgress);
-  const stages = msg.input.mode==='burst' ? [['scan',0,0.55],['dprec',0.55,0.62],['climb',0.62,0.85],['prec',0.85,0.97]] : [['scan',0,0.75],['climb',0.75,0.9],['prec',0.9,0.97]];
+  const stages = stagesIn || (msg.input.mode==='burst' ? [['scan',0,0.55],['dprec',0.55,0.62],['climb',0.62,0.85],['prec',0.85,0.97]] : [['scan',0,0.75],['climb',0.75,0.9],['prec',0.9,0.97]]);
   let pre = null;
   for(const [st,a,b] of stages){
     const fr = new Array(n).fill(0);
@@ -240,7 +241,7 @@ async function viaShards(chan, msg, onProgress){
 const BUILD = (document.querySelector('meta[name="eden-calc"]')||{}).content || '';
 const RC_KEY = 'aeopt_rc1', RC_MAX = 8;
 function hashStr(t){ let h1 = 0x811c9dc5, h2 = 0x01000193; for(let i=0;i<t.length;i++){ const c=t.charCodeAt(i); h1 = Math.imul(h1 ^ c, 16777619); h2 = Math.imul(h2 + c, 2246822519) ^ (h2>>>13); } return (h1>>>0).toString(36)+(h2>>>0).toString(36)+t.length.toString(36); }
-const rcKey = msg => hashStr(JSON.stringify([msg.ids, msg.own, msg.S, msg.cap, msg.input, WK.dbKey]));
+const rcKey = msg => hashStr(JSON.stringify([msg.type, msg.ids, msg.own, msg.S, msg.cap, msg.input, WK.dbKey]));
 const SAMPLE_RC = (()=>{ try{ const o = JSON.parse((document.getElementById('db-samplecache')||{}).textContent||'null'); return o && o.b===BUILD ? o : null; }catch(e){ return null; } })();
 function rcGet(k){ try{ const L = JSON.parse(localStorage.getItem(RC_KEY)||'[]'); const e = L.find(x=>x.k===k); if(e) return e; }catch(e){} return SAMPLE_RC && SAMPLE_RC.k===k ? SAMPLE_RC : null; }
 function rcPut(k, lr){ try{ let L = JSON.parse(localStorage.getItem(RC_KEY)||'[]'); L = L.filter(x=>x.k!==k); L.unshift({k, b:BUILD, t:Date.now(), lr}); localStorage.setItem(RC_KEY, JSON.stringify(L.slice(0, RC_MAX))); }catch(e){} }
@@ -280,10 +281,17 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
 async function calcPerChar(inp, onProgress){
   const J = jobSnap();
   if(inp && inp.pgl===undefined) inp = Object.assign({pgl: pglInput()}, inp);
-  const lr = await viaWorker('pc', {type:'perChar', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp}, onProgress);
-  if(lr===CANCELED) return null;
-  if(lr===FALLBACK){ calcStat('main'); return E.perCharBest(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap}), onProgress); }
-  calcStat('worker');
+  const msg = {type:'perChar', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp}, ck = rcKey(msg), hit = rcGet(ck);
+  let lr;
+  if(hit && hit.b===BUILD){ lr = hit.lr; calcStat('cache'); }
+  else {
+    const stages = inp.mode==='burst' ? [['scan',0,0.8],['dprec',0.8,0.88],['prec',0.88,0.97]] : [['scan',0,0.85],['prec',0.85,0.97]];
+    lr = await viaShards('pc', msg, onProgress, stages); // 캐릭터별 최적도 워커 여러 개로 나눠 계산(2026-10-16)
+    if(lr===CANCELED) return null;
+    if(lr===FALLBACK){ calcStat('main'); return E.perCharBest(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap}), onProgress); }
+    calcStat('worker');
+    if(!lr.error) rcPut(ck, lr);
+  }
   if(lr.error) return lr;
   const ctx = ctxOf(inp, J), memo = new Map(), list = [];
   for(const y of lr.list){
@@ -342,7 +350,7 @@ function eqWorker(){
 /* 최적 장비 탐색 (같은 조건이면 저장된 결과를 다시 씀, 한 번에 하나씩) */
 async function eqOptimize(s, wt, opts, onTick){
   await eqLoad();
-  const key = JSON.stringify([s, wt, opts&&opts.from||null]);
+  const key = JSON.stringify([s, wt, opts&&opts.from||null, opts&&opts.afW||0]);
   if(EQS.cache.has(key)) return EQS.cache.get(key);
   const main = ()=>EQ.optimize(s, wt, Object.assign({}, opts||{}, {onTick})).then(r=>({best:r.best, evals:r.evals, why:r.why||null}));
   const run = ()=>new Promise((resolve, reject)=>{
@@ -412,7 +420,10 @@ function eqCondFromTeam(x, i){
     bRes: clampP(-co.physR*100), bERes: clampP(-co.typeR*100),
     cu1: co.kind==='mag' && !!((c.self||{}).mental_focus || x.team.some(m=>(m.party||{}).mental_focus)),
     cu2: co.kind==='phys' && !!((c.self||{}).singular_focus || x.team.some(m=>(m.party||{}).singular_focus)),
-    pMode:'direct', pElem: Math.round(share*(S.mulePct||0.3)*100), pDmg:0
+    pMode:'direct', pElem: Math.round(share*(S.mulePct||0.3)*100), pDmg:0,
+    uSk: {mpatk: Math.round((co.mpAtkSk||0)*100), weak: Math.round((co.weakSk||0)*100)}, // 스킬로 받는 중복 불가 효과(장비의 같은 효과와 겹치지 않음)
+    // 성장(무지마루 등 '공격 대미지 성장 +n%'): 빌더 기본 10턴(최대치)이 아니라 실전 N턴 평균 → (N+1)/2턴째 값(2026-10-16, 사용자 지적)
+    turns: ((['sustain','stability'].includes(state.plan.mode) ? (S.simTurns||6) : (S.burstTurns||3)) + 1) / 2
   };
   s[{pwr:'bStr',int:'bInt',spd:'bSpd'}[co.stat]||'bStr'] = clampP(co.statB*100);
   return {s, wt: E.WEAPON_KR[c.weapon], c, own:o};
@@ -432,7 +443,7 @@ function eqCondNeutral(c, st, fate, v){
     atkCls: kind==='mag'?'마법':'물리', kind: STAT_B[stat], atkType: kind==='mag'?'':(WT_B[wt]||''),
     elem: EL_B[el]||'무속성', range: tgt==='st'?'단일':'전체', power: Math.max(10, Math.round(sizeV*100*Math.max(1, sk.mult||1)/hits)), hits,
     aff:'통상', zoneT: zone ? (ZONE_OF_EL[el]||ZONE_OF_WT[wt]||'') : '', zone:!!zone, tPain:!!pain, tPoison:!!pain, enemies:1,
-    bCrit: kind==='phys'?v.crit:0, bMcrit: kind==='mag'?v.crit:0, cu1: kind==='mag'&&!!v.cu, cu2: kind==='phys'&&!!v.cu, pMode:'direct', pElem:0, pDmg:0};
+    bCrit: kind==='phys'?v.crit:0, bMcrit: kind==='mag'?v.crit:0, cu1: kind==='mag'&&!!v.cu, cu2: kind==='phys'&&!!v.cu, pMode:'direct', pElem:0, pDmg:0, turns: ((settings().burstTurns||3)+1)/2};
 }
 const eqCode = (cond, b) => EQ.buildCode({who:cond.s.who, wt:cond.wt, equip:b.equip, ore:b.ore, wc:b.wc,
   st:{str:cond.s.str, int:cond.s.int, spd:cond.s.spd, luck:cond.s.luck, mp:cond.s.mp, fate:cond.s.fate, atkAdj:0, magAdj:0},
@@ -465,6 +476,8 @@ function eqTableHtml(b, fate){
     return `<tr><th>${esc(EQ.slotLabel(k))}</th><td>${lk?`<span class="hint">잠김 · 천명치 ${lk} 필요</span>`:eqItemName(k,b)}</td></tr>`; }).join('')}</table>`;
 }
 /* 추천 세팅 패널의 '추천 장비 찾기' */
+/* 실전 N턴 대미지 중 AF가 차지하는 비중(장비 추천의 평상·AF 조건 섞기) */
+function eqAfW(ev){ const b = ev && ev.bsim; if(!b || !b.turns || !b.turns.length) return 0; let af=0, all=0; for(const t of b.turns){ af += +t.afD||0; all += +t.d||0; } return all>0 ? Math.min(1, af/all) : 0; }
 async function runEqRec(btn){
   const key=btn.dataset.eqrec, i=+btn.dataset.i, rec=RES.get(key); if(!rec) return;
   const box=btn.closest('.eqbox'), out=box.querySelector('.eqout');
@@ -474,7 +487,8 @@ async function runEqRec(btn){
     await eqLoad();
     const own=cond.own, from = own && own.build && own.build.equip && own.build.wt===cond.wt ? {equip:own.build.equip, ore:own.build.ore||{}} : null;
     const t0=Date.now();
-    const r = await eqOptimize(cond.s, cond.wt, from?{from}:{}, n=>{ const el=out.querySelector('[role=status]'); if(el) el.textContent=`장비 조합을 찾는 중… ${n.toLocaleString()}개 계산 (${((Date.now()-t0)/1000).toFixed(0)}초)`; });
+    const afW = eqAfW(rec.x.ev);
+    const r = await eqOptimize(cond.s, cond.wt, Object.assign({afW}, from?{from}:{}), n=>{ const el=out.querySelector('[role=status]'); if(el) el.textContent=`장비 조합을 찾는 중… ${n.toLocaleString()}개 계산 (${((Date.now()-t0)/1000).toFixed(0)}초)`; });
     if(!document.body.contains(out)) return;
     if(!r || !r.best){ out.innerHTML=`<p class="hint ng">${esc(r&&r.why||'장비를 찾지 못했습니다.')}</p>`; return; }
     const b=r.best, d=b.detail, code=eqCode(cond, b);
@@ -484,7 +498,7 @@ async function runEqRec(btn){
     out.innerHTML = `${eqTableHtml(b, cond.s.fate)}
       <div class="eqsum">기대 대미지 <b class="num">${fmtN(d.exp)}</b> <span class="hint">(일반 ${fmtN(d.n)} · 크리 ${fmtN(d.c)} · 크리율 ${+d.crit.toFixed(1)}%)</span></div>
       ${mine}
-      <div class="hint">조건: ${esc(eqCondText(cond.s).join(' · '))}</div>
+      <div class="hint">조건: ${esc(eqCondText(cond.s).join(' · '))}${afW>0.01?` · 실전 대미지 중 AF 비중 ${Math.round(afW*100)}%(AF 밖에서만 붙는 겨누어 쏘기 등은 그만큼 덜 셈)`:''} · 성장 효과는 ${cond.s.turns}턴째 값</div>
       ${locks.length?`<div class="hint">천명치를 올리면 ${[...new Set(locks)].sort((a,b)=>a-b).map(v=>v===120?'120: 배지 2번째 칸':'200: 글래스터 4번째 칸').join(' · ')}이 열립니다.</div>`:''}
       <div class="hint">스킬 위력은 크기·배율로 추정한 값이라 대미지 숫자는 참고용이고, 장비끼리 비교는 빌더와 같은 계산식입니다. ${r.evals.toLocaleString()}개 조합 계산.</div>
       <div class="eqbtns"><a class="btn small" href="${esc(builderUrl(cond, code, cond.c.id))}" target="_blank" rel="noopener">빌더에서 열기 ↗</a>${cond.own?` <button type="button" class="btn small" data-eqsave="${esc(cond.c.id)}">내 캐릭터 빌드로 저장</button>`:''} <span class="hint" role="status"></span></div>`;
@@ -621,7 +635,13 @@ function renderPglTbl(){
     + pglPRows().map(r=>`<tr><th scope="row">${esc(r.kr)}</th>${PGLP_COLS.map(([k,n],ci)=>{ if(!r.cols[ci]) return '<td class="na">·</td>'; const v=(PP[r.x]&&PP[r.x][k])||0; return `<td><button type="button" class="pgc v${v}" data-pp="${esc(r.x)}" data-pk="${k}" aria-label="${esc(n)} <${esc(r.kr)}>: ${lab[v]}">${v===0?'–':v===1?'1':'2+'}</button></td>`; }).join('')}</tr>`).join('') + '</tbody>';
   const t3=$('#pglTblA'); const PA=P._a||{};
   if(t3) t3.innerHTML = `<thead><tr><th scope="col">글래스터</th><th scope="col">보유</th></tr></thead><tbody>` + PGLA_ROWS.map(([k,n])=>{ const v=PA[k]||0; return `<tr><th scope="row">${esc(n)}</th><td><button type="button" class="pgc v${v}" data-pa="${k}" aria-label="${esc(n)}: ${lab[v]}">${v===0?'–':v===1?'1':'2+'}</button></td></tr>`; }).join('') + '</tbody>';
-  const n=pglCount(); $('#pglN').textContent = n ? `${n}종 표시` : (settings().pglAssumeAll ? '표시 없음 · 전부 있다고 가정' : '표시 없음 · 셔틀 공유 없음');
+  const n=pglCount(); $('#pglN').textContent = n ? `${n}종 표시` : (settings().pglAssumeAll ? '대부분 있음' : '아직 없음');
+  { // 간단 선택(2026-10-16): 아직 없음 / 대부분 있음(획득 가능한 만큼 가정) / 직접 표시(표)
+    const mode = n || (state.ui && state.ui.pglMark) ? 'mark' : settings().pglAssumeAll ? 'all' : 'none';
+    $$('#pglMode button').forEach(b=>{ b.setAttribute('aria-pressed', b.dataset.pm===mode?'true':'false'); b.disabled = !!n && b.dataset.pm!=='mark'; });
+    $('#pglTables').hidden = mode!=='mark';
+    $('#pglModeHint').textContent = mode==='none' ? '셔틀 P글래 없이 계산합니다.' : mode==='all' ? '종류마다 얻을 수 있는 만큼(대부분 1개) 가졌다고 보고, 후열 셔틀 2명에 이득이 큰 순서로 달아 계산합니다.' : n ? `표시한 ${n}종만 가졌다고 보고 계산합니다. 다른 선택으로 바꾸려면 아래 '표시 전부 지우기'.` : '아래 표에서 가진 것을 누르세요(없음 → 1개 → 2개 이상).';
+  }
 }
 /* 육성 수준(뉴비 옵션): 레벨 80/100, 글래스터 미개방, 아군 전체 P글래 없음, 전용 글래 일괄 */
 function renderGrow(){
@@ -808,7 +828,8 @@ function teamWarns(x, boss, enemy, ex){
   if(needPierce && co && !co.pierce) warns.push({t:'주딜 배리어 관통 없음'});
   if(ev.survDet.heal===0) warns.push({t:'회복 수단 없음'});
   x.team.forEach((c,i)=>{ if(c.stellar && state.owned[c.id] && state.owned[c.id].s && (x.progs[i].t||0)<15) warns.push({t:c.name+': 천명치 15 미만 → 성도 스킬 미반영'}); });
-  if(!ev.hasSB) warns.push({t:'성도각성 캐릭터 없음 → 스텔라 버스트 불가'});
+  if(!ev.hasSB) warns.push({t:(ev.sbOff||[]).some(Boolean) ? '성도 스킬을 모두 빼는 편이 나음 → 스텔라 버스트 없음' : '성도각성 캐릭터 없음 → 스텔라 버스트 불가'});
+  if(ev.azAlt>1) warns.push({t:`개전 자동 존이 ${ev.azAlt}개 — 더 좋은 ${sbz&&sbz.label||'존'} 기준으로 계산(게임에서 다른 존이 먼저 깔리면 결과가 달라짐)`});
   for(const z of (ev.sb.zones||[])) if(z.by && sbz && z.by===sbz.by) for(const u of (z.unmet||[])) warns.push({t:(byId.get(z.by)?byId.get(z.by).name:'')+': '+u});
   if(sbz && sbz.how==='스킬 각성') warns.push({t:'극존은 스킬로 각성해야 함(준비 1턴)'});
   if(enemy && ev.sb.cores.some(c=>c&&(c.rel==='null'||c.rel==='absorb'))) warns.push({t:'무효·흡수 당하는 공격자 포함'});
@@ -834,14 +855,15 @@ function dmgShares(ev, mode){
 function memHtml(x, i, key, focus, lockSet){
   const c=x.team[i], ev=x.ev, cs=ev.sb.cores[i], ds=dmgShares(ev, (RES.get(key)||{}).mode || state.plan.mode), share=ds.s[i];
   const gq = cs&&cs.gq;
-  const off = focus && !E.charFocusMatch(c, focus);
+  const off = focus && !E.charFocusMatch(c, focus) && !(focus.kind==='elem' && cs && cs.el===focus.v); // 속성 변환(変幻自在 등)으로 지정 속성으로 치면 지정 외가 아님
   const notMine = x.shared && x.real && !x.mine[i];
   return `<div class="mem${lockSet&&lockSet.has(c.id)?' locked':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="눌러서 추천 세팅 보기">
     <div class="nm">${esc(c.name)}${notMine?' <span class="badge warn">미보유</span>':''}</div>
     <div class="meta">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
-    <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}</div>
+    <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}${ev.sbOff&&ev.sbOff[i]?' <span class="badge" title="성도 스킬도 스킬 칸 1개라, 빼고 그 칸에 버프·공격 스킬을 하나 더 다는 편이 이 조합에선 나음(이 캐릭터는 SB 안 씀)">성도 스킬 안 씀</span>':''}</div>
+    ${gq && glText(gq) && glText(gq)!=='글래 없음' ? `<div class="sk">글래 ${esc(glText(gq))}${gq.painOK||!(gq.pa||gq.po)?'':' (독·페 미부여)'}</div>` : ''}
     <div class="share" title="${ds.lab} ${(share*100).toFixed(0)}%"><i style="width:${(share*100).toFixed(0)}%"></i></div>
-    <div class="sk">${ds.lab} <span class="num">${(share*100).toFixed(0)}%</span>${off?' <span class="badge">지정 외 · 지원</span>':''}</div>
+    <div class="sk">${ds.lab} <span class="num">${(share*100).toFixed(0)}%</span>${off?' <span class="badge">지정 외 · 지원</span>':''}${cs && cs.el && cs.el!=='none' && !(c.elems||[c.elem]).includes(cs.el) ? ` <span class="badge" title="아군의 속성 변환(変幻自在 등)으로 이 속성으로 공격">${esc(roJ(E.ELEM_KR[cs.el]||cs.el))} 변환</span>` : ''}</div>
     <div class="tap">추천 세팅 ▾</div>
   </div>`;
 }
@@ -2189,6 +2211,8 @@ function bind(){
   $('#ioOpen').addEventListener('click',()=>$('#ioFile').click());
   $('#ioFile').addEventListener('change',openFile);
   $('#quickGo').addEventListener('click',quickCheck);
+  $('#pglMode').addEventListener('click',e=>{ const b=e.target.closest('button[data-pm]'); if(!b || b.disabled) return; const m=b.dataset.pm;
+    state.ui = Object.assign({}, state.ui, {pglMark: m==='mark'}); if(m!=='mark') state.settings.pglAssumeAll = m==='all'; touchRoster(); renderPglTbl(); });
   $('#rowAdv').addEventListener('change',e=>{ state.ui = Object.assign({}, state.ui, {rowAdv: e.target.checked}); save(); $('#roster').classList.toggle('simple', !e.target.checked); });
   $('#bossFilter').addEventListener('change',renderBossList); $('#bossQ').addEventListener('input',renderBossList);
   $('#bossList').addEventListener('click',e=>{ const b=e.target.closest('[data-boss]'); if(!b) return; curBoss=b.dataset.boss; renderBossList(); });
