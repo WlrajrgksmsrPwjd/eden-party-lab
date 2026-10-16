@@ -837,7 +837,9 @@ function teamWarns(x, boss, enemy, ex){
   x.team.forEach((c,i)=>{ if(c.stellar && state.owned[c.id] && state.owned[c.id].s && (x.progs[i].t||0)<15) warns.push({t:c.name+': 천명치 15 미만 → 성도 스킬 미반영'}); });
   if(!ev.hasSB) warns.push({t:(ev.sbOff||[]).some(Boolean) ? '성도 스킬을 모두 빼는 편이 나음 → 스텔라 버스트 없음' : '성도각성 캐릭터 없음 → 스텔라 버스트 불가'});
   x.team.forEach((c,i)=>{ if(c.self && c.self.unison && typeof c.self.unison==='object' && !(ev.uni && ev.uni[i]!=null)) warns.push({t:c.name+': 전열에 다른 가창 캐릭터가 없어 유니즌 없음 → 재공격·AF 콤보 2배 없음'}); });
-  if(ev.azAlt>1) warns.push({t:`개전 자동 존이 ${ev.azAlt}개 — 더 좋은 ${sbz&&sbz.label||'존'} 기준으로 계산(게임에서 다른 존이 먼저 깔리면 결과가 달라짐)`});
+  if(ev.azAlt>1){ // 개전 자동 존이 같은 등급으로 여럿: 게임은 전열 왼쪽부터 전개(사용자 확인 2026-10-17) — 배치(ex.order)가 고른 전개자를 왼쪽에 둠
+    const by = ev.azBy && byId.get(ev.azBy), oth = (ev.azBys||[]).filter(id=>id!==ev.azBy).map(id=>byId.get(id) ? byId.get(id).name : id), zl = (ev.normal && ev.normal.zone && ev.normal.zone.label) || (sbz && sbz.label) || '그 존';
+    warns.push({t: by ? `개전 자동 존 ${ev.azAlt}개 — 왼쪽부터 깔리므로 ${by.name}을(를) ${oth.join('·')}보다 왼쪽에 배치 → ${zl}${ex && ex.az && ex.az.posLost>0 ? ` (이 때문에 위치 버프 ${ex.az.posLost}개 포기)` : ''}` : `개전 자동 존이 ${ev.azAlt}개 — 왼쪽에 둔 캐릭터의 존이 깔림`}); }
   for(const z of (ev.sb.zones||[])) if(z.by && sbz && z.by===sbz.by) for(const u of (z.unmet||[])) warns.push({t:(byId.get(z.by)?byId.get(z.by).name:'')+': '+u});
   if(sbz && sbz.how==='스킬 각성') warns.push({t:'극존은 스킬로 각성해야 함(준비 1턴)'});
   if(sbz && sbz.how==='1회 각성') warns.push({t:'존 각성은 전투 중 1회(루나틱 등) — 각성 지속 턴이 지나면 일반 존'});

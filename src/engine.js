@@ -2273,9 +2273,10 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   for(const b of by) for(const d of drops) for(const u of uv){
     const pr = d.length || u.length ? progs.map((p,i)=>d.includes(i) || u.includes(i) ? Object.assign({}, p, d.includes(i) ? {sbOK:false, sbAw:true, sbOff:true} : null, u.includes(i) ? {uniOff:true} : null) : p) : progs;
     const ev = evalTeam0(team, pr, enemy, S, cap, Object.assign({}, ctx||{}, {_azPick:b}));
-    const v = val(ev); if(v > bv*(1+1e-9)){ bv = v; best = ev; best.sbOff = team.map((c,i)=>d.includes(i)); best.uni = uc.length ? team.map((c,i)=>uc.includes(i) ? !u.includes(i) : null) : null; }
+    const v = val(ev); if(v > bv*(1+1e-9)){ bv = v; best = ev; best.sbOff = team.map((c,i)=>d.includes(i)); best.uni = uc.length ? team.map((c,i)=>uc.includes(i) ? !u.includes(i) : null) : null; best.azBy = b; }
   }
-  if(by.length>1) best.azAlt = by.length; return best;
+  // 개전 자동 존이 같은 등급으로 여럿이면 게임은 왼쪽(전열 배치 순)부터 전개(사용자 확인 2026-10-17) → 고른 전개자(azBy)를 다른 전개자(azBys)보다 왼쪽에 두는 배치로(explainTeam)
+  if(by.length>1){ best.azAlt = by.length; best.azBys = by.slice(); } return best;
 }
 function evalTeam0(team, progs, enemy, S, cap, ctx){
   if(ctx && ctx.maxBack===0 && !progs.noBack){ progs = progs.slice(); progs.noBack = true; } // 후열 없음: VC(교대) 효과·VC 존 없음
@@ -2849,19 +2850,26 @@ function explainTeam(team, progs, ev, S, ctx){
   const rel=[];
   if(posSets) team.forEach((c,j)=>{ if(!posSets[j]) return; c.rules.list.forEach((r,ri)=>{ const ps=posSets[j][ri]; if(!ps) return; ps.forEach(i=>{ if(i!==j) rel.push({j,i,side:r.side}); }); }); });
   let order=[0,1,2,3].slice(0,team.length), okN=-1;
+  // 개전 자동 존(같은 등급 여럿): 고른 전개자가 나머지보다 왼쪽이어야 그 존이 깔림 — 배치에서 가장 먼저 지킴
+  const azI = ev.azBy && Array.isArray(ev.azBys) ? team.findIndex(c=>c.id===ev.azBy) : -1, azO = azI>=0 ? ev.azBys.filter(id=>id!==ev.azBy).map(id=>team.findIndex(c=>c.id===id)).filter(i=>i>=0) : [];
+  const azOK = pm => { if(azI<0) return 1; const p0 = pm.indexOf(azI); return azO.every(i=>pm.indexOf(i) > p0) ? 1 : 0; };
+  if(!rel.length && azI>=0){ const perms=[]; const permute=(a,l)=>{ if(l===a.length){ perms.push(a.slice()); return; } for(let k=l;k<a.length;k++){ [a[l],a[k]]=[a[k],a[l]]; permute(a,l+1); [a[l],a[k]]=[a[k],a[l]]; } };
+    permute(team.map((_,i)=>i),0); let bz=-1, bl=-1;
+    for(const pm of perms){ const z = azOK(pm), L = leftScore(pm); if(z>bz || (z===bz && L>bl+1e-9)){ bz=z; bl=L; order=pm; } }
+    return {notes, order, posOk:0, posTotal:0, rel:[], giveW, az:{by:azI, others:azO}}; }
   if(rel.length){
     const perms=[]; const permute=(a,l)=>{ if(l===a.length){ perms.push(a.slice()); return; } for(let k=l;k<a.length;k++){ [a[l],a[k]]=[a[k],a[l]]; permute(a,l+1); [a[l],a[k]]=[a[k],a[l]]; } };
     permute(team.map((_,i)=>i),0);
     const uniq=new Map(); rel.forEach(x=>uniq.set(x.j+'-'+x.i+'-'+(x.side||''),x));
     const R2=[...uniq.values()];
-    let bestL=-1;
+    let bestL=-1, bestZ=-1, okFree=-1;
     for(const pm of perms){
       const pos=[]; pm.forEach((m,slot)=>pos[m]=slot);
       let ok=0; for(const x of R2){ const d=pos[x.i]-pos[x.j]; if(x.side==='r'?d===1 : x.side==='l'?d===-1 : Math.abs(d)===1) ok++; }
-      const L=leftScore(pm);
-      if(ok>okN || (ok===okN && L>bestL+1e-9)){ okN=ok; order=pm; bestL=L; }
+      const L=leftScore(pm), z=azOK(pm); if(ok>okFree) okFree=ok;
+      if(z>bestZ || (z===bestZ && (ok>okN || (ok===okN && L>bestL+1e-9)))){ bestZ=z; okN=ok; order=pm; bestL=L; }
     }
-    return {notes, order, posOk:okN, posTotal:R2.length, rel:R2, giveW};
+    return {notes, order, posOk:okN, posTotal:R2.length, rel:R2, giveW, az: azI>=0 ? {by:azI, others:azO, posLost: okFree - okN} : null};
   }
   order = team.map((_,i)=>i).sort((a,b)=>giveW[b]-giveW[a]);
   return {notes, order, posOk:0, posTotal:0, rel:[], giveW};
