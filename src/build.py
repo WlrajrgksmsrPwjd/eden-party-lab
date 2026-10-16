@@ -104,12 +104,12 @@ tend=json.load(open(P('data','turn_end.json'),encoding='utf-8')) if os.path.exis
 sstk=json.load(open(P('data','self_stk.json'),encoding='utf-8')) if os.path.exists(P('data','self_stk.json')) else {}
 for c in chars:
     if tend.get(c['id']) and not c['id'].startswith('_'): c['turn_end']=[{k:e[k] for k in ('name','atk','fixed','when','up','sb_only') if k in e} for e in tend[c['id']]]
-    if sstk.get(c['id']) and not c['id'].startswith('_'): c['self_stk']={k:{x:v[x] for x in ('stack','turns','start','af_grows','af_p','af_r','sb_fill','req','cnt','zone','zlv','per') if x in v} for k,v in sstk[c['id']].items()}
+    if sstk.get(c['id']) and not c['id'].startswith('_'): c['self_stk']={k:{x:v[x] for x in ('stack','turns','start','af_grows','af_p','af_r','sb_fill','req','cnt','zone','zlv','per','e') if x in v} for k,v in sstk[c['id']].items()}
 scond=json.load(open(P('data','skill_cond.json'),encoding='utf-8'))
 for c in chars:
     for k,v in (scond.get(c['id']) or {}).items():
         kk='af_skill' if k=='af' else k
-        if c.get(kk): c[kk]['mcond']={x:v[x] for x in ('base','top','need','steps') if x in v}
+        if c.get(kk): c[kk]['mcond']={x:v[x] for x in ('base','top','need','steps','self') if x in v}
 for c in chars:
     if c['id'] in drules: c['debuff_rules']=drules[c['id']]
     if chain.get(c['id']): c['chain']=[{k:e[k] for k in ('on','max','atk','when','af','every','name','effect','stk') if k in e} for e in chain[c['id']]]

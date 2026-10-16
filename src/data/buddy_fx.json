@@ -1,5 +1,5 @@
 {
-  "_doc": "버디 계산용 효과 (buddies.json 조사 내용을 계산식으로 옮긴 것). main: 메인일 때 오토 스킬(매 턴, 스택은 평균 3중첩), aura: 메인·서브 모두, sb: 차지 스킬을 폭딜 턴에 쓴다고 볼 때. when: weak(적이 약점 피해를 받음), zone(그 ZONE 전개 중), st(단일 공격만). sup: 생존(회복·해제·부활 등급). 환경(대기·지표·천후·특수) 한정 오라는 넣지 않음",
+  "_doc": "버디 계산용 효과 (buddies.json 조사 내용을 계산식으로 옮긴 것). main: 메인일 때 오토 스킬(매 턴, 스택은 평균 3중첩), aura: 메인일 때만(서브는 오라 발동 안 함, 사용자 확인 2026-10-16), sb: 차지 스킬을 폭딜 턴에 쓴다고 볼 때. when: weak(적이 약점 피해를 받음), zone(그 ZONE 전개 중), st(단일 공격만). sup: 생존(회복·해제·부활 등급). 환경(대기·지표·천후·특수) 한정 오라는 넣지 않음",
   "tetra":      {"jp":"テトラ","kr":"테트라","sup":{"heal":3,"cleanse":2,"revive":true}},
   "tetra_as":   {"jp":"テトラ(AS)","kr":"테트라(AS)","sup":{"heal":3,"cleanse":2,"revive":true}},
   "jiruya":     {"jp":"ジルヤ","kr":"질야","main":{"deb":{"phys_res":30,"mag_res":30}},"aura":{"party":{"crit_rate":100},"when":"weak"},"sup":{"revive":true,"cleanse":1}},

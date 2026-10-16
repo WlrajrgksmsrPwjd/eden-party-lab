@@ -118,7 +118,7 @@
   "flammelapis": {"main":{"base":1,"need":[{"stack":"자기 버프 8종","turns":2},{"hp":"max"}],"steps":[[5,[{"stack":"자기 버프 8종","turns":2}]],[2,[{"hp":"max"}]]],"note":"자기 버프 8종 5배 × HP 80% 이상 2배"}},
   "shisou_no_yaritsukai": {"main":{"base":1,"need":[{"zone":["any"],"zlv":2},{"enemy":"pain"}],"steps":[[3,[{"zone":["any"],"zlv":2}]],[4,[{"enemy":"pain"}]]],"note":"ANOTHER ZONE 3배 × 대상 독/페인 시 최대 4배"}},
   "premaya_as": {"main":{"base":1,"need":[{"stack":"サジタ 4(턴 종료마다 전열 地 인원수만큼)","turns":2,"af_p":0,"af_r":1,"per":{"kind":"elem","vals":["earth"],"full":4}}],"note":"サジタ 비례 최대 8배, 4누적 시 추가 1.5배. サジタ는 전방 땅 속성 아군 수에 따라 축적"}},
-  "ryuze": {"main":{"base":1,"need":[{"stack":"破竜の構え","turns":1,"af_p":0.8,"af_r":1}],"note":"牙龍驟滅은 破竜の構え 중 6배. 構え는 개전 竜戟 1개를 써서 1행동(破竜の構え)으로 들어가고 해제 조건 없음 → 평상 턴은 첫 행동 뒤 상시, AF는 構え 행동 1번을 빼야 해서 0.8"}},
+  "ryuze": {"main":{"base":1,"need":[{"stack":"破竜の構え","turns":1,"af_p":1,"af_r":1}],"note":"牙龍驟滅은 破竜の構え 중 6배. 構え는 개전 竜戟 1개를 써서 1행동(破竜の構え)으로 들어가고 해제 조건 없음 → 평상 턴은 첫 행동 뒤 상시, AF는 構え 행동 1번을 빼야 해서 0.8 / 2026-10-16: 破竜の構え 행동(자기 MP 최대 +100%)과 묶음(self mp_up) — 그 행동을 못 달면 1배, 허수아비는 그 행동 뒤부터(그래서 af_p 0.8 → 1).","self":"mp_up"}},
   "ramyu": {"main":{"base":1,"need":[{"stack":"クロノ 10","turns":0,"af_p":1}],"note":"クロノ 10누적 시 4배(전투 시작 시 자동 10누적)"}},
   "nagi_as": {"main":{"base":1,"need":[{"enemy":"pain"},{"stack":"テンタクル 4","turns":2,"af_p":0.33,"af_r":0.67}],"note":"대상 페인 시 증가 + テンタクル(최대 4) 비례 최대 14배(현현 ナイダリアエッジ 1회 2누적)"}},
   "kikyo": {"main":{"base":1,"need":[{"other":"속도 600 이상"}],"note":"자신 속도 비례 최대 8배(속도 600 상한)"}},

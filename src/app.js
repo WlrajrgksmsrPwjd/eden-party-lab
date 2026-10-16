@@ -104,6 +104,7 @@ function showTab(name){
   try{ localStorage.setItem('aeopt_tab', name); }catch(e){}
   if(name==='plan' && SHARE && shareDirty) renderShare(); // 보유가 바뀌었으면 공유 카드 다시 계산
   if(name==='plan' && planDirty){ planDirty=false; runPlan(); }
+  if(name==='goal' && goalDirty) renderGoals();
 }
 
 /* ---------- 공용 렌더 조각 ---------- */
@@ -209,7 +210,8 @@ function jobSnap(){
 }
 const progJ = (J,id) => E.charProg(byId.get(id), J.own[id], J.S);
 // timeline: 실전(N턴 총딜)의 1턴을 속도·선제 순서로 — 화면에 되살리는 팀도 엔진 탐색과 같은 값이 되게
-const ctxOf = (inp, J) => Object.assign(E.buildCtx(Object.assign({pgl: pglInput()}, inp), J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)}))), {timeline:true});
+const backNow = () => state.plan.mode==='kesshitsu' ? undefined : (state.plan.backN!=null ? +state.plan.backN : 2); // 후열 인원(결현현은 서약 인원으로)
+const ctxOf = (inp, J) => Object.assign(E.buildCtx(Object.assign({pgl: pglInput(), backN: backNow()}, inp), J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)}))), {timeline:true});
 const ownedJ = J => J.ids.filter(id=>byId.has(id)).map(id=>({pc:byId.get(id), prog:progJ(J,id)}));
 /* E.optimize와 같은 모양의 결과를 돌려준다. 새 계산에 밀려 버려지면 null */
 /* 편성 계산을 워커 여러 개로 나눔(2026-10-16, 사용자 요청: 처음 쓰는 사람에겐 계산이 너무 오래 걸림).
@@ -245,10 +247,12 @@ const rcKey = msg => hashStr(JSON.stringify([msg.type, msg.ids, msg.own, msg.S, 
 const SAMPLE_RC = (()=>{ try{ const o = JSON.parse((document.getElementById('db-samplecache')||{}).textContent||'null'); return o && o.b===BUILD ? o : null; }catch(e){ return null; } })();
 function rcGet(k){ try{ const L = JSON.parse(localStorage.getItem(RC_KEY)||'[]'); const e = L.find(x=>x.k===k); if(e) return e; }catch(e){} return SAMPLE_RC && SAMPLE_RC.k===k ? SAMPLE_RC : null; }
 function rcPut(k, lr){ try{ let L = JSON.parse(localStorage.getItem(RC_KEY)||'[]'); L = L.filter(x=>x.k!==k); L.unshift({k, b:BUILD, t:Date.now(), lr}); localStorage.setItem(RC_KEY, JSON.stringify(L.slice(0, RC_MAX))); }catch(e){} }
+const yieldUI = () => new Promise(r=>setTimeout(r, 0)); // 메인 스레드 계산을 잘게 나눠 화면이 멈추지 않게(2026-10-16)
 async function calcOptimize(chan, inp, onProgress, J, opt){
   J = J || jobSnap(); opt = opt || {};
   if(inp && inp.pgl===undefined) inp = Object.assign({pgl: pglInput()}, inp);
   if(inp && inp.seeds===undefined) inp = Object.assign({seeds: DECKS.map(d=>d.members)}, inp); // 커뮤니티 추천 덱도 평가(2026-10-16)
+  if(inp && inp.backN===undefined) inp = Object.assign({backN: backNow()}, inp);
   const msg = {type:'optimize', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp};
   const ck = opt.cache ? rcKey(msg) : null, hit = ck && rcGet(ck);
   let lr;
@@ -269,6 +273,7 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
     results.push({rank:y.rank, team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx),
       reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[],
       recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])});
+    await yieldUI(); // 화면 다시 그리기를 막지 않게 조합마다 쉬어 감
   }
   const decks = [];
   for(const y of lr.decks||[]){
@@ -276,12 +281,14 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
     const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
     decks.push({focus:y.focus, team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx), reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)),
       fixedBack:new Set(y.fixedBackIds||[]), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team)});
+    await yieldUI();
   }
   return Object.assign({}, lr, {results, decks});
 }
 async function calcPerChar(inp, onProgress){
   const J = jobSnap();
   if(inp && inp.pgl===undefined) inp = Object.assign({pgl: pglInput()}, inp);
+  if(inp && inp.backN===undefined) inp = Object.assign({backN: backNow()}, inp);
   const msg = {type:'perChar', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp}, ck = rcKey(msg), hit = rcGet(ck);
   let lr;
   if(hit && hit.b===BUILD){ lr = hit.lr; calcStat('cache'); }
@@ -301,7 +308,7 @@ async function calcPerChar(inp, onProgress){
     const k=y.teamIds.join();
     let t=memo.get(k);
     if(!t){ const team=y.teamIds.map(id=>byId.get(id)), progs=y.teamIds.map(id=>progJ(J,id));
-      t={team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx), diff:E.teamDifficulty(team)}; memo.set(k,t); }
+      t={team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx), diff:E.teamDifficulty(team)}; memo.set(k,t); await yieldUI(); }
     list.push({pc, score:y.score, rel:y.rel, team:t.team, progs:t.progs, ev:t.ev, diff:t.diff});
   }
   return {list, evaluated:lr.evaluated, poolSize:lr.poolSize};
@@ -591,16 +598,14 @@ async function saveInbox(){
 
 /* ---------- 버디 ---------- */
 const BUD_SURV = ['tetra','tetra_as','gansu_as','choco','tyusia','jiruya','pisuke'];
-const BUD_AURA = ['jiruya','moke','pitan_as','hanyamo','gansu','mea','kuramaru','kyumos','kyumos_as'];
 const ownBud = ()=>Object.keys(state.buddies||{}).filter(k=>state.buddies[k] && BUDDIES[k]);
 function budPick(){
   const P=state.plan, B=P.buddy||(P.buddy={main:'auto',sub:'auto'}), own=ownBud();
-  if(!own.length) return {main:null, sub:null, auto:true};
-  let main = B.main==='none' ? null : B.main==='auto' ? (BUD_SURV.find(k=>own.includes(k)) || own[0]) : (own.includes(B.main) ? B.main : null);
-  let sub = B.sub==='none' ? null : B.sub==='auto' ? (BUD_AURA.find(k=>own.includes(k) && k!==main) || null) : (own.includes(B.sub) && B.sub!==main ? B.sub : null);
-  return {main, sub};
+  if(!own.length) return {main:null, auto:true};
+  const main = B.main==='none' ? null : B.main==='auto' ? (BUD_SURV.find(k=>own.includes(k)) || own[0]) : (own.includes(B.main) ? B.main : null);
+  return {main}; // 서브 버디는 오라가 발동하지 않아 계산에서 뺌(사용자 확인 2026-10-16)
 }
-function buddyInput(){ const b=budPick(); if(!b.main && !b.sub) return null; return {main: b.main?Object.assign({id:b.main}, BUDDIES[b.main]):null, sub: b.sub?Object.assign({id:b.sub}, BUDDIES[b.sub]):null}; }
+function buddyInput(){ const b=budPick(); if(!b.main) return null; return {main: Object.assign({id:b.main}, BUDDIES[b.main]), sub:null}; }
 const budName = k => k && BUDDIES[k] ? BUDDIES[k].kr : '';
 function renderBudGrid(){
   const g=$('#budGrid'); if(!g) return;
@@ -704,9 +709,9 @@ function renderPlanControls(){
   { // 버디
     const own=ownBud(), B=P.buddy||(P.buddy={main:'auto',sub:'auto'});
     const opt=(sel,v)=>`<option value="auto"${v==='auto'?' selected':''}>자동</option><option value="none"${v==='none'?' selected':''}>없음</option>`+own.map(k=>`<option value="${esc(k)}"${v===k?' selected':''}>${esc(budName(k))}</option>`).join('');
-    $('#budMain').innerHTML=opt('m',B.main); $('#budSub').innerHTML=opt('s',B.sub);
+    $('#budMain').innerHTML=opt('m',B.main);
     const pk=budPick();
-    $('#budHint').textContent = own.length ? `지금 계산: 메인 ${budName(pk.main)||'없음'} · 서브 ${budName(pk.sub)||'없음'}` : '보유 캐릭터 탭의 "보유 버디"에서 가진 버디를 체크하면 버디 효과를 넣어 계산합니다.';
+    $('#budHint').textContent = own.length ? `지금 계산: 메인 ${budName(pk.main)||'없음'}` : '보유 캐릭터 탭의 "보유 버디"에서 가진 버디를 체크하면 버디 효과를 넣어 계산합니다.';
   }
   { // 성향 직접 조절
     const W=P.weights||(P.weights={b:70,s:40,t:30});
@@ -730,6 +735,7 @@ function renderPlanControls(){
     return `<button type="button" class="etype" data-t="${t}" data-rel="${r}" aria-label="${lab} ${REL_KR[r]||'보통'}">${lab}<small>${REL_KR[r]||'보통'}</small></button>`;
   }).join('');
   $$('#countSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.n===(P.enemyCount||1)?'true':'false'));
+  { const br=$('#backRow'); if(br){ br.hidden = P.mode==='kesshitsu'; const bn = P.backN!=null ? +P.backN : 2; $$('#backSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.b===bn?'true':'false')); } }
   $$('#diffSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.lv===(P.maxDiff||4)?'true':'false'));
   $('#focusSeg').innerHTML = [null].concat(FOCUS_LIST).map((f,k)=>`<button type="button" data-fi="${k-1}" aria-pressed="${sameFocus(f,P.focus)?'true':'false'}">${f&&f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(f?(f.kind==='elem'?E.ELEM_KR[f.v]:FT_KR[f.v]):'전체')}</button>`).join('');
   renderChips('#lockChips', P.locked, 'locked');
@@ -739,7 +745,7 @@ function renderPlanControls(){
   $('#optCap').checked = settings().capOn!==false;
   { // 세부 조건에서 기본값과 다른 것 수
     const S=settings(), B=P.buddy||{}, n = [(S.burstTurns||3)!==3 && !$('#nturnRow').hidden, !!P.focus, P.mode!=='weak' && Object.values(P.enemy||{}).some(Boolean), (P.enemyCount||1)!==1,
-      (B.main&&B.main!=='auto') || (B.sub&&B.sub!=='auto'), (P.excluded||[]).length>0, (P.backLocked||[]).length>0, (P.maxDiff||4)!==4, S.diverse===false, S.capOn===false].filter(Boolean).length;
+      (B.main&&B.main!=='auto'), (P.excluded||[]).length>0, (P.backLocked||[]).length>0, P.mode!=='kesshitsu' && P.backN!=null && +P.backN!==2, (P.maxDiff||4)!==4, S.diverse===false, S.capOn===false].filter(Boolean).length;
     $('#advN').textContent = n ? n+'개 바꿈' : '';
   }
 }
@@ -878,7 +884,7 @@ function keyMetrics(x, mode, ref){
   return `<div class="keys">${ord.map((k,j)=>{ const [lab,v,rk,isS]=M[k]; return metric(lab, +v||0, ref&&ref[rk] ? (+v||0)/ref[rk] : null, j===0, isS); }).join('')}</div>`;
 }
 function renderResults(r, boss, enemy, mode){
-  const P=state.plan, out=$('#results');
+  const P=state.plan, out=$('#results'); BUDQ.tok++; BUDQ.q.length = 0;
   mode = mode||P.mode;
   for(const k of [...RES.keys()]) if(k[0]==='p') RES.delete(k);
   let h='';
@@ -914,20 +920,27 @@ function toggleDeck(btn){
   box.hidden=false;
 }
 /* 버디 줄: 지금 계산한 버디 + 화력 위주 추천 메인 */
-function budLine(x, o){
+// 화력 위주 추천 메인 버디: 버디마다 조합을 다시 계산해야 해서(보유 버디 수 × 카드 수) 화면을 그린 뒤 조금씩 나눠 계산(2026-10-16: 한 번에 하다 화면이 15초 멈추던 문제)
+const BUDQ = {q:[], run:false, tok:0};
+const budTipHtml = b => b ? ` · 화력 위주면 메인 버디 <b>${esc(budName(b.k))}</b> (세팅 후 폭딜 +${(b.g*100).toFixed(0)}%)` : '';
+function budLine(x, o, key){
   const own=ownBud(); if(!own.length) return '';
-  const cur=buddyInput(); const cm=cur&&cur.main?cur.main.id:null, cs=cur&&cur.sub?cur.sub.id:null;
-  let tip='';
+  const cur=buddyInput(); const cm=cur&&cur.main?cur.main.id:null;
+  if(x._budBest===undefined && own.length>1){ BUDQ.q.push({x, o, cm, own, tok:BUDQ.tok}); if(!BUDQ.run) setTimeout(runBudQ, 60); }
+  return `<div class="hint">버디: 메인 ${esc(budName(cm)||'없음')}<span class="budtip" data-budk="${esc(key||'')}">${budTipHtml(x._budBest)}</span></div>`;
+}
+async function runBudQ(){
+  if(BUDQ.run) return; BUDQ.run = true;
   try{
-    const BV = ev => state.plan.mode==='burst' ? ev.dummyT : ev.burst;
-    if(!x._budBest){ let best=null; const base=BV(x.ev);
-      for(const k of own){ if(k===cs) continue; const bd={main:Object.assign({id:k},BUDDIES[k]), sub:cur&&cur.sub||null};
-        const ev=E.evalTeam(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, {focus:o&&o.focus||null, buddy:bd});
-        if(!best || BV(ev)>best.v) best={k, v:BV(ev)}; }
-      x._budBest = best && best.k!==cm && best.v>base*1.03 ? {k:best.k, g:best.v/base-1} : null; }
-    if(x._budBest) tip = ` · 화력 위주면 메인 버디 <b>${esc(budName(x._budBest.k))}</b> (세팅 후 폭딜 +${(x._budBest.g*100).toFixed(0)}%)`;
-  }catch(e){}
-  return `<div class="hint">버디: 메인 ${esc(budName(cm)||'없음')} · 서브 ${esc(budName(cs)||'없음')}${tip}</div>`;
+    while(BUDQ.q.length){ const it = BUDQ.q.shift(); if(it.tok!==BUDQ.tok || it.x._budBest!==undefined) continue;
+      const x = it.x, o = it.o, BV = ev => state.plan.mode==='burst' ? ev.dummyT : ev.burst; let best=null; const base=BV(x.ev), c0 = ctxOf({focus:o&&o.focus||null, boss:o&&o.boss||null});
+      for(const k of it.own){ if(it.tok!==BUDQ.tok) break; const bd={main:Object.assign({id:k},BUDDIES[k]), sub:null};
+        try{ const ev=E.evalTeam(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, Object.assign({}, c0, {buddy:bd})); if(!best || BV(ev)>best.v) best={k, v:BV(ev)}; }catch(e){}
+        await new Promise(r=>setTimeout(r, 0)); }
+      if(it.tok!==BUDQ.tok) continue;
+      x._budBest = best && best.k!==it.cm && best.v>base*1.03 ? {k:best.k, g:best.v/base-1} : null;
+      const html = budTipHtml(x._budBest); for(const [key, rec] of RES) if(rec && rec.x===x) $$(`.budtip[data-budk="${key}"]`).forEach(el=>{ el.innerHTML = html; }); }
+  } finally { BUDQ.run = false; }
 }
 /* 턴별 화력 줄: 1턴(보장~속도 맞춤) · 2턴 · SB · AF */
 function tlOf(x, o){
@@ -1000,7 +1013,7 @@ function cardHtml(x, key, o){
       <details class="why"><summary>자세히 보기 · 턴별 화력 · 최고점</summary>
         <div class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span>${sbz&&sbz.how&&sbz.level?` · 존 ${esc(sbz.how)}`:''}</div>
         <div class="order">전방 배치 <span class="hint">왼쪽 → 오른쪽${ex.posTotal?` · 위치 버프 ${ex.posOk}/${ex.posTotal} 성립`:''} · 버퍼·서포터 왼쪽, 주 딜러 오른쪽 (AF는 왼쪽부터 자동 선택)</span></div>
-        ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${budLine(x, o)}${muleLine(x)}</div>`}
+        ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${budLine(x, o, key)}${muleLine(x)}</div>`}
         ${timelineHtml(x, o)}
         <div class="metrics">
           ${metric('최고점 (허수아비 어포딜)', ev.dummyT, rel('dummyT'), hot==='b')}
@@ -1149,24 +1162,26 @@ function closeShare(){
 const ZJP_KR = {'水天陣':'수천진','烈火陣':'열화진','地裂陣':'지열진','風王陣':'풍왕진','招雷陣':'초뢰진','刻陰陣':'각음진','輝晶陣':'휘정진','煌斬陣':'황참진','瞬突陣':'순돌진','轟打陣':'굉타진','幻魔陣':'환마진','双撃陣・斬突':'쌍격진·참돌','双撃陣・斬魔':'쌍격진·참마','月光陣':'월광진','閃撃陣':'섬격진'};
 const BASIS_KR = {non_af:'비어포 기준', af:'어포 기준', both:'기준 미기재'};
 let mdSort='zone', mdCache=null, mdKey='';
-function mdEval(){
-  const key = JSON.stringify([state.sample, state.owned, settings(), pglInput()]);
+let mdBusy = null;
+async function mdEval(onStep){
+  const key = JSON.stringify([state.sample, state.owned, settings(), pglInput(), backNow()]);
   if(mdCache && mdKey===key) return mdCache;
-  const S = Object.assign({}, settings(), {enemyCount:1}), real = !state.sample;
-  mdCache = DECKS.map((d,k)=>{
+  const S = Object.assign({}, settings(), {enemyCount:1}), real = !state.sample, out = [];
+  for(let k=0;k<DECKS.length;k++){ const d = DECKS[k]; // 덱마다 쉬어 가며(30개 넘게 한 번에 계산하면 화면이 멈춤)
     const team = d.members.map(id=>byId.get(id));
-    if(team.some(c=>!c)) return {d, k, team, mine:[], ev:null};
+    if(team.some(c=>!c)){ out.push({d, k, team, mine:[], ev:null}); continue; }
     const mine = team.map(c=>!!(real && state.owned[c.id]));
     const progs = team.map((c,i)=>E.charProg(c, mine[i] ? Object.assign(BASE_OWN(), state.owned[c.id]) : {t:80, s:!!c.stellar, m:0, g:'none', gl:null}, S));
     let ev=null; try{ ev = E.evalTeam(team, progs, null, S, cap, ctxOf({backLocked:[]})); }catch(e){}
-    return {d, k, team, mine, ev};
-  });
-  mdKey = key; return mdCache;
+    out.push({d, k, team, mine, ev}); if(onStep) onStep(k+1, DECKS.length); await yieldUI(); }
+  mdCache = out; mdKey = key; return mdCache;
 }
-function renderMetaDecks(){
+async function renderMetaDecks(){
   const box=$('#mdList'); if(!box) return;
   $$('#mdSort button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.k===mdSort?'true':'false'));
-  const L = mdEval().filter(r=>r.ev);
+  if(mdBusy) return mdBusy;
+  let LL; mdBusy = mdEval((i,n)=>{ if(i%4===0) box.innerHTML=`<div class="empty">계산 중… ${i}/${n}</div>`; }); try{ LL = await mdBusy; } finally { mdBusy = null; }
+  const L = LL.filter(r=>r.ev);
   if(!L.length){ box.innerHTML='<div class="empty">추천 덱 자료가 없습니다.</div>'; return; }
   const mxN = Math.max(...L.map(r=>r.ev.sustainNoAF))||1, mxD = Math.max(...L.map(r=>r.ev.dummyT))||1;
   const ZO = Object.keys(ZJP_KR), zi = r=>{ const i=ZO.indexOf(r.d.zone); return i<0?99:i; };
@@ -1652,21 +1667,17 @@ function thresholdsCrossed(c, a, b){
   add(120,'배지 칸'); add(200,'글래스터 4칸'); add(255,'전 스탯');
   return L;
 }
-function goalAnalysis(g){
+async function goalAnalysis(g){ // 목표 하나 = 조합 계산 여러 번 → 한 번마다 쉬어 감(2026-10-16: 시작할 때 목표 탭을 한 번에 계산하다 화면이 멈추던 문제)
   const team=g.members.map(id=>byId.get(id)); if(team.some(c=>!c)) return null;
   const curOwn = team.map(c=>Object.assign(BASE_OWN(), state.owned[c.id]||{}));
   const tgOwn = team.map((c,i)=>{ const t=g.tgt[c.id]||{}; return Object.assign({}, curOwn[i], t, {gl: t.gl===undefined?curOwn[i].gl:t.gl}); });
-  const evC=evalWith(team, curOwn), evT=evalWith(team, tgOwn);
+  const evC=evalWith(team, curOwn); await yieldUI(); const evT=evalWith(team, tgOwn); await yieldUI();
   const mode=g.mode||state.plan.mode, sC=goalScore(evC,mode)||1e-9, sT=goalScore(evT,mode);
   const S=settings();
-  const items=[];
+  const items=[], todo=[];
   team.forEach((c,i)=>{
     const cu=curOwn[i], tg=tgOwn[i], owned=!!state.owned[c.id];
-    const push=(label, patch, extra)=>{
-      const own2=curOwn.map((o,k)=>k===i?Object.assign({},o,patch):o);
-      const gain = goalScore(evalWith(team, own2), mode)/sC - 1;
-      items.push({i, label, gain, extra});
-    };
+    const push=(label, patch, extra)=>{ todo.push({i, label, patch, extra}); };
     if(!owned) items.push({i, label:'캐릭터 획득', gain:null, need:true});
     if(c.stellar && tg.s && !cu.s) push('성도각성', {s:true, t:Math.max(cu.t,15)}, '천명치 15 이상과 함께');
     if((+tg.t||0) > (+cu.t||0)){ const cr=thresholdsCrossed(c, +cu.t||0, +tg.t); push(`천명치 ${cu.t||0} → ${tg.t} (+${tg.t-(cu.t||0)})`, {t:+tg.t, s:tg.s}, cr.join(' · ')); }
@@ -1676,6 +1687,7 @@ function goalAnalysis(g){
     const fC=E.grastaFactor(E.charProg(c,cu,S), infC).f, fT=E.grastaFactor(E.charProg(c,Object.assign({},cu,{gl:tg.gl}),S), infC).f;
     if(tg.gl && fT>fC+1e-6){ const gq=E.grastaFactor(E.charProg(c,Object.assign({},cu,{gl:tg.gl}),S), infC); push(`공격 글래스터 → ${glText(gq)}${tg.gl.ore&&!(cu.gl&&cu.gl.ore)?' + 잠재 광석':''}`, {gl:tg.gl}); }
   });
+  for(const t of todo){ const own2=curOwn.map((o,k)=>k===t.i?Object.assign({},o,t.patch):o); const gain = goalScore(evalWith(team, own2), mode)/sC - 1; items.push({i:t.i, label:t.label, gain, extra:t.extra}); await yieldUI(); }
   const minor = items.filter(x=>!x.need && Math.abs(x.gain)<0.001);
   const main = items.filter(x=>x.need || Math.abs(x.gain)>=0.001);
   main.sort((a,b)=>(b.need?1:0)-(a.need?1:0) || (b.gain||0)-(a.gain||0));
@@ -1686,10 +1698,15 @@ function renderGoals(){
   const G=state.goals||[];
   $('#tabGoalN').textContent=G.length;
   if(!G.length){ box.innerHTML='<div class="empty">아직 목표가 없습니다. 편성 추천 결과에서 <b>목표로 저장</b>을 누르거나 위에서 4명을 골라 보세요.</div>'; return; }
-  box.innerHTML = G.map(goalHtml).join('');
+  const tok = ++goalTok;
+  box.innerHTML = G.map(g=>`<section class="card goal" data-goal="${esc(g.id)}"><div class="empty">계산 중…</div></section>`).join('');
+  if(!($('#p-goal') && $('#p-goal').classList.contains('on'))){ goalDirty = true; return; } // 목표 탭을 열 때 계산
+  goalDirty = false; fillGoals(tok);
 }
-function goalHtml(g){
-  const A=goalAnalysis(g);
+let goalTok = 0, goalDirty = false;
+async function fillGoals(tok){ for(const g of (state.goals||[]).slice()){ if(tok!==goalTok) return; const h = await goalHtml(g); if(tok!==goalTok) return; const sec=$(`#goalList .goal[data-goal="${g.id}"]`); if(sec) sec.outerHTML = h; } }
+async function goalHtml(g){
+  const A=await goalAnalysis(g);
   if(!A) return `<section class="card goal" data-goal="${esc(g.id)}"><div class="card-head"><b>삭제된 캐릭터가 포함된 목표</b><button type="button" class="btn small" data-gdel="${esc(g.id)}">삭제</button></div></section>`;
   const {team, curOwn, tgOwn, evC, evT, items} = A;
   const unowned = team.filter(c=>!state.owned[c.id]);
@@ -1740,7 +1757,7 @@ function onGoalInput(e){
   else if(f==='ore'){ if(tg.gl) tg.gl.ore=t.checked; }
   save();
   clearTimeout(onGoalInput._t);
-  onGoalInput._t = setTimeout(()=>{ const sec=$(`#goalList .goal[data-goal="${g.id}"]`); if(sec) sec.outerHTML=goalHtml(g); }, 0);
+  onGoalInput._t = setTimeout(async ()=>{ const h = await goalHtml(g); const sec=$(`#goalList .goal[data-goal="${g.id}"]`); if(sec) sec.outerHTML=h; }, 0);
 }
 let goalPick=[];
 function setupGoalPicker(){
@@ -2094,7 +2111,6 @@ function bind(){
   $('#modeSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-mode]'); if(!b) return; state.plan.mode=b.dataset.mode; save(); renderPlanControls(); if(b.dataset.mode!=='boss') runPlan(); else if(state.plan.bossId) runPlan(); else runPlan(); });
   // 버디
   $('#budMain').addEventListener('change',e=>{ state.plan.buddy.main=e.target.value; save(); renderPlanControls(); runPlan(); });
-  $('#budSub').addEventListener('change',e=>{ state.plan.buddy.sub=e.target.value; save(); renderPlanControls(); runPlan(); });
   $('#pglTbl').addEventListener('click',e=>{ const b=e.target.closest('[data-pw]'); if(!b) return; const P=pglState(), w=b.dataset.pw, k=b.dataset.pk;
     P[w]=P[w]||{}; P[w][k]=(((P[w][k]||0)+1)%3); if(!P[w][k]) delete P[w][k]; if(!Object.keys(P[w]).length) delete P[w];
     touchRoster(); renderPglTbl(); const nb=$(`#pglTbl [data-pw="${w}"][data-pk="${k}"]`); if(nb) nb.focus(); });
@@ -2136,6 +2152,7 @@ function bind(){
   $('#enemyGrid').addEventListener('click',e=>{ const b=e.target.closest('.etype'); if(!b) return; const t=b.dataset.t; const cur=state.plan.enemy[t]||null; const nx=REL_CYCLE[(REL_CYCLE.indexOf(cur)+1)%REL_CYCLE.length]; if(nx) state.plan.enemy[t]=nx; else delete state.plan.enemy[t]; save(); renderPlanControls(); });
   $('#enemyClear').addEventListener('click',()=>{ state.plan.enemy={}; save(); renderPlanControls(); });
   $('#countSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-n]'); if(!b) return; state.plan.enemyCount=+b.dataset.n; save(); renderPlanControls(); });
+  $('#backSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-b]'); if(!b) return; state.plan.backN=+b.dataset.b; save(); renderPlanControls(); });
   document.addEventListener('click',e=>{ const b=e.target.closest('button[data-rm]'); if(!b) return; const L=state.plan[b.dataset.key]; const i=L.indexOf(b.dataset.rm); if(i>=0) L.splice(i,1); save(); renderPlanControls(); });
   { const md=$('#metaDecks'); if(md){
       md.addEventListener('toggle',()=>{ if(md.open){ $('#mdList').innerHTML='<div class="empty">계산 중…</div>'; setTimeout(renderMetaDecks, 30); } });

@@ -74,5 +74,6 @@
   "ryuze": [{"f":["elres"],"st":true}],
   "yakumo_as": [{"f":["allres"],"when":{"t":0.7}}],
   "matsurika": [{"f":["allres","pres"],"st":true}],
-  "sesta": [{"f":["elres"],"when":{"zone":["wind"],"zlv":2}}]
+  "sesta": [{"f":["elres"],"when":{"zone":["wind"],"zlv":2}}],
+  "sesta_as": [{"f":["elres"],"when":{"t":0.85}}]
 }
