@@ -856,7 +856,7 @@ function dmgShares(ev, mode){
   const sum = a => a.reduce((t,v)=>t+(v||0),0);
   let per = null, lab = '';
   if(mode==='burst' && ev.dummy && ev.dummy.per && sum(ev.dummy.per)>0){ per = ev.dummy.per; lab = '최고점 딜 비중'; }
-  else if((mode==='sustain'||mode==='stability') && ev.afPer){ per = ev.normal.per.map((v,k)=>(v||0) + (ev.afPer[k]||0)/Math.max(1, ev.afTurns||2) + (ev.sbPerSus ? ev.sbPerSus[k]||0 : 0)); lab = '지속 딜 비중'; }
+  else if((mode==='sustain'||mode==='stability') && ev.afPer){ per = ev.normal.per.map((v,k)=>(v||0)*(ev.susNW!=null ? ev.susNW : 1) + (ev.afPer[k]||0)/Math.max(1, ev.afTurns||2) + (ev.sbPerSus ? ev.sbPerSus[k]||0 : 0)); lab = '지속 딜 비중'; }
   else if(ev.bsim && ev.bsim.per && sum(ev.bsim.per)>0){ per = ev.bsim.per; lab = `실전 ${ev.bsim.N}턴 딜 비중`; }
   else { per = ev.sb.per; lab = 'SB 턴 비중'; }
   const t = sum(per)||1; return {s: per.map(v=>(v||0)/t), lab};
@@ -955,7 +955,7 @@ function tlOf(x, o){
 function bsimHtml(ev){
   const b=ev.bsim; if(!b || !b.turns || !b.turns.length) return '';
   const st=b.afStart||{g:50,why:[]};
-  const turn = r=>`<li><b>${r.t}턴</b> <span class="hint">AF ${Math.round(r.g)}% · SB ${ev.hasSB?Math.round(r.s)+'%':'—'}</span> ${r.af?`<span class="tag">AF${r.af<100?` ${r.af}%`:''}</span> `:''}${r.sb==='af'?`<span class="tag">AF 끝에 SB ×${r.combo.toFixed(1)}</span> `:r.sb==='turn'?'<span class="tag">SB</span> ':''}<span class="num">${fmtN(r.d)}</span></li>`;
+  const turn = r=>`<li><b>${r.t}턴</b> <span class="hint">AF ${Math.round(r.g)}% · SB ${ev.hasSB?Math.round(r.s)+'%':'—'}</span> ${r.af?`<span class="tag">AF${r.af<100?` ${r.af}%`:''} · 턴 종료</span> `:''}${r.sb==='af'?`<span class="tag">AF 끝에 SB ×${r.combo.toFixed(1)}</span> `:r.sb==='turn'?'<span class="tag">SB</span> ':''}<span class="num">${fmtN(r.d)}</span></li>`;
   return `<div class="bsim"><div class="hint">실전 참고: 개전부터 ${b.N}턴 총 <b class="num">${fmtN(b.total)}</b> · 시작 AF ${st.g}%${st.why&&st.why.length?` (${esc(st.why.join(', '))})`:''} · 시작 SB ${ev.hasSB?Math.round(b.s0)+'%':'성도 없음'}</div><ol>${b.turns.map(turn).join('')}</ol></div>`;
 }
 /* 최고점 = 허수아비 어포딜 한 줄: AF 행동 딜 + AF 끝 SB(콤보 배율) */

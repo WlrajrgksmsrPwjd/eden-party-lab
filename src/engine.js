@@ -829,9 +829,9 @@ const atkEx = sk => { const ex = Math.max(1, +sk.execs||1); return Array.isArray
 function zoneAFAct(z, co, inAF){
   const za = zoneAF(z, co, inAF); if(za==null) return null;
   if(co.mixL && co.mixL.length){ const W = co.mixL.reduce((v,x)=>v+x.w, 0) || 1; return co.mixL.reduce((v,x)=>v + x.w/W*(zoneAFAct(z, x.co, inAF)||0), 0); } // 상태 ON·OFF 섞인 코어(세스타(AS) 狼志 등): 실행 수도 가동률로
-  const rep = 1 + Math.max(0, co.rep||0);
-  if(co.afSeq) return co.afSeq.reduce((a,e)=>a + (zoneAF(z, {el: e, wt: co.wt}, inAF)||0), 0) * rep;
-  return za * (co.execs || rep);
+  const rep = 1 + Math.max(0, co.rep||0), cp = co.cpy ? 0.5 : 1; // 루나틱<複写>: 2번째 실행은 AF 게이지가 안 참(사용자 확인 2026-10-16) — 실행 수의 절반만
+  if(co.afSeq) return co.afSeq.reduce((a,e)=>a + (zoneAF(z, {el: e, wt: co.wt}, inAF)||0), 0) * rep * cp;
+  return za * (co.execs || rep) * cp;
 }
 function zoneFactor(z, el, wt, S, rel){
   // 빌더 코어(ae-core zoneEffect, 계산기 56행) 기준. 괄호는 극(ZONE 각성, 절 포함)
@@ -968,7 +968,7 @@ function stateVariant(c, sts, onMask){ // 상태 목록(sts)·켜짐·대리 여
   const r1 = stateVariantB(c, sts, onMask, px, ck); mc.set(ck, r1); return r1;
 }
 function stateVariantB(c, sts, onMask, px, ck){
-  let nf = ST_NF.get(sts); if(!nf){ const sk = sts.some(s=>s.main_off||s.sb_off||(s.pow&&+s.pow!==1)), pt = sts.some(s=>s.party_off&&s.party_off.length);
+  let nf = ST_NF.get(sts); if(!nf){ const sk = sts.some(s=>s.main_off||s.sb_off||s.copy||(s.pow&&+s.pow!==1)), pt = sts.some(s=>s.party_off&&s.party_off.length);
     nf = {a:['self','teishin'].concat(pt?['party']:[]), b:['self','teishin'].concat(pt?['party']:[], sk?['main','sb','afSk','sbN']:[])}; ST_NF.set(sts, nf); }
   const F = px ? nf.a : nf.b; // 대리 스킬은 스킬 칸을 안 바꾸니 비교도 안 함
   let m1 = ST_V.get(sts); if(!m1){ m1 = new Map(); ST_V.set(sts, m1); }
@@ -984,6 +984,10 @@ function stateVariant0(c, sts, onMask){
   sts.forEach((s, k) => { const on = onMask[k];
     if(on){
       if(s.on_self){ self = Object.assign({}, self); for(const q in s.on_self){ const v = s.on_self[q]; self[q] = typeof v==='number' ? (+self[q]||0) + v : v; } }
+      if(!px && s.copy){ const to = s.copy_to || s.pow_to || ['main'], f = sk => { if(!sk) return sk; const o = Object.assign({}, sk, {copy:true}); // 루나틱<複写>: 같은 스킬 2번 연속 실행(2번째는 MP·AF 게이지 없음) — x2: 실행·타수 2배(위력은 pow), ex2: 실행만 2배(타수·위력은 데이터가 ON 값), rep: 재공격으로 표현됨
+          if(s.copy==='x2'){ o.execs = Math.max(1, +sk.execs||1)*2; o.hits = Math.max(1, +sk.hits||1)*2; if(Array.isArray(sk.af_seq)) o.af_seq = sk.af_seq.concat(sk.af_seq); } else if(s.copy==='ex2'){ o.execs = Math.max(1, +sk.execs||1)*2; if(Array.isArray(sk.af_seq)) o.af_seq = sk.af_seq.concat(sk.af_seq); }
+          o.hit_w = null; return o; };
+        if(to.includes('main')) main = f(main); if(to.includes('sb_normal')) sbN = f(sbN); if(to.includes('af_skill')) afSk = f(afSk); }
       if(!px && s.pow && +s.pow!==1){ const to = s.pow_to || ['main','sb','af_skill','sb_normal'], mul = sk => sk ? Object.assign({}, sk, {mult:(sk.mult||1)*s.pow, _stPow:(+sk._stPow||1)*s.pow}) : sk;
         if(to.includes('main')) main = mul(main); if(to.includes('sb')) sb = mul(sb); if(to.includes('af_skill')) afSk = mul(afSk); if(to.includes('sb_normal')) sbN = mul(sbN); }
     } else {
@@ -1389,7 +1393,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 이어 치는 스킬의 타격별 위력 비중(hit_w: [[타수, 위력]…], 타수 합 = hits일 때만 — 상태로 스킬이 바뀌면 무시): 큰 타격이 25억 경감을 더 받게(2026-10-16, 세스타(AS) 凶狼薙 2타가 위력 67%)
   const hw = Array.isArray(sk.hit_w) && sk.hit_w.length ? (g => { const H = g.reduce((a,x)=>a+x[0],0), W = g.reduce((a,x)=>a+x[1],0); return H===Math.max(1, sk.hits||1) && W>0 ? {H, g: g.map(x=>[x[0], x[1]/W])} : null; })(sk.hit_w.map(x=>[+x[0]||0, +x[1]||0]).filter(x=>x[0]>0 && x[1]>0)) : null;
   return {cs: csOK ? sk.combo_scale : null, ca: +sk.combo_add||0, cup: cupA, perHit: pN*critX, pN, cR, p, oc:ocP, totHits, hw, links, linkHits, nT, el, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
-    afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, rep, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
+    afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, rep, cpy: !!sk.copy, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
     bh, defR, flatP, lunaF, auraF, auraR, chW, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpAtkSk, weakSk: weakD.reduce((a,b)=>a+b,0), mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st'};
 }
 
@@ -1879,7 +1883,7 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan){ // plan[i
   const known = team.map((c,i)=> progs[i] && progs[i].spdSrc ? progs[i].spdSrc : null);
   const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
     const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
-    const byHit = Math.min(30, co.totHits + (co.linkHits||0))*(weak?3.5:1.5);
+    const byHit = Math.min(30, co.totHits + (co.linkHits||0))*(weak?3.5:1.5)*(co.cpy ? 0.5 : 1);
     // 재공격은 실행마다 행동 한 번처럼 AF 게이지가 찬다(사용자 확인 — 루나틱 복사는 예외): 맞는 존은 실행당 7.5%, 그 밖은 타수 기준(재공격 타수 포함)
     const za = zoneAFAct(z, co, true); if(za!=null) return za; // 존이 있으면 행동(실행)당 충전으로 바뀜(위키), 상극·안 맞는 타입은 0
     return byHit; });
@@ -2174,8 +2178,9 @@ function counterCalc(team, progs, A, enemy, S, cx, FX, z, cap, fw){
   return any ? {per, trig, els, wts, kinds, tgts, res, afg, total:per.reduce((x,y)=>x+y,0)} : null;
 }
 /* ---------- N턴 전투 시뮬레이션 (최고점 = 개전부터 N턴 총 대미지) ----------
-   턴마다: AF(게이지 50% 이상이면 쓸지 말지 둘 다 따짐, 100%면 오래감) → AF 안에서 SB 게이지가 차면 그 시점 콤보로 SB
-   → 평상 턴(1턴은 속도·선제 순서). AF 밖에서 SB가 차 있으면 그 턴에 SB. AF·SB는 턴을 쓰지 않음.
+   턴마다: AF(게이지 50% 이상이면 쓸지 말지 둘 다 따짐, 100%면 오래감) → AF 안에서 SB 게이지가 차면 그 시점 콤보로 SB.
+   AF를 쓴 턴은 AF가 끝나면 턴 종료(사용자 확인 2026-10-16: 아군 평상 행동·적 공격 없음 → 요격·체인도 없음, 게이지 충전은 AF 안에서만, 턴 종료 공격은 있음).
+   AF를 안 쓴 턴은 평상 턴(1턴은 속도·선제 순서), SB가 차 있으면 그 턴에 SB(SB는 턴을 쓰지 않음).
    게이지: AF 시작 50%(캐릭터·버디 조건이면 100%), 평상 턴 충전은 afGain. SB 시작 = 성향이 같은 전열 1명당 12.5%(최대 50%),
    아군 행동 1회당 2.5%(AF 중 행동 포함). 상태(턴, AF%, SB%)마다 남은 턴의 최댓값을 기억하는 동적 계획으로 가장 좋은 순서를 찾는다 */
 function afStartOf(team, ctx, S){
@@ -2206,12 +2211,13 @@ function battleSim(N, o){
       const useSB = (inAF, fin)=>{ if(o.sbAw) aw1 = Math.max(aw1, 2); const lv = (o.sbAw||aw1>0||o.awConst) ? 2 : 1; let sv = o.sbT ? o.sbT(t) : {b:o.sbBurst, b1:o.sbBurst1, ch:o.sbChain||0};
         if(o.sbOnce){ const ox = o.sbOnce.t(t); if(ou1 || t>o.sbOnce.maxT){ sv = {b: sv.b - (lv>=2 ? ox.b : 0), b1: sv.b1 - (lv>=2 ? 0 : ox.b1), ch: sv.ch}; rec.sbNo1 = true; } else ou1 = 1; } // 틸릴(ES) 心の剣: 剣持つ救世主(개전 3턴) 중에만, 쓰면 해제 → 전투 중 1번
         d += (lv>=2 ? sv.b - (sv.ch||0) : sv.b1)*(inAF?fin:1); /* SB 대미지만(그 턴 체인은 평상 턴 nd에 이미 있음 — SB는 체인을 발동시키지 않음) */ s1=0; rec.sb = inAF?'af':'turn'; if(inAF) rec.combo=fin; if(R && (e1 || !R.cost)){ g1=Math.max(g1, R.to); e1=0; rec.refill=true; } };
-      if(op==='af'){ const r=o.afRun(g1, L(), t); d+=r.dmg; s1+=o.sbAct*r.acts; g1=0; rec.af=r.g0; rec.afD=r.dmg; rec.afL=L(); if(o.teAF){ d += o.teAF.total; rec.teAF = o.teAF.total; }
+      // AF를 쓴 턴(사용자 확인 2026-10-16): AF가 끝나면 그 턴이 끝남 — 아군 평상 행동 없음, 적도 공격 못 함(요격·체인 없음), AF 게이지·SB 게이지는 AF 안에서만. 턴 종료 공격은 남음
+      if(op==='af'){ const r=o.afRun(g1, L(), t); d+=r.dmg; s1+=o.sbAct*r.acts; g1=0; rec.af=r.g0; rec.afD=r.dmg; rec.afL=L(); if(o.teAF){ d += o.teAF.total; rec.teAF = o.teAF.total; } if(o.teN){ d += o.teN; rec.teN = o.teN; }
         if(o.hasSB && s1>=100) useSB(true, r.fin); }
       if(op==='stack'){ g1-=R.cost; e1=1; rec.stack=true; }
-      if(o.hasSB && !rec.sb && s1>=100) useSB(false);
-      const nd = t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1); d += nd; rec.nd = nd; rec.L = L();
-      s1 = Math.min(100, s1 + o.sbAct*o.front); g1 = Math.min(100, g1 + o.afGain); aw1 = Math.max(0, aw1-1);
+      if(op!=='af' && o.hasSB && !rec.sb && s1>=100) useSB(false);
+      const nd = op==='af' ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1); d += nd; rec.nd = nd; rec.L = L();
+      if(op!=='af'){ s1 = Math.min(100, s1 + o.sbAct*o.front); g1 = Math.min(100, g1 + o.afGain); } else s1 = Math.min(100, s1); aw1 = Math.max(0, aw1-1);
       rec.d = d; rec.g = g; rec.s = s;
       const nx = f(t+1, g1, s1, e1, aw1, ou1), v = d + nx.v;
       if(!best || v>best.v) best = {v, plan:[rec].concat(nx.plan)};
@@ -2360,16 +2366,16 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     team.forEach((c,i)=>{ const co=cs[i]; if(!co) return; const pM = simUse ? sim.act[i] : 1, pA = simUse ? sim.alt[i] : 0;
       const za = zoneAFAct(z, co, false), za1 = zoneAF(z, co, false);
       const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
-      const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5), byHit1 = Math.min(30, Math.max(1, Math.round((co.totHits||1)/Math.max(1, co.execs||1)))) * (weak?3.5:1.5);
+      const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5) * (co.cpy ? 0.5 : 1), byHit1 = Math.min(30, Math.max(1, Math.round((co.totHits||1)/Math.max(1, co.execs||1)))) * (weak?3.5:1.5);
       // 존이 있으면 행동(실행)당. 주력 아닌 공격 턴(공격 버프기·MP 부족 대체 공격)은 스킬 하나 = 실행 1번(2026-10-16: 주력의 연속 실행 수로 세던 문제 — 테오도로스·엑구레)
       afGain += pM * (za!=null ? za : byHit) + pA * (za1!=null ? za1 : byHit1);
       afGain += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)];
     });
     if(A.bud && ctx && ctx.buddy && ctx.buddy.main && ['moke','korobo','gansu_as'].includes(ctx.buddy.main.id)) afGain += 5;
-    // 요격도 공격이라 AF 게이지가 참(note.com '守護迎撃で…AFゲージを大量に稼ぐ', 2026-10-16) — 존이 있으면 요격 1번 = 행동 1번, 복사 2번째는 안 참
-    if(res.normal.counter && res.normal.counter.afg>0) afGain += res.normal.counter.afg;
+    // 요격은 AF 게이지를 채우지 않음(사용자 확인 2026-10-16 — 예전엔 note.com 글 하나를 근거로 요격 1번 = 행동 1번으로 채웠음). counterCalc의 afg는 참고값
   }
-  const afTurns = Math.max(2, Math.min(20, 100/Math.max(1, afGain)));
+  const afTurns = 1 + Math.max(1, Math.min(19, 100/Math.max(1, afGain))); // AF 주기 = 게이지를 채우는 평상 턴 + AF 턴(AF 턴엔 평상 행동·게이지 충전 없음, 2026-10-16)
+  const susNW = S.afCycle!==false ? (afTurns-1)/afTurns : 1; // 지속 딜에서 평상 턴 비율
   // 허수아비는 1턴만, AF 100%로 시작(사용자 확인) → 세팅 턴 없음: 축적은 AF 중 행동 횟수만큼
   A.tm.S0 = 0;
   runSit('sb');
@@ -2407,8 +2413,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   // 체인 어빌리티는 AF 밖(평상·SB 턴)에서만 발동 (사용자 확인)
   const sbTurn = res.sb.total;
   const surv = survival(team, progs, A.bud);
-  const sustainAF = sustain + (S.afCycle!==false ? af/afTurns : 0); // 지속 딜: 평상 턴 + AF를 주기마다 한 번
-  const out = {sbTurn, af, af1: afS.v, afPer: R3.afS.per, afChain, afA: R3.afA, afA1: afA, sustain: sustainAF, sustainNoAF: sustain, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
+  const sustainAF = sustain*susNW + (S.afCycle!==false ? af/afTurns : 0); // 지속 딜: 평상 턴(AF 턴 제외) + AF를 주기마다 한 번
+  const out = {sbTurn, af, af1: afS.v, afPer: R3.afS.per, afChain, afA: R3.afA, afA1: afA, sustain: sustainAF, sustainNoAF: sustain, susNW, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo: R3.avg, avgCombo1: avgCombo, normal:res.normal, sb:res.sb, sb3:R3.sb, A, posSets, sim, mule:A.mule};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; }
   // AF를 게이지 g0%에서 시작했을 때 (행동 수·콤보·화력). 100%는 위에서 계산한 값
@@ -2438,16 +2444,17 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const simIn = {t1: out.tl ? out.tl.t1 : normal2, normal: normal2, normal1, sbBurst: sbSum(res.sb.per), sbBurst1: sbSum(sbPer1),
     sbChain: sbCh(res.sb), // 체인 추격은 평상 턴 SB에만(AF 안 SB엔 없음)
     sbT: t => { const w = Math.min(1, Math.max(0, (t-1)/2)), L = (x,y)=>x+(y-x)*w; return {b: L(sbSum(res.sb.per), sbSum(sb3.per)), b1: L(sbSum(sbPer1), sbSum(sbPer31)), ch: L(sbCh(res.sb), sbCh(sb3))}; }, // 실전 N턴의 SB: 턴이 지날수록 3턴째 값으로
+    teN: res.normal.turnEnd ? res.normal.turnEnd.total : 0, // AF 턴에도 남는 턴 종료 공격(평상 턴 값)
     teAF: (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.when && e.when.af))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, nz, cap, fw, 'af'); return r && r.total>0 ? r : null; })(), // AF 턴 종료 공격(콤보 최대 기준 위력, 그 스킬 칸·AF 행동 1번은 따로 안 셈)
     sbOnce: (()=>{ const oi = sbIdx.filter(i=>team[i].sb && +team[i].sb.once_t>0); if(!oi.length) return null; const S1 = per => oi.reduce((v,i)=>v+(per[i]||0),0);
       return {maxT: Math.min(...oi.map(i=>+team[i].sb.once_t)), t: t => { const w = Math.min(1, Math.max(0, (t-1)/2)), L = (x,y)=>x+(y-x)*w; return {b: L(S1(res.sb.per), S1(sb3.per)), b1: L(S1(sbPer1), S1(sbPer31))}; }}; })(), // 전투 중 1회 SB(sb.once_t = 쓸 수 있는 마지막 턴)
     aw0: awStart ? 2 : 0, awConst, sbAw, hasSB: sbIdx.length>0,
     afGain, g0: st.g, s0: Math.min(50, 12.5*Math.max(light, shadow)), sbAct: S.sbPerAct!=null ? +S.sbPerAct : 2.5, front: team.length, afRun,
     refill: (()=>{ const rc = sbIdx.length ? team.find(c=>c.afRefillR && c.afRefillR.on==='sb') : null; return rc ? {to:+rc.afRefillR.to||100, cost:+rc.afRefillR.cost||0} : null; })()};
-  if(simIn.teAF && S.afCycle!==false){ out.sustain += simIn.teAF.total/afTurns; out.teAF = simIn.teAF; } // AF 턴 종료 공격도 AF 주기마다
+  if(S.afCycle!==false){ if(simIn.teAF){ out.sustain += simIn.teAF.total/afTurns; out.teAF = simIn.teAF; } if(simIn.teN) out.sustain += simIn.teN/afTurns; } // AF 턴 종료 공격(AF 턴 전용 + 평상 턴 종료 공격)도 AF 주기마다
   // 지속 딜에 SB(2026-10-16, 사용자 확인: SB는 턴을 쓰지 않아 쓴 뒤에도 그 턴 행동을 그대로 함): SB 게이지가 차는 주기마다 한 번 더함.
   // 게이지 = 평상 턴 행동마다 + AF 행동마다(실전 시뮬과 같은 sbAct), 차는 몫이 AF 쪽이면 AF 끝 콤보로(실전 시뮬처럼 AF 안 SB)
-  if(S.sbCycle!==false && sbIdx.length){ const sa = simIn.sbAct, afActs = R3.afA.n.reduce((x,y)=>x+y,0), gN = sa*team.length, gA = S.afCycle!==false ? sa*afActs/afTurns : 0, gT = gN + gA;
+  if(S.sbCycle!==false && sbIdx.length){ const sa = simIn.sbAct, afActs = R3.afA.n.reduce((x,y)=>x+y,0), gN = sa*team.length*susNW, gA = S.afCycle!==false ? sa*afActs/afTurns : 0, gT = gN + gA;
     const sbTurns = Math.max(1, 100/Math.max(1, gT)), fr = gT>0 ? gA/gT : 0, fin = afRun(100, 2, 3).fin, k = fr*fin + (1-fr);
     const Hs = (A.tm && A.tm.H) || 6; // 전투 중 1회 SB(once_t)는 주기마다가 아니라 전투(H턴)에 한 번
     const sp = team.map((c,i)=> sbIdx.includes(i) ? Math.max(0, (sb3.per[i]||0) - (sb3.chain ? sb3.chain.per[i]||0 : 0))*k/(c.sb && +c.sb.once_t>0 ? Math.max(sbTurns, Hs) : sbTurns) : 0), sv = sp.reduce((x,y)=>x+y,0);
@@ -2463,7 +2470,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const sus2 = susOf(), ex2 = (res.normal.chain?res.normal.chain.total:0) + (res.normal.counter?res.normal.counter.total:0) + (res.normal.turnEnd?res.normal.turnEnd.total:0);
       const nz2 = res.normal.zone, nz2L1 = nz2 && nz2.level>=2 ? Object.assign({}, nz2, {level:1}) : nz2;
       simIn.normal = res.normal.total; simIn.normal1 = nz2 && nz2.level>=2 ? sumZ(zdep ? coresFor('normal', nz2L1, simUse) : res.normal.cores, nz2L1, null, wN).v + ex2 : simIn.normal;
-      out.sustain += sus2 - out.sustainNoAF; out.sustainNoAF = sus2; out.normal = res.normal; out.sbUpN = u; } }
+      out.sustain += (sus2 - out.sustainNoAF)*susNW; out.sustainNoAF = sus2; out.normal = res.normal; out.sbUpN = u; } }
   const NB = Math.max(1, Math.min(10, (ctx && ctx.burstN) || +S.burstTurns || 3));
   // 조합 탐색 중에는 그 모드 점수에 쓰는 것만 계산(최고점 = 허수아비, 나머지 = N턴 시뮬). 화면용 재계산(ctx.mode 없음)은 둘 다
   const md = ctx && ctx.mode, needBsim = md!=='burst', needDummy = !md || md==='burst';
@@ -2474,7 +2481,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     const perOf = bs => { // 실전 N턴 딜 비중(2026-10-16, 사용자 지적: 화면이 SB 턴 비중만 보여 주력 딜러 몫이 작게 보임): 고른 계획의 AF·SB·평상 턴을 캐릭터별로 다시 더함
       const per = team.map(()=>0), nT = res.normal.per.reduce((a,b)=>a+b,0)||1, add = (arr, k) => arr.forEach((v,i)=>{ per[i] += (v||0)*k; });
       for(const rc of bs.turns){
-        if(rc.af){ const r = afRun(rc.af, rc.afL, rc.t); add(r.per, 1); if(rc.teAF && simIn.teAF) add(simIn.teAF.per, 1); }
+        if(rc.af){ const r = afRun(rc.af, rc.afL, rc.t); add(r.per, 1); if(rc.teAF && simIn.teAF) add(simIn.teAF.per, 1); if(rc.teN && res.normal.turnEnd) add(res.normal.turnEnd.per, 1); }
         if(rc.sb){ const w = Math.min(1, Math.max(0, (rc.t-1)/2)), lv2 = rc.L>=2, ch1 = lv2 && res.sb.chain ? res.sb.chain.per : null, ch3 = lv2 && sb3.chain ? sb3.chain.per : null, k = rc.sb==='af' ? (rc.combo||1) : 1;
           const p1 = lv2 ? res.sb.per : sbPer1, p3 = lv2 ? sb3.per : sbPer31;
           sbIdx.forEach(i=>{ if(rc.sbNo1 && team[i].sb && +team[i].sb.once_t>0) return; const a1 = (p1[i]||0) - (ch1 ? ch1[i]||0 : 0), a3 = (p3[i]||0) - (ch3 ? ch3[i]||0 : 0); per[i] += Math.max(0, a1 + (a3-a1)*w)*k; }); }
