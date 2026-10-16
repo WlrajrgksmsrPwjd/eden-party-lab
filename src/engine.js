@@ -224,6 +224,10 @@ function parseZoneCond(cond, awakened){
 }
 function reqMet(req, team, self){
   if(!req) return true;
+  const n = reqCount(req, team, self);
+  return n >= (req.n||1);
+}
+function reqCount(req, team, self){
   const pool = req.others ? team.filter(m=>m!==self) : team;
   let n=0;
   if(req.kind==='elem') n = pool.filter(m=>m.elems.some(e=>req.vals.includes(e))).length;
@@ -233,8 +237,20 @@ function reqMet(req, team, self){
   else if(req.kind==='pers') n = pool.filter(m=>req.vals.some(v=>m.pers&&m.pers.has(v))).length;
   else if(req.kind==='name') n = pool.filter(m=>req.vals.includes(m.raw.name_jp)).length;
   else if(req.kind==='distinct') n = new Set(pool.flatMap(m=>m.elems.filter(e=>req.vals.includes(e)))).size;
-  else return false;
-  return n >= (req.n||1);
+  else return 0;
+  return n;
+}
+/* 'ZONE 중 ○ 공격 수만큼 전체 강화'(15/30/45/60% 등, 2026-10-16 K2): 그 턴 아군의 ○ 공격 수(전열 4명 → 최대 4)로 턴 종료에 강화(같은 계열 'ZONE 중 ○ 공격 수만큼 전체 회복'이 턴 종료 효과)
+   → 1턴째(허수아비 AF·실전 1턴째 AF)엔 없고, 평상 턴은 2턴째부터, 실전 2턴째 이후 AF는 앞 턴 공격 수. q: {wt:[…]} | {el:[…]} | {kind:'mag'|'phys'} | req 형식({kind:'elem', vals}), n: 최대가 되는 공격 수(기본 4) */
+function frontCount(q, team){
+  if(q.vals) return reqCount(q, team, null);
+  return team.slice(0,4).filter(m=>{ const sk = m.main||{}, el = sk.element||m.elem, wt = sk.weapon_type||m.wt, kind = sk.kind||'phys';
+    if(q.wt) return [].concat(q.wt).includes(wt); if(q.el) return [].concat(q.el).includes(el); if(q.kind) return kind===q.kind; return true; }).length;
+}
+function cntFill(q, team, sit, A){
+  const n = Math.max(1, +q.n||4), f = Math.min(n, frontCount(q, team))/n;
+  if(sit==='normal'){ const H = Math.max(1, (A.tm && A.tm.H) || 6); return f*(H-1)/H; }
+  return A.realT>1 ? f : 0;
 }
 const KOF_JP = ['テリー・ボガード','草薙京','クーラ・ダイアモンド','不知火舞'];
 const PERS_KR = {'アルカディア':'아르카디아','IDAスクール':'IDA 스쿨','アウトロー':'아웃로','KMS社':'KMS사','時の傷痕の輪舞':'시간의 흉터 윤무','ロストラボ':'로스트 랩',
@@ -302,7 +318,7 @@ function compileRules(c){
     if(r.deb && r.st) fs.forEach(k=>debSt.add(k));
     const w=r.when||{}, to=r.deb ? {} : (r.to||{});
     if(w.zone||w.zlv) zdep=true;
-    if(w.sb||w.af||w.t!=null||w.stack) sdep=true;
+    if(w.sb||w.af||w.t!=null||w.stack||w.cnt) sdep=true;
     list.push({fs:[...fs], to, w, x:r.x!=null?r.x:1, e:r.e!=null?r.e:0, en:r.en!=null?r.en:null, me:!!r.me, pos:to.pos||null, side:to.side||null, deb:!!r.deb});
   }
   return {list, zel, zdep, sdep, hasPos:list.some(r=>r.pos), debSt};
@@ -328,6 +344,7 @@ function ruleAct(r, j, team, progs, sit, z, A){
   if(w.up!=null) a*=w.up;
   if(w.t!=null && sit==='normal') a*=w.t;
   if(w.stack) a*=ruleStackFill(w.stack, team, sit, A, team[j]);
+  if(w.cnt) a*=cntFill(w.cnt, team, sit, A);
   return a;
 }
 /* ---------- 행동 횟수 기준 축적 ----------
@@ -363,7 +380,7 @@ function ruleStackFill(st, team, sit, A, self){
     const a = sit==='sb' ? cl(f.sb!=null ? f.sb : f.af) : cl(f.af), r = sit==='sb' ? cl(f.sbr!=null ? f.sbr : (f.real!=null ? f.real : f.sb)) : cl(f.real!=null ? f.real : f.af);
     return a + (r-a)*w; }
   const tm = A.tm || {S0:2, H:6}, use = +st.use||0, max = Math.max(1, +st.max||1), st0 = +st.start||0;
-  const tg = (+st.turn||0) * (st.turnReq ? (reqMet(st.turnReq, team, null) ? 1 : 0) : 1);
+  const tg = (+st.turn||0) * (st.turnReq ? (reqMet(st.turnReq, team, null) ? 1 : 0) : 1) * (st.turnPer ? frontCount(st.turnPer, team) : 1); // turnPer: 턴마다 전열의 그 조건 인원수만큼(멜로디(AS) デザイア)
   const at = (turnsDone, acts) => Math.min(1, (st0 + turnsDone*tg + acts*use)/max);
   if(sit==='normal'){ let v=0; const H=Math.max(1,tm.H||6); for(let t=1;t<=H;t++) v+=at(t-1, t); return v/H; }
   const S0 = tm.S0||0, n = AF_N_EST;
@@ -1300,17 +1317,20 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 /* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
 function condP(cd, sit, team, c, A, zone, enemy, el, progs){
   const nrm = sit==='normal';
+  // per: 축적 속도가 전열 조건 인원수에 비례(턴마다 그 수만큼, full개에서 가득 — 프레메아(AS) サジタ·멜로디(AS) デザイア) → 가득 차는 턴 = full ÷ 인원수
+  const tnE = cd.per ? (k => k>0 ? Math.max(1, (+cd.per.full||+cd.turns||1)/k) : 99)(frontCount(cd.per, team)) : null;
   // 스탯 비례 위력: {stat:'spr', full:500, buff:0.5, sum:'front'} — 기본 스탯(천명치 반영)·버프로 최대치 대비 비율
   if(cd.af_p!=null && sit!=='normal'){ let x = Math.max(0, Math.min(1, +cd.af_p)); // AF·SB(허수아비 1턴) 때 충족 비율을 직접 지정(축적이 AF 중 안 늘거나 개전 축적량이 정해진 경우)
-    if(cd.af_r!=null && A.realT>1) x += (Math.max(0, Math.min(1, +cd.af_r)) - x)*Math.min(1, (A.realT-1)/2); // af_r: 실전 3턴째 AF·SB의 충족 비율
+    if(cd.af_r!=null && A.realT>1){ const r = Math.max(0, Math.min(1, +cd.af_r, tnE ? 2/tnE : 1)); x += (r - x)*Math.min(1, (A.realT-1)/2); } // af_r: 실전 3턴째 AF·SB의 충족 비율(per면 2턴 동안 쌓인 만큼까지)
     return x; }
+  if(cd.cnt){ let x = cntFill(cd.cnt, team, sit, A); if(cd.zone && !(zoneMatch(cd.zone, zone) && (!cd.zlv || (zone && zone.level>=cd.zlv)))) x = 0; return x; } // 'ZONE 중 ○ 공격 수만큼' 자기 몫(self_stk)
   if(cd.noaf) return sit==='normal' ? 1 : 0;
   if(cd.stat){ const k=cd.stat, val = m=>{ const j=team.indexOf(m), pr=progs&&progs[j]; const st=statsAt(m.stats, m.fateTbl, pr?(pr.t||0):120, m.stellar && pr && (pr.sbOK || pr.sbAw) ? m.stBoard : null, pr ? pr.lvB||0 : 0, pr ? pr.sty : null); return st ? st[k] : (+cd.dflt||170); };
     const v = cd.sum==='front' ? team.reduce((a,m)=>a+val(m),0) : val(c);
     return Math.min(1, v*(1+(+cd.buff||0))/Math.max(1,+cd.full||500)); }
   if(cd.zone){ const ok = zoneMatch(cd.zone, zone) && (!cd.zlv || (zone && zone.level>=cd.zlv)); return ok?1:0; }
   if(cd.req) return reqMet(cd.req, team, c) ? 1 : 0;
-  if(cd.stack!=null){ const tn=+cd.turns||0, consume=/소비형/.test(String(cd.stack));
+  if(cd.stack!=null){ const tn = tnE!=null ? tnE : +cd.turns||0, consume=/소비형/.test(String(cd.stack));
     if(tn<=0) return 1;
     if(cd.sb_fill && (sit==='sb' || (sit==='af' && A.postSB))) return 1; // SB가 가득 채움
     return stackFill(tn, sit, A, consume, cd.start, cd.af_grows); } // turns = 가득 차는 데 드는 자기 행동 수, start = 개전 축적 비율, af_grows=false면 AF 중 안 늘어남

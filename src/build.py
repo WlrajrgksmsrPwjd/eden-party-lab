@@ -104,7 +104,7 @@ tend=json.load(open(P('data','turn_end.json'),encoding='utf-8')) if os.path.exis
 sstk=json.load(open(P('data','self_stk.json'),encoding='utf-8')) if os.path.exists(P('data','self_stk.json')) else {}
 for c in chars:
     if tend.get(c['id']) and not c['id'].startswith('_'): c['turn_end']=[{k:e[k] for k in ('name','atk','fixed','when','up','sb_only') if k in e} for e in tend[c['id']]]
-    if sstk.get(c['id']) and not c['id'].startswith('_'): c['self_stk']={k:{x:v[x] for x in ('stack','turns','start','af_grows','af_p','af_r','sb_fill','req') if x in v} for k,v in sstk[c['id']].items()}
+    if sstk.get(c['id']) and not c['id'].startswith('_'): c['self_stk']={k:{x:v[x] for x in ('stack','turns','start','af_grows','af_p','af_r','sb_fill','req','cnt','zone','zlv','per') if x in v} for k,v in sstk[c['id']].items()}
 scond=json.load(open(P('data','skill_cond.json'),encoding='utf-8'))
 for c in chars:
     for k,v in (scond.get(c['id']) or {}).items():

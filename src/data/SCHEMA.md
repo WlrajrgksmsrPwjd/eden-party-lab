@@ -260,3 +260,5 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - `counter.json` `zone`: 그 존일 때만 요격(질퍼니(AS) 水天陣). 스킬 `afx_zone`: 그 존일 때만 af_combo_x(질퍼니(AS) 輝晶陣).
 - `self_stk.json` 항목에 `req`(편성 조건, 맞으면 1·아니면 0)만 둬도 됨(테오도로스 下克上, 메릿 赫灼の心臓).
 - 성도 스킬이 공격이 아니면(sb·sb_normal 없음, 주력도 아님) 성도 칸을 따로 세지 않고 그 버프 행동이 칸을 씀(밀디).
+- (K2) 규칙 `when.cnt: {wt:[…]} | {el:[…]} | {kind:'mag'} | req 형식, n: 4` — 'ZONE 중 ○ 공격 수만큼 전체 강화'(1회 15%~4회 60% 등): 전열에서 그 공격을 하는 인원수 ÷ n, 턴 종료 효과라 1턴째 AF(허수아비)엔 0·평상 턴은 (N−1)/N. self_stk 항목도 `cnt`(+`zone`)로 자기 몫.
+- (K2) skill_cond·self_stk 축적 조건 `per: {kind, vals, full}` — 턴마다 전열 조건 인원수만큼 쌓여 full개에서 가득(프레메아(AS) サジタ·멜로디(AS) デザイア). buff_rules `when.stack.turnPer`도 같은 뜻(턴 축적 × 인원수).
