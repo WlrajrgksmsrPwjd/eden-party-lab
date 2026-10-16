@@ -83,7 +83,7 @@ for c in chars:
     if c['id'] in lnk and not c['id'].startswith('_'): c['links']=lnk[c['id']]
 ctr=json.load(open(P('data','counter.json'),encoding='utf-8'))
 for c in chars:
-    if c['id'] in ctr and not c['id'].startswith('_'): c['counter']=ctr[c['id']]
+    if c['id'] in ctr and not c['id'].startswith('_'): c['counter']={k:v for k,v in ctr[c['id']].items() if k not in ('note','src')}
     cv=(ctr.get('_cover') or {}).get(c['id'])
     if cv: c['cover']=cv
 echg=json.load(open(P('data','elem_change.json'),encoding='utf-8'))
@@ -112,7 +112,7 @@ for c in chars:
         if c.get(kk): c[kk]['mcond']={x:v[x] for x in ('base','top','need','steps') if x in v}
 for c in chars:
     if c['id'] in drules: c['debuff_rules']=drules[c['id']]
-    if chain.get(c['id']): c['chain']=[{k:e[k] for k in ('on','max','atk','when','af','every','name','effect') if k in e} for e in chain[c['id']]]
+    if chain.get(c['id']): c['chain']=[{k:e[k] for k in ('on','max','atk','when','af','every','name','effect','stk') if k in e} for e in chain[c['id']]]
 bosses=json.load(open(P('data','bosses.json'),encoding='utf-8'))+json.load(open(P('data','bosses_more.json'),encoding='utf-8'))
 # 결실 현현(결현현): 필수 캐릭터·서약
 for b in json.load(open(P('data','bosses_kesshitsu.json'),encoding='utf-8')):
@@ -137,7 +137,7 @@ head='''<!doctype html>
 # 계산 버전: 엔진·데이터가 같으면 같은 결과 → 앱이 저장해 둔 편성 결과를 다시 쓸지 정하는 기준(2026-10-16)
 import hashlib
 _bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); _bfx.pop('_doc',None)
-calc_ver=hashlib.sha1((js(chars)+js(bosses)+js(_bfx)+rd('engine.js')).encode('utf-8')).hexdigest()[:12]
+calc_ver=hashlib.sha1((js(chars)+js(bosses)+js(_bfx)+rd('engine.js')+rd(os.path.join('data','meta_decks.json'))).encode('utf-8')).hexdigest()[:12] # 추천 덱도 탐색 시작점(seeds)이라 포함
 head=head.replace('<title>','<meta name="eden-calc" content="'+calc_ver+'">\n<title>',1)
 out=head+rd('app.css')+'\n</style></head><body>\n'+rd('body.html')
 out+='<script type="application/json" id="db-chars">'+js(chars)+'</script>\n'

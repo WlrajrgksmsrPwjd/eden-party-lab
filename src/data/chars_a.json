@@ -152,11 +152,11 @@
   "party_buff": {"scope": "all", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 50, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": true, "barrier_pierce": true, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 30, "int": 30, "spd": 30, "all_elem_res": 70, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "crystal", "weak_expose": "", "pain_poison": false},
   "zone": {"type": "crystal", "awakened": true, "condition": "전투 시작 시 전방 정 2명이면 輝晶陣, 4명이면 極・輝晶陣"},
-  "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 2, "status_immune": 0, "debuff_guard": 2, "knockback_immune": 0, "guard": 0, "taunt": 3, "mp_recover": 3, "af_gauge": 0, "revive": true},
+  "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 2, "status_immune": 0, "debuff_guard": 2, "knockback_immune": 0, "guard": 2, "taunt": 3, "mp_recover": 3, "af_gauge": 0, "revive": true},
   "req": "アルカナ 스택/アルケミーハイ, 전방 정 속성 4명",
   "tags": ["lunatic_plus", "counter", "link", "revive", "weakness_adapt"],
   "note_kr": "정(晶) 파티 서포터. 성도스킬 カレイドスコープ로 아군 1명(SB시 전체)에 연계+배리어 관통, SB시 전후열 HP/MP 100% 회복+전투불능 회복. 리플렉트 불릿 도발+요격 탱킹, 전체 크리율/마크리율 100%+전속성공격 50%. VC+SB강화로 전속성내성 최대 70% 다운. 성도스킬이 비공격이라 sb null.",
-  "support_src": {"heal": "リフレクトバレット(迎撃) / カレイドスコープ(SB)", "dmg_cut": "リフレクトバレット / モードチェンジ(守護)", "cleanse": "カレイドスコープ", "debuff_guard": "カレイドスコープ", "taunt": "リフレクトバレット", "mp_recover": "リフレクトバレット(迎撃) / カレイドスコープ(SB)"},
+  "support_src": {"heal": "リフレクトバレット(迎撃) / カレイドスコープ(SB)", "dmg_cut": "リフレクトバレット / モードチェンジ(守護)", "cleanse": "カレイドスコープ", "debuff_guard": "カレイドスコープ", "taunt": "リフレクトバレット", "mp_recover": "リフレクトバレット(迎撃) / カレイドスコープ(SB)", "guard": "モードチェンジ(守護, アルケミーハイ 2턴·최대 5회)"},
   "play_kr": "알마(AS)는 활·晶 탱커 겸 서포터입니다. 개전 アルカナ 5로 1턴째 アルケミーハイ에 들어가 守護를 얻고, ラスターグレアー(특대 15배)로 공격하며 아군 전체에 크리율·마법 크리율 100%·전 속성 공격 50%를 겁니다. リフレクトバレット로 도발·요격을 걸면 맞을 때마다 반격하며 아군 전체 HP 30%·MP 10%를 회복(アルケミーハイ 시 2배)하고, 성도 스킬 カレイドスコープ로 아군 1명(SB 때 전체)에 연계·배리어 관통을 줍니다. アルケミーハイ는 전투 중 5회뿐이고 필요 アルカナ가 5/10/20/40/80으로 늘어 장기전 화력은 떨어집니다."
 },
 {

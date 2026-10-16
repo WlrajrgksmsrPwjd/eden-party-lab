@@ -248,6 +248,7 @@ function rcPut(k, lr){ try{ let L = JSON.parse(localStorage.getItem(RC_KEY)||'[]
 async function calcOptimize(chan, inp, onProgress, J, opt){
   J = J || jobSnap(); opt = opt || {};
   if(inp && inp.pgl===undefined) inp = Object.assign({pgl: pglInput()}, inp);
+  if(inp && inp.seeds===undefined) inp = Object.assign({seeds: DECKS.map(d=>d.members)}, inp); // 커뮤니티 추천 덱도 평가(2026-10-16)
   const msg = {type:'optimize', ids:J.ids, own:J.own, S:J.S, cap:J.cap, input:inp};
   const ck = opt.cache ? rcKey(msg) : null, hit = ck && rcGet(ck);
   let lr;
