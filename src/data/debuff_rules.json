@@ -10,7 +10,7 @@
   "anabel_es": [{"f":["allres","pres"],"when":{"t":0.3}}],
   "isuka": [{"f":["allres","pres"],"when":{"up":0.7},"e":0.5,"st":true},{"f":["elres","wres"],"when":{"t":0.85},"st":true}],
   "lovely_as": [{"f":["allres"],"when":{"t":0.5}},{"f":["wres"],"when":{"t":0.5},"e":0.5}],
-  "venefica": [{"f":["elres"],"when":{"sb":true}}],
+  "venefica": [{"f":["elres"],"when":{"sb":true,"sb1":true}}],
   "kid": [{"f":["def"],"when":{"sb":true}}],
   "m2_claudia": [{"f":["def"],"when":{"up":0.5}}],
   "nonold": [{"f":["def","allres","pres"],"st":true}],
@@ -65,5 +65,14 @@
   "ukuaji": [{"f":["elres","wres"],"when":{"stack":{"turn":1,"start":1,"max":10}}}],
   "zanei_no_kajin": [{"f":["elres","wres"],"when":{"zone":"any","zlv":2},"e":0.5}],
   "zilva": [{"f":["pres","elres"],"when":{"sb":true}}],
-  "zilva_as": [{"f":["pres"],"st":true}]
+  "zilva_as": [{"f":["pres"],"st":true}],
+  "sazanka": [{"f":["allres","pres"],"st":true},{"f":["allres","pres"],"when":{"up":0.6},"e":0.5}],
+  "roberta": [{"f":["pres"],"when":{"t":0.35}}],
+  "iwera": [{"f":["allres"],"when":{"t":0.65}},{"f":["pres"],"when":{"t":0.4}}],
+  "yakumo": [{"f":["elres"],"when":{"t":0.75}}],
+  "tokai_no_ute": [{"f":["pres","allres"],"when":{"req":{"kind":"align","vals":["shadow"],"n":3,"others":true}},"e":0.7}],
+  "ryuze": [{"f":["elres"],"st":true}],
+  "yakumo_as": [{"f":["allres"],"when":{"t":0.7}}],
+  "matsurika": [{"f":["allres","pres"],"st":true}],
+  "sesta": [{"f":["elres"],"when":{"zone":["wind"],"zlv":2}}]
 }

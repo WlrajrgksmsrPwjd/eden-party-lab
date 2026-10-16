@@ -294,7 +294,7 @@
    "buff": 0
   },
   "turns": {
-   "buff": 1,
+   "buff": 3,
    "debuff": 3
   },
   "buff_how": "skill",

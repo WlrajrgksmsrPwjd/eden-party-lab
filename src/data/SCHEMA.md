@@ -250,3 +250,13 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - `state.json` `real`: 3턴째 AF의 켜짐 비율. 없으면 af 값과 '개전·사용 구간에 3턴째가 들어가는지(start·dur·uses)' 중 큰 쪽, 구간 정보가 없으면 평상 턴 가동률(up).
 - stackFill·규칙 축적은 세팅 턴 S0 = 2(3턴째).
 - buff_rules `when.stack.fill: {n, af, real, sb, sbr}`(평상 턴·1턴째 AF·3턴째 AF·1턴째 SB·3턴째 SB 채움 비율) + `req`/`no`(조건을 못 채울 때의 fill) — 개전 축적·AF 중 소모가 있는 ZONE 어빌리티(錬魔·鋭魔·脆禍). party_buff `dmg_src: "zone"`(ZONE 어빌리티, 다른 출처와 곱).
+
+## 2026-10-16 스킬 로직 점검(62명 176건)
+
+- VC: `buff_acts.json` 행동 이름이 `ヴァリアブルチャント`·`VC…`인 auto 행동은 교대해 들어올 때 1턴 효과 → 평상 턴 1/6, AF·SB·허수아비엔 없음(엔진 VC_UP). VC를 buff/attack 행동으로 두지 않는다(스킬 칸·AF 행동이 아님). VC로만 거는 항목인데 행동에 없으면 VC auto 행동을 넣는다(시리즈 물리 내성).
+- `EX必殺技` 행동은 `na: true`(EX 커맨드라 스킬 칸 아님), 전투 중 한 번 꼴이면 `once`.
+- SB 행동 `dur: 1` = SB 그 턴만(ターン終了まで) → 평상 턴에 안 남음. af_timing 값 `"sb1"`, 규칙 `when.sb1`도 같은 뜻.
+- chars `debuff.weak_expose_up: {n, af, real}`: 약점 간파가 켜진 비율(평상 턴·1턴째 AF·3턴째 AF). 개전 1턴만·스킬 쓴 턴만·N턴 한정일 때. 약점 부여는 이제 켜짐/꺼짐이 아니라 비율로 섞음.
+- `counter.json` `zone`: 그 존일 때만 요격(질퍼니(AS) 水天陣). 스킬 `afx_zone`: 그 존일 때만 af_combo_x(질퍼니(AS) 輝晶陣).
+- `self_stk.json` 항목에 `req`(편성 조건, 맞으면 1·아니면 0)만 둬도 됨(테오도로스 下克上, 메릿 赫灼の心臓).
+- 성도 스킬이 공격이 아니면(sb·sb_normal 없음, 주력도 아님) 성도 칸을 따로 세지 않고 그 버프 행동이 칸을 씀(밀디).

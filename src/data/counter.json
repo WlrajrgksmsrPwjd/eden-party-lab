@@ -10,7 +10,7 @@
   "hismena": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"water","weapon_type":"pierce","size":"xl","mult":10,"hits":1}},
   "cyrus": {"trig":"any","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"water","weapon_type":"slash","size":"xxl","mult":3,"hits":1}},
   "philo_as": {"trig":"any","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"water","weapon_type":"slash","size":"xl","mult":15,"hits":1}},
-  "jilfany_as": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"water","weapon_type":"slash","size":"xl","mult":10,"hits":1}},
+  "jilfany_as": {"trig":"any","taunt":true,"atk":{"target":"st","kind":"phys","stat":"pwr","element":"water","weapon_type":"slash","size":"xl","mult":10,"hits":1},"zone":["water"]},
   "hoshinoko": {"trig":"phys","taunt":true,"atk":{"target":"aoe","kind":"mag","stat":"int","element":"crystal","weapon_type":"magic","size":"xl","mult":2,"hits":1}},
   "alma_as": {"trig":"any","taunt":true,"copy":true,"atk":{"target":"aoe","kind":"mag","stat":"pwr","element":"crystal","weapon_type":"magic","size":"xl","mult":1,"hits":1}},
   "anabel_es": {"trig":"any","taunt":false,"atk":{"target":"aoe","kind":"phys","stat":"pwr","element":"fire","weapon_type":"pierce","size":"xl","mult":10,"hits":2}},
