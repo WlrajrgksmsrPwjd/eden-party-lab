@@ -249,3 +249,4 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - skill_cond·self_stk 조건 `af_r`: 3턴째 AF·SB의 충족 비율(af_p와 짝). 조건 `turn`(>=·<=)은 그 AF의 턴으로 판정.
 - `state.json` `real`: 3턴째 AF의 켜짐 비율. 없으면 af 값과 '개전·사용 구간에 3턴째가 들어가는지(start·dur·uses)' 중 큰 쪽, 구간 정보가 없으면 평상 턴 가동률(up).
 - stackFill·규칙 축적은 세팅 턴 S0 = 2(3턴째).
+- buff_rules `when.stack.fill: {n, af, real, sb, sbr}`(평상 턴·1턴째 AF·3턴째 AF·1턴째 SB·3턴째 SB 채움 비율) + `req`/`no`(조건을 못 채울 때의 fill) — 개전 축적·AF 중 소모가 있는 ZONE 어빌리티(錬魔·鋭魔·脆禍). party_buff `dmg_src: "zone"`(ZONE 어빌리티, 다른 출처와 곱).

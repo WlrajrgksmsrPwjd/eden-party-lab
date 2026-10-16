@@ -57,6 +57,7 @@ input[type=text],input[type=number],select,textarea{border:1px solid var(--line)
 textarea{width:100%; min-height:110px; font-family:var(--f-mono); font-size:12px}
 .chip{display:inline-flex; align-items:center; gap:4px; border:1px solid var(--line); border-radius:999px; padding:2px 9px; font-size:12px; background:var(--surface); cursor:pointer}
 .el{display:inline-block; font-size:11px; font-weight:700; padding:0 6px; border-radius:4px; color:#fff; line-height:18px}
+.el + .el{margin-left:2px}
 .el.fire{background:var(--el-fire)} .el.water{background:var(--el-water)} .el.earth{background:var(--el-earth)} .el.wind{background:var(--el-wind)}
 .el.thunder{background:var(--el-thunder)} .el.shade{background:var(--el-shade)} .el.crystal{background:var(--el-crystal)} .el.none{background:var(--el-none)}
 :root[data-theme="dark"] .el{color:#111} @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .el{color:#111} }

@@ -105,6 +105,7 @@ function showTab(name){
 
 /* ---------- 공용 렌더 조각 ---------- */
 const elChip = e => `<span class="el ${esc(e)}">${esc(E.ELEM_KR[e]||e)}</span>`;
+const elChips = c => ((c && c.elems && c.elems.length) ? c.elems : [(c && c.elem) || 'none']).map(elChip).join(''); // 다속성(질퍼니(AS) 물·결정 등)은 전부(사용자 요청 2026-10-16)
 const alDot = a => `<span class="al ${a==='light'?'light':'shadow'}" title="${a==='light'?'천':'명'}"></span>`;
 function ownedList(){ return Object.keys(state.owned).filter(id=>byId.has(id)); }
 function progOf(id){ return E.charProg(byId.get(id), state.owned[id], settings()); }
@@ -681,7 +682,7 @@ function setupPicker(inputSel, dropSel, key, max){
     const own=ownedList().map(id=>byId.get(id));
     items = own.filter(c=>!state.plan.locked.includes(c.id)&&!state.plan.excluded.includes(c.id)&&!(state.plan.backLocked||[]).includes(c.id))
       .filter(c=>!q || c.name.toLowerCase().includes(q) || (c.raw.name_jp||'').toLowerCase().includes(q) || c.id.includes(q) || (c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(q))).slice(0,30);
-    drop.innerHTML = items.length ? items.map((c,i)=>`<button type="button" data-i="${i}" class="${i===hl?'hl':''}">${elChip(c.elem)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span></button>`).join('')
+    drop.innerHTML = items.length ? items.map((c,i)=>`<button type="button" data-i="${i}" class="${i===hl?'hl':''}">${elChips(c)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span></button>`).join('')
       : `<div class="hint" style="padding:8px 10px">보유 캐릭터 중 일치하는 이름이 없습니다.</div>`;
     drop.hidden=false;
   };
@@ -753,18 +754,29 @@ function teamWarns(x, boss, enemy, ex){
   if(ex.posTotal && ex.posOk<ex.posTotal) warns.push({t:`위치 버프 ${ex.posTotal}개 중 ${ex.posOk}개만 동시에 성립`});
   const seen=new Set(); return warns.filter(w=>{ if(seen.has(w.t)) return false; seen.add(w.t); return true; });
 }
+/* 딜 비중(2026-10-16, 사용자 지적: SB 턴 비중만 보여서 AF로 딜하는 주력 딜러 몫이 작게 보였음): 그 성향 점수의 기준 대미지로
+   최고점 = 허수아비 AF·SB, 지속 딜·안정성 = 평상 턴 + AF/주기, 그 밖(종합·실전) = 실전 N턴 시뮬(AF·SB·평상 턴 합) */
+function dmgShares(ev, mode){
+  const sum = a => a.reduce((t,v)=>t+(v||0),0);
+  let per = null, lab = '';
+  if(mode==='burst' && ev.dummy && ev.dummy.per && sum(ev.dummy.per)>0){ per = ev.dummy.per; lab = '최고점 딜 비중'; }
+  else if((mode==='sustain'||mode==='stability') && ev.afPer){ per = ev.normal.per.map((v,k)=>(v||0) + (ev.afPer[k]||0)/Math.max(1, ev.afTurns||2)); lab = '지속 딜 비중'; }
+  else if(ev.bsim && ev.bsim.per && sum(ev.bsim.per)>0){ per = ev.bsim.per; lab = `실전 ${ev.bsim.N}턴 딜 비중`; }
+  else { per = ev.sb.per; lab = 'SB 턴 비중'; }
+  const t = sum(per)||1; return {s: per.map(v=>(v||0)/t), lab};
+}
 function memHtml(x, i, key, focus, lockSet){
-  const c=x.team[i], ev=x.ev, cs=ev.sb.cores[i], sbTot=ev.sb.per.reduce((a,b)=>a+b,0)||1, share=ev.sb.per[i]/sbTot;
+  const c=x.team[i], ev=x.ev, cs=ev.sb.cores[i], ds=dmgShares(ev, (RES.get(key)||{}).mode || state.plan.mode), share=ds.s[i];
   const gq = cs&&cs.gq;
   const off = focus && !E.charFocusMatch(c, focus);
   const notMine = x.shared && x.real && !x.mine[i];
   return `<div class="mem${lockSet&&lockSet.has(c.id)?' locked':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="눌러서 추천 세팅 보기">
     <div class="nm">${esc(c.name)}${notMine?' <span class="badge warn">미보유</span>':''}</div>
-    <div class="meta">${elChip(c.elem)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
+    <div class="meta">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
     <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}</div>
     <div class="sk">${gq?'글래 '+esc(glText(gq))+(gq.painOK||!(gq.pa||gq.po)?'':' (독·페 미부여)'):''}</div>
-    <div class="share" title="SB 턴 대미지 비중 ${(share*100).toFixed(0)}%"><i style="width:${(share*100).toFixed(0)}%"></i></div>
-    <div class="sk">SB 턴 비중 <span class="num">${(share*100).toFixed(0)}%</span>${off?' <span class="badge">지정 외 · 지원</span>':''}</div>
+    <div class="share" title="${ds.lab} ${(share*100).toFixed(0)}%"><i style="width:${(share*100).toFixed(0)}%"></i></div>
+    <div class="sk">${ds.lab} <span class="num">${(share*100).toFixed(0)}%</span>${off?' <span class="badge">지정 외 · 지원</span>':''}</div>
     <div class="tap">추천 세팅 ▾</div>
   </div>`;
 }
@@ -930,7 +942,7 @@ function basisHtml(x){
   ln.push(row('속성 · 무기종', `+${P(co.elB)} · +${P(co.wB)}`, '같은 묶음은 감쇠 합산(1 + A + A·B …), 상한 100%'));
   ln.push(row('정신통일·심기일체·하극상', `+${P(co.specB)}`, co.mpF?`최대 MP ${Math.round(co.mpTot)}${co.mpB?` (MP +${P(co.mpB)})`:''} × ${co.kind==='mag'?'0.23':'0.16'}% = ${P(co.mpF)} (상한 250%)`:'MP 비례 버프 없음'));
   const luna=[]; if(co.kess) luna.push('결사 ×1.7·크리 확정'); if(co.shin) luna.push('심안 ×1.5');
-  const dsrc=Object.entries(co.dmgS||{}).map(([k,v])=>({prayer:'기도',song:'가창',self:'자신',other:'기타'}[k]||k)+' +'+P(v));
+  const dsrc=Object.entries(co.dmgS||{}).map(([k,v])=>({prayer:'기도',song:'가창',self:'자신',other:'기타',zone:'ZONE 어빌리티'}[k]||k)+' +'+P(v));
   ln.push(row('루나틱 · 주는 대미지', `${X(co.lunaF)} · ${X(co.dmgUp)}`, (luna.join(' · ')||'루나틱 없음')+' / '+(dsrc.join(' · ')||'기도·가창 없음')));
   ln.push(row('내성 디버프', `×${(1+co.typeR+co.physR).toFixed(2)}`, `속성 내성 −${P(co.typeR)} + ${co.kind==='mag'?'마법':'물리'} 내성 −${P(co.physR)} (합산)`));
   ln.push(row('크리티컬', `${P(Math.min(co.critR,1))} · ${X(co.cR)}`, `크리 확률${co.critR>1?` (${P(co.critR)}${co.oc>0?`, 오버크리 ${P(co.oc)} 확률로 2배`:''})`:''} · 크리타÷일반타 (방어/4·×3.25, 크리 위력 +${P(co.critD)})`));
@@ -1285,7 +1297,8 @@ function setupHtml(x, i){
   const c=x.team[i], pr=x.progs[i], o=(x.owns&&x.owns[i])||state.owned[c.id]||{}, ev=x.ev, r=c.raw;
   const ex = x.ex || (x.ex=E.explainTeam(x.team,x.progs,ev,settings(),{}));
   const sum=a=>a.reduce((s,v)=>s+v,0)||1;
-  const sSB=ev.sb.per[i]/sum(ev.sb.per), sN=ev.normal.per[i]/sum(ev.normal.per), share=Math.max(sSB,sN);
+  const ds=dmgShares(ev, (RES.get(x._key)||{}).mode || state.plan.mode), sM=ds.s[i];
+  const sSB=ev.sb.per[i]/sum(ev.sb.per), sN=ev.normal.per[i]/sum(ev.normal.per), share=Math.max(sM, sN);
   const role = share>=0.35?'주 딜러':share>=0.12?'보조 딜러':'서포터';
   const dealer = share>=0.12;
   const order = ex.order;
@@ -1293,7 +1306,7 @@ function setupHtml(x, i){
   const nm = k=>esc(x.team[k].name);
   const L = []; // 이 조합에서
   if(x.shared && !x.mine[i]) L.push(x.real ? '<li><span class="ng">미보유</span> — 아래 값은 천명치 80·성도각성으로 가정한 것</li>' : '<li class="hint">보유 정보가 없어 천명치 80·성도각성으로 가정한 값입니다</li>');
-  L.push(`<li>${role} · SB 턴 비중 <span class="num">${(sSB*100).toFixed(0)}%</span> · 평상 턴 <span class="num">${(sN*100).toFixed(0)}%</span></li>`);
+  L.push(`<li>${role} · ${ds.lab} <span class="num">${(sM*100).toFixed(0)}%</span> · 평상 턴 <span class="num">${(sN*100).toFixed(0)}%</span> · SB 턴 <span class="num">${(sSB*100).toFixed(0)}%</span></li>`);
   { const st = c.stats ? E.statsAt(c.stats, c.fateTbl, pr.t||0) : null;
     if(st) L.push(`<li>스탯 <span class="hint">(천명치 ${pr.t||0}, 장비 제외)</span>: ${E.STAT_ORDER.map(k=>`${k===c.mainStat?'<b>':''}${STAT_KR[k]} ${st[k].toLocaleString()}${k===c.mainStat?'</b>':''}`).join(' · ')}${pr.spdSrc==='build'?` · <span class="hint">빌드 장비 포함 속도 ${pr.spd}</span>`:''}</li>`);
     else L.push(`<li class="hint">스탯: 기본 스탯 자료 없음 (위키에 없는 캐릭터)</li>`); }
@@ -1371,7 +1384,7 @@ function setupHtml(x, i){
   if(c.main) S2.push(`<li>평상: ${skillLine(c.main)}</li>`);
   if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req_ko||r.req)}</span></li>`);
   const O = (c.cxWhy||[]).map(w=>`<li>${esc(w)}</li>`);
-  return `<div class="shead"><b>${esc(c.name)}</b> ${(c.elems.length?c.elems:['none']).map(elChip).join('')} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> <span class="hint">${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}${(r.ex&&r.ex.pers_ko&&r.ex.pers_ko.length)?' · 퍼스널리티 '+esc(r.ex.pers_ko.join('·')):''}</span><button type="button" class="btn small sclose" data-sclose="1">닫기</button></div>
+  return `<div class="shead"><b>${esc(c.name)}</b> ${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> <span class="hint">${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}${(r.ex&&r.ex.pers_ko&&r.ex.pers_ko.length)?' · 퍼스널리티 '+esc(r.ex.pers_ko.join('·')):''}</span><button type="button" class="btn small sclose" data-sclose="1">닫기</button></div>
     <div><h4>이 조합에서</h4><ul>${L.join('')}</ul></div>
     <div><h4>추천 육성·장비</h4><ul>${G.join('')}</ul></div>
     <div><h4>주력 스킬</h4><ul>${S2.join('')||'<li class="hint">—</li>'}</ul></div>
@@ -1427,7 +1440,7 @@ function renderPerChar(){
       const z=x.ev.sb.zone;
       const mates=x.team.filter(c=>c.id!==x.pc.id);
       return `<tr><td class="num">${pcResult.list.indexOf(x)+1}</td>
-        <td class="who">${elChip(x.pc.elem)} ${esc(x.pc.name)}</td>
+        <td class="who">${elChips(x.pc)} ${esc(x.pc.name)}</td>
         <td><div class="sc"><span class="num">${Math.round(x.rel*100)}</span><div class="bar"><i style="width:${Math.round(x.rel*100)}%"></i></div></div></td>
         <td class="mates">${mates.map(c=>`<b>${esc(c.name)}</b>`).join(' · ')}</td>
         <td>${esc(z&&z.level?z.label:'—')}${z&&z.how?`<div class="zonehow">${esc(z.how)}</div>`:''}</td>
@@ -1478,7 +1491,7 @@ function fcardHtml(f, k, r, cond){
     return `<div class="frow">
       <div class="frank">${x.rank}</div>
       <div class="fmain">
-        <div class="fmem">${order.map(i=>{ const c=x.team[i], sh=shr[i]/sbTot; return `<span class="mchip${sh>=0.35?' main':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="추천 세팅 보기">${elChip(c.elem)} ${esc(c.name)}</span>`; }).join('')}</div>
+        <div class="fmem">${order.map(i=>{ const c=x.team[i], sh=shr[i]/sbTot; return `<span class="mchip${sh>=0.35?' main':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="추천 세팅 보기">${elChips(c)} ${esc(c.name)}</span>`; }).join('')}</div>
         <div class="fmeta"><span>${esc(z&&z.level?z.label:'존 없음')}</span> · <span class="diff lv${x.diff.lv}">Lv${x.diff.lv}</span> · ${dm?`최고점 <span class="num">${fmtN(x.ev.dummyT)}</span> <span class="hint">(허수아비 어포딜${dm.sbAt?` · AF ${dm.sbAt}번째에 SB`:''})</span>`:`SB 턴 <span class="num">${fmtN(x.ev.sbTurn)}</span> · 평상 <span class="num">${fmtN(x.ev.sustain)}</span>`}${bad?` · <span class="ng">버프 조건 미충족 ${bad}</span>`:''} · <button type="button" class="linkbtn" data-goalsave="${key}">목표로 저장</button> · <button type="button" class="linkbtn" data-share="${key}">링크 복사</button></div>
         <div class="setup" data-for="${key}" hidden></div>
       </div></div>`;
@@ -1583,7 +1596,7 @@ function goalHtml(g){
     const cu=curOwn[i], tg=tgOwn[i], o=!!state.owned[c.id], gk=glKey(tg.gl);
     const st=(ok)=>ok?'<span class="ok">✓</span>':'<span class="ng">남음</span>';
     return `<div class="gmem" data-gid="${esc(g.id)}" data-cid="${esc(c.id)}">
-      <div class="gh"><b>${esc(c.name)}</b> ${elChip(c.elem)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${o?'':'<span class="badge warn">미보유</span>'}</div>
+      <div class="gh"><b>${esc(c.name)}</b> ${elChips(c)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${o?'':'<span class="badge warn">미보유</span>'}</div>
       <div class="grow"><span>천명치</span><span class="num">${cu.t||0}</span><span>→</span><input type="number" min="0" max="255" data-gf="t" value="${tg.t||0}" aria-label="${esc(c.name)} 목표 천명치">${st((cu.t||0)>=(tg.t||0))}</div>
       ${c.stellar?`<div class="grow"><span>성도각성</span><span>${cu.s?'완료':'안 함'}</span><span>→</span><label><input type="checkbox" data-gf="s" ${tg.s?'checked':''}> 목표</label>${st(!tg.s||cu.s)}</div>`:''}
       <div class="grow"><span>현현</span><span>${M_KR[+cu.m||0]}</span><span>→</span>${c.manifestMax===0?'<span class="hint">현현 무기 없음</span>':`<select data-gf="m">${M_KR.slice(0,(c.manifestMax||2)+1).map((l,k)=>`<option value="${k}"${(+tg.m||0)===k?' selected':''}>${l}</option>`).join('')}</select>`}${st((+cu.m||0)>=(+tg.m||0))}</div>
@@ -1633,7 +1646,7 @@ function setupGoalPicker(){
   const refresh=()=>{
     const q=inp.value.trim().toLowerCase(); if(!q){ close(); return; }
     items=prepped.filter(c=>!goalPick.includes(c.id) && (c.name.toLowerCase().includes(q)||(c.raw.name_jp||'').toLowerCase().includes(q)||(c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(q)))).slice(0,30);
-    drop.innerHTML = items.map((c,i)=>`<button type="button" data-i="${i}">${elChip(c.elem)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span>${state.owned[c.id]?'':' <span class="badge">미보유</span>'}</button>`).join('') || '<div class="hint" style="padding:8px 10px">일치하는 캐릭터가 없습니다.</div>';
+    drop.innerHTML = items.map((c,i)=>`<button type="button" data-i="${i}">${elChips(c)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span>${state.owned[c.id]?'':' <span class="badge">미보유</span>'}</button>`).join('') || '<div class="hint" style="padding:8px 10px">일치하는 캐릭터가 없습니다.</div>';
     drop.hidden=false;
   };
   const render=()=>{ $('#goalChips').innerHTML=goalPick.map(id=>`<span class="chip">${esc(byId.get(id).name)}<button type="button" data-gpr="${esc(id)}" aria-label="빼기">×</button></span>`).join(''); $('#goalAdd').disabled=goalPick.length!==4; $('#goalAdd').textContent=goalPick.length===4?'목표로 추가':`목표로 추가 (${goalPick.length}/4)`; };
@@ -1696,7 +1709,7 @@ function rowHtml(c){
   const r=c.raw;
   const head=`<input type="checkbox" id="own-${esc(c.id)}" data-own="${esc(c.id)}" ${o?'checked':''} aria-label="${esc(c.name)} 보유">
     <label class="who" for="own-${esc(c.id)}"><span class="n">${esc(c.name)}${r._custom?' <span class="badge">직접 추가</span>':''}</span>
-    <span class="m">${(c.elems.length?c.elems:['none']).map(elChip).join('')} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)}${c.align==='light'?'천':'명'} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span></label>`;
+    <span class="m">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)}${c.align==='light'?'천':'명'} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span></label>`;
   const stBtn = `<button type="button" class="lnk" data-stat aria-expanded="false" title="기본 스탯과 천명치별 값">스탯</button>`;
   if(!o) return `<div class="row off" data-id="${esc(c.id)}">${head}<div class="ctl">${stBtn}<span class="hint"${r.play_kr?` title="${esc(r.play_kr)}"`:''}>${esc((r.note_kr||'').slice(0,70))}${(r.note_kr||'').length>70?'…':''}</span></div><div class="stwrap" hidden></div></div>`;
   const t=+o.t||0;

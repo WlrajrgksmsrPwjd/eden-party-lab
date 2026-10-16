@@ -327,7 +327,7 @@ function ruleAct(r, j, team, progs, sit, z, A){
   if(w.pain){ const f=A.infNow; if(f ? !(f.poison>0 || f.pain>0) : !A.painAny) return 0; } // 허수아비는 그 순간 걸려 있는지
   if(w.up!=null) a*=w.up;
   if(w.t!=null && sit==='normal') a*=w.t;
-  if(w.stack) a*=ruleStackFill(w.stack, team, sit, A);
+  if(w.stack) a*=ruleStackFill(w.stack, team, sit, A, team[j]);
   return a;
 }
 /* ---------- 행동 횟수 기준 축적 ----------
@@ -355,7 +355,13 @@ function stackFill(need, sit, A, consume, start, grow){
   return Math.min(1, s0 + (S0+g*n)/need); // SB: AF 끝(세팅 턴 + AF 행동)까지 쌓인 양
 }
 /* 규칙의 축적 버프(when.stack = {use: 버퍼 행동 1회당, turn: 턴 종료마다, turnReq: 턴 종료 축적 조건(편성), start: 개전 축적 수, max}) 채움 비율 */
-function ruleStackFill(st, team, sit, A){
+function ruleStackFill(st, team, sit, A, self){
+  // fill: 상황별 채움 비율을 직접 지정(ZONE 어빌리티 錬魔·鋭魔·脆禍 — 개전 축적·AF 중 소모가 있어 행동 수 근사가 안 맞는 경우, 2026-10-16)
+  // {n: 평상 턴, af: 허수아비(1턴째) AF, real: 실전 3턴째 AF, sb: 1턴째 SB, sbr: 3턴째 SB}, req를 못 채우면 no(같은 형식)
+  if(st.fill){ const f = st.req && !reqMet(st.req, team, self) ? (st.no || {}) : st.fill, cl = x => Math.max(0, Math.min(1, +x||0)), w = A.realT>1 ? Math.min(1, (A.realT-1)/2) : 0;
+    if(sit==='normal') return cl(f.n);
+    const a = sit==='sb' ? cl(f.sb!=null ? f.sb : f.af) : cl(f.af), r = sit==='sb' ? cl(f.sbr!=null ? f.sbr : (f.real!=null ? f.real : f.sb)) : cl(f.real!=null ? f.real : f.af);
+    return a + (r-a)*w; }
   const tm = A.tm || {S0:2, H:6}, use = +st.use||0, max = Math.max(1, +st.max||1), st0 = +st.start||0;
   const tg = (+st.turn||0) * (st.turnReq ? (reqMet(st.turnReq, team, null) ? 1 : 0) : 1);
   const at = (turnsDone, acts) => Math.min(1, (st0 + turnsDone*tg + acts*use)/max);
@@ -2084,7 +2090,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   const sbTurn = res.sb.total;
   const surv = survival(team, progs, A.bud);
   const sustainAF = sustain + (S.afCycle!==false ? af/afTurns : 0); // 지속 딜: 평상 턴 + AF를 주기마다 한 번
-  const out = {sbTurn, af, af1: afS.v, afChain, afA: R3.afA, afA1: afA, sustain: sustainAF, sustainNoAF: sustain, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
+  const out = {sbTurn, af, af1: afS.v, afPer: R3.afS.per, afChain, afA: R3.afA, afA1: afA, sustain: sustainAF, sustainNoAF: sustain, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo: R3.avg, avgCombo1: avgCombo, normal:res.normal, sb:res.sb, sb3:R3.sb, A, posSets, sim, mule:A.mule};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; }
   // AF를 게이지 g0%에서 시작했을 때 (행동 수·콤보·화력). 100%는 위에서 계산한 값
@@ -2122,6 +2128,14 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   const md = ctx && ctx.mode, needBsim = md!=='burst', needDummy = !md || md==='burst';
   if(needBsim){
     out.bsim = battleSim(NB, simIn); out.bsim.afStart = st; out.bsim.s0 = simIn.s0;
+    { // 실전 N턴 딜 비중(2026-10-16, 사용자 지적: 화면이 SB 턴 비중만 보여 주력 딜러 몫이 작게 보임): 고른 계획의 AF·SB·평상 턴을 캐릭터별로 다시 더함
+      const per = team.map(()=>0), nT = res.normal.per.reduce((a,b)=>a+b,0)||1, add = (arr, k) => arr.forEach((v,i)=>{ per[i] += (v||0)*k; });
+      for(const rc of out.bsim.turns){
+        if(rc.af){ const r = afRun(rc.af, rc.afL, rc.t); add(r.per, 1); }
+        if(rc.sb){ const w = Math.min(1, Math.max(0, (rc.t-1)/2)), lv2 = rc.L>=2, p1 = lv2 ? res.sb.per : sbPer1, p3 = lv2 ? sb3.per : sbPer31, k = rc.sb==='af' ? (rc.combo||1) : 1;
+          sbIdx.forEach(i=>{ per[i] += ((p1[i]||0) + ((p3[i]||0)-(p1[i]||0))*w)*k; }); }
+        add(res.normal.per, (rc.nd||0)/nT); }
+      out.bsim.per = per; }
     out.burstOld = out.burst; out.burst = out.bsim.total;
     out.opener = NB===1 ? out.bsim.total : battleSim(1, simIn).total;
   } else { out.bsim = {total:0, turns:[], N:NB, afStart:st, s0:simIn.s0}; }
