@@ -822,6 +822,7 @@ function zoneAF(z, co, inAF){
 const atkEx = sk => { const ex = Math.max(1, +sk.execs||1); return Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=ex ? sk.af_seq.length : ex; }; // 연속 실행 중 공격 실행 수
 function zoneAFAct(z, co, inAF){
   const za = zoneAF(z, co, inAF); if(za==null) return null;
+  if(co.mixL && co.mixL.length){ const W = co.mixL.reduce((v,x)=>v+x.w, 0) || 1; return co.mixL.reduce((v,x)=>v + x.w/W*(zoneAFAct(z, x.co, inAF)||0), 0); } // 상태 ON·OFF 섞인 코어(세스타(AS) 狼志 등): 실행 수도 가동률로
   const rep = 1 + Math.max(0, co.rep||0);
   if(co.afSeq) return co.afSeq.reduce((a,e)=>a + (zoneAF(z, {el: e, wt: co.wt}, inAF)||0), 0) * rep;
   return za * (co.execs || rep);
@@ -2272,11 +2273,12 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   // 서포트 등급(AF 게이지)·버디로 추가. AF 주기 K = 100 / 턴당 충전
   let afGain = 0;
   { const z=nz, cs=res.normal.cores;
-    team.forEach((c,i)=>{ const co=cs[i]; if(!co) return; const pAct = simUse ? (sim.act[i]+sim.alt[i]) : 1;
-      const za = zoneAFAct(z, co, false);
+    team.forEach((c,i)=>{ const co=cs[i]; if(!co) return; const pM = simUse ? sim.act[i] : 1, pA = simUse ? sim.alt[i] : 0;
+      const za = zoneAFAct(z, co, false), za1 = zoneAF(z, co, false);
       const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
-      const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5);
-      afGain += pAct * (za!=null ? za : byHit); // 존이 있으면 행동(실행)당
+      const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5), byHit1 = Math.min(30, Math.max(1, Math.round((co.totHits||1)/Math.max(1, co.execs||1)))) * (weak?3.5:1.5);
+      // 존이 있으면 행동(실행)당. 주력 아닌 공격 턴(공격 버프기·MP 부족 대체 공격)은 스킬 하나 = 실행 1번(2026-10-16: 주력의 연속 실행 수로 세던 문제 — 테오도로스·엑구레)
+      afGain += pM * (za!=null ? za : byHit) + pA * (za1!=null ? za1 : byHit1);
       afGain += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)];
     });
     if(A.bud && ctx && ctx.buddy && ctx.buddy.main && ['moke','korobo','gansu_as'].includes(ctx.buddy.main.id)) afGain += 5;
@@ -2377,16 +2379,23 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   // 조합 탐색 중에는 그 모드 점수에 쓰는 것만 계산(최고점 = 허수아비, 나머지 = N턴 시뮬). 화면용 재계산(ctx.mode 없음)은 둘 다
   const md = ctx && ctx.mode, needBsim = md!=='burst', needDummy = !md || md==='burst';
   if(needBsim){
-    out.bsim = battleSim(NB, simIn); out.bsim.afStart = st; out.bsim.s0 = simIn.s0;
-    { // 실전 N턴 딜 비중(2026-10-16, 사용자 지적: 화면이 SB 턴 비중만 보여 주력 딜러 몫이 작게 보임): 고른 계획의 AF·SB·평상 턴을 캐릭터별로 다시 더함
+    /* AF 게이지 경계 완화(2026-10-16): 턴당 충전이 50% 언저리면 '매 턴 AF'와 '격턴 AF'가 갈려 실전 총딜이 2배 가까이 뛰던 문제 —
+       평상 턴 충전 추정(행동 비율·버프 턴)의 오차만큼 충전량 ×(1∓j)로도 돌려 0.25·0.5·0.25로 평균(j = S.afJitter, 기본 0.12, 0이면 끔). 화면의 턴 계획은 가운데 값 */
+    const jit = S.afJitter!=null ? Math.max(0, +S.afJitter) : 0.12, JV = jit>0 ? [[1, 0.5], [1-jit, 0.25], [1+jit, 0.25]] : [[1, 1]];
+    const perOf = bs => { // 실전 N턴 딜 비중(2026-10-16, 사용자 지적: 화면이 SB 턴 비중만 보여 주력 딜러 몫이 작게 보임): 고른 계획의 AF·SB·평상 턴을 캐릭터별로 다시 더함
       const per = team.map(()=>0), nT = res.normal.per.reduce((a,b)=>a+b,0)||1, add = (arr, k) => arr.forEach((v,i)=>{ per[i] += (v||0)*k; });
-      for(const rc of out.bsim.turns){
+      for(const rc of bs.turns){
         if(rc.af){ const r = afRun(rc.af, rc.afL, rc.t); add(r.per, 1); }
         if(rc.sb){ const w = Math.min(1, Math.max(0, (rc.t-1)/2)), lv2 = rc.L>=2, ch1 = lv2 && res.sb.chain ? res.sb.chain.per : null, ch3 = lv2 && sb3.chain ? sb3.chain.per : null, k = rc.sb==='af' ? (rc.combo||1) : 1;
           const p1 = lv2 ? res.sb.per : sbPer1, p3 = lv2 ? sb3.per : sbPer31;
           sbIdx.forEach(i=>{ const a1 = (p1[i]||0) - (ch1 ? ch1[i]||0 : 0), a3 = (p3[i]||0) - (ch3 ? ch3[i]||0 : 0); per[i] += Math.max(0, a1 + (a3-a1)*w)*k; }); }
         add(res.normal.per, (rc.nd||0)/nT); }
-      out.bsim.per = per; }
+      return per; };
+    let tot = 0; const perW = team.map(()=>0);
+    JV.forEach(([k, w], q)=>{ const bs = q===0 ? battleSim(NB, simIn) : battleSim(NB, Object.assign({}, simIn, {afGain: simIn.afGain*k}));
+      if(q===0){ out.bsim = bs; out.bsim.afStart = st; out.bsim.s0 = simIn.s0; }
+      tot += w*bs.total; perOf(bs).forEach((v,i)=>{ perW[i] += w*v; }); });
+    out.bsim.total0 = out.bsim.total; out.bsim.total = tot; out.bsim.per = perW;
     out.burstOld = out.burst; out.burst = out.bsim.total;
     out.opener = NB===1 ? out.bsim.total : battleSim(1, simIn).total;
   } else { out.bsim = {total:0, turns:[], N:NB, afStart:st, s0:simIn.s0}; }
