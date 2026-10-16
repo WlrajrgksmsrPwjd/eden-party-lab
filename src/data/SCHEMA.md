@@ -291,3 +291,13 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - buff_rules when `uni: true|false`: 유니즌 중인지(self_buff.unison req 충족 + 그 변형에서 끄지 않음). evalTeam이 유니즌을 쓸 수 있는 조합은 끄는 쪽(progs uniOff: 다른 가창보다 먼저 혼자 歌唱)도 계산해 나은 쪽(ev.uni).
 - 스킬 `af_seq: [속성…]`: 연속 실행 중 AF 게이지가 차는 공격 실행만(버프 실행 제외, 'none' = 무속성 → 속성 존에서 1.5%). 연계 횟수·다단강화 실행당 타수도 이 수로. 세스타 ["none","wind","wind"], 세스타(AS) ["wind","none","wind","wind"], 에이미 AF 스킬 ["wind","none"].
 - 주력 `uses`+`alt`는 허수아비뿐 아니라 실전 AF(afRun·지속 딜의 AF)에서도 행동 uses번까지만, 나머지는 alt(상태로 주력이 바뀌는 캐릭터는 상태가 맡음).
+
+## 2026-10-16 점검 3차(시전 없이 켜진 효과·조건 범위) 새 표현
+
+- counter.json `req`: 편성 조건(전열 구성, req 형식) — 못 채우면 요격 없음(아나벨(ES) 冥の誘い).
+- debuff `break_req`(req 형식)·`break_zone` {zone, zlv}·`break_up` {n, af, real}: 브레이크의 편성·존 조건과 켜진 비율(평상 턴 n, 허수아비 AF af, 실전 3턴째 real). `weak_expose_req`: 약점 부여의 편성 조건.
+- link.json 항목 `st: true`: 받는 아군이 단체 공격할 때만(마츠리카 魂の力 연계).
+- zone `late: true`: 전투 몇 턴 뒤에야 펼 수 있는 존 — 계산에서 뺌(펠미나(ES) 氷爆符 50). `awaken_once: true`: 존 각성이 전투 중 1회(루나틱 등) — how '1회 각성', 실전은 개전 자동처럼 1·2턴째만 극, 계속 각성(awConst) 아님.
+- turn_end.json `act`: 그 턴 종료 공격을 거는 스킬 이름 — 버프 행동이면 장착·유지율만큼(buff_acts 행동 g에 'te<번호>').
+- 스킬 `self_on.on`의 `mult`(대미지 비율로)·불리언 필드(crit_sure·barrier_pierce·def_ignore는 켜진 비율로 섞음). self_buff 상태 키는 `{req}`·`{zone, zlv}`만 있어도 됨(행동 출처가 없으면 조건만으로 0/1).
+- self_stk 조건 키: stack·turns·start·af_grows·af_p·af_r·sb_fill·req·cnt·zone·zlv·per·e + hp·mp·af·enemy·turn·other·noaf·stat(condP 형식, 빌드가 넘김).

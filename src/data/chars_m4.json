@@ -95,7 +95,7 @@
   "self_buff": {"pwr": 45, "int": 0, "spd": 30, "elem_atk": 75, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "", "pwr": 45, "int": 0, "spd": 30, "all_elem_atk": 0, "elem_atk": {"earth": 75, "shade": 75}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "", "pain_poison": false},
-  "zone": {"type": "", "awakened": true, "condition": "직접 전개 불가. ルナティック(전투 중 1회)으로 ZONE 각성", "awaken_any": {"kinds": ["any"], "skill": "ルナティック"}},
+  "zone": {"type": "", "awakened": true, "condition": "직접 전개 불가. ルナティック(전투 중 1회)으로 ZONE 각성", "awaken_any": {"kinds": ["any"], "skill": "ルナティック"}, "awaken_once": true},
   "support": {"heal": 2, "barrier": 1, "dmg_cut": 2, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "revive": false},
   "req": "ルナティック 발동(전투 중 1회, 3턴)",
   "tags": ["lunatic", "follow_up", "zone_awaken", "stack"],

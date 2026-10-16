@@ -1,7 +1,7 @@
 {
-  "_doc": "연계(連携) 추가공격: 받은 아군이 공격할 때(재행동 포함 행동마다) 이 속성·크기·배율로 1타 추가. to: all|weap[]|one(가장 센 다른 아군 1명)|adj(2명)|self. zone: 그 존일 때만. stack: 배율이 축적에 비례(행동 수). 출처 알테마 2026-10. 배율 미기재(엘실·월화의 영애(AS)·투바(ES)·폼(AS)·리이카·알마(AS))와 추가타 없는 연계(쿠치나와·루프스(AS)), 본인 주력기에 이미 넣은 마츠리카는 뺐다",
+  "_doc": "연계(連携) 추가공격: 받은 아군이 공격할 때(재행동 포함 행동마다) 이 속성·크기·배율로 1타 추가. to: all|weap[]|one(가장 센 다른 아군 1명)|adj(2명)|self. zone: 그 존일 때만. stack: 배율이 축적에 비례(행동 수). 출처 알테마 2026-10. 배율 미기재(엘실·월화의 영애(AS)·투바(ES)·폼(AS)·리이카·알마(AS))와 추가타 없는 연계(쿠치나와·루프스(AS)), 본인 주력기에 이미 넣은 마츠리카는 뺐다 st: 받는 아군이 단체 공격할 때만.",
   "linaria": [{"el": "fire", "size": "xl", "mult": 2, "to": {"weap": ["sword", "ax", "katana", "lance", "bow"]}}],
-  "tokai_no_ute": [{"el": "fire", "size": "xl", "mult": 4, "to": {"one": true}}],
+  "tokai_no_ute": [{"el": "fire", "size": "xl", "mult": 4, "to": {"all": true}}],
   "shigure_es": [{"el": "wind", "size": "xxl", "mult": 2, "to": {"weap": ["katana"]}}],
   "dalnis_as": [{"el": "wind", "size": "xxl", "mult": 15, "to": {"one": true}, "stack": 10}],
   "myrus_es": [{"el": "water", "size": "xl", "mult": 4, "to": {"all": true}, "zone": ["starsea"]}],
@@ -12,7 +12,7 @@
   "shanie_ac": [{"el": "wind", "size": "xl", "mult": 3, "to": {"self": true, "one": true}, "note": "공격하는 아군 HP가 낮을수록 최대 5배 → 평균 3"}],
   "gariyu": [{"el": "fire", "size": "xxl", "mult": 2, "to": {"self": true}, "note": "焔撃・ヴァシュタル 자신 連携(3턴): 공격 시 화 마법 극대 2배"}],
   "m6_ruvi": [{"el": "none", "size": "xl", "mult": 1, "to": {"self": true}}],
-  "matsurika": [{"el": "water", "size": "xl", "mult": 15, "to": {"all": true}}],
+  "matsurika": [{"el": "water", "size": "xl", "mult": 15, "to": {"all": true}, "st": true}],
   "raven_as": [{"el": "earth", "size": "xl", "mult": 2, "to": {"self": true}, "note": "鴉眼(성도 스킬, 통상 5턴·SB 10턴): 자신이 공격할 때마다 지 마법 특대 2배 추가타+지 내성 30%↓(최대 5누적)"}],
   "senya_as": [{"el": "fire", "size": "l", "mult": 1, "to": {"self": true}, "note": "桜下の誓い・白宵(白宵纏 중 復仇の誓い 변화): 자신 연계, 공격 시 火 斬(大) 추가타, 배율 미기재, 3턴"}]
 }

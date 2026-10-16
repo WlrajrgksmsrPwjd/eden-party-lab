@@ -40,7 +40,7 @@
   "kullervo_as": {"poison":true,"pain":false,"target":"st","turns":0,"on_main":false,"ignore_res":false,"note":"ケミカルポイズン(단일 마법 小)로 독(지속·耐性無視 미기재). 메인 カテネーション엔 없음","dummy":"skill"},
   "nilya": {"poison":false,"pain":true,"target":"aoe","turns":3,"on_main":false,"ignore_res":false,"note":"インパクトドロップ(각 적에게 정 타 小)로 페인 3턴(耐性無視 표기 없음). 메인 必殺アビセ蹴り엔 없음","dummy":"skill"},
   "dewey_ac_as": {"poison":false,"pain":true,"target":"st","turns":3,"on_main":false,"ignore_res":true,"note":"トリッキーヒット에 ANOTHER ZONE 전개 시에만 단일 페인 3턴(耐性無視) 추가. 메인 ブラストガン・EX엔 없음","dummy":"skill"},
-  "dunarith_ac_as": {"poison":true,"pain":true,"target":"st","turns":99,"on_main":true,"ignore_res":true,"note":"메인 アボイドノート가 단일 페인 永続·耐性無視. 독은 별도 ナヌリズマ(전체 수 마법 小, 독+수면, 지속·耐性無視 미기재)","dummy":"main"},
+  "dunarith_ac_as": {"poison":false,"pain":true,"target":"st","turns":99,"on_main":true,"ignore_res":true,"note":"메인 アボイドノート가 단일 페인 永続·耐性無視. 독은 별도 ナヌリズマ(전체 수 마법 小, 독+수면, 지속·耐性無視 미기재)","dummy":"main"},
   "mildy": {"poison":true,"pain":true,"target":"aoe","turns":99,"on_main":false,"ignore_res":true,"note":"ルミナスノイズ(전체 정 마법 小)로 독+페인 永続·耐性無視. 메인 サイキックジェム엔 없음","dummy":"skill"},
   "lokido": {"poison":false,"pain":true,"target":"aoe","turns":99,"on_main":true,"ignore_res":true,"note":"성도보드 어빌리티: 전위 전투 시작 시 전체 페인(기본 5턴, 강화 永続·耐性無視) 자동. 메인 地烈無双拳엔 없음","dummy":"start_sb"},
   "shion": {"poison":true,"pain":false,"target":"st","turns":3,"on_main":false,"ignore_res":false,"note":"小夜時雨(단일 참 小)로 독 3턴(耐性無視 표기 없음)+독 시 10배. 메인 鳳凰飛翔斬엔 없음","dummy":"skill"},

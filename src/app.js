@@ -840,6 +840,7 @@ function teamWarns(x, boss, enemy, ex){
   if(ev.azAlt>1) warns.push({t:`개전 자동 존이 ${ev.azAlt}개 — 더 좋은 ${sbz&&sbz.label||'존'} 기준으로 계산(게임에서 다른 존이 먼저 깔리면 결과가 달라짐)`});
   for(const z of (ev.sb.zones||[])) if(z.by && sbz && z.by===sbz.by) for(const u of (z.unmet||[])) warns.push({t:(byId.get(z.by)?byId.get(z.by).name:'')+': '+u});
   if(sbz && sbz.how==='스킬 각성') warns.push({t:'극존은 스킬로 각성해야 함(준비 1턴)'});
+  if(sbz && sbz.how==='1회 각성') warns.push({t:'존 각성은 전투 중 1회(루나틱 등) — 각성 지속 턴이 지나면 일반 존'});
   if(enemy && ev.sb.cores.some(c=>c&&(c.rel==='null'||c.rel==='absorb'))) warns.push({t:'무효·흡수 당하는 공격자 포함'});
   for(const n of ex.notes){
     if(n.lvl==='ok') continue;
@@ -1307,7 +1308,7 @@ function turnPlanHtml(x, boss){
   // 1턴: 세팅
   const o1=[];
   const zoneBy = sbz&&sbz.level ? team.findIndex(c=>c.id===sbz.by) : -1;
-  if(zoneBy>=0 && sbz.how!=='개전 자동') o1.push(`${nm(zoneBy)}: ${esc(sbz.how==='SB 시'?(nz&&nz.level?nz.label:'존'):sbz.how==='스킬 각성'?sbz.label.replace(/^[극절]·/,''):sbz.label)} 전개${sbz.how==='극 글래스터'?' (극 글래스터)':''}`);
+  if(zoneBy>=0 && sbz.how!=='개전 자동') o1.push(`${nm(zoneBy)}: ${esc(sbz.how==='SB 시'?(nz&&nz.level?nz.label:'존'):(sbz.how==='스킬 각성'||sbz.how==='1회 각성')?sbz.label.replace(/^[극절]·/,''):sbz.label)} 전개${sbz.how==='극 글래스터'?' (극 글래스터)':''}`);
   team.forEach((c,i)=>{
     if(dealers.includes(i) && shSB[i]>=0.35) return;
     const b=buffSummary(c); if(b.length) o1.push(`${nm(i)}: 버프 — ${esc(b.slice(0,4).join(', '))}${(ex.notes.find(n=>n.j===i&&n.lvl!=='ok'))?' <span class="cond part">조건 확인</span>':''}`);
@@ -1333,7 +1334,7 @@ function turnPlanHtml(x, boss){
   T.push(['1턴 · 세팅', o1]);
   // 2턴
   const o2=[];
-  if(sbz && sbz.level>=2 && sbz.how==='스킬 각성') o2.push(`${esc(sbz.byName)}: 존 각성 → <b>${esc(sbz.label)}</b>`);
+  if(sbz && sbz.level>=2 && (sbz.how==='스킬 각성'||sbz.how==='1회 각성')) o2.push(`${esc(sbz.byName)}: 존 각성 → <b>${esc(sbz.label)}</b>`);
   const shortB = team.map((c,i)=>i).filter(i=>team[i].rules && team[i].rules.list.some(r=>r.w.t!=null));
   if(shortB.length) o2.push(`${shortB.map(nm).join(', ')}: 짧은 버프(VC·초회·개막 한정)는 SB 턴 직전에 맞춰 쓰기`);
   o2.push(`${dealers.map(nm).join(', ')||nm(mainN)}: 평상 공격 — ${esc((ev.normal.cores[mainN]&&ev.normal.cores[mainN].skill)||'')} 위주, 버프·디버프 남은 턴 확인`);

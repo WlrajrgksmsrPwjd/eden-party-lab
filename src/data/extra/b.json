@@ -316,7 +316,7 @@
    "buff": 0
   },
   "turns": {
-   "buff": 99,
+   "buff": 5,
    "debuff": 5
   },
   "buff_how": "passive",

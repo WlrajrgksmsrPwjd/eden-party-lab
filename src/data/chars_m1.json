@@ -43,7 +43,7 @@
   "self_buff": {"pwr": 100, "int": 0, "spd": 100, "elem_atk": 60, "weapon_atk": 30, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": true, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "雲龍 白宵纏 시(5턴)", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"katana": 30}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": true, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
   "debuff": {"pwr": 0, "int": 0, "spd": 0, "all_elem_res": 30, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "slash", "weak_expose": "", "pain_poison": false},
-  "zone": {"type": "fire", "awakened": true, "condition": "VC Lv3로 烈火陣 전개, 通常攻撃 白転醒火로 ZONE 각성(絶・烈火陣), 전투 중 1회", "vc_only": true},
+  "zone": {"type": "fire", "awakened": true, "condition": "VC Lv3로 烈火陣 전개, 通常攻撃 白転醒火로 ZONE 각성(絶・烈火陣), 전투 중 1회", "vc_only": true, "awaken_once": true},
   "support": {"heal": 1, "barrier": 1, "dmg_cut": 0, "cleanse": 0, "status_immune": 2, "debuff_guard": 1, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "revive": false},
   "req": "白宵纏 상태(전방이 巳の国 캐릭만이면 턴 시작 시 자동), 剛·柔の刀気 5스택",
   "tags": ["zone_awaken", "stack", "stellar", "unique_weapon"],

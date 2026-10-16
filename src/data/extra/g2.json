@@ -86,13 +86,13 @@
   "mp": {
    "main": 50,
    "sb": 79,
-   "buff": 0
+   "buff": 22
   },
   "turns": {
-   "buff": 99,
+   "buff": 3,
    "debuff": null
   },
-  "buff_how": "passive",
+  "buff_how": "skill",
   "mp_max": null,
   "manifest": 0
  },
