@@ -566,7 +566,7 @@
   "tier": "",
   "score": 92,
   "roles": ["dps"],
-  "main": {"skill": "紅刃・地獄渦", "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "slash", "mult": 8, "size": "xl", "hits": 2, "repeat": 0, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "현현 강화판. 단일 특대 + 전체 특대 참격, 자기 속도 비례 최대 8배(속도 600 상한), 전체 확정크리. 暴風刃 강화: 전체 특대+속도 30%UP(3누적)+크리대미지 50%+도끼 장비자 피해 100%UP+분신 [알테마 대조(2026-10): 단일 특대+전체 특대 2타]"},
+  "main": {"skill": "紅刃・地獄渦", "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "slash", "mult": 8, "size": "xl", "hits": 2, "repeat": 0, "crit_sure": 0.5, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "현현 강화판. 단일 특대 + 전체 특대 참격, 자기 속도 비례 최대 8배(속도 600 상한), 전체 확정크리. 暴風刃 강화: 전체 특대+속도 30%UP(3누적)+크리대미지 50%+도끼 장비자 피해 100%UP+분신 [알테마 대조(2026-10): 단일 특대+전체 특대 2타] [crit_sure 0.5: 확정 크리는 전체 공격 쪽(2단 중 1단)만 — 2026-10-16]"},
   "sb": null,
   "self_buff": {"pwr": 0, "int": 0, "spd": 90, "elem_atk": 0, "weapon_atk": 100, "crit_rate": 0, "crit_dmg": 50, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {"wind": 35}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},

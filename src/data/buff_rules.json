@@ -50,7 +50,7 @@
   "celies_as": [{"f":["crit"],"when":{"req":{"kind":"pers","vals":["アルカディア"],"n":2},"zone":["pierce"]}},{"f":["crit"],"to":{"kind":"phys"}}],
   "series": [{"f":["crit"],"when":{"zone":["pierce"],"req":{"kind":"pers","vals":["アルカディア"],"n":2}}},{"f":["critd"],"when":{"sb":true,"sb1":true}}],
   "mariel": [{"f":["stat"],"when":{"sb":true},"e":0.3},{"f":["focus"],"when":{"sb":true}}],
-  "lokido": [{"f":["*"],"to":{"align":"light"},"e":0.5}],
+  "lokido": [{"f":["*"],"to":{"any":[{"align":"light"},{"pers":["魔獣"]}]},"e":0.5}],
   "myrus": [{"f":["stat"],"when":{"req":{"kind":"elem","vals":["earth"],"n":4}},"e":0.5}],
   "rosetta": [{"f":["pwr","int","mf"],"when":{"t":0.5}},{"f":["mp"],"to":{"pos":"others"},"when":{"t":0.5}}],
   "cerrine": [],

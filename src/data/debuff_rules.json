@@ -3,7 +3,7 @@
   "velette_as": [{"f":["allres"],"when":{"t":0.45}},{"f":["pres"],"when":{"req":{"kind":"elem","vals":["thunder"],"n":1,"others":true}}}],
   "hismena_es": [{"f":["allres"],"when":{"t":0.5}}],
   "dalnis_as": [{"f":["allres"],"st":true}],
-  "myrus_es": [{"f":["allres"],"when":{"req":{"kind":"distinct","vals":["fire","water","earth","wind","thunder","shade","crystal"],"n":4}},"e":0.5,"st":true},{"f":["allres"],"when":{"t":0.85},"st":true}],
+  "myrus_es": [{"f":["allres"],"when":{"req":{"kind":"nodup","n":4}},"e":0.5,"st":true},{"f":["allres"],"when":{"t":0.85},"st":true}],
   "nekoko_ac": [{"f":["allres","pres"],"when":{"req":{"kind":"align","vals":["shadow"],"n":3,"others":true}},"e":0.4}],
   "xianhua_as": [{"f":["allres"],"when":{"t":0.85},"st":true},{"f":["pres"],"when":{"t":0.85}}],
   "melina": [{"f":["allres"],"when":{"stack":{"use":0,"turn":1,"start":0,"max":3}},"e":0.5},{"f":["pres"],"when":{"stack":{"use":0,"turn":1,"start":0,"max":3}},"e":0.5,"st":true},{"f":["elres","wres"],"when":{"t":0.3}}],

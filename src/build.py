@@ -92,7 +92,7 @@ for c in chars:
 inflict=json.load(open(P('data','inflict.json'),encoding='utf-8'))
 for c in chars:
     x=inflict.get(c['id'])
-    if x: c['inflict']={k:x[k] for k in ('poison','pain','target','turns','on_main') if k in x}
+    if x: c['inflict']={k:x[k] for k in ('poison','pain','target','turns','on_main','dummy','p','up','af','req','zone','zlv','split') if k in x} # dummy(허수아비 시점)는 2026-10-16까지 빠져 있었음
 def LJ(n): return json.load(open(P('data',n),encoding='utf-8')) if os.path.exists(P('data',n)) else {}
 stt=LJ('state.json'); alt=LJ('alts.json'); onc=LJ('once.json'); sbn=LJ('style_bonus.json')
 for c in chars:

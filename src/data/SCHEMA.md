@@ -302,3 +302,17 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - 스킬 `self_on.on`의 `mult`(대미지 비율로)·불리언 필드(crit_sure·barrier_pierce·def_ignore는 켜진 비율로 섞음). self_buff 상태 키는 `{req}`·`{zone, zlv}`만 있어도 됨(행동 출처가 없으면 조건만으로 0/1).
 - self_stk 조건 키: stack·turns·start·af_grows·af_p·af_r·sb_fill·req·cnt·zone·zlv·per·e + hp·mp·af·enemy·turn·other·noaf·stat(condP 형식, 빌드가 넘김).
 - (4차) self_buff 상태 키에 `e`(조건 밖 비율)·`af1`(1턴째 허수아비·실전 1턴째 AF는 늘 충족). VC 행동 `dur`(평상 턴 VC 1/6 × dur, 최대 1). zone.awaken_any.kinds에 존 키(water 등)도. 약점 부여를 조건으로 쓰는 skill_cond `{enemy:'weak'}`·버디 약점 오라는 약점 부여의 켜진 비율(weak_expose_up·noaf·SB 그 턴)을 따름.
+
+## 2026-10-16 남은 엔진 표현(5차)
+
+- state.json `req`·`zone`·`zlv`: 상태 자체의 편성·존 조건 — 못 채우면 가동률 × `e`(기본 0). `gate: "normal"`이면 평상 턴만(SB로 들어간 그 턴은 조건 무관 — 가리유 炎帝). `full_req`: 채우면 평상 턴도 늘 켜짐(헬레나 宵の明星 전열 合成人間 2명). 캄라녜쥬 雷帝 = zone thunder/moonlight·zlv 2, 코마치(AS) 戦姫 = 전열 地 3명.
+- zone `switch: {need: req, yes, no}`: 편성 조건으로 존 종류가 바뀜(선택 아님) — 테오도로스 プロボカティオ: 전열 拳·槌 퍼스널리티 3명이면 轟打陣, 아니면 地裂陣.
+- inflict.json: `dummy`가 이제 빌드에서 넘어감(예전엔 빠져 start·start_sb가 'skill'로 계산). 새 키 `p`(걸릴 확률), `up`(평상 턴 가동률), `af`(허수아비 AF에서 걸 수 있는 비율), `req`, `zone`/`zlv`(이 조합에서 그 존을 펼 수 있을 때만), `split {poison|pain: {dummy, up}}`.
+- elem_change `buff: true`(el ally): 파티 elem_atk(특정 속성 키)·디버프 elem_res도 변환 상대 아군의 속성 퍼스널리티 전부로(이벨라(AS)·노나(AS)). 'ally' 상대 = 그 캐릭터 위치 규칙(1명 대상)이 고른 받는 사람, 위치 규칙이 없으면 가장 센 아군(넣은 순서 무관).
+- 스킬 `adapt`(臨機応変): `weak`(적 물리 타입 약점 → 없으면 아군 약점 간파 타입, 니르야) · `front`(전열 최다 물리 타입, 월화의 영애) · `ally`(변환 상대의 무기 타입, 이벨라(AS)·노나(AS)) · `zone`(전개 중 무기 타입 존, 유인(AS)). skill_cond `{enemy:'weak'}`는 이제 공격 타입 약점도 봄.
+- skill_cond need `buff_k`: stat 조건의 `buff` 몫을 그 자기 버프 키가 켜진 만큼만(엘레노아 정신 ×1.5 = 祈誓の導き). need `n_p`: 평상 턴 충족 비율 직접(아자미(AS) 後攻 0.15).
+- 스킬 `n_over {필드}`: 평상 턴만 바뀌는 필드(유인 ラーヴァインパクト execs 1·hits 4). `crit_sure`는 0~1 숫자도(키쿄 0.5·스제트(ES) 0.8). sb `once_t`: 그 턴까지·전투 중 1번만 SB(틸릴(ES) 心の剣 3) — 실전 N턴은 두 번째부터 빼고, 지속 딜은 전투(H턴)에 한 번.
+- turn_end `when.af`: AF를 쓴 턴의 종료 공격 — 실전 N턴 AF 턴과 지속 딜 AF 주기에 더함(빅트(AS) オスクロ・カーパ, 콤보 최대 위력, 그 스킬 칸·AF 행동은 따로 안 셈).
+- buff_acts 행동 `req`(한국어 편성 문구도 해석): lv 2 전개(바로 극)의 조건 — 못 채우면 허수아비는 일반 존(각성 행동이 있으면 그 뒤 극).
+- req kind `nodup`: 전열 속성 퍼스널리티가 서로 안 겹침(뮤르스(ES)). 규칙 to `any: [to…]`: OR 조건(로키드 天 또는 魔獣).
+
