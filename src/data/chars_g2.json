@@ -46,7 +46,7 @@
   "zone": {"type": "water", "awakened": true, "condition": "雪速の陣略 선제 전개, 수천진 중 ZONE각성"},
   "support": {"heal": 2, "barrier": 2, "dmg_cut": 3, "cleanse": 2, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 2, "guard": 2, "taunt": 0, "mp_recover": 1, "af_gauge": 0, "revive": false},
   "req": "전방 동방 퍼스널리티 2명 이상(천명 어빌리티). 歌唱 유지",
-  "tags": ["song", "dmg_up_80", "dmg_cut_50", "stack_roles", "first_strike_all", "max_mp_15"],
+  "tags": ["song", "dmg_up_80", "dmg_cut_50", "stack_roles", "first_strike_all", "max_mp_15", "singer"],
   "note_kr": "물 활 서포터(이시층 유키노). 선제 전체 완력/지성 100%UP, 歌唱(霏綿天歌) 중 아군 피해 80%UP + 선제 부여, 雪月風歌 중 피해 50%UP/피격 50%DOWN. 攻手/護衛/斥候 축적으로 배리어관통/회복. 성도 스킬은 SB 시 15배 전체 물 마법 3연.",
   "support_src": {"heal": "雪月風歌(歌唱)", "barrier": "氷界裂華散", "dmg_cut": "雪月風歌 / 氷城の護り / 獲得アビリティ", "cleanse": "斥候", "knockback_immune": "ステラバースト強化", "guard": "護衛", "mp_recover": "ヴァリアブルチャント / ユッキーノ☆エール / 斥候"},
   "play_kr": "개전(스텔라 보드)이나 선제 機略：雨露霜雪로 아군 전체 힘·지성 +100%(5턴)를 주고, 오른쪽 아군부터 攻手(전속성 공격 +50%·크리율 100%)·護衛(HP 최대 +80%, 전체 공격 대신 받기)·斥候를 배정하므로 주 딜러를 바로 오른쪽에 둡니다. 歌唱은 霏綿天歌(아군 선제·주는 대미지 +80%) 또는 雪月風歌(주는 대미지 +50%·받는 대미지 −50%·역할 보유자 회복) 중 하나를 3턴 유지합니다. 雪速の陣略으로 水天陣 전개·각성과 속도 +50%, 공격은 星導 氷界裂華散(水 마법 전체 극대, 영구 페인, SB 15배)입니다."

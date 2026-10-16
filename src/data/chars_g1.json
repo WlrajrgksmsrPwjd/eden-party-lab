@@ -314,7 +314,7 @@
   "req": "AF 중(배율 1000% 이상), 버스트부스터 10누적",
   "tags": ["af_specialist", "crit_multiplier", "stun", "speed_scaling"],
   "note_kr": "AF 특화 타격 딜러. 크리 시 대미지 4~6배 스킬, AF 중 트리플다운 연속 실행·슈퍼콤보. 버스트부스터 10누적으로 완력/속도 +100, 속격속공 속도 +300. 풍/물리내성 35% DOWN, SB 시 타내성 50% DOWN.",
-  "af_skill": {"skill": "ブラストヘヴン→トリプルダウン(AF 연속 실행)", "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "blunt", "mult": 10, "size": "xl", "hits": 4, "repeat": 0, "execs": 2, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1.75, "condition": "[알테마 대조 2026-10-15] AF 중 ブラストヘヴン(바람 특대 1타, 자기 크리율 100%라 크리 4배, AF 콤보 300%에서 2배 → 8) 뒤 トリプルダウン(무속성 특대 3타, 크리 시 6배 → 6)을 연속 실행 = 2실행 4타 합 14배. 콤보 증가량 2배는 トリプルダウン 3타에만이라 행동 평균 1.75. トリプルダウン 부분은 실제로 무속성(바람 버프·내성 적용 안 됨)", "combo_scale": {"lo": 1, "hi": 1.4, "full": 3}},
+  "af_skill": {"skill": "ブラストヘヴン→トリプルダウン(AF 연속 실행)", "target": "st", "kind": "phys", "stat": "pwr", "element": "wind", "weapon_type": "blunt", "mult": 10, "size": "xl", "hits": 4, "repeat": 0, "execs": 2, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1.75, "condition": "[알테마 대조 2026-10-15] AF 중 ブラストヘヴン(바람 특대 1타, 자기 크리율 100%라 크리 4배, AF 콤보 300%에서 2배 → 8) 뒤 トリプルダウン(무속성 특대 3타, 크리 시 6배 → 6)을 연속 실행 = 2실행 4타 합 14배. 콤보 증가량 2배는 トリプルダウン 3타에만이라 행동 평균 1.75. トリプルダウン 부분은 실제로 무속성(바람 버프·내성 적용 안 됨)", "combo_scale": {"lo": 1, "hi": 1.4, "full": 3}, "af_seq": ["wind", "none"]},
   "support_src": {"af_gauge": "ゲイルクラッシャー(SB)"},
   "play_kr": "AF 특화 바람·권갑 딜러입니다. AF 중 ブラストヘヴン(바람 타 특대, 크리 시 4배, AF 콤보 300%면 2배)을 쓰면 トリプルダウン(무속성 특대 3타, 크리 시 6배, AF 콤보 증가량 2배)이 이어서 나가 콤보를 빠르게 올리고, 콤보 1000% 이상이면 통상 공격이 スーパーコンボ(トリプルダウン 5배×3연속, AF 1회 1번)로 바뀝니다. ブラストヘヴン이 자기 크리율 100%를 주므로 크리 배율이 늘 들어가고, チャージスタンス(첫 사용 2배)로 아군 완력·속도도 올립니다. 평상 턴엔 성도 스킬 ゲイルクラッシャー(극대 3배, 비AF 재공격)도 강하지만 MP 소비가 큽니다."
 },
@@ -417,7 +417,7 @@
   "zone": null,
   "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 3, "status_immune": 1, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 2, "revive": false},
   "req": "가창(歌唱) 지속 중(3턴), 임의의 ZONE 전개",
-  "tags": ["song", "damage_dealt_up", "damage_taken_down", "auto_break", "sleep"],
+  "tags": ["song", "damage_dealt_up", "damage_taken_down", "auto_break", "sleep", "singer"],
   "note_kr": "가창(노래) 버프형 서포터/힐러. 그랜드피날레로 아군 주는 대미지 100% UP+받는 대미지 30% DOWN, 턴 종료 HP 20% 회복. 랩소디 아리아로 크리율 100%+대미지 100% UP, 턴 종료 시 적 전체 브레이크. 가창 중 턴 종료 AF 10% 회복. 전속성내성 30% DOWN+독/페인/수면.",
   "support_src": {"heal": "オラトリオ / グランドフィナーレ", "dmg_cut": "オラトリオ / グランドフィナーレ", "cleanse": "オラトリオ", "status_immune": "ヴァリアブルチャント", "mp_recover": "オラトリオ / VC", "af_gauge": "固有アビリティ(歌唱中)"},
   "play_kr": "歌唱(3턴, 존과 함께 가능) 버프 서포터로, ラプソディ・アリア로 아군 전체 크리율 100%·주는 대미지 +100%를 주고 턴 종료 시 적 전체 브레이크를 겁니다. 위험한 턴엔 オラトリオ(받는 피해 −50%·턴 종료 HP 30%·MP 회복·상태이상 회복)로 바꿔 부르고, 歌唱 중엔 매 턴 AF 게이지가 10% 찹니다. レチタティーヴォ는 창·활 대미지·크리 위력 30%(존 중 60%)를 주며, 歌唱은 하나만 유지되는 점에 주의하세요."

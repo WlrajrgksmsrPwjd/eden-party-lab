@@ -150,7 +150,7 @@
   "m3_lloyd": [{"f":["*"],"when":{"up":0.5}}],
   "m4_dunarith_as": [{"f":["*"],"when":{"t":0.5}}],
   "dewey_ac_as": [{"zel":true},{"f":["elat"],"when":{"zone":"any","zlv":2},"e":0.667},{"f":["weap"],"when":{"zone":"any","zlv":2},"e":0.5},{"f":["pierce"],"when":{"zone":["crystal"],"zlv":3}}],
-  "mistrea": [{"f":["dmg"],"when":{"req":{"kind":"pers","vals":["吟遊詩人"],"n":1,"others":true}},"x":0,"e":1},{"f":["critd"],"when":{"req":{"kind":"pers","vals":["吟遊詩人"],"n":1,"others":true}}},{"f":["spd"],"when":{"t":0.3}},{"f":["elat"],"when":{"t":0.75}},{"f":["weap"],"when":{"sb":true}}],
+  "mistrea": [{"f":["dmg"],"when":{"uni":true},"x":0,"e":1},{"f":["combo"],"when":{"uni":true},"x":0,"e":1},{"f":["critd"],"when":{"uni":true}},{"f":["spd"],"when":{"t":0.3}},{"f":["elat"],"when":{"t":0.75}},{"f":["weap"],"when":{"sb":true}}],
   "premaya_as": [{"f":["elat"],"when":{"up":0.8},"why":"地 공격 50%×3누적(3턴)은 フュージレイド를 거듭 써야 유지 — 평상 턴 가동률. 지금 규칙의 '전열 地 3명 이상' 조건은 버프 원문에 없음(サジタ 축적 조건과 혼동)"}],
   "claude_es": [{"f":["mh"],"when":{"zone":"any","zlv":2}},{"f":["stat"],"when":{"zone":"any"},"me":0}],
   "jilfany_as": [{"f":["weap","mh"],"when":{"t":0.85}}],

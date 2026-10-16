@@ -124,7 +124,7 @@
   "zone": {"type": "fire/water", "awakened": false, "condition": "烈火のセレナーデ로 烈火陣, 水天のノクターン으로 水天陣 선택 전개"},
   "support": {"heal": 3, "barrier": 2, "dmg_cut": 3, "cleanse": 2, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "烈火陣 또는 水天陣",
-  "tags": ["song", "pain", "poison", "party_damage"],
+  "tags": ["song", "pain", "poison", "party_damage", "singer"],
   "note_kr": "화/수 ZONE 전환형 서포터. 黄昏のシンフォニー 가창 3턴: 아군 크리율·마법크리율 100%, 烈火陣 시 아군 주는 대미지 100% UP, 水天陣 시 받는 대미지 50% DOWN. 玉蜻のコンチェルト 치유(대) 5회+단일 화/수 내성 50% DOWN. 開闢のプレリュード 선제 독·페인+MP 15. VC 30% 경감 배리어+상태이상 회복.",
   "support_src": {"heal": "玉蜻のコンチェルト", "barrier": "ヴァリアブルチャント", "dmg_cut": "黄昏のシンフォニー", "cleanse": "ヴァリアブルチャント", "mp_recover": "開闢のプレリュード"},
   "play_kr": "火·水 존을 골라 까는 서포터로, 烈火のセレナーデ(烈火陣)로 火 공격 +50%를 주고 주력 永劫のファンタジア로 아군 전체 힘·지성·속도 +50%(5턴)를 겁니다. 黄昏のシンフォニー 가창으로 아군 크리율 100%와, 발동 때 烈火陣이면 주는 대미지 +100%를 줍니다. 水天陣이면 공격이 水 속성으로 바뀌고 대신 적 능력치 다운과 받는 피해 −50%로 내구 지원이 되므로, 존을 먼저 깔고 노래를 쓰는 순서가 중요합니다."
@@ -255,7 +255,7 @@
   "zone": null,
   "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 3, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "TL 축적(50에서 피니시)",
-  "tags": ["song", "chain_ability", "stellar", "tactics_level", "normal_attack_change"],
+  "tags": ["song", "chain_ability", "stellar", "tactics_level", "normal_attack_change", "singer"],
   "note_kr": "라이자의 아틀리에 콜라보. 오버추어 계열 선제 가창(받는 대미지 최대 50% DOWN)+아군 MP 30. セイクリッドコード 전속성 내성 30%(TL로 최대 2배)+가창 아군 주는 대미지 30%. フェアリーズギフト 완력·지성 30%×3+전무기 30%. 癒しの旋律 회복+상태이상 회복+치유(특대). 체인 어빌리티 チューニング(수 마법 특대 3배, TL+20). altema 평가점 93(배정표 90).",
   "support_src": {"heal": "癒しの旋律 / オーヴァーチュア / VC", "dmg_cut": "オーヴァーチュア(歌唱)", "cleanse": "癒しの旋律", "mp_recover": "オーヴァーチュア"},
   "play_kr": "水 활 서포터 겸 힐러로, 고유 스킬 オーヴァーチュア(선제)로 3턴 가창(아군 받는 대미지 −50%)을 켜고 아군 MP 30 회복과 癒しの旋律(회복·상태이상 해제)을 함께 실행합니다. セイクリッドコード는 적 전 속성 내성 −30%(TL로 최대 −60%)와 아군 주는 대미지 +30% 가창을, フェアリーズギフト는 힘·지성 +30%(최대 3누적)를 줍니다. 턴 종료와 체인 チューニング으로 タクティクスレベル이 쌓일수록 凍麗の舞(최대 4배)와 버프가 강해지고, TL 50이면 ソングオブフィナーレ로 적 5스탯 −50%를 겁니다. TL은 AF 중엔 오르지 않아 개전 AF에선 기본 효과만 나옵니다."
@@ -518,7 +518,7 @@
   "zone": {"type": "blunt", "awakened": false, "condition": "パワーオブテン 선제로 轟打陣 전개"},
   "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 3, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 3, "af_gauge": 0, "revive": false},
   "req": "",
-  "tags": ["manifest", "stack", "af", "poison", "stun"],
+  "tags": ["manifest", "stack", "af", "poison", "stun", "singer"],
   "note_kr": "현현무기(アルス・アルマデル)로 セフェル・イェツラ(전체 수 타 특대 2회)가 수·타내성 30%×3 DOWN+아군 회복(대)+크리율 100%(3회)로 강화. デラーシュ 축적 시 완력·지성 UP(수치 미기재). レイン・オブ・マナ MP 회복·최대MP UP. VC 치유(대) 2턴. 서브 힐러 겸 수/타 딜러.",
   "af_skill": {"skill": "セフェル・ラジム", "target": "st", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "blunt", "mult": 3, "size": "xl", "hits": 5, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "현현 강화판(MP45). デラーシュ 수만큼 공격 횟수·위력 증가(최대 3배, 3개면 5연격), AF 중엔 デラーシュ를 소비하지 않음. 아군 회복(중)·HP 최대 UP·자신 크리 위력 30%", "mcond": {"base": 1, "need": [{"stack": "デラーシュ 3", "turns": 3, "af_grows": false}], "note": "デラーシュ는 평상 턴 セフェル・イェツラ로 쌓임(1회당 양 미기재, 1로 봄) → AF 전 세팅 턴만큼 채움. AF 중 주력 ラジム로는 안 늘어남(af_grows false), 1턴 허수아비는 0"}},
   "support_src": {"heal": "セフェル・イェツラ / エルの唄", "dmg_cut": "エルの唄", "cleanse": "エルの唄", "mp_recover": "レイン・オブ・マナ"},

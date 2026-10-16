@@ -836,6 +836,7 @@ function teamWarns(x, boss, enemy, ex){
   if(ev.survDet.heal===0) warns.push({t:'회복 수단 없음'});
   x.team.forEach((c,i)=>{ if(c.stellar && state.owned[c.id] && state.owned[c.id].s && (x.progs[i].t||0)<15) warns.push({t:c.name+': 천명치 15 미만 → 성도 스킬 미반영'}); });
   if(!ev.hasSB) warns.push({t:(ev.sbOff||[]).some(Boolean) ? '성도 스킬을 모두 빼는 편이 나음 → 스텔라 버스트 없음' : '성도각성 캐릭터 없음 → 스텔라 버스트 불가'});
+  x.team.forEach((c,i)=>{ if(c.self && c.self.unison && typeof c.self.unison==='object' && !(ev.uni && ev.uni[i]!=null)) warns.push({t:c.name+': 전열에 다른 가창 캐릭터가 없어 유니즌 없음 → 재공격·AF 콤보 2배 없음'}); });
   if(ev.azAlt>1) warns.push({t:`개전 자동 존이 ${ev.azAlt}개 — 더 좋은 ${sbz&&sbz.label||'존'} 기준으로 계산(게임에서 다른 존이 먼저 깔리면 결과가 달라짐)`});
   for(const z of (ev.sb.zones||[])) if(z.by && sbz && z.by===sbz.by) for(const u of (z.unmet||[])) warns.push({t:(byId.get(z.by)?byId.get(z.by).name:'')+': '+u});
   if(sbz && sbz.how==='스킬 각성') warns.push({t:'극존은 스킬로 각성해야 함(준비 1턴)'});
@@ -867,7 +868,7 @@ function memHtml(x, i, key, focus, lockSet){
   return `<div class="mem${lockSet&&lockSet.has(c.id)?' locked':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="눌러서 추천 세팅 보기">
     <div class="nm">${esc(c.name)}${notMine?' <span class="badge warn">미보유</span>':''}</div>
     <div class="meta">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
-    <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}${ev.sbOff&&ev.sbOff[i]?' <span class="badge" title="성도 스킬도 스킬 칸 1개라, 빼고 그 칸에 버프·공격 스킬을 하나 더 다는 편이 이 조합에선 나음(이 캐릭터는 SB 안 씀)">성도 스킬 안 씀</span>':''}</div>
+    <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}${ev.sbOff&&ev.sbOff[i]?' <span class="badge" title="성도 스킬도 스킬 칸 1개라, 빼고 그 칸에 버프·공격 스킬을 하나 더 다는 편이 이 조합에선 나음(이 캐릭터는 SB 안 씀)">성도 스킬 안 씀</span>':''}${ev.uni&&ev.uni[i]===true?' <span class="badge" title="전열의 다른 가창 캐릭터가 歌唱 중일 때 エルの唄가 エルの唄・ユニゾン으로 바뀜 → 재공격·AF 콤보 증가량 2배·스킬 위력 1.3배·아군 크리 대미지 50%">유니즌</span>':ev.uni&&ev.uni[i]===false?' <span class="badge" title="다른 가창 캐릭터보다 먼저 혼자 歌唱(아군 주는 대미지 50%·AF 콤보 +3%p)하는 편이 이 조합에선 나음 → 재공격 없음">혼자 가창</span>':''}</div>
     ${gq && glText(gq) && glText(gq)!=='글래 없음' ? `<div class="sk">글래 ${esc(glText(gq))}${gq.painOK||!(gq.pa||gq.po)?'':' (독·페 미부여)'}</div>` : ''}
     <div class="share" title="${ds.lab} ${(share*100).toFixed(0)}%"><i style="width:${(share*100).toFixed(0)}%"></i></div>
     <div class="sk">${ds.lab} <span class="num">${(share*100).toFixed(0)}%</span>${off?' <span class="badge">지정 외 · 지원</span>':''}${cs && cs.el && cs.el!=='none' && !(c.elems||[c.elem]).includes(cs.el) ? ` <span class="badge" title="아군의 속성 변환(変幻自在 등)으로 이 속성으로 공격">${esc(roJ(E.ELEM_KR[cs.el]||cs.el))} 변환</span>` : ''}</div>

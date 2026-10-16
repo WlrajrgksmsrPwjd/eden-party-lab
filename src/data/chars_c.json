@@ -373,7 +373,7 @@
   "zone": {"type": "blunt", "awakened": false, "condition": "パワーオブテン으로 轟打陣 전개"},
   "support": {"heal": 3, "barrier": 2, "dmg_cut": 3, "cleanse": 3, "status_immune": 3, "debuff_guard": 0, "knockback_immune": 3, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "가창(歌唱) 중(행동 불가), 카나프 3 축적",
-  "tags": ["singing", "true_manifest", "weapon_zone_sync", "turn_end_attack"],
+  "tags": ["singing", "true_manifest", "weapon_zone_sync", "turn_end_attack", "singer"],
   "note_kr": "수속성 망치 명 가창 서포터. 진현현 후 라지엘: 전속성 내성 50%(카나프 시 100%) DOWN, 아군 완력·지성·속도 50%(최대 100%) UP, 전무기종 50%. 엘의 노래: 적 완력·지성·속도 최대 40% DOWN, 가창 중 피해 50% 감소·턴 종료 HP 50% 회복. 성도로 턴 종료 추격(최대 8배×3회). 무기 존 전개 중 가창으로 아군 무기 속성 통일. 가창 중 행동 불가가 약점.",
   "support_src": {"heal": "エルの唄(歌唱)", "barrier": "ステラバースト強化", "dmg_cut": "エルの唄(歌唱)", "cleanse": "エルの唄(歌唱)", "status_immune": "マハノ・マナ(真・顕現)", "knockback_immune": "マハノ・マナ(真・顕現)", "mp_recover": "レイン・オブ・マナ / アビリティ獲得"},
   "play_kr": "水·槌 서포터로, 真・현현판 セファ・ラジエル로 아군 전체 완력·지성·속도 50%·적 전체 전속성 내성 50%(5턴)를 주고, カナフ가 3까지 쌓이면 둘 다 100%에 전무기종 대미지 50%가 더해집니다. エルの唄로 歌唱에 들어가면 아군 전체 받는 피해 50% 감소·턴 종료 HP 50% 회복·상태이상 회복과 함께 カナフ가 쌓이지만, 歌唱 중엔 행동할 수 없습니다. SB는 歌唱을 켜면서 セファ・ラジエル·マハノ・マナ를 자동 실행하고 턴 종료에 극대 추격(최대 3회)을 넣습니다."

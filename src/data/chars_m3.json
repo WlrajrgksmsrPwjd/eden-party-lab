@@ -46,7 +46,7 @@
   "zone": null,
   "support": {"heal": 2, "barrier": 1, "dmg_cut": 2, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "가창 유지, 전투 개시 3턴 이내(턴 종료 버프 3배)",
-  "tags": ["song", "first_strike", "mp_cost_down", "bp", "normal_attack_change", "collab_octopath"],
+  "tags": ["song", "first_strike", "mp_cost_down", "bp", "normal_attack_change", "collab_octopath", "singer"],
   "note_kr": "옥토패스 트래블러 대륙의 패자 콜라보 번개 권갑 가창 서포터. 猛将の鼓舞Ⅲ 선제 가창(3턴): 아군 전체 피해 50%UP, 턴 종료 시 완력·지성 25%(개전 3턴 이내 3배=75%). 轟雷の詩Ⅲ 선제 전체 특대+전속성내성 20%DOWN(BP 축적으로 최대 2배=40%). 孔雀の舞 전속성공격 30%·속도 30%, 天衝撃 물리내성 30%DOWN. SB 강화로 아군 번개공격 30%. VC 전속성내성 30%UP. 呼び出す로 동료 NPC 호출. (한국어명 미확인)",
   "support_src": {"heal": "呼び出す(ガルディ)", "barrier": "呼び出す(リケッツ)", "dmg_cut": "VC みんなのために踊ってあげる！", "mp_recover": "呼び出す(ガルディ) / 雷公の嬉遊曲"},
   "play_kr": "번개 권갑 가창 서포터로, 猛将の鼓舞Ⅲ(선제)로 3턴 동안 아군 주는 대미지 +50%를 깔고 턴 종료마다 힘·지성 +25%(개전 3턴 안은 75%)를 줍니다. 습득 스킬로 BP 3을 채운 뒤 고유 스킬 轟雷の詩Ⅲ로 적 전 속성 내성 −40%와 必殺技の宝珠를 얻고, 다음 통상 공격 雷公の嬉遊曲(특대 12배 3타 확정 크리)을 쏩니다. 성도 스킬 雷獣の詩는 크리 대미지 +30%·전 속성 공격 +50%, SB 때 크리율 +100%와 브레이크를 더합니다. 雷公の嬉遊曲은 약 5행동에 한 번이라 본인 딜보다 버프·디버프가 핵심입니다."

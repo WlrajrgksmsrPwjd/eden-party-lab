@@ -283,3 +283,11 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - optimize·perCharBest 입력 `backN`(후열 인원 0~2, 결현현은 pledge.size가 우선): 후열 셔틀·아군 전체 글래·후열 추천 수, 0이면 VC·VC 존 없음.
 - 스킬(main) `zone_need: {zone, zlv?, off?}`: 그 존(등급)이 아니면 off 필드로 바꾸거나(off 없으면 main.alt) — 존이 있어야 연속 실행되는 주력(세스타 二刀神狼, 월화의 영애(AS) ヴァイスドルン).
 
+## 2026-10-16 유니즌·연속 실행 AF 게이지·실전 AF 횟수 제한
+
+- 캐릭터 태그 `singer`: 歌唱 상태가 되는 캐릭터(알테마 프로필 '歌唱発動' 17명 — 'song' 태그와 다름: 시엘 エレメントソング는 歌唱 아님, 메리나·메리나(AS)는 歌唱). 편성 조건 req `{"kind":"tag","vals":["singer"],"n":1,"others":true}`.
+- self_buff 상태 키 `{req, pow, pow0}`(예: `unison`): req를 채우고 그 키를 주는 버프 행동(buff_acts `self.unison`)을 단 뒤부터 켜짐. `pow`는 그 캐릭터 모든 스킬 위력 배율(성도각성이면 pow, 아니면 pow0).
+- 스킬 `self_on: {k, on:{repeat, af_combo_x…}}`: 자기 상태 키 k가 켜진 비율만큼 on 필드로(재공격은 확률 rep_p). 미스트레아 オウル・ナカル = repeat 0 + self_on unison {repeat 1, af_combo_x 2}.
+- buff_rules when `uni: true|false`: 유니즌 중인지(self_buff.unison req 충족 + 그 변형에서 끄지 않음). evalTeam이 유니즌을 쓸 수 있는 조합은 끄는 쪽(progs uniOff: 다른 가창보다 먼저 혼자 歌唱)도 계산해 나은 쪽(ev.uni).
+- 스킬 `af_seq: [속성…]`: 연속 실행 중 AF 게이지가 차는 공격 실행만(버프 실행 제외, 'none' = 무속성 → 속성 존에서 1.5%). 연계 횟수·다단강화 실행당 타수도 이 수로. 세스타 ["none","wind","wind"], 세스타(AS) ["wind","none","wind","wind"], 에이미 AF 스킬 ["wind","none"].
+- 주력 `uses`+`alt`는 허수아비뿐 아니라 실전 AF(afRun·지속 딜의 AF)에서도 행동 uses번까지만, 나머지는 alt(상태로 주력이 바뀌는 캐릭터는 상태가 맡음).

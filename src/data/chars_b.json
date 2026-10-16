@@ -552,7 +552,7 @@
   "zone": {"type": "wind/fire/pierce", "awakened": true, "condition": "전투 시작 시 전위 퍼스널리티에 따라 極・風王陣/極・烈火陣/極・瞬突陣 중 하나 자동 전개"},
   "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 0, "status_immune": 0, "debuff_guard": 2, "knockback_immune": 1, "guard": 0, "taunt": 0, "mp_recover": 3, "af_gauge": 2, "revive": false},
   "req": "歌唱 중(凱風/煽火の歌 3턴), 전위 風 또는 火 2~3명",
-  "tags": ["song", "fire_or_wind", "buff_erase", "debuff_clear", "chain_af_gauge", "hp_mp_max_up", "stun"],
+  "tags": ["song", "fire_or_wind", "buff_erase", "debuff_clear", "chain_af_gauge", "hp_mp_max_up", "stun", "singer"],
   "note_kr": "풍·화 파티 겸용 가창형 서포터. 凱風の歌/煽火の歌(歌唱 3턴)로 아군 완력·지성 50%·풍/화공격 50%·피해 80~100% UP·크리율/마크리율 100%·HP 50% 회복(煽火는 매턴 화 EB 5 누적). イグナイトウィンド로 크리대미지 30~60%(10회행동)·MP치유. エレジーショット 단일 전속성내성 50% DOWN. 아군 전체공격 시 AF 게이지 5%(3회/턴). 전투 시작 시 極 존 자동 전개.",
   "support_to": {"knockback_immune": {"pos": "self"}},
   "support_src": {"heal": "凱風の歌 / 煽火の歌 / VC", "dmg_cut": "凱風の歌 / ステラバースト強化", "debuff_guard": "金色の舞(SB)", "knockback_immune": "固有アビリティ", "mp_recover": "イグナイトウィンド", "af_gauge": "薫風の輪唱(チェイン)"},

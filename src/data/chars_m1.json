@@ -284,7 +284,7 @@
   "zone": null,
   "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 2, "status_immune": 1, "debuff_guard": 0, "knockback_immune": 1, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 2, "revive": false},
   "req": "전방 槍·弓 장비자 4명",
-  "tags": ["song", "harmony"],
+  "tags": ["song", "harmony", "singer"],
   "note_kr": "가창 서포터 겸 槍·弓 파티 딜러. カンタービレ 가창 3턴: 받는 피해 50% DOWN, 턴 종료 시 HP 30% 회복+전속성내성 50%, 槍·弓 4명 시 MP 50·상태이상 회복·전속성 공격 50%(5회 행동). 가창 중 턴 종료 AF 10% 회복+槍·弓 ハーモニー 축적. ベルスーズ 전속성내성 30% DOWN+독·페인·수면.",
   "support_src": {"heal": "カンタービレ / オラトリオ(歌唱)", "dmg_cut": "カンタービレ(歌唱)", "cleanse": "オラトリオ / カンタービレ", "status_immune": "ヴァリアブルチャント", "knockback_immune": "ヴァリアブルチャント", "mp_recover": "オラトリオ / カンタービレ", "af_gauge": "固有アビリティ(歌唱中)"},
   "play_kr": "전열을 槍·弓 4명으로 맞춘 突 파티의 歌唱 서포터입니다. カンタービレ로 3턴 동안 아군 받는 대미지 −50%·턴 종료 HP 30% 회복·槍·弓 아군 ハーモニー 축적(1개당 힘·지성 +30, 최대 +90)을 주고, レチタティーヴォ로 槍·弓 대미지·크리 위력(존 중 2배)을 올립니다. ハーモニー가 쌓이면 フォルテッシモ(火 突 전체 특대 4타, 최대 15배, AF 콤보 1.6배)로 공격하지만, 歌唱 중엔 본인이 행동할 수 없습니다."
@@ -414,7 +414,7 @@
   "zone": {"type": "thunder_shade_crystal", "awakened": false, "condition": "VC로 月光陣(뇌·음·정 강화, 그 외 약화) 전개. ZONE 각성 미대응", "vc_only": true},
   "support": {"heal": 3, "barrier": 0, "dmg_cut": 3, "cleanse": 0, "status_immune": 2, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "뇌·음·정 속성 파티",
-  "tags": ["song", "lunatic_grant", "zone", "guts"],
+  "tags": ["song", "lunatic_grant", "zone", "guts", "singer"],
   "note_kr": "최초의 뇌·음·정 3속성 강화 ZONE 月光陣. 가창으로 아군 전체에 루나틱(挺身/捨身) 부여+주는 피해 50% UP, HP 최대 시 버티기 부여. アーデインアスピダ로 1,000 이하 피해 무효+받는 피해 50% DOWN. ZONE 전개 시 뇌·음·정 공격 수만큼 HP 최대 60% 회복. 전투 시작 시 아군 상태이상무효 1회. エルの唄 완력 15%×3누적+MP 15.",
   "support_src": {"heal": "パフシポノン / ZONE展開時 아빌리티 / VC", "dmg_cut": "アーデインアスピダ / パフシポノン", "status_immune": "固有アビリティ(戦闘開始時)", "mp_recover": "エルの唄"},
   "play_kr": "미르샤(AS)는 地·陰 창 서포터로, 가창 스킬로 아군 전체에 루나틱을 걸어 주는 게 핵심입니다. アーデインアスピダ 가창(3턴)은 아군 전체에 루나틱(捨身: 대미지 ×1.7·크리 확정)과 받는 피해 50% 감소·1,000 이하 피해 무효를 주고, トラグディスパスィ 가창은 루나틱(挺身)·주는 대미지 50%·HP 최대 시 踏ん張る를 주는데 가창은 하나만 유지됩니다. VC로 月光陣(뇌·음·정 강화)을 깔며 전체 회복하고, エルの唄로 아군 완력을 15%씩 3번까지 올립니다. 직접 딜은 약해 버프 행동에 AF 행동을 쓰는 운용입니다."
