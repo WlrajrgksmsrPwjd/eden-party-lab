@@ -1756,7 +1756,8 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
       let n=0;
       for(const o of opts){
         let s=0;
-        for(let i=0;i<team.length;i++){ if(i===h && (o.by||'other')!=='any') continue; s += chainActP(team[i], i, o, cores, sit==='af'?'sb':sit, sim);
+        for(let i=0;i<team.length;i++){ if(i===h && (o.by||'other')!=='any') continue; if(sit==='sb' && cores[i] && cores[i].usingSB) continue; // SB 공격은 체인 어빌리티를 발동시키지 않음(사용자 확인 2026-10-16)
+          s += chainActP(team[i], i, o, cores, sit==='af'?'sb':sit, sim);
           // 요격도 공격(사용자 확인: 네코코(ES) 変幻自在로 알마(AS) 요격을 번개로 → 벨벳(AS) イレクトリ가 턴 최대 10번): 평상 턴 요격 횟수만큼
           if(ctr && sit==='normal' && ctr.trig[i]>0 && (o.act||'attack')==='attack' && (!o.elem || o.elem.includes(ctr.els[i])) && (!o.wt || o.wt.includes(ctr.wts[i])) && (!o.kind || ctr.kinds[i]===o.kind) && (!o.tgt || ctr.tgts[i]===o.tgt)) s += ctr.trig[i]; }
         n += sit==='af' ? (s>0 ? (e.max||1) : 0) : Math.min(e.max||1, s);
@@ -1957,7 +1958,7 @@ function battleSim(N, o){
       let d=0, g1=g, s1=s, e1=e, aw1=aw; const rec={t, af:null, sb:null, combo:null, stack:false};
       const L = ()=> (aw1>0 || o.awConst) ? 2 : 1;
       const useSB = (inAF, fin)=>{ if(o.sbAw) aw1 = Math.max(aw1, 2); const lv = (o.sbAw||aw1>0||o.awConst) ? 2 : 1, sv = o.sbT ? o.sbT(t) : {b:o.sbBurst, b1:o.sbBurst1, ch:o.sbChain||0};
-        d += (lv>=2 ? sv.b - (inAF ? sv.ch||0 : 0) : sv.b1)*(inAF?fin:1); s1=0; rec.sb = inAF?'af':'turn'; if(inAF) rec.combo=fin; if(R && (e1 || !R.cost)){ g1=Math.max(g1, R.to); e1=0; rec.refill=true; } };
+        d += (lv>=2 ? sv.b - (sv.ch||0) : sv.b1)*(inAF?fin:1); /* SB 대미지만(그 턴 체인은 평상 턴 nd에 이미 있음 — SB는 체인을 발동시키지 않음) */ s1=0; rec.sb = inAF?'af':'turn'; if(inAF) rec.combo=fin; if(R && (e1 || !R.cost)){ g1=Math.max(g1, R.to); e1=0; rec.refill=true; } };
       if(op==='af'){ const r=o.afRun(g1, L(), t); d+=r.dmg; s1+=o.sbAct*r.acts; g1=0; rec.af=r.g0; rec.afD=r.dmg; rec.afL=L();
         if(o.hasSB && s1>=100) useSB(true, r.fin); }
       if(op==='stack'){ g1-=R.cost; e1=1; rec.stack=true; }
@@ -2129,7 +2130,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   // 게이지 = 평상 턴 행동마다 + AF 행동마다(실전 시뮬과 같은 sbAct), 차는 몫이 AF 쪽이면 AF 끝 콤보로(실전 시뮬처럼 AF 안 SB)
   if(S.sbCycle!==false && sbIdx.length){ const sa = simIn.sbAct, afActs = R3.afA.n.reduce((x,y)=>x+y,0), gN = sa*team.length, gA = S.afCycle!==false ? sa*afActs/afTurns : 0, gT = gN + gA;
     const sbTurns = Math.max(1, 100/Math.max(1, gT)), fr = gT>0 ? gA/gT : 0, fin = afRun(100, 2, 3).fin, k = fr*fin + (1-fr);
-    const sp = team.map((c,i)=> sbIdx.includes(i) ? (sb3.per[i]||0)*k/sbTurns : 0), sv = sp.reduce((x,y)=>x+y,0);
+    const sp = team.map((c,i)=> sbIdx.includes(i) ? Math.max(0, (sb3.per[i]||0) - (sb3.chain ? sb3.chain.per[i]||0 : 0))*k/sbTurns : 0), sv = sp.reduce((x,y)=>x+y,0);
     out.sustain += sv; out.sustainSB = sv; out.sbPerSus = sp; out.sbTurns = sbTurns;
     // SB 뒤 효과(SB로만 거는 버프·디버프, af_timing 'sb')는 평상 턴에도 남음(사용자 확인 2026-10-16, 체인 어빌리티 공격만 빼고):
     // 남는 비율 = 지속 턴(turns.buff) ÷ SB 주기. 평상 턴을 그 비율로 다시 계산하고 지속 딜·실전 시뮬의 평상 턴 값을 바꿈
@@ -2152,8 +2153,9 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
       const per = team.map(()=>0), nT = res.normal.per.reduce((a,b)=>a+b,0)||1, add = (arr, k) => arr.forEach((v,i)=>{ per[i] += (v||0)*k; });
       for(const rc of out.bsim.turns){
         if(rc.af){ const r = afRun(rc.af, rc.afL, rc.t); add(r.per, 1); }
-        if(rc.sb){ const w = Math.min(1, Math.max(0, (rc.t-1)/2)), lv2 = rc.L>=2, p1 = lv2 ? res.sb.per : sbPer1, p3 = lv2 ? sb3.per : sbPer31, k = rc.sb==='af' ? (rc.combo||1) : 1;
-          sbIdx.forEach(i=>{ per[i] += ((p1[i]||0) + ((p3[i]||0)-(p1[i]||0))*w)*k; }); }
+        if(rc.sb){ const w = Math.min(1, Math.max(0, (rc.t-1)/2)), lv2 = rc.L>=2, ch1 = lv2 && res.sb.chain ? res.sb.chain.per : null, ch3 = lv2 && sb3.chain ? sb3.chain.per : null, k = rc.sb==='af' ? (rc.combo||1) : 1;
+          const p1 = lv2 ? res.sb.per : sbPer1, p3 = lv2 ? sb3.per : sbPer31;
+          sbIdx.forEach(i=>{ const a1 = (p1[i]||0) - (ch1 ? ch1[i]||0 : 0), a3 = (p3[i]||0) - (ch3 ? ch3[i]||0 : 0); per[i] += Math.max(0, a1 + (a3-a1)*w)*k; }); }
         add(res.normal.per, (rc.nd||0)/nT); }
       out.bsim.per = per; }
     out.burstOld = out.burst; out.burst = out.bsim.total;
