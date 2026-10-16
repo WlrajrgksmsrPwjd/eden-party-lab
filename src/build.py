@@ -65,7 +65,7 @@ for c in chars:
     if c['id'] in stb and not c['id'].startswith('_'): c['stellar_board']=stb[c['id']]
 aft=json.load(open(P('data','af_timing.json'),encoding='utf-8'))
 for c in chars:
-    if c['id'] in aft and not c['id'].startswith('_'): c['af_t']={k:v for k,v in aft[c['id']].items() if k in ('party','self','deb','zone')}
+    if c['id'] in aft and not c['id'].startswith('_'): c['af_t']={k:v for k,v in aft[c['id']].items() if k in ('party','self','deb','zone','real')}
 # AF 버프·디버프 행동(알테마 대조 299명): 버프 스킬 하나에 AF 행동 1번
 bac=json.load(open(P('data','buff_acts.json'),encoding='utf-8'))
 for c in chars:
