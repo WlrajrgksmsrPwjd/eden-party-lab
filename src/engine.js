@@ -882,7 +882,7 @@ function teamAgg(team){
     if(c.breakT && !(dbr.break_req && !reqMet(dbr.break_req, team, c))){ A.breaks.push(c.breakT); (A.breakJ||(A.breakJ=[])).push(j); }
     if(c.weakExpose && !(dbr.weak_expose_req && !reqMet(dbr.weak_expose_req, team, c))){ A.weakAdd.push(c.weakExpose); // 약점 부여(弱点看破): SB 한정 표기면 SB 때(그 AF 남은 행동)만, 개전 자동이면 처음부터, 그 밖엔 부여한 사람이 행동한 뒤부터
       const raw = String((c.raw && c.raw.debuff && c.raw.debuff.weak_expose) || '');
-      A.weakInfo.push({t:c.weakExpose, j, sb:/SB/.test(raw), start: !!(c.raw && c.raw.debuff && c.raw.debuff.weak_expose_start), noaf: !!(c.raw && c.raw.debuff && c.raw.debuff.weak_expose_noaf) || (c.afT && c.afT.deb && typeof c.afT.deb.weak_expose==='number' && c.afT.deb.weak_expose<0.5), sbOnly: !!(c.afT && c.afT.deb && (c.afT.deb.weak_expose==='sb' || c.afT.deb.weak_expose==='sb1')), sb1: !!(c.afT && c.afT.deb && c.afT.deb.weak_expose==='sb1') || !!(c.bact && c.bact.sb1.has('weak')), up: (c.raw && c.raw.debuff && c.raw.debuff.weak_expose_up) || null, real: c.afT && c.afT.real && c.afT.real.deb ? c.afT.real.deb.weak_expose : undefined}); } // up {n,af,real}: 약점 간파가 켜진 비율(개전 1턴만·스킬 쓴 턴만 등), sb1: SB 그 턴만 // real: 실전 3턴째 AF 값(af_timing real)
+      A.weakInfo.push({t:c.weakExpose, dflt: (c.raw && c.raw.debuff && c.raw.debuff.weak_expose_dflt) || null, j, sb:/SB/.test(raw), start: !!(c.raw && c.raw.debuff && c.raw.debuff.weak_expose_start), noaf: !!(c.raw && c.raw.debuff && c.raw.debuff.weak_expose_noaf) || (c.afT && c.afT.deb && typeof c.afT.deb.weak_expose==='number' && c.afT.deb.weak_expose<0.5), sbOnly: !!(c.afT && c.afT.deb && (c.afT.deb.weak_expose==='sb' || c.afT.deb.weak_expose==='sb1')), sb1: !!(c.afT && c.afT.deb && c.afT.deb.weak_expose==='sb1') || !!(c.bact && c.bact.sb1.has('weak')), up: (c.raw && c.raw.debuff && c.raw.debuff.weak_expose_up) || null, real: c.afT && c.afT.real && c.afT.real.deb ? c.afT.real.deb.weak_expose : undefined}); } // up {n,af,real}: 약점 간파가 켜진 비율(개전 1턴만·스킬 쓴 턴만 등), sb1: SB 그 턴만 // real: 실전 3턴째 AF 값(af_timing real)
   });
   return A;
 }
@@ -1294,7 +1294,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const wR = w => A.realT>1 && w.real!=null && w.real!=='sb' && +w.real>=0.5; // 실전 2턴째 이후 AF: 약점 부여 조건(축적 등)이 채워짐
   // 약점 부여가 켜진 비율(2026-10-16): 예전엔 켜짐/꺼짐(0.5 문턱)뿐이라 개전 1턴만·스킬 쓴 턴만·SB 그 턴만인 약점 간파가 평상 턴 내내 켜지던 문제 → 비율로 섞음
   const c01 = v => Math.max(0, Math.min(1, +v||0));
-  const wkF = t => { let best = 0; for(const w of (A.weakInfo||[])){ if(w.t!==t) continue; let f = 1;
+  const wkF = t => { let best = 0; for(const w of (A.weakInfo||[])){ if(!wkHit(w, t, zone)) continue; let f = 1;
       if(w.noaf && situation!=='normal' && !wR(w)) f = 0;
       if(f>0 && (w.sb || (w.sbOnly && !wR(w)))) f = situation==='sb' || (situation==='af' && A.postSB) ? 1 : situation==='normal' && !w.sb1 ? c01(sbU(w.j)) : 0;
       if(f>0 && !w.start){ const r = FX && FX[w.j] && FX[w.j].rows[idx]; if(r && r.weak_x!=null) f *= c01(r.weak_x); }
@@ -1399,8 +1399,11 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 
 /* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
 /* 약점 부여가 지금 켜진 비율(2026-10-16 점검 검증: skill_cond '약점 시'·버디 약점 오라가 SB 그 턴만·평상 턴 0인 약점 간파도 늘 켜진 것으로 보던 문제) */
-function weakFrac(A, el, sit){ let best = 0;
-  for(const w of (A.weakInfo||[])){ if(w.t!==el) continue; let f = 1;
+/* 약점 부여 속성: 'zone'이면 깔린 속성 존의 속성(없으면 기본 dflt, 네코코(ES) 猫又巫女神楽 「属性ZONEに応じて弱点看破属性変化」, 2026-10-16) */
+const wkEl = (w, zone) => w.t!=='zone' ? w.t : (zone && zone.kind==='elem' && zone.level>0 ? zone.types : [w.dflt||'wind']);
+const wkHit = (w, t, zone) => { const e = wkEl(w, zone); return Array.isArray(e) ? e.includes(t) : e===t; };
+function weakFrac(A, el, sit, zone){ let best = 0;
+  for(const w of (A.weakInfo||[])){ if(!(w.t===el || wkHit(w, el, zone))) continue; let f = 1;
     if(w.up) f = sit==='normal' ? +w.up.n||0 : (A.realT>1 && w.up.real!=null ? +w.up.real||0 : (w.up.af!=null ? +w.up.af||0 : 1));
     if(w.noaf && sit!=='normal' && !(A.realT>1)) f = 0;
     if(w.sbOnly || w.sb) f *= sit==='normal' ? (w.sb1 ? 0 : 0.3) : (sit==='sb' || A.postSB) ? 1 : 0;
@@ -1446,7 +1449,7 @@ function condP(cd, sit, team, c, A, zone, enemy, el, progs){
     if(e==='poison'||e==='pain'){ const f=A.infNow||A.inf; if(!f) return A.painAny?1:0; return e==='poison' ? f.poison : Math.max(f.pain, f.poison); } // 'pain'은 '독/페인 중 하나'로 쓰인 경우가 있음
     if(e==='weak'){ // 약점 공격: 속성 또는 공격 타입 약점(2026-10-16 — 예전엔 속성만), 臨機応変(adapt)이면 적의 어느 물리 타입 약점이든
       const sk0 = (c && c.main) || {}, wt0 = c ? adaptWt(sk0, sk0.weapon_type || (sk0.kind==='mag' ? 'magic' : c.wt), sk0.kind==='mag'?'mag':'phys', team, A, enemy, team.indexOf(c), zone) : null, wts = wt0 ? [wt0] : [];
-      if(enemy && (enemyRel(enemy, el)==='weak' || wts.some(t=>enemyRel(enemy, t)==='weak'))) return 1; const wf = Math.max(weakFrac(A, el, sit), ...wts.map(t=>weakFrac(A, t, sit))); return enemy ? wf : Math.max(wf, 0.4); }
+      if(enemy && (enemyRel(enemy, el)==='weak' || wts.some(t=>enemyRel(enemy, t)==='weak'))) return 1; const wf = Math.max(weakFrac(A, el, sit, zone), ...wts.map(t=>weakFrac(A, t, sit, zone))); return enemy ? wf : Math.max(wf, 0.4); }
     if(e==='break') return A.breaks.length ? 1 : 0.3;
     return 0.8; }
   if(cd.turn){ if(nrm) return 0.3; const T = A.realT>1 ? A.realT : 1, m=String(cd.turn).match(/>=\s*(\d+)/), m2=String(cd.turn).match(/<=\s*(\d+)/); return m ? (+m[1]<=T ? 1 : 0) : m2 ? (T<=+m2[1] ? 1 : 0) : 0.5; } // AF·SB = 허수아비 1턴(실전 N턴은 그 AF의 턴)
@@ -2451,6 +2454,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     aw0: awStart ? 2 : 0, awConst, sbAw, hasSB: sbIdx.length>0,
     afGain, g0: st.g, s0: Math.min(50, 12.5*Math.max(light, shadow)), sbAct: S.sbPerAct!=null ? +S.sbPerAct : 2.5, front: team.length, afRun,
     refill: (()=>{ const rc = sbIdx.length ? team.find(c=>c.afRefillR && c.afRefillR.on==='sb') : null; return rc ? {to:+rc.afRefillR.to||100, cost:+rc.afRefillR.cost||0} : null; })()};
+  // 지속 딜의 AF도 극 존이 계속 유지될 때만 극(2026-10-17): 개전 자동·1회 각성(네코코(ES) 颯 첫 사용 등)은 2턴 뒤 일반 존 — 평상 턴(susOf)과 같은 비율(일반 0.6·극 0.4)로 섞음. SB로 다시 각성(sbAw)하면 그대로
+  if(S.afCycle!==false && nz && nz.level>=2 && !awConst && !sbAw){ const a1 = afRun(100, 1, 3).dmg; if(a1 < af){ const dA = 0.6*(a1 - af)/afTurns; out.sustain += dA; out.susAfL1 = a1; } }
   if(S.afCycle!==false){ if(simIn.teAF){ out.sustain += simIn.teAF.total/afTurns; out.teAF = simIn.teAF; } if(simIn.teN) out.sustain += simIn.teN/afTurns; } // AF 턴 종료 공격(AF 턴 전용 + 평상 턴 종료 공격)도 AF 주기마다
   // 지속 딜에 SB(2026-10-16, 사용자 확인: SB는 턴을 쓰지 않아 쓴 뒤에도 그 턴 행동을 그대로 함): SB 게이지가 차는 주기마다 한 번 더함.
   // 게이지 = 평상 턴 행동마다 + AF 행동마다(실전 시뮬과 같은 sbAct), 차는 몫이 AF 쪽이면 AF 끝 콤보로(실전 시뮬처럼 AF 안 SB)

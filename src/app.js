@@ -1257,7 +1257,7 @@ function debuffSummary(c){
   const er=Object.entries(d.elem_res||{}).filter(([k,v])=>v>0); if(er.length) out.push(er.map(([k])=>E.ELEM_KR[k]).join('·')+' 내성 −'+PCT(Math.max(...er.map(x=>x[1]))));
   if(d.phys_res>0) out.push('물리 내성 −'+PCT(d.phys_res)); if(d.mag_res>0) out.push('마법 내성 −'+PCT(d.mag_res));
   const wr=Object.entries(d.weapon_res||{}).filter(([k,v])=>v>0); if(wr.length) out.push(wr.map(([k])=>FT_KR[k]||k).join('·')+' 내성 −'+PCT(Math.max(...wr.map(x=>x[1]))));
-  if(c.breakT) out.push('브레이크'); if(c.weakExpose) out.push('약점 부여('+(E.ELEM_KR[c.weakExpose]||FT_KR[c.weakExpose]||c.weakExpose)+')');
+  if(c.breakT) out.push('브레이크'); if(c.weakExpose) out.push('약점 부여('+(c.weakExpose==='zone'?'속성 존 따라':(E.ELEM_KR[c.weakExpose]||FT_KR[c.weakExpose]||c.weakExpose))+')');
   if(c.pain) out.push('독·페인');
   return out;
 }
