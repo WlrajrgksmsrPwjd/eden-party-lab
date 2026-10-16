@@ -85,7 +85,7 @@
   "glenn": {"poison":true,"pain":false,"target":"aoe","turns":99,"on_main":false,"ignore_res":true,"note":"ヘルプラント(전체)로 독 永続·耐性無視, ニードル는 단일 독. 페인 없음. 메인 ソードスタッブ엔 없음","dummy":"skill"},
   "cyrus": {"poison":false,"pain":true,"target":"st","turns":3,"on_main":true,"ignore_res":true,"note":"주력 無為・涅槃斬り(단일)가 페인 3턴(耐性無視)을 직접 걸고 페인 대상 3배. 전체 페인은 水竜斬り(선제 전체 中 4배)","dummy":"main"},
   "galliard": {"poison":false,"pain":true,"target":"aoe","turns":0,"on_main":false,"ignore_res":false,"note":"レイジングチャージ(전체 지 돌 大)로 페인(지속·耐性無視 미기재). 메인 リベリオンチャージ엔 없음","dummy":"skill"},
-  "tsukiha_es": {"poison":false,"pain":true,"target":"aoe","turns":99,"on_main":true,"ignore_res":true,"note":"패시브: 전투 시작 시 적 전체 페인 永続·耐性無視. 影矢(단일 페인 永続)도 있음. 메인 飄鬼・威吹紋엔 없음","dummy":"start"},
+  "tsukiha_es": {"poison":false,"pain":true,"target":"aoe","turns":5,"on_main":true,"ignore_res":true,"note":"패시브: 전투 시작 시 적 전체 페인 永続·耐性無視. 影矢(단일 페인 永続)도 있음. 메인 飄鬼・威吹紋엔 없음","dummy":"start"},
   "hekkou_no_kamatsukai": {"poison":false,"pain":true,"target":"aoe","turns":0,"on_main":false,"ignore_res":false,"note":"고유스킬 전체 풍 참+페인(지속·耐性無視 미기재). 메인 リュシオルサイス엔 없음","dummy":"skill"},
   "shisou_no_yaritsukai": {"poison":true,"pain":true,"target":"aoe","turns":99,"on_main":false,"ignore_res":false,"note":"고유스킬 전체 지 돌 2회+독·페인 永続(耐性無視 표기 없음). 메인 イモータルシャード는 독·페인 시 최대 4배일 뿐","dummy":"skill"},
   "miyu_es": {"poison":false,"pain":true,"target":"aoe","turns":3,"on_main":true,"ignore_res":true,"note":"평상 턴 주력 レビン・ロンギヌス(전체 뇌 突 특대 2회)로 페인 3턴(耐性無視, 獅子奮迅 시 효과량 35배·턴 5배). AF 주력 ケラウノス・カリス엔 없음","dummy":"main"},

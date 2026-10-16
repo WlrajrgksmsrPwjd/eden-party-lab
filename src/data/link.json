@@ -14,5 +14,9 @@
   "m6_ruvi": [{"el": "none", "size": "xl", "mult": 1, "to": {"self": true}}],
   "matsurika": [{"el": "water", "size": "xl", "mult": 15, "to": {"all": true}, "st": true}],
   "raven_as": [{"el": "earth", "size": "xl", "mult": 2, "to": {"self": true}, "note": "鴉眼(성도 스킬, 통상 5턴·SB 10턴): 자신이 공격할 때마다 지 마법 특대 2배 추가타+지 내성 30%↓(최대 5누적)"}],
-  "senya_as": [{"el": "fire", "size": "l", "mult": 1, "to": {"self": true}, "note": "桜下の誓い・白宵(白宵纏 중 復仇の誓い 변화): 자신 연계, 공격 시 火 斬(大) 추가타, 배율 미기재, 3턴"}]
+  "senya_as": [{"el": "fire", "size": "l", "mult": 1, "to": {"self": true}, "note": "桜下の誓い・白宵(白宵纏 중 復仇の誓い 변화): 자신 연계, 공격 시 火 斬(大) 추가타, 배율 미기재, 3턴"}],
+  "alma_as": [{"el": "crystal", "size": "xl", "mult": 1, "to": {"all": true}, "note": "カレイドスコープ 연계: 단일 특대 1배(물리 200%·마법 190% = 크기표 st xl). 실제 속성은 연계를 유발한 공격 속성(무속성이면 결정)을 따라감 — 엔진 link el 고정이라 晶으로 둠. 평소 1명·AF 오른쪽 1명·SB 전체는 buff_rules(sb, e 0.25)가 처리"}],
+  "pom_as": [{"el": "fire", "size": "l", "mult": 1, "to": {"all": true}, "note": "딩 DB 러브 포션 P 연계: 불 마법 170%(변화무쌍·임기응변 미적용), 極・幻魔陣 때만(buff_rules link)"}],
+  "senya": [{"el": "shade", "size": "l", "mult": 1, "to": {"self": true}, "note": "復仇の誓い(宵影纏 중): 자신 연계 3턴, 陰 斬 180%(딩 DB)"}],
+  "m3_riica": [{"el": "none", "size": "l", "mult": 1, "to": {"all": true}, "note": "エリミネートレイ 연계: 공격 대상에게 무속성 打 190%(딩 DB, st_phys_no l), 연계 발동자 HP 회복"}]
 }

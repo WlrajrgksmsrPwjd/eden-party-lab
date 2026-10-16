@@ -91,7 +91,7 @@
   "m3_riica": [{"f":["pres"],"st":true}],
   "m5_yuri": [{"f":["elres"],"st":true}],
   "m3_myrus_as": [{"f":["elres"],"st":true}],
-  "m4_laclair_as": [{"f":["pres"],"st":true}],
+  "m4_laclair_as": [{"f":["pres","elres"],"st":true}],
   "m6_shannon_as": [{"f":["elres"],"st":true}],
   "m6_mighty_as": [{"f":["pres"],"st":true}],
   "m6_warabo": [{"f":["allres"],"st":true}],
@@ -122,8 +122,9 @@
   "m2_nagi_es": [{"f":["allres"],"st":true}],
   "m3_melina_es": [{"f":["allres"],"st":true}],
   "m3_levia_as": [{"f":["elres"],"st":true}],
-  "m4_hardy": [{"f":["pres"],"st":true}],
+  "m4_hardy": [{"f":["pres"],"st":true},{"f":["elres"],"when":{"zone":["fire"]},"e":0.667},{"f":["pres"],"when":{"zone":["fire"]},"e":0.714}],
   "m5_veina_as": [{"f":["elres"],"when":{"zone":["wind"]}},{"f":["pres"],"st":true}],
   "m5_velvet": [{"f":["pres"],"st":true}],
-  "m6_cynthia": [{"f":["pres"],"st":true}]
+  "m6_cynthia": [{"f":["pres"],"st":true}],
+  "tsukiha_es": [{"f":["elres","wres"],"when":{"zone":"any"},"e":0.667}]
 }

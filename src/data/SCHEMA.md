@@ -320,3 +320,8 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - debuff `weak_expose: "zone"` + `weak_expose_dflt`: 약점 간파 속성이 깔린 속성 존을 따라감(없으면 기본) — 네코코(ES) 猫又巫女神楽(슈퍼 상태).
 - 지속 딜의 AF: 극 존이 계속 유지되지 않으면(개전 자동·1회 각성, SB 재각성 없음) 일반 존 AF와 0.6:0.4로 섞음(평상 턴 susOf와 같은 비율).
 
+
+## 2026-10-17 딩 DB 대조 — 누적 버프 규칙
+
+- '최고 누적 N회' 버프·디버프의 최대치 = 1회분 × (N+1)/2(첫 회 전량, 2회째부터 절반씩: 3누적 2배, 4누적 2.5배, 5누적 3배). party_buff·self_buff·debuff에는 이 최대치를 넣는다(1회분×N 아님).
+- 누적 진행 비율(af_timing `self/party/deb`·`real`, self_stk·skill_cond `af_p`·`af_r`)은 k누적 = (k+1)/(N+1). self_stk `turns`/`start`로 쓸 때는 turns N+1·start 1/(N+1)(0회는 주력 행동 마스크가 맡음).

@@ -47,10 +47,10 @@
     "element": "thunder",
     "weapon_type": "blunt",
     "size": "xl",
-    "mult": 1,
-    "hits": 3,
+    "mult": 3,
+    "hits": 1,
     "hits_max": 6,
-    "hits_avg": 4.5
+    "hits_avg": 3
    },
    "effect": "브레이크 부여, 턴 종료까지 レヴマ 1 축적. デドメナ 축적 수에 따라 공격 횟수 증가(최대 6회)·レヴマ 축적 수 증가(최대 6개)",
    "when": {},
@@ -161,7 +161,7 @@
     "size": "xl",
     "mult": 2,
     "hits": 1,
-    "mult_max": 3
+    "mult_max": 6
    },
    "effect": "기절 부여. 자신 이외 아군 중 拳·槌 장비자 수에 따라 위력 증가(최대 3배)",
    "when": {},
@@ -582,6 +582,33 @@
    "src": "https://altema.jp/anaden/chara/6",
    "jp": "【チェインアビリティ】発動条件：自身以外の味方の地属性攻撃スキル使用時 ターン中の最大発動回数 3回 発動効果：チェインアビリティ専用スキル「霊の呼び声」を実行する / 自身に死霊の髄を3蓄積 +魔法耐性25%UP(1ターン 最高累積回数3)",
    "note": "기존 chain_current.json에 없던 캐릭터. 클래스 ジオマンサー(★5) 고유 어빌리티"
+  }
+ ],
+ "renri": [
+  {
+   "name": "ソリダリティ",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "wt": [
+     "pierce"
+    ]
+   },
+   "max": 1,
+   "atk": {
+    "target": "aoe",
+    "kind": "phys",
+    "stat": "pwr",
+    "element": "none",
+    "weapon_type": "slash",
+    "size": "xxl",
+    "mult": 15,
+    "hits": 1
+   },
+   "when": {},
+   "af": false,
+   "src": "딩 DB",
+   "note": "체인 전용 스킬 솔리대리티: 적 전체 베기 극대 15배(3300%), 턴 최대 1회"
   }
  ]
 }
