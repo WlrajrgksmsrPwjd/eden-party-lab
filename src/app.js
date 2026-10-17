@@ -32,7 +32,8 @@ let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
 const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'all', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null, weights:{b:70,s:40,t:30}, kesId:'', pledge:{nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0}, buddy:{main:'auto',sub:'auto'}}, rosterView:{}, goals:[], buddies:{}});
 const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
 const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
-const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성' : (FT_KR[f.v]||f.v);
+const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성'+(f.conv?' (변환 포함)':'') : (FT_KR[f.v]||f.v);
+const focusIn = P => P.focus && P.focus.kind==='elem' && P.focusConv ? Object.assign({}, P.focus, {conv:true}) : P.focus; // 속성 지정: 기본은 원래 그 속성인 공격만, '변환 덱 포함'이면 남의 속성 변환으로 그 속성이 된 공격도
 const sameFocus = (a,b) => (!a&&!b) || (a&&b&&a.kind===b.kind&&a.v===b.v);
 function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1, ownedIds: ownedList()}); } // ownedIds: 다른 스타일 보드 완성 보너스(보유 = 완성으로 봄)
 function rebuildChars(){
@@ -739,6 +740,7 @@ function renderPlanControls(){
   $$('#countSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.n===(P.enemyCount||1)?'true':'false'));
   { const br=$('#backRow'); if(br){ br.hidden = P.mode==='kesshitsu'; const bn = P.backN!=null ? +P.backN : 2; $$('#backSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.b===bn?'true':'false')); } }
   $$('#diffSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.lv===(P.maxDiff||4)?'true':'false'));
+  { const cvb = $('#focusConv'); if(cvb){ cvb.checked = !!P.focusConv; cvb.closest('label').hidden = !(P.focus && P.focus.kind==='elem'); } }
   $('#focusSeg').innerHTML = [null].concat(FOCUS_LIST).map((f,k)=>`<button type="button" data-fi="${k-1}" aria-pressed="${sameFocus(f,P.focus)?'true':'false'}">${f&&f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(f?(f.kind==='elem'?E.ELEM_KR[f.v]:FT_KR[f.v]):'전체')}</button>`).join('');
   renderChips('#lockChips', P.locked, 'locked');
   renderChips('#exChips', P.excluded, 'excluded');
@@ -815,7 +817,7 @@ async function runPlan(){
   const pledge = kes ? pledgeInput(boss) : null;
   $('#runBtn').disabled=true; $('#prog').hidden=false; $('#prog i').style.width='0%';
   const t0=Date.now(), ptx=$('#progTxt'); ptx.textContent='계산 중…';
-  const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null,
+  const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null,
       weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, pledge, buddy: buddyInput()},
     f=>{ if(my===runToken){ $('#prog i').style.width=Math.round(f*100)+'%'; ptx.textContent=`계산 중 ${Math.round(f*100)}% · ${Math.round((Date.now()-t0)/1000)}초${NW>1?` · 워커 ${NW}개`:''}`; } }, null, {shard:true, cache:true});
   if(my!==runToken || !r) return;
@@ -1228,14 +1230,22 @@ function muleGot(x){
     if(al && al.names) return `${esc(c.name)}: ${esc(at)}`;
     return `${esc(c.name)} ${al&&al.pct?'':al&&al.el!=null?`P글래 ${al.e+al.z}개`:'+'+slotTxt(mu.k[i])+'칸'}${at?` (${esc(at)})`:''}`; }).filter(Boolean);
 }
+/* 셔틀마다 달 연성 P글래 목록(같은 이름은 ×개수) */
+function shuttleItems(o){ const m = new Map(); for(const t of (o.items||[])) m.set(t, (m.get(t)||0)+1); return [...m].map(([t,n])=>esc(t)+(n>1?` ×${n}`:'')).join(', '); }
+/* 셔틀 계획: 종합 등은 ev.mule, 최고점은 허수아비 계산의 셔틀(ev.dummy.mule) — 그 존의 계획 */
+function shuttlePlan(x){ const ev = x.ev, mu = ev.mule || (ev.dummy && ev.dummy.mule); if(!mu || !mu.auto || !mu._pm || !mu._pm.size) return null;
+  const z = (!ev.mule && ev.dummy && ev.dummy.zFull) || (ev.sb && ev.sb.zone), zk = z && z.level>0 ? (z.key||z.kind)+':'+z.level : '-';
+  return mu._pm.get(zk) || [...mu._pm.values()].pop(); }
+function shuttleHtml(pl){ if(!pl || !pl.shuttles || !pl.shuttles.length) return '';
+  return `<ul class="shut">${pl.shuttles.map(o=>`<li><b>${o.names[0] ? esc(o.names[0]) : '셔틀'}</b>${o.names[0] ? (o.own>0 ? (o.own>1?` <span class="hint">(보유 ${o.own}명 중 하나)</span>`:'') : ' <span class="ng">미보유</span>') : ''}${o.pers&&o.pers.length?` <span class="hint">${o.pers.map(esc).join('·')}</span>`:''}<br>${shuttleItems(o)||'<span class="hint">달 것 없음</span>'}</li>`).join('')}</ul>`; }
 function muleLine(x){
-  const mu=x.ev.mule; if(!mu) return settings().muleOn!==false && !pglCount() ? `<div class="hint">P글래 셔틀: 보유 탭 '연성 P글래 보유'에 가진 것을 표시하면 후열 셔틀 공유를 계산합니다 (표시 전에는 없다고 봄)</div>` : '';
+  const mu=x.ev.mule; if(!mu){ const pd = shuttlePlan(x); if(pd && pd.shuttles) return `<div class="hint">최고점 계산의 연성 P글래 셔틀(전부 가졌다고 가정, 천명치 200·4칸):</div>${shuttleHtml(pd)}`; } if(!mu) return settings().muleOn!==false && !pglCount() ? `<div class="hint">P글래 셔틀: 보유 탭 '연성 P글래 보유'에 가진 것을 표시하면 후열 셔틀 공유를 계산합니다 (표시 전에는 없다고 봄)</div>` : '';
   const got = muleGot(x);
   const fr = (mu.front||[]).map(j=>esc(x.team[j].name));
   const zoneTip = x.ev.sb.zone && x.ev.sb.zone.level>=2 ? ' · 극존(ZONE 각성)이 깔리면 셔틀마다 각성의 힘(+25%)을 섞는 게 이득 (속성 P글래와 다른 그룹이라 곱해짐)' : '';
-  if(mu.auto && mu.plan){ const sl = (mu.carriers||[]).reduce((a,m)=>a+m.slots,0), pl = mu._pm && mu._pm.size ? [...mu._pm.values()].pop() : null, sw = pl && pl.shuttleWeap;
+  if(mu.auto && mu.plan){ const sl = (mu.carriers||[]).reduce((a,m)=>a+m.slots,0), pl = shuttlePlan(x), sw = pl && pl.shuttleWeap;
     const shN = pl && pl.shuttles && pl.shuttles.length ? pl.shuttles.map(o=>`${esc(o.names[0])}${o.own>0 ? (o.own>1?` 등 보유 ${o.own}명`:'') : ' <span class="ng">미보유</span>'}${o.pers&&o.pers.length?`(${o.pers.map(esc).join('·')})`:''}`).join(' + ') : null; // 보유 캐릭터 중 고른 셔틀(퍼스널리티 P글래는 그 퍼스널리티가 있어야 장착)
-    return `<div class="hint">P글래 셔틀 가정: 후열 ${shN ? shN : sw&&sw.length?sw.map(w=>esc(w)+' 캐릭터').join(' + '):'셔틀 '+mu.mules.length+'명'}(천명치 200, ${sl}칸)이 ${pglCount()?'표시한':'모든'} 잠재 연성 P글래를 종류마다 ${pglCount()?'표시한 수만큼':'1개씩'} 나눠 달고(퍼스널리티 P글래는 그 퍼스널리티가 있는 셔틀만), 장착 조건(무기종·퍼스널리티·속성)이 같은 아군에게 공유 → ${got.join(', ')||'—'}. 남는 칸엔 아군 전체 글래(공명·격진의 힘)</div>`; }
+    return `<div class="hint">P글래 셔틀 가정: 후열 ${shN ? shN : sw&&sw.length?sw.map(w=>esc(w)+' 캐릭터').join(' + '):'셔틀 '+mu.mules.length+'명'}(천명치 200, ${sl}칸)이 ${pglCount()?'표시한':'모든'} 잠재 연성 P글래를 종류마다 ${pglCount()?'표시한 수만큼':'1개씩'} 나눠 달고(퍼스널리티 P글래는 그 퍼스널리티가 있는 셔틀만), 장착 조건(무기종·퍼스널리티·속성)이 같은 아군에게 공유 → ${got.join(', ')||'—'}. 남는 칸엔 아군 전체 글래(공명·격진의 힘)</div>${shuttleHtml(pl)}`; }
   if(mu.auto) return `<div class="hint">P글래 셔틀 가정: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 ${mu.mules.length?`후열 ${mu.mules.length}명`:''}${mu.mules.length&&fr.length?' + ':''}${fr.length?`전열 서포터 ${fr.join(', ')}`:''}이 잠재 연성한 P글래를 공유 → ${got.join(', ')||'—'}${zoneTip}</div>`;
   return `<div class="hint">후열 고정 셔틀의 P글래 공유: ${got.join(', ')||'<span class="ng">무기 퍼스널리티가 맞는 전열 캐릭터 없음</span>'}</div>`;
 }
@@ -1545,7 +1555,7 @@ async function runPerChar(){
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   $('#pcRun').disabled=true; $('#pcProg').hidden=false; $('#pcProg i').style.width='0%';
-  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:P.focus||null,
+  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null,
       weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, buddy: buddyInput()},
     f=>{ if(my===pcToken) $('#pcProg i').style.width=Math.round(f*100)+'%'; });
   if(my!==pcToken || !r) return;
@@ -2171,6 +2181,7 @@ function bind(){
   $('#runBtn').addEventListener('click',runPlan);
   $('#burstN').addEventListener('change',e=>{ state.settings.burstTurns=Math.max(1,Math.min(10,+e.target.value||3)); save(); runPlan(); });
   $('#focusSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-fi]'); if(!b) return; const k=+b.dataset.fi; state.plan.focus = k<0?null:Object.assign({},FOCUS_LIST[k]); save(); renderPlanControls(); runPlan(); });
+  { const cvb = $('#focusConv'); if(cvb) cvb.addEventListener('change', ()=>{ state.plan.focusConv = cvb.checked; save(); runPlan(); }); }
   $('#fxRun').addEventListener('click', runFocusAll);
   document.addEventListener('click',e=>{ const b=e.target.closest('button[data-goalsave]'); if(b) saveGoalFromResult(b.dataset.goalsave); });
   document.addEventListener('click',e=>{

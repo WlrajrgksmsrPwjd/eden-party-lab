@@ -1400,7 +1400,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const csOK = sk.combo_scale && (!sk.combo_scale.when || !Object.keys(sk.combo_scale.when).length || ruleAct({w:sk.combo_scale.when}, idx, team, progs, situation==='af'?'normal':situation, zone, A)>0);
   // 이어 치는 스킬의 타격별 위력 비중(hit_w: [[타수, 위력]…], 타수 합 = hits일 때만 — 상태로 스킬이 바뀌면 무시): 큰 타격이 25억 경감을 더 받게(2026-10-16, 세스타(AS) 凶狼薙 2타가 위력 67%)
   const hw = Array.isArray(sk.hit_w) && sk.hit_w.length ? (g => { const H = g.reduce((a,x)=>a+x[0],0), W = g.reduce((a,x)=>a+x[1],0); return H===Math.max(1, sk.hits||1) && W>0 ? {H, g: g.map(x=>[x[0], x[1]/W])} : null; })(sk.hit_w.map(x=>[+x[0]||0, +x[1]||0]).filter(x=>x[0]>0 && x[1]>0)) : null;
-  return {cs: csOK ? sk.combo_scale : null, ca: +sk.combo_add||0, cup: cupA, perHit: pN*critX, pN, cR, p, oc:ocP, totHits, hw, links, linkHits, nT, el, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
+  return {cs: csOK ? sk.combo_scale : null, ca: +sk.combo_add||0, cup: cupA, perHit: pN*critX, pN, cR, p, oc:ocP, totHits, hw, links, linkHits, nT, el, elN: elNat, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
     afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, rep, cpy: !!sk.copy, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
     bh, defR, flatP, lunaF, auraF, auraR, chW, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpAtkSk, weakSk: weakD.reduce((a,b)=>a+b,0), mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st'};
 }
@@ -1849,12 +1849,12 @@ function pglPlan(team, progs, A, S, zone){
       let bt=null, bg=1e-6, bc=null;
       for(const t of Tc){ if(t.cap<=0) continue; const c=fit(t); if(!c) continue; const g=gainOf(t); if(g>bg){ bg=g; bt=t; bc=c; } }
       if(!bt) break;
-      bc.left--; bt.cap--; used.push(bt.label); score += bg;
+      bc.left--; bt.cap--; used.push(bt.label); (bc.items = bc.items || []).push(bt.label); score += bg; // 셔틀마다 다는 글래(화면 표시용)
       if(bt.kind==='add') for(const i of bt.recv){ Rc[i].add+=bt.v; Rc[i].names.push(bt.label); }
       else if(bt.kind==='zone' || bt.kind==='r49'){ for(const i of bt.recv){ Rc[i].zp+=bt.v; if(bt.kind==='zone') Rc[i].names.push(bt.label); } if(bt.kind==='r49') for(const i of bt.erecv) Rc[i].add+=bt.ev; }
       else if(bt.kind==='r51') q51+=bt.v; else if(bt.kind==='r50') q50+=bt.v;
     }
-    return {score, Rc, used, q51, q50};
+    return {score, Rc, used, q51, q50, carriers};
   };
   let best=null, wsel=null, shut=null;
   const nbA = mu.carriers.length, slA = mu.carriers.length ? mu.carriers[0].slots : 3;
@@ -1874,10 +1874,11 @@ function pglPlan(team, progs, A, S, zone){
     const combos = []; const rec = (k, from, acc) => { if(k===nb){ combos.push(acc.slice()); return; } for(let a=from;a<ws.length;a++){ acc.push(ws[a]); rec(k+1, a, acc); acc.pop(); } };
     if(ws.length && nb>0) rec(0, 0, []); else combos.push([]);
     for(const cb of combos){ const r = run(cb.length ? cb.map(w=>({left:sl, pers:new Set([w])})) : mu.carriers.map(m=>({left:m.slots, pers:new Set()}))); if(!best || r.score>best.score+1e-12){ best=r; wsel=cb; } } // 셔틀 후보 목록이 없을 때: 무기 퍼스널리티 하나짜리 가상 셔틀(다른 퍼스널리티 P글래는 못 담)
-  } else best = run(mu.carriers.map(m=>({left:m.slots, pers:m.pers||null})));
+  } else if(!best) best = run(mu.carriers.map(m=>({left:m.slots, pers:m.pers||null}))); // 고정 셔틀(보유 셔틀 계획이 이미 있으면 덮어쓰지 않음 — 2026-10-17 버그: 셔틀 후보 계획을 퍼스널리티 제한 없는 계획이 덮어씀)
   const out = {per: best.Rc.map(r=>({e:r.add, z:r.zp, names:r.names})), r51:best.q51, r50:best.q50, used:best.used, slots: mu.carriers.reduce((a,m)=>a+m.slots,0), nb: mu.carriers.length,
-    shuttleWeap: wsel ? wsel.map(w=>PERS_KR[w]||w) : null, shuttles: shut ? (seen => shut.map(o=>{ const k = seen.get(o)||0; seen.set(o, k+1); // 같은 묶음을 두 번 쓰면 둘째는 그 묶음의 다음 캐릭터
-      return {names:o.names.slice(k,k+3), ids:o.ids.slice(k,k+6), n:o.n, own:Math.max(0, o.own-k), pers:[...o.pers].map(x=>PERS_KR[x]||x)}; }))(new Map()) : null};
+    shuttleWeap: wsel ? wsel.map(w=>PERS_KR[w]||w) : null, shuttles: shut ? (seen => shut.map((o,q)=>{ const k = seen.get(o)||0; seen.set(o, k+1); // 같은 묶음을 두 번 쓰면 둘째는 그 묶음의 다음 캐릭터
+      return {names:o.names.slice(k,k+3), ids:o.ids.slice(k,k+6), n:o.n, own:Math.max(0, o.own-k), pers:[...o.pers].map(x=>PERS_KR[x]||x), items:((best.carriers[q]||{}).items||[]).slice()}; }))(new Map())
+      : best && best.carriers ? best.carriers.map(c=>({names:[], ids:[], n:0, own:0, pers:c.pers ? [...c.pers].map(x=>PERS_KR[x]||x) : [], items:(c.items||[]).slice()})) : null};
   memo.set(zk, out); return out;
 }
 /* 보스가 행동불능 상태이상(기절·수면·마비·석화·빙결·혼란·매료·공포)을 거는지 — 걸리면 요격이 안 나감 */
@@ -2806,7 +2807,7 @@ function hitInfo(co, z, S, combo){
 /* 속성·공격 타입 지정: 지정과 맞는 공격만 화력으로 센다 */
 function focusMatch(co, f){
   if(!co) return false;
-  if(f.kind==='elem') return co.el===f.v;
+  if(f.kind==='elem') return co.el===f.v && (!!f.conv || co.elN==null || co.elN===f.v); // 속성 지정: 원래 그 속성인 공격만(사용자 2026-10-17: 물덱은 베르단타·엘실처럼 물 캐릭터로 — 남의 속성 변환으로 물이 된 공격은 f.conv일 때만)
   if(f.v==='magic') return co.kind==='mag' || co.wt==='magic';
   return co.kind!=='mag' && co.wt===f.v;
 }
@@ -2826,7 +2827,7 @@ function charFocusMatch(c, f){
 const teamZoneEl = (team, el) => team.some(c=>c.zoneTypes && c.zoneTypes.opts.some(op=>op.kind==='elem' && op.types.includes(el)));
 function cvTo(c, F){ const e = c && c.echange; return !!(F && F.kind==='elem' && e && e.to==='all' && !e.sb && (e.el===F.v || e.el==='zone') && (!e.zone || e.zone===F.v)); }
 function focusN(team, F){
-  if(F && F.kind==='elem' && team.some(c=>cvTo(c, F) && (!c.echange.req || reqMet(c.echange.req, team, c))) && teamZoneEl(team, F.v)) return team.length;
+  if(F && F.kind==='elem' && F.conv && team.some(c=>cvTo(c, F) && (!c.echange.req || reqMet(c.echange.req, team, c))) && teamZoneEl(team, F.v)) return team.length; // 변환 덱은 F.conv일 때만
   return team.filter(c=>charFocusMatch(c,F)).length;
 }
 
@@ -2947,7 +2948,7 @@ function buildPool(owned, locked, opts){
     // 지정 속성·타입 공격자 + 그 속성·타입 존 담당 + 버퍼·생존 보강
     const fm = free.filter(o=>charFocusMatch(o.pc,F));
     add('dps', 20, fm);
-    const cv = free.filter(o=>cvTo(o.pc, F)); // 아군 전체 속성 변환 담당 — 있으면 다른 속성 딜러·탱커도 지정 속성으로 침
+    const cv = F.conv ? free.filter(o=>cvTo(o.pc, F)) : []; // 아군 전체 속성 변환 담당 — 변환 덱(F.conv)이면 다른 속성 딜러·탱커도 지정 속성으로 침
     if(cv.length){ add('sup', 3, cv); add('surv', 3, free.filter(o=>!charFocusMatch(o.pc,F) && o.pc.counter)); }
     const zm = free.filter(o=>o.pc.zoneTypes && o.pc.zoneTypes.opts.some(op=>F.kind==='elem' ? op.kind==='elem'&&op.types.includes(F.v) : op.kind==='weap'&&op.types.includes(F.v)));
     add('sup', 8, zm);
@@ -2963,7 +2964,7 @@ function buildPool(owned, locked, opts){
   const MAXP = opts.maxPool || 44;
   if(arr.length>MAXP){
     const lk = arr.filter(o=>lockedSet.has(o.pc.id));
-    const fb = o=> F && (charFocusMatch(o.pc,F) || cvTo(o.pc,F)) ? 1.5 : 1;
+    const fb = o=> F && (charFocusMatch(o.pc,F) || (F.conv && cvTo(o.pc,F))) ? 1.5 : 1;
     const rest = arr.filter(o=>!lockedSet.has(o.pc.id)).sort((a,b)=>(b.pot.dps*fb(b)/ (opts.maxD||1) + b.pot.sup*0.3)-(a.pot.dps*fb(a)/(opts.maxD||1)+a.pot.sup*0.3));
     arr = lk.concat(rest.slice(0,MAXP-lk.length));
   }
@@ -3063,14 +3064,14 @@ async function optimize(input, onProgress){
   // 속성덱·타입덱 후보: 속성·타입마다 작은 후보 풀로 조합을 더 만들어 같은 기준(지정 없음)으로 평가
   // (조합 시너지로 강해지는 캐릭터가 전체 후보 풀에서 빠지는 것을 막는다)
   const posOf = new Map(pool.map((o,i)=>[o.pc.id,i]));
-  const deckIdx = []; // 속성덱·타입덱 후보 (전방 3명 이상이 그 속성·타입으로 공격)
+  const deckIdx = [], deckIdxC = []; // 속성덱·타입덱 후보 (전방 3명 이상이 그 속성·타입으로 공격) · 변환 덱(남의 아군 전체 속성 변환으로 그 속성이 되는 조합, 따로)
   if(!ctx.focus && input.deckSeeds!==false){
     const FOC = ELEMS.map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
     let di = 0;
     for(let fi=0; fi<FOC.length; fi++){
       const F=FOC[fi];
       if(!own.some(o=>charFocusMatch(o.pc,F))) continue;
-      const fp = buildPool(own, lockIds, {enemy,S,cap,ctx:Object.assign({},ctx,{focus:F}),mode,maxPool:input.deckPool||10});
+      const fp = buildPool(own, lockIds, {enemy,S,cap,ctx:Object.assign({},ctx,{focus:F.kind==='elem' ? Object.assign({}, F, {conv:true}) : F}),mode,maxPool:input.deckPool||10}); // 후보 풀은 변환 담당까지
       for(const o of fp) if(!posOf.has(o.pc.id)){ posOf.set(o.pc.id,pool.length); pool.push(o); }
       const lk = lockIds.map(id=>fp.findIndex(o=>o.pc.id===id)).filter(i=>i>=0);
       const fr = fp.map((_,i)=>i).filter(i=>!lk.includes(i));
@@ -3078,14 +3079,15 @@ async function optimize(input, onProgress){
       const it2 = nd>0 ? combos(fr.length, nd) : [[]][Symbol.iterator]();
       for(const cmb of it2){
         const mem = lk.concat(cmb.map(k=>fr[k])).map(i=>fp[i]);
-        const nMatch = focusN(mem.map(o=>o.pc), F); if(!nMatch) continue; // 변환으로 지정 속성이 되는 조합도 덱으로
+        const nMatch = focusN(mem.map(o=>o.pc), F), nConv = F.kind==='elem' ? focusN(mem.map(o=>o.pc), Object.assign({}, F, {conv:true})) : 0; if(!nMatch && !nConv) continue; // 변환으로 지정 속성이 되는 조합은 변환 덱으로
         const key = mem.map(o=>o.pc.id).sort().join();
-        if(seen.has(key)){ if(nMatch>=3){ const ti=seen.get(key); if(ti>=0) (deckIdx[fi]=deckIdx[fi]||[]).push(ti); } continue; }
+        const push = ti => { if(ti<0) return; if(nMatch>=3) (deckIdx[fi]=deckIdx[fi]||[]).push(ti); else if(nConv>=3) (deckIdxC[fi]=deckIdxC[fi]||[]).push(ti); };
+        if(seen.has(key)){ push(seen.get(key)); continue; }
         const team=mem.map(o=>o.pc);
         if(dupBase(team)){ seen.set(key, -1); continue; }
         if(!mine(1, ci++)){ seen.set(key, -1); continue; }
         const idxs = mem.map(o=>posOf.get(o.pc.id)), ti = addT(idxs, key, evalRaw(idxs, key));
-        if(nMatch>=3) (deckIdx[fi]=deckIdx[fi]||[]).push(ti);
+        push(ti);
         if(Date.now()-lastYield>40){ lastYield=Date.now(); if(onProgress) onProgress(0.85+0.15*fi/FOC.length); await new Promise(r=>setTimeout(r,0)); }
       }
     }
@@ -3102,7 +3104,9 @@ async function optimize(input, onProgress){
       for(const o of os) if(!posOf.has(o.pc.id)){ posOf.set(o.pc.id,pool.length); pool.push(o); }
       let ti = seen.get(key);
       if(ti==null){ if(!mine(1, ci++)){ seen.set(key, -1); continue; } ti = addT(os.map(o=>posOf.get(o.pc.id)), key, evalRaw(os.map(o=>posOf.get(o.pc.id)), key)); }
-      if(ti>=0 && !ctx.focus && input.deckSeeds!==false) FOS.forEach((F,fi)=>{ if(own.some(o=>charFocusMatch(o.pc,F)) && focusN(team, F)>=3 && !(deckIdx[fi]||[]).includes(ti)) (deckIdx[fi]=deckIdx[fi]||[]).push(ti); });
+      if(ti>=0 && !ctx.focus && input.deckSeeds!==false) FOS.forEach((F,fi)=>{ if(!own.some(o=>charFocusMatch(o.pc,F))) return;
+        if(focusN(team, F)>=3){ if(!(deckIdx[fi]||[]).includes(ti)) (deckIdx[fi]=deckIdx[fi]||[]).push(ti); }
+        else if(F.kind==='elem' && focusN(team, Object.assign({}, F, {conv:true}))>=3 && !(deckIdxC[fi]||[]).includes(ti)) (deckIdxC[fi]=deckIdxC[fi]||[]).push(ti); });
     }
   }
   if(shard && shard.stage==='scan') return shardOut();
@@ -3251,10 +3255,15 @@ async function optimize(input, onProgress){
   // 속성덱·타입덱: 각 속성·타입에서 점수가 가장 높은 조합
   const FOCL = ELEMS.map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
   const decks = [];
-  deckIdx.forEach((L,fi)=>{ if(!L||!L.length) return; let bi=-1, bs=-1;
+  const deckBest = L => { let bi=-1, bs=-1; if(!L) return {bi, bs};
     for(const i of L){ if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue; const b=raws[3*i]/mb, s=raws[3*i+1]/ms, tt=raws[3*i+2]/mt; let sc=w.b*b+w.s*s+w.t*tt; if((mode==='sustain'||mode==='weak'||mode==='all') && tt<0.25) sc*=0.85; if(maxLv<4 && teamDifficulty(teams[i].map(k=>pool[k].pc)).lv>maxLv) continue; if(sc>bs){ bs=sc; bi=i; } }
-    if(bi>=0){ const team=teams[bi].map(k=>pool[k].pc), progs=teams[bi].map(k=>pool[k].prog); const ev=evalTeam(team,progs,enemy,S,cap,ctx); const rv=pickReserves(team,progs,ev);
-      decks.push({focus:FOCL[fi], team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); } });
+    return {bi, bs}; };
+  const pushDeck = (F, bi, bs) => { const team=teams[bi].map(k=>pool[k].pc), progs=teams[bi].map(k=>pool[k].prog); const ev=evalTeam(team,progs,enemy,S,cap,ctx); const rv=pickReserves(team,progs,ev);
+    decks.push({focus:F, team, progs, ev, reserves:rv.reserves, fixedBack:new Set(rv.fixedBack.map(c=>c.id)), score:bs, rel:bs/topScore, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:needPenalty(ev,boss).miss, recCount:team.filter(t=>recSet.has(t.id)).length, diff:teamDifficulty(team)}); };
+  // 속성덱(원래 그 속성인 캐릭터 3명 이상)과, 그보다 점수가 높을 때만 변환 덱(남의 아군 전체 속성 변환으로 그 속성이 되는 조합)을 따로(2026-10-17, 사용자: 물덱에 베르단타·엘실이 없음)
+  FOCL.forEach((F,fi)=>{ const a = deckBest(deckIdx[fi]), c = deckBest(deckIdxC[fi]);
+    if(a.bi>=0) pushDeck(F, a.bi, a.bs);
+    if(c.bi>=0 && c.bs > a.bs) pushDeck(Object.assign({}, F, {conv:true}), c.bi, c.bs); });
   decks.sort((a,b)=>b.score-a.score);
   return {results, decks, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus, nmax:{b:mb, s:ms, t:mt}};
 }
