@@ -9,6 +9,13 @@ const BOSSES = JSON.parse(document.getElementById('db-bosses').textContent);
 const BUDDIES = (()=>{ try{ return JSON.parse((document.getElementById('db-buddies')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
 const DECKS = (()=>{ try{ return JSON.parse((document.getElementById('db-decks')||{}).textContent||'[]')||[]; }catch(e){ return []; } })();
 const META = (()=>{ try{ return JSON.parse((document.getElementById('db-meta')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
+// 이름이 가려진 캐릭터(이시층 등)의 진명 {id: {t 한국어, j 일본어, k 이시층 1}} — 보유 탭 '진명 공개'를 켜면 표시 이름을 진명으로(2026-10-17, 사용자 요청)
+const ISHI = (()=>{ try{ return JSON.parse((document.getElementById('db-ishi')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
+const trueOn = () => !!(state && state.ui && state.ui.trueName);
+const trueNameOf = (p, e) => { const s = (p.raw && p.raw.style) || 'NS'; return e.k ? e.t+'(이시층'+(s==='AS'||s==='ES' ? '·'+s : '')+')' : e.t; };
+// 검색에 쓰는 이름들: 표시 이름 + 원래 이름(진명 공개 중이면 가명) + 일본어 + 예전 표시명
+const hayOf = c => [c.name, c.title||'', (c.raw && c.raw.name_jp)||''].concat((c.raw && c.raw.alias_kr)||[]);
+const nameHas = (c, q) => hayOf(c).some(n=>n.toLowerCase().includes(q));
 const ROLE_KR = {dps:'딜러',support:'버퍼',debuffer:'디버퍼',healer:'힐러',tank:'탱커',zone:'존',breaker:'브레이커'};
 const STYLE_KR = {NS:'노멀',AS:'어나더',ES:'엑스트라',AC:'이시층'};
 const CONTENT_KR = c => (c||'').replace('星詠みの書架','성영의 서가').replace(/^廻生$/,'회생(과거와의 결투)').replace(/^顕現/,'현현').replace(/^外史/,'외사');
@@ -43,6 +50,8 @@ function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings
 function rebuildChars(){
   chars = CHARS_BASE.concat(state.custom||[]);
   prepped = chars.map(E.prepChar);
+  { const tn = trueOn(); for(const p of prepped){ const e = ISHI[p.id]; if(!e) continue; p.title = p.name; p.ishi = true; if(tn) p.name = trueNameOf(p, e); } } // 가명 캐릭터: title = 원래 표시 이름(가명)
+  NICK_L = null;
   byId = new Map(prepped.map(p=>[p.id,p]));
   cap = E.computeCap(prepped, settings());
   WK.dbKey = JSON.stringify(state.custom||[]);
@@ -790,7 +799,7 @@ function setupPicker(inputSel, dropSel, key, max){
     const q=inp.value.trim().toLowerCase();
     const own=ownedList().map(id=>byId.get(id));
     items = own.filter(c=>!state.plan.locked.includes(c.id)&&!state.plan.excluded.includes(c.id)&&!(state.plan.backLocked||[]).includes(c.id))
-      .filter(c=>!q || c.name.toLowerCase().includes(q) || (c.raw.name_jp||'').toLowerCase().includes(q) || c.id.includes(q) || (c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(q))).slice(0,30);
+      .filter(c=>!q || nameHas(c, q) || c.id.includes(q)).slice(0,30);
     drop.innerHTML = items.length ? items.map((c,i)=>`<button type="button" data-i="${i}" class="${i===hl?'hl':''}">${elChips(c)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span></button>`).join('')
       : `<div class="hint" style="padding:8px 10px">보유 캐릭터 중 일치하는 이름이 없습니다.</div>`;
     drop.hidden=false;
@@ -1588,7 +1597,7 @@ async function runPerChar(){
 function renderPerChar(){
   if(!pcResult) return;
   const q=($('#pcQ').value||'').trim().toLowerCase();
-  const rows = pcResult.list.filter(x=>!q || x.pc.name.toLowerCase().includes(q) || (x.pc.raw.name_jp||'').toLowerCase().includes(q));
+  const rows = pcResult.list.filter(x=>!q || nameHas(x.pc, q));
   $('#pcTable').innerHTML = `<table class="pct"><thead><tr><th>#</th><th>캐릭터</th><th>점수</th><th>함께 쓸 3명</th><th>존</th><th>난이도</th><th></th></tr></thead><tbody>${
     rows.map((x,i)=>{
       if(x.none) return `<tr><td class="num">—</td><td class="who">${esc(x.pc.name)}</td><td colspan="5" class="hint">난이도 상한 안에서 조합을 찾지 못했습니다.</td></tr>`;
@@ -1802,7 +1811,7 @@ function setupGoalPicker(){
   const close=()=>{ drop.hidden=true; };
   const refresh=()=>{
     const q=inp.value.trim().toLowerCase(); if(!q){ close(); return; }
-    items=prepped.filter(c=>!goalPick.includes(c.id) && (c.name.toLowerCase().includes(q)||(c.raw.name_jp||'').toLowerCase().includes(q)||(c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(q)))).slice(0,30);
+    items=prepped.filter(c=>!goalPick.includes(c.id) && nameHas(c, q)).slice(0,30);
     drop.innerHTML = items.map((c,i)=>`<button type="button" data-i="${i}">${elChips(c)} ${esc(c.name)} <span class="tier ${c.tier}">${esc(c.tier)}</span>${state.owned[c.id]?'':' <span class="badge">미보유</span>'}</button>`).join('') || '<div class="hint" style="padding:8px 10px">일치하는 캐릭터가 없습니다.</div>';
     drop.hidden=false;
   };
@@ -1817,14 +1826,15 @@ function setupGoalPicker(){
 
 /* ---------- 보유 탭 ---------- */
 function rosterFilters(){
-  return {q:($('#rq').value||'').trim().toLowerCase(), el:$('#rel').value, wp:$('#rwp').value, al:$('#ral').value, tier:$('#rtier').value, own:$('#rown').value};
+  return {q:($('#rq').value||'').trim().toLowerCase(), el:$('#rel').value, wp:$('#rwp').value, al:$('#ral').value, tier:$('#rtier').value, own:$('#rown').value, kind:$('#rkind').value};
 }
 let TAP_SKIP = false;
-function renderRoster(){ renderRosterBase(); if(TAP_SKIP) tapCount(); else renderTap(); } // 눌러서 고르기 칸도 같이(누르는 중엔 개수만)
+function renderRoster(){ { const t = $('#trueName'); if(t) t.checked = trueOn(); } renderRosterBase(); if(TAP_SKIP) tapCount(); else renderTap(); } // 눌러서 고르기 칸도 같이(누르는 중엔 개수만)
 function renderRosterBase(){
   const F=rosterFilters();
   const list = prepped.filter(c=>{
-    if(F.q && !(c.name.toLowerCase().includes(F.q) || (c.raw.name_jp||'').toLowerCase().includes(F.q) || (c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(F.q)))) return false;
+    if(F.q && !nameHas(c, F.q)) return false;
+    if(F.kind==='ishi' && !c.ishi) return false; if(F.kind==='noishi' && c.ishi) return false;
     if(F.el && !c.elems.includes(F.el)) return false;
     if(F.wp && c.weapon!==F.wp) return false;
     if(F.al && c.align!==F.al) return false;
@@ -1848,7 +1858,7 @@ function updateRosterCount(){
   const own = ownedList().length, n = rosterShown.length, k = rosterShown.filter(id=>state.owned[id]).length;
   $('#rcount').textContent = `보유 ${own}명 · 표시 ${n}명 / 전체 ${prepped.length}명`;
   $('#tabOwnN').textContent = own;
-  const cb = $('#selAll'), F = rosterFilters(), filtered = !!(F.q||F.el||F.wp||F.al||F.tier||F.own);
+  const cb = $('#selAll'), F = rosterFilters(), filtered = !!(F.q||F.el||F.wp||F.al||F.tier||F.own||F.kind);
   cb.checked = n>0 && k===n; cb.indeterminate = k>0 && k<n; cb.disabled = n===0;
   $('#selAllLbl').textContent = filtered ? `표시된 ${n}명 전체 선택` : `전체 선택 (${n}명)`;
 }
@@ -1868,7 +1878,7 @@ function rowHtml(c){
   const o=state.owned[c.id];
   const r=c.raw;
   const head=`<input type="checkbox" id="own-${esc(c.id)}" data-own="${esc(c.id)}" ${o?'checked':''} aria-label="${esc(c.name)} 보유">
-    <label class="who" for="own-${esc(c.id)}"><span class="n">${esc(c.name)}${r._custom?' <span class="badge">직접 추가</span>':''}</span>
+    <label class="who" for="own-${esc(c.id)}"><span class="n">${esc(c.name)}${c.title && c.title!==c.name ? ` <small class="ttl">${esc(c.title)}</small>` : ''}${r._custom?' <span class="badge">직접 추가</span>':''}</span>
     <span class="m">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)}${c.align==='light'?'천':'명'} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span></label>`;
   const stBtn = `<button type="button" class="lnk" data-stat aria-expanded="false" title="기본 스탯과 천명치별 값">스탯</button>`;
   if(!o) return `<div class="row off" data-id="${esc(c.id)}">${head}<div class="ctl">${stBtn}<span class="hint"${r.play_kr?` title="${esc(r.play_kr)}"`:''}>${esc((r.note_kr||'').slice(0,70))}${(r.note_kr||'').length>70?'…':''}</span></div><div class="stwrap" hidden></div></div>`;
@@ -1924,6 +1934,7 @@ const normName = s => String(s||'').normalize('NFKC').toLowerCase().replace(/[\s
 function nameIndex(){
   const m=new Map(), put=(n,id)=>{ const k=normName(n); if(k && !m.has(k)) m.set(k,id); };
   for(const c of prepped) put(c.name, c.id);           // 한국어 이름 우선
+  for(const c of prepped) if(c.title) put(c.title, c.id); // 진명 공개 중에도 가명으로 넣을 수 있게
   for(const c of prepped) for(const a of (c.raw.alias_kr||[])) put(a, c.id); // 예전 표시명(2026-10-16 위키 시트 이름으로 바꾸기 전)
   for(const c of prepped){ put(c.raw.name_jp, c.id); put(c.id, c.id); }
   return m;
@@ -1946,7 +1957,7 @@ let NICK_L = null;
 const AC_BASE = {shanie_ac:'셰이네', laclair_ac:'라크레아', tsubame_ac:'츠바메', nekoko_ac:'네코코'}; // 이절(AC)은 원래 캐릭터와 묶음 키가 달라 줄임말(짭이네·짭바메)용 원래 이름을 따로
 function nickList(){ if(NICK_L) return NICK_L;
   NICK_L = prepped.filter(c=>!c._custom).map(c=>{ const st = (c.raw && c.raw.style) || 'NS', b = c.base || c.id, ns = prepped.find(p=>(p.base||p.id)===b && ((p.raw && p.raw.style)||'NS')==='NS');
-    return {c, st, bn: normName(st==='AC' && AC_BASE[c.id] ? AC_BASE[c.id] : (ns ? ns.name : c.name).replace(/\s*\((AS|ES|AC)\)\s*$/,''))}; });
+    return {c, st, bn: normName(st==='AC' && AC_BASE[c.id] ? AC_BASE[c.id] : (ns ? ns.title||ns.name : c.title||c.name).replace(/\s*\((AS|ES|AC)\)\s*$/,''))}; });
   return NICK_L; }
 function matchNick(k){
   const st = {'어':'AS', '엑':'ES', '짭':'AC'}[k[0]]; if(!st || k.length<3) return null; const r = k.slice(1);
@@ -1978,7 +1989,7 @@ function editDist(a,b){
 function suggestName(q){
   const k=normName(q); if(!k) return null;
   let best=null, bd=Infinity;
-  for(const c of prepped) for(const n of [c.name, c.raw.name_jp].concat(c.raw.alias_kr||[])){
+  for(const c of prepped) for(const n of hayOf(c)){
     const kn=normName(n); if(!kn) continue;
     const d = (kn.includes(k)||k.includes(kn)) ? Math.abs(kn.length-k.length)*0.3 : editDist(k,kn);
     if(d<bd){ bd=d; best=c; }
@@ -2016,7 +2027,7 @@ function quickCheck(){
 /* ---------- 눌러서 고르기(2026-10-17): 이름 칸을 누를 때마다 보유 → 성도각성 안 함 → 해제 ---------- */
 const TAPF = {q:'', el:'', st:''};
 const TAP_EL = [['','전체'],['fire','불'],['water','물'],['earth','땅'],['wind','바람'],['thunder','번개'],['shade','그림자'],['crystal','결정']];
-const TAP_ST = [['','전체'],['NS','기본'],['AS','AS'],['ES','ES'],['AC','AC']];
+const TAP_ST = [['','전체'],['NS','기본'],['AS','AS'],['ES','ES'],['AC','AC'],['ishi','이시층']];
 const tapState = c => { const o = state.owned[c.id]; return !o ? 0 : (c.stellar && !o.s ? 2 : 1); };
 const tapInner = c => `<span class="dot ${esc(c.elem)}"></span>${esc(c.name)}${tapState(c)===2?'<small>성도✕</small>':''}`;
 const tapChip = c => { const s = tapState(c); return `<button type="button" class="tapc${s?' on':''}${s===2?' nos':''}" data-tap="${esc(c.id)}" aria-pressed="${s?'true':'false'}">${tapInner(c)}</button>`; };
@@ -2028,8 +2039,8 @@ function tapCount(){ const n = $('#tapN'); if(n) n.textContent = `보유 ${Objec
 function renderTap(){
   tapCount(); const g = $('#tapGrid'), f = $('#tapFold'); if(!g || !f || !f.open) return;
   const q = normName(TAPF.q);
-  const L = prepped.filter(c=>!c._custom && (!TAPF.el || (c.elems||[c.elem]).includes(TAPF.el)) && (!TAPF.st || ((c.raw&&c.raw.style)||'NS')===TAPF.st)
-    && (!q || normName(c.name).includes(q) || normName(c.raw.name_jp).includes(q) || (c.raw.alias_kr||[]).some(a=>normName(a).includes(q)))).sort((a,b)=>a.name.localeCompare(b.name, 'ko'));
+  const L = prepped.filter(c=>!c._custom && (!TAPF.el || (c.elems||[c.elem]).includes(TAPF.el)) && (!TAPF.st || (TAPF.st==='ishi' ? c.ishi : ((c.raw&&c.raw.style)||'NS')===TAPF.st))
+    && (!q || hayOf(c).some(n=>normName(n).includes(q)))).sort((a,b)=>a.name.localeCompare(b.name, 'ko'));
   g.innerHTML = L.length ? L.map(tapChip).join('') : '<p class="hint">맞는 캐릭터가 없어요.</p>';
 }
 let tapRR = 0;
@@ -2339,7 +2350,8 @@ function bind(){
   $('#pcQ').addEventListener('input', renderPerChar);
   $('#pcTable').addEventListener('click', e=>{ const b=e.target.closest('button[data-focus]'); if(!b) return; const id=b.dataset.focus;
     state.plan.locked=[id]; state.plan.excluded=state.plan.excluded.filter(x=>x!==id); save(); renderPlanControls(); showTab('plan'); runPlan(); });
-  ['#rq','#rel','#rwp','#ral','#rtier','#rown'].forEach(s=>$(s).addEventListener('input',renderRoster));
+  ['#rq','#rel','#rwp','#ral','#rtier','#rown','#rkind'].forEach(s=>$(s).addEventListener('input',renderRoster));
+  $('#trueName').addEventListener('change', e=>{ state.ui = state.ui || {}; state.ui.trueName = e.target.checked; save(); rebuildChars(); renderAll(); runPlan(); }); // 진명 공개: 이름만 바뀌고 계산은 그대로(결과는 저장해 둔 것으로 다시 그림)
   $('#roster').addEventListener('change',onRosterChange);
   $('#bulkTop').addEventListener('click',()=>{ for(const c of prepped) if((c.tier==='SS'||c.tier==='S')&&!state.owned[c.id]) state.owned[c.id]=newOwn(c.id); touchRoster(); renderRoster(); renderTap(); });
   $('#roster').addEventListener('click',e=>{ const b=e.target.closest('[data-bact]'); if(b) onBuildAct(b);

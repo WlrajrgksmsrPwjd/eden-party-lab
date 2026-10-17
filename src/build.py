@@ -147,6 +147,14 @@ out=head+rd('app.css')+'\n</style></head><body>\n'+rd('body.html')
 out+='<script type="application/json" id="db-chars">'+js(chars)+'</script>\n'
 out+='<script type="application/json" id="db-bosses">'+js(bosses)+'</script>\n'
 out+='<script type="application/json" id="db-meta">'+js(meta)+'</script>\n'
+# 이름이 가려진 캐릭터(이시층 등)의 진명 → 캐릭터 id별 {t 한국어 진명, j 일본어 진명, k 이시층 1/0}. 계산과 무관해 계산 버전(calc_ver)에 넣지 않음(2026-10-17)
+_ish=json.load(open(P('data','ishisou.json'),encoding='utf-8'))['list']; _tn={}
+for c in chars:
+    _b=re.sub(r'\((AS|ES|AC)\)$','',c['name_jp'])
+    if _b in _ish: e=_ish[_b]; _tn[c['id']]={'t':e['kr'],'j':e['jp'],'k':1 if e.get('ishi') else 0}
+_miss=[k for k in _ish if not any(re.sub(r'\((AS|ES|AC)\)$','',c['name_jp'])==k for c in chars)]
+if _miss: raise SystemExit('ishisou.json: 데이터에 없는 이름 %s'%_miss)
+out+='<script type="application/json" id="db-ishi">'+js(_tn)+'</script>\n'
 # 보편 추천 덱(커뮤니티): 없는 캐릭터 id가 있으면 빌드를 멈춘다
 mdk=json.load(open(P('data','meta_decks.json'),encoding='utf-8'))['decks']
 _ids={c['id'] for c in chars}
