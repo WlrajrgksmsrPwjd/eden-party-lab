@@ -592,6 +592,7 @@
  },
  {
   "id": "kesshitsu_myrus",
+  "parts": [{"label": "稔杖(물리로)", "need": ["phys"], "hp": 1}, {"label": "바레스(마법으로)", "need": ["mag"], "hp": 1}],
   "name_kr": "결실 뮬루스",
   "name_jp": "結実ミュルス",
   "content": "顕現（結実せし武器との交わり）",

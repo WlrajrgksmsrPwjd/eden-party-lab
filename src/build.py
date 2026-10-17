@@ -154,7 +154,16 @@ for c in chars:
 # 계산 버전: 엔진·데이터가 같으면 같은 결과 → 앱이 저장해 둔 편성 결과를 다시 쓸지 정하는 기준(2026-10-16)
 import hashlib
 _bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); _bfx.pop('_doc',None)
-calc_ver=hashlib.sha1((js(chars)+js(bosses)+js(_bfx)+rd('engine.js')+rd(os.path.join('data','meta_decks.json'))).encode('utf-8')).hexdigest()[:12] # 추천 덱도 탐색 시작점(seeds)이라 포함
+# 화면 표시용 필드(한국어 이름·설명)는 계산에 안 쓰므로 계산 버전에서 뺀다(2026-10-17 점검: 글자만 고쳐도 저장된 결과·예시 결과가 버려지던 문제)
+_DISP={'sko','skill_disp','name_disp','cond_ko','req_ko','note_kr','play_kr','name_kr','alias_kr','skill_official','pers_ko'}
+def _calc_view(o):
+    if isinstance(o,dict):
+        d={k:_calc_view(v) for k,v in o.items() if k not in _DISP}
+        if 'skill_jp' in d: d.pop('skill',None) # 한국어로 바꾼 스킬 이름(계산은 skill_jp)
+        return d
+    if isinstance(o,list): return [_calc_view(x) for x in o]
+    return o
+calc_ver=hashlib.sha1((js(_calc_view(chars))+js(bosses)+js(_bfx)+rd('engine.js')+rd(os.path.join('data','meta_decks.json'))).encode('utf-8')).hexdigest()[:12] # 추천 덱도 탐색 시작점(seeds)이라 포함
 head=head.replace('<title>','<meta name="eden-calc" content="'+calc_ver+'">\n<title>',1)
 out=head+rd('app.css')+'\n</style></head><body>\n'+rd('body.html')
 out+='<script type="application/json" id="db-chars">'+js(chars)+'</script>\n'
@@ -242,8 +251,17 @@ if os.path.exists(VB):
 }catch(e){ console.warn('[편성 연구실 연결]', e); } })();
 </script>
 '''
+    # 빌더 테마·보강(2026-10-17): 편성 연구실과 같은 디자인, 캐릭터 불러오기(스탯·주력 스킬·무기 한 번에), 조건 접기, 모바일 대미지 고정
+    import subprocess as _sp
+    _bc=_sp.run(['node', os.path.join(here,'tools','bchars.js')], capture_output=True, text=True)
+    if _bc.returncode: raise SystemExit('빌더 캐릭터 목록 실패: '+_bc.stderr[-400:])
+    _si=b.find('</style>')
+    if _si>=0: b=b[:_si]+'\n'+rd('builder_theme.css')+'\n'+b[_si:]
+    plus='<script type="application/json" id="db-bchars">'+_bc.stdout+'</script>\n<script>\n'+rd('builder_plus.js')+'\n</script>\n'
+    b=b.replace('<title>어나더에덴 빌더</title>','<title>장비 빌더 · 에덴 편성 연구실</title>',1)
+    pre=pre.replace('<meta name="viewport" content="width=device-width,initial-scale=1">','<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111936">')
     i=b.rfind('</script>')
-    b=pre+b[:i+9]+'\n'+hook+b[i+9:]
+    b=pre+b[:i+9]+'\n'+plus+hook+b[i+9:]
     open(os.path.join(DIST,'builder.html'),'w',encoding='utf-8').write(b)
     print('dist/builder.html',len(b.encode())//1024,'KB')
 

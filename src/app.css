@@ -657,3 +657,4 @@ dialog.guide::backdrop{background:rgba(8,12,30,.62)}
   .dbgrid{max-height:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
   .dbul li{grid-template-columns:1fr; gap:2px}
 }
+.dk .dz, .fhead h3 .dz{font-size:11px; font-weight:500; color:var(--muted); margin-left:2px}

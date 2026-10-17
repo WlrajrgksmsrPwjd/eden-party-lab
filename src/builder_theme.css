@@ -1,0 +1,65 @@
+/* 장비 빌더 테마(2026-10-17): 편성 연구실과 같은 밤하늘 남색 + 금빛 시계 다이얼. 원본 빌더의 색 변수만 바꾸고 몇 가지 부품을 덮어씀 */
+:root{
+  --bg:#e7ecf5; --panel:#fbfcfe; --ink:#17203a; --muted:#56627e; --line:#d2d8e6; --soft:#f0f3f9;
+  --accent:#2d4ea2; --accent-soft:#e2e8f7; --bar:#c7d3ee;
+  --e-gold:#c9a24a; --e-gold2:#e6c97a; --e-frame:#cdb68a; --e-frame-in:#e6dcc3; --e-night:#111936; --e-night2:#1d2b5e; --e-title:#f2e1af;
+  --e-btn1:#2d4ea2; --e-btn2:#1b2e6a; --e-grid:rgba(38,62,124,.055); --e-glow:rgba(120,150,220,.22); --e-sh:rgba(23,32,58,.06);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#090f22; --panel:#101934; --ink:#e6eaf4; --muted:#9ba6c2; --line:#26345a; --soft:#16213f; --accent:#8fb0ff; --accent-soft:#1c2a52; --bar:#2c3c6b;
+  --e-frame:#5a5134; --e-frame-in:#2b3352; --e-night:#060b1b; --e-night2:#101c42; --e-title:#efd9a0; --e-btn1:#3a5fbe; --e-btn2:#233c86; --e-grid:rgba(120,150,230,.05); --e-glow:rgba(60,90,180,.28); --e-sh:rgba(0,0,0,.3); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#090f22; --panel:#101934; --ink:#e6eaf4; --muted:#9ba6c2; --line:#26345a; --soft:#16213f; --accent:#8fb0ff; --accent-soft:#1c2a52; --bar:#2c3c6b;
+  --e-frame:#5a5134; --e-frame-in:#2b3352; --e-night:#060b1b; --e-night2:#101c42; --e-title:#efd9a0; --e-btn1:#3a5fbe; --e-btn2:#233c86; --e-grid:rgba(120,150,230,.05); --e-glow:rgba(60,90,180,.28); --e-sh:rgba(0,0,0,.3); color-scheme:dark }
+body{margin:0; min-height:100vh; background-color:var(--bg); background-image:radial-gradient(1100px 380px at 50% -120px, var(--e-glow), transparent 72%), linear-gradient(var(--e-grid) 1px, transparent 1px), linear-gradient(90deg, var(--e-grid) 1px, transparent 1px); background-size:auto, 28px 28px, 28px 28px}
+/* 머리띠 */
+header.top.edenhead{position:relative; overflow:hidden; display:grid; gap:6px; padding:16px 20px 18px; border-radius:12px; color:#e9edf8;
+  background-color:var(--e-night); background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 400%22 fill=%22none%22 stroke=%22%23d8b867%22%3E%3Ccircle cx=%22200%22 cy=%22200%22 r=%22186%22 stroke-width=%221.2%22 stroke-opacity=%220.35%22/%3E%3Ccircle cx=%22200%22 cy=%22200%22 r=%22170%22 stroke-width=%227%22 stroke-opacity=%220.28%22 stroke-dasharray=%221.1 16.702%22/%3E%3Ccircle cx=%22200%22 cy=%22200%22 r=%22170%22 stroke-width=%2215%22 stroke-opacity=%220.40%22 stroke-dasharray=%222.6 86.412%22/%3E%3Ccircle cx=%22200%22 cy=%22200%22 r=%22112%22 stroke-width=%221%22 stroke-opacity=%220.23%22 stroke-dasharray=%222 7%22/%3E%3Cpath d=%22M200 200 L200 62%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-opacity=%220.40%22/%3E%3Cpath d=%22M200 200 L300 258%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-opacity=%220.35%22/%3E%3Ccircle cx=%22200%22 cy=%22200%22 r=%226%22 fill=%22%23d8b867%22 fill-opacity=%220.42%22 stroke=%22none%22/%3E%3C/svg%3E"), linear-gradient(180deg, var(--e-night2), var(--e-night));
+  background-repeat:no-repeat; background-size:300px 300px, auto; background-position:right -90px center, 0 0;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--e-gold) 45%, transparent), 0 2px 10px var(--e-sh)}
+header.top.edenhead h1{color:var(--e-title); font-size:24px}
+header.top.edenhead .sub{color:rgba(233,237,248,.78)}
+header.top.edenhead .credit{color:rgba(233,237,248,.6)}
+.edennav{display:flex; gap:8px; align-items:center}
+.edenback{display:inline-flex; align-items:center; gap:4px; color:#f2e1af; text-decoration:none; font-size:12.5px; font-weight:600; padding:3px 10px; border:1px solid color-mix(in srgb, var(--e-gold) 60%, transparent); border-radius:999px; background:rgba(255,255,255,.05)}
+.edenback:hover{background:rgba(255,255,255,.12)}
+.edenback:focus-visible{outline:2px solid var(--e-gold2); outline-offset:2px}
+/* 패널·카드: 금색 두 줄 테두리 */
+aside, .sum-card, .modal-card{border-color:var(--e-frame); box-shadow:inset 0 0 0 3px var(--panel), inset 0 0 0 4px var(--e-frame-in), 0 1px 3px var(--e-sh)}
+.slot{border-color:var(--e-frame-in)}
+.slot[aria-pressed="true"]{border-color:var(--e-gold); box-shadow:inset 0 0 0 1px var(--e-gold), 0 0 0 3px color-mix(in srgb, var(--e-gold) 18%, transparent)}
+.sec-h{color:var(--ink)}
+/* 버튼 */
+.btn{border-color:color-mix(in srgb, var(--accent) 55%, var(--line)); border-radius:7px}
+.btn:hover{background:var(--accent-soft)}
+.btn.solid, .opt-bar > .btn:first-child{background:linear-gradient(180deg, var(--e-btn1), var(--e-btn2)); border-color:var(--e-gold); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 1px 2px var(--e-sh)}
+.tab[aria-pressed="true"]{background:linear-gradient(180deg, var(--e-btn1), var(--e-btn2)); border-color:var(--e-gold); color:#fff}
+/* 현재 세팅 기대 대미지 */
+.total{background:linear-gradient(180deg, var(--e-night2), var(--e-night)); color:#e9edf8; box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--e-gold) 50%, transparent)}
+.total .v{color:var(--e-title)}
+.bar > i{background:linear-gradient(90deg, var(--e-gold), var(--e-gold2))}
+/* 캐릭터 불러오기 */
+aside section.pick{background:color-mix(in srgb, var(--e-gold) 7%, var(--panel)); border-radius:10px 10px 0 0; position:relative}
+.pickn{font-weight:500; letter-spacing:0; color:var(--muted)}
+.pickrow{display:grid; grid-template-columns:minmax(0,1fr) 112px; gap:6px}
+.pklist{display:grid; gap:2px; max-height:280px; overflow:auto; border:1px solid var(--line); border-radius:8px; background:var(--panel); padding:4px}
+.pklist button{display:flex; justify-content:space-between; gap:8px; align-items:baseline; text-align:left; border:0; background:transparent; color:var(--ink); padding:6px 8px; border-radius:6px; cursor:pointer; font:inherit}
+.pklist button span{font-size:11.5px; color:var(--muted); white-space:nowrap}
+.pklist button em{font-style:normal; color:var(--good); font-weight:600}
+.pklist button:hover, .pklist button.hl{background:var(--accent-soft)}
+.pkempty{margin:6px 8px; color:var(--muted); font-size:12.5px}
+.pkmsg{margin:0; font-size:12px; color:var(--muted); line-height:1.6}
+.pkmsg b{color:var(--ink)}
+.pkmsg .btn{margin-left:4px; padding:2px 10px}
+/* 대상·전투·버프 조건 접기 */
+details.moreconds{border-top:1px solid var(--line)}
+details.moreconds > summary{cursor:pointer; padding:12px 16px; font-size:12.5px; font-weight:700; list-style:none; display:flex; justify-content:space-between; align-items:center}
+details.moreconds > summary::-webkit-details-marker{display:none}
+details.moreconds > summary::after{content:"펼치기 ▾"; font-size:11.5px; font-weight:500; color:var(--muted)}
+details.moreconds[open] > summary::after{content:"접기 ▴"}
+details.moreconds > summary .mcn{margin-left:auto; margin-right:10px; font-weight:500; font-size:11.5px; color:var(--accent)}
+details.moreconds > section:first-of-type{border-top:1px solid var(--line)}
+@media (max-width: 900px){
+  header.top.edenhead{background-size:220px 220px, auto; background-position:right -80px top -30px, 0 0}
+  .total{position:sticky; top:0; z-index:15}
+}

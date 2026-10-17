@@ -730,6 +730,7 @@
   },
   {
     "id": "chimera_volca",
+    "parts": [{"label": "사자(마법만)", "need": ["magic"], "hp": 2640}, {"label": "용(참격만)", "need": ["slash"], "hp": 2640}, {"label": "뱀", "need": null, "hp": 1920}],
     "name_kr": "키마이라 볼카 (미확인)",
     "name_jp": "キマイラ・ヴォルカ",
     "content": "外史（望郷の魂と逆星の旅人 第1弾 幻霊の剣と祈誓の灯火）追加ボス",

@@ -16,6 +16,10 @@ const trueNameOf = (p, e) => { const s = (p.raw && p.raw.style) || 'NS'; return 
 // 검색에 쓰는 이름들: 표시 이름 + 원래 이름(진명 공개 중이면 가명) + 일본어 + 예전 표시명
 const hayOf = c => [c.name, c.title||'', (c.raw && c.raw.name_jp)||''].concat((c.raw && c.raw.alias_kr)||[]);
 const nameHas = (c, q) => hayOf(c).some(n=>n.toLowerCase().includes(q));
+// 진명 공개 켜고 끄기: 캐릭터 객체의 이름만 제자리에서 바꿈(지난 결과·평가가 같은 객체를 가리켜 다시 계산 없이 다시 그리기만, 2026-10-17 점검)
+function applyTrueNames(){ const tn = trueOn(); for(const p of prepped){ const e = ISHI[p.id]; if(e && p.title) p.name = tn ? trueNameOf(p, e) : p.title; } NICK_L = null; }
+// 진명 공개를 끈 동안 메모·운용 글에 들어 있는 진명 가리기(이시층 캐릭터 note_kr에 '이시층 렌리' 같은 문구, 2026-10-17 점검)
+const maskTN = (c, t) => { t = String(t||''); const e = c && ISHI[c.id]; if(!e || trueOn()) return t; return t.split(e.t).join('?').split(e.j).join('?'); };
 const ROLE_KR = {dps:'딜러',support:'버퍼',debuffer:'디버퍼',healer:'힐러',tank:'탱커',zone:'존',breaker:'브레이커'};
 const STYLE_KR = {NS:'노멀',AS:'어나더',ES:'엑스트라',AC:'이시층'};
 const CONTENT_KR = c => (c||'').replace('星詠みの書架','성영의 서가').replace(/^廻生$/,'회생(과거와의 결투)').replace(/^顕現/,'현현').replace(/^外史/,'외사');
@@ -39,6 +43,7 @@ let state = null, chars = [], prepped = [], byId = new Map(), cap = 1;
 const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan:{mode:'all', enemy:{}, bossId:'', locked:[], excluded:[], backLocked:[], enemyCount:1, maxDiff:4, focus:null, weights:{b:70,s:40,t:30}, kesId:'', pledge:{nokill:false,size:6,comp:{on:false,elem:[],weap:[],n:3},turns:0}, buddy:{main:'auto',sub:'auto'}}, rosterView:{}, goals:[], buddies:{}});
 const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
 const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
+const zoneOfFocus = f => !f ? '' : f.kind==='elem' ? ({fire:'열화진',water:'수천진',earth:'지열진',wind:'풍왕진',thunder:'초뢰진',shade:'각음진',crystal:'휘정진'}[f.v]||'') : ({slash:'황참진',pierce:'순돌진',blunt:'굉타진',magic:'환마진'}[f.v]||''); // 덱 이름 옆 존(사용자 '환마진덱이 없는디' — 마법 덱이 '마법'으로만 보였음)
 const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성'+(f.conv?' (변환 포함)':'') : (FT_KR[f.v]||f.v);
 // 속성 변환 캐릭터(네코코(ES)·네코코(AS)·에니 등 아군 전체 속성을 바꾸는 캐릭터) 포함 여부(사용자 2026-10-17 '결현현이나 보스 등에도 네코코 필터'):
 // plan.conv를 정하지 않았으면 속성 지정은 원래 그 속성만·그 밖은 포함, 한 번 고르면 모든 성향·탭에 같은 값. 끄면 속성 지정은 원래 속성 공격만 + 다른 속성 변환 담당 제외, 그 밖은 변환 담당을 후보에서 제외(noConv)
@@ -50,8 +55,8 @@ function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings
 function rebuildChars(){
   chars = CHARS_BASE.concat(state.custom||[]);
   prepped = chars.map(E.prepChar);
-  { const tn = trueOn(); for(const p of prepped){ const e = ISHI[p.id]; if(!e) continue; p.title = p.name; p.ishi = true; if(tn) p.name = trueNameOf(p, e); } } // 가명 캐릭터: title = 원래 표시 이름(가명)
-  NICK_L = null;
+  for(const p of prepped){ p._custom = !!(p.raw && p.raw._custom); const e = ISHI[p.id]; if(e){ p.title = p.name; p.ishi = true; } } // 가명 캐릭터: title = 원래 표시 이름(가명)
+  applyTrueNames();
   byId = new Map(prepped.map(p=>[p.id,p]));
   cap = E.computeCap(prepped, settings());
   WK.dbKey = JSON.stringify(state.custom||[]);
@@ -144,10 +149,11 @@ function workerMain(){
   /* 이 함수는 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
   const E = self.AEOpt;
   let byId = new Map(), SP = null;
+  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, azBy: ev.azBy || null} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
-      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])]})),
-    decks:(r.decks||[]).map(d=>({focus:d.focus, ids:d.team.map(c=>c.id), reserveIds:d.reserves.map(c=>c.id), fixedBackIds:[...(d.fixedBack||[])], score:d.score, rel:d.rel, norm:d.norm, miss:d.miss, recCount:d.recCount})),
+      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev)})),
+    decks:(r.decks||[]).map(d=>({focus:d.focus, ids:d.team.map(c=>c.id), reserveIds:d.reserves.map(c=>c.id), fixedBackIds:[...(d.fixedBack||[])], score:d.score, rel:d.rel, norm:d.norm, miss:d.miss, recCount:d.recCount, v:vOf(d.ev)})),
     evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, focus:r.focus||null};
   const litePc = r => r.error ? {error:r.error} : {
     list: r.list.map(x=>x.none ? {id:x.pc.id, none:true} : {id:x.pc.id, teamIds:x.team.map(c=>c.id), score:x.score, rel:x.rel}),
@@ -233,7 +239,7 @@ const progJ = (J,id) => E.charProg(byId.get(id), J.own[id], J.S);
 // timeline: 실전(N턴 총딜)의 1턴을 속도·선제 순서로 — 화면에 되살리는 팀도 엔진 탐색과 같은 값이 되게
 const backNow = () => state.plan.mode==='kesshitsu' ? undefined : (state.plan.backN!=null ? +state.plan.backN : 2); // 후열 인원(결현현은 서약 인원으로)
 let SPOOL = null, SPOOL_SRC = null; const shuttlePool = () => { if(SPOOL_SRC!==prepped){ SPOOL = E.shuttlePoolOf(prepped); SPOOL_SRC = prepped; } return SPOOL; }; // P글래 셔틀 후보(전체 캐릭터)
-const ctxOf = (inp, J) => Object.assign(E.buildCtx(Object.assign({pgl: pglInput(), backN: backNow(), shuttlePool: shuttlePool()}, inp), J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)}))), {timeline:true});
+const ctxOf = (inp, J) => Object.assign(E.buildCtx(Object.assign({pgl: pglInput(), backN: backNow(), shuttlePool: shuttlePool()}, inp), J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)}))), {timeline:true, lazyDummy:true, keyMode: (inp && inp.mode) || (state.plan.mode==='kesshitsu' ? 'boss' : state.plan.mode)}); // keyMode: 변형 고르기를 탐색과 같은 성향 기준으로(2026-10-17 점검)
 const ownedJ = J => J.ids.filter(id=>byId.has(id)).map(id=>({pc:byId.get(id), prog:progJ(J,id)}));
 /* E.optimize와 같은 모양의 결과를 돌려준다. 새 계산에 밀려 버려지면 null */
 /* 편성 계산을 워커 여러 개로 나눔(2026-10-16, 사용자 요청: 처음 쓰는 사람에겐 계산이 너무 오래 걸림).
@@ -292,9 +298,10 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
   for(const y of lr.results||[]){
     if(y.ids.some(id=>!byId.has(id))) continue;
     const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
-    results.push({rank:y.rank, team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx),
+    results.push({rank:y.rank, team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, y.v ? Object.assign({}, ctx, {variant:y.v}) : ctx),
       reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[],
       recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])});
+    Object.defineProperty(results[results.length-1], 'ctx', {value:ctx, writable:true, configurable:true, enumerable:false}); // 같은 상황으로 다시 평가할 때(잠재 광석 추정)
     await yieldUI(); // 화면 다시 그리기를 막지 않게 조합마다 쉬어 감
   }
   const decks = [];
@@ -304,7 +311,7 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
     const d = {focus:y.focus, team, progs, reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)),
       fixedBack:new Set(y.fixedBackIds||[]), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team)};
     // 덱 목록 줄은 이름·점수만 보여서 자세한 평가(ev)는 펼칠 때 계산(2026-10-17 계산 속도: 결과 표시가 덱 수만큼 늦어지던 것)
-    Object.defineProperty(d, 'ev', {configurable:true, enumerable:true, get(){ const v = E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx); Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); return v; },
+    Object.defineProperty(d, 'ev', {configurable:true, enumerable:true, get(){ const v = E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, y.v ? Object.assign({}, ctx, {variant:y.v}) : ctx); Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); return v; },
       set(v){ Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); }});
     decks.push(d);
   }
@@ -438,7 +445,7 @@ function eqCondFromTeam(x, i){
   const fate = o ? (+o.t||0) : 80;
   const st = realSt(o && o.build && o.build.st) || wikiStats(c, fate) || eqBaseStats(co.kind, co.stat);
   const s = {
-    str:st.str, int:st.int, spd:st.spd, luck:st.luck, mp:st.mp, who: baseName(c.name), fate, tlv:140,
+    str:st.str, int:st.int, spd:st.spd, luck:st.luck, mp:st.mp, who: baseName(c.title||c.name), fate, tlv:140,
     atkCls: co.kind==='mag'?'마법':'물리', kind: STAT_B[co.stat]||'', atkType: co.kind==='mag'?'':(WT_B[co.wt]||''),
     elem: EL_B[co.el]||'무속성', range: co.tgt==='st'?'단일':'전체',
     power: Math.max(10, Math.round(co.sizeV*100*co.mult/(co.baseHits||1))), hits: Math.max(1, Math.round(co.totHits)),
@@ -472,7 +479,7 @@ function eqCondNeutral(c, st, fate, v){
   const sizeV = T[E.SIZE_IDX[sk.size]??3]/100, hits = Math.max(1, sk.hits||1), stat = sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
   const wt = kind==='mag' ? 'magic' : (sk.weapon_type||c.wt);
   const b = realSt(st) || wikiStats(c, fate) || eqBaseStats(kind, stat);
-  return {str:b.str, int:b.int, spd:b.spd, luck:b.luck, mp:b.mp, who: baseName(c.name), fate: +fate||0, tlv:140,
+  return {str:b.str, int:b.int, spd:b.spd, luck:b.luck, mp:b.mp, who: baseName(c.title||c.name), fate: +fate||0, tlv:140,
     atkCls: kind==='mag'?'마법':'물리', kind: STAT_B[stat], atkType: kind==='mag'?'':(WT_B[wt]||''),
     elem: EL_B[el]||'무속성', range: tgt==='st'?'단일':'전체', power: Math.max(10, Math.round(sizeV*100*Math.max(1, sk.mult||1)/hits)), hits,
     aff:'통상', zoneT: zone ? (ZONE_OF_EL[el]||ZONE_OF_WT[wt]||'') : '', zone:!!zone, tPain:!!pain, tPoison:!!pain, enemies:1,
@@ -580,7 +587,7 @@ function buildBadge(o){
 }
 function buildCtlHtml(c, o){
   const b=o.build;
-  return `<span class="bld">${b?`${buildBadge(o)} <a class="lnk" href="${esc('builder.html#'+new URLSearchParams({who:baseName(c.name), wt:E.WEAPON_KR[c.weapon]||'', id:c.id, code:b.code}).toString())}" target="_blank" rel="noopener">빌더 ↗</a> <button type="button" class="lnk" data-bact="edit">코드 바꾸기</button> <button type="button" class="lnk" data-bact="del">빌드 빼기</button>`
+  return `<span class="bld">${b?`${buildBadge(o)} <a class="lnk" href="${esc('builder.html#'+new URLSearchParams({who:baseName(c.title||c.name), wt:E.WEAPON_KR[c.weapon]||'', id:c.id, code:b.code}).toString())}" target="_blank" rel="noopener">빌더 ↗</a> <button type="button" class="lnk" data-bact="edit">코드 바꾸기</button> <button type="button" class="lnk" data-bact="del">빌드 빼기</button>`
     : `<button type="button" class="lnk" data-bact="edit" title="장비 빌더의 빌드 코드(AEB1.…)를 넣으면 실제 장비로 계산합니다">장비 빌드 코드</button>`}</span>
     <div class="bldin" hidden><input type="text" placeholder="AEB1.… (장비 빌더 → 빌드 비교 → 코드 복사)" aria-label="${esc(c.name)} 빌드 코드" autocomplete="off" spellcheck="false"><button type="button" class="btn small" data-bact="apply">적용</button><span class="hint" role="status"></span></div>`;
 }
@@ -605,7 +612,7 @@ function renderInbox(){
   const m=readInbox(); if(!m){ bar.hidden=true; bar.innerHTML=''; return; }
   const wt=m.wt||'';
   const cands=ownedList().map(id=>byId.get(id)).filter(c=>!wt || E.WEAPON_KR[c.weapon]===wt).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-  const pick=(m.id && cands.find(c=>c.id===m.id)) || cands.find(c=>baseName(c.name)===m.who) || null;
+  const pick=(m.id && cands.find(c=>c.id===m.id)) || cands.find(c=>baseName(c.title||c.name)===m.who) || null;
   bar.innerHTML = `<b>장비 빌더에서 보낸 빌드</b>${m.who?` (${esc(m.who)}${wt?' · '+esc(wt):''})`:wt?` (${esc(wt)})`:''}
     ${cands.length?`<select id="inboxTo" aria-label="저장할 캐릭터">${pick?'':'<option value="">캐릭터 선택…</option>'}${cands.map(c=>`<option value="${esc(c.id)}"${pick&&pick.id===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}</select>
     <button type="button" class="btn small" id="inboxSave">이 캐릭터 빌드로 저장</button>`:`<span class="hint">${esc(wt||'이 무기')} 보유 캐릭터가 없습니다.</span>`}
@@ -849,8 +856,10 @@ async function runPlan(){
   ptx.textContent = CALC.last==='cache' ? (state.sample ? '미리 계산해 둔 예시 결과입니다.' : '같은 조건으로 계산해 둔 결과입니다.') : `계산 ${Math.max(1,Math.round((Date.now()-t0)/1000))}초`;
   if(r.error){ out.innerHTML=`<div class="empty">${esc(r.error)}</div>`; return; }
   r.pledge = pledge;
+  LAST_PLAN = {r, boss, enemy:any?enemy:null, mode:P.mode};
   renderResults(r, boss, any?enemy:null, P.mode);
 }
+let LAST_PLAN = null;
 
 function fmtN(v){ if(!isFinite(v)) return '—'; if(v>=1e12) return (v/1e12).toFixed(2)+'조'; if(v>=1e8) return (v/1e8).toFixed(v>=1e10?0:v>=1e9?1:2)+'억'; if(v>=1e4) return (v/1e4).toFixed(1)+'만'; return v.toFixed(0); }
 const MODE_KR={all:'종합',opener:'개전 속공',burst:'최고점(허수아비)',sustain:'지속 딜',stability:'안정성',weak:'약점 맞춤',boss:'보스 맞춤',kesshitsu:'결현현',custom:'직접 조절'};
@@ -936,9 +945,9 @@ function renderResults(r, boss, enemy, mode){
   }
   const decks=(r.decks||[]).filter(d=>!all.some(x=>sameTeam(x.team,d.team)));
   if(decks.length){
-    h+=`<section class="decks"><h3>속성덱 · 타입덱</h3><p class="hint" style="margin:0">전방 3명 이상이 같은 속성·공격 타입으로 싸우는 조합 중 가장 좋은 것. 점수는 위 1위를 100으로 둔 값입니다. 눌러서 자세히 보기.</p>`;
+    h+=`<section class="decks"><h3>속성덱 · 타입덱</h3><p class="hint" style="margin:0">전방 3명 이상이 같은 속성·공격 타입으로 싸우는 조합 중 가장 좋은 것(옆은 그 덱의 존 — 마법 = 환마진, 참격 = 황참진, 타격 = 굉타진, 돌격 = 순돌진). 점수는 위 1위를 100으로 둔 값입니다. 눌러서 자세히 보기.</p>`;
     decks.forEach((d,k)=>{ const key='d'+k; d.rank=k+1; RES.set(key,{x:d, focus:r.focus, mode, bossId:boss?boss.id:''}); DECKCTX[key]={boss, enemy, focus:r.focus, ref, hot:HOT[mode], lockSet, mode};
-      h+=`<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${d.focus.kind==='elem'?`<span class="dot ${d.focus.v}"></span> `:''}${esc(focusLabel(d.focus))}</span><span class="dm">${d.team.map(c=>esc(c.name)).join(', ')}</span><span class="num">${(d.rel*100).toFixed(0)}</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; });
+      h+=`<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${d.focus.kind==='elem'?`<span class="dot ${d.focus.v}"></span> `:''}${esc(focusLabel(d.focus))}${zoneOfFocus(d.focus)?` <small class="dz">${esc(zoneOfFocus(d.focus))}</small>`:''}</span><span class="dm">${d.team.map(c=>esc(c.name)).join(', ')}</span><span class="num">${(d.rel*100).toFixed(0)}</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; });
     h+='</section>';
   }
   out.innerHTML=h;
@@ -1336,7 +1345,7 @@ function turnPlanHtml(x, boss){
       const sh=team.map((c,i)=>shSB[i]), mi=sh.indexOf(Math.max(...sh));
       try{ const p2=x.progs.map((p,k)=>k===mi?Object.assign({},p,{gl:Object.assign({mode:'auto'},p.gl||{},{ore:true}),_gq0:null,_gq1:null}):p);
         for(const k in p2[mi]) if(k.indexOf('_gq')===0) delete p2[mi][k];
-        const ev2=E.evalTeam(team, p2, null, x.S||settings(), cap, ctxOf({boss:boss||null})); // 원래 계산과 같은 상황(셔틀·후열 등)으로 비교
+        const ev2=E.evalTeam(team, p2, null, x.S||settings(), cap, x.ctx || ctxOf({boss:boss||null})); // 원래 계산과 같은 상황(셔틀·후열·버디·속성 지정)으로 비교
         const g=ev2.burst/Math.max(1e-9, ev.burst);
         if(g>1.02) o0.push(`독·페인을 거는 캐릭터가 없음 → <b>${esc(team[mi].name)}</b>의 글래스터 1개에 <b>잠재 광석</b>을 달면 공격으로 독·페인이 걸려 독·페인 글래스터가 켜짐 (세팅 후 폭딜 약 +${((g-1)*100).toFixed(0)}%)`);
       }catch(e){}
@@ -1625,9 +1634,9 @@ async function runFocusAll(){
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   const mode = P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, J = jobSnap(), cond = {mode, bossId:boss?boss.id:''};
   for(const k of [...RES.keys()]) if(k[0]==='f') RES.delete(k);
-  grid.innerHTML = FOCUS_LIST.map((f,k)=>`<section class="fcard" id="fx-${k}"><div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><span class="hint">대기 중…</span></div></section>`).join('');
+  grid.innerHTML = FOCUS_LIST.map((f,k)=>`<section class="fcard" id="fx-${k}"><div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}${zoneOfFocus(f)?` <small class="dz">${esc(zoneOfFocus(f))}</small>`:''}</h3><span class="hint">대기 중…</span></div></section>`).join('');
   $('#fxRun').disabled=true; $('#fxProg').hidden=false; $('#fxProg i').style.width='0%';
-  $('#fxMeta').textContent = `${MODE_KR[P.mode]==='보스 맞춤'&&!boss?'최고점 딜':MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''}${P.conv===true?' · 속성 변환 포함':P.conv===false?' · 속성 변환 캐릭터 제외':' · 속성은 원래 속성만'}`;
+  $('#fxMeta').textContent = `${MODE_KR[P.mode]==='보스 맞춤'&&!boss?'최고점 딜':MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''}${convOn(P, P.focus) ? (P.focus && P.focus.kind==='elem' ? ' · 속성 변환 포함' : '') : P.focus && P.focus.kind==='elem' ? ' · 속성은 원래 속성만' : ' · 속성 변환 캐릭터 제외'}`;
   // 11가지를 워커 여러 개(코어 수 - 1, 최대 4)로 나눠 동시에 계산
   const NW = Math.max(1, Math.min(4, ((navigator.hardwareConcurrency||2)-1), FOCUS_LIST.length));
   const fp = FOCUS_LIST.map(()=>0), upd = ()=>{ if(my===fxToken) $('#fxProg i').style.width=Math.round(fp.reduce((a,b)=>a+b,0)/FOCUS_LIST.length*100)+'%'; };
@@ -1643,7 +1652,7 @@ async function runFocusAll(){
   $('#fxRun').disabled=false; $('#fxProg').hidden=true;
 }
 function fcardHtml(f, k, r, cond){
-  const head = `<div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><button type="button" class="btn small" data-fgo="${k}">1~5위 자세히</button></div>`;
+  const head = `<div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}${zoneOfFocus(f)?` <small class="dz">${esc(zoneOfFocus(f))}</small>`:''}</h3><button type="button" class="btn small" data-fgo="${k}">1~5위 자세히</button></div>`;
   if(r.error || !r.results || !r.results.length) return `<section class="fcard" id="fx-${k}">${head}<div class="hint">${esc(r.error||'조건에 맞는 조합이 없습니다.')}</div></section>`;
   const top = r.results[0].ev;
   const rows = r.results.map(x=>{
@@ -1882,7 +1891,7 @@ function rowHtml(c){
     <label class="who" for="own-${esc(c.id)}"><span class="n">${esc(c.name)}${c.title && c.title!==c.name ? ` <small class="ttl">${esc(c.title)}</small>` : ''}${r._custom?' <span class="badge">직접 추가</span>':''}</span>
     <span class="m">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)}${c.align==='light'?'천':'명'} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> ${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}</span></label>`;
   const stBtn = `<button type="button" class="lnk" data-stat aria-expanded="false" title="기본 스탯과 천명치별 값">스탯</button>`;
-  if(!o) return `<div class="row off" data-id="${esc(c.id)}">${head}<div class="ctl">${stBtn}<span class="hint"${r.play_kr?` title="${esc(r.play_kr)}"`:''}>${esc((r.note_kr||'').slice(0,70))}${(r.note_kr||'').length>70?'…':''}</span></div><div class="stwrap" hidden></div></div>`;
+  if(!o) return `<div class="row off" data-id="${esc(c.id)}">${head}<div class="ctl">${stBtn}<span class="hint"${r.play_kr?` title="${esc(maskTN(c, r.play_kr))}"`:''}>${esc(maskTN(c, r.note_kr).slice(0,70))}${maskTN(c, r.note_kr).length>70?'…':''}</span></div><div class="stwrap" hidden></div></div>`;
   const t=+o.t||0;
   const warn = c.stellar && o.s && t<15 ? `<span class="badge warn">15 미만: 성도 스킬 잠김</span>` : '';
   const gk = glKey(o.gl);
@@ -1943,6 +1952,7 @@ function nameIndex(){
 // 이름 뒤 상태 단어(2026-10-17, 사용자 '보유·상태를 쉽고 간편하게'): 숫자 = 천명치, 성도/노성도, 현현/진현현, 극·진·증표·상급(전용 글래스터)
 function statusWord(word){
   const w = normName(word); if(!w) return null;
+  if(['천명','천명치','t','lv'].includes(w)) return {}; // '하보크 천명치 80'처럼 띄어 쓴 앞말(숫자는 따로 읽음)
   let m = w.match(/^(?:천명치?|t)?(\d{1,3})$/); if(m) return {t: Math.min(255, parseInt(m[1], 10))};
   if(['성도','성도o','성도ㅇ','성도각성','성각','성도각성o','sa'].includes(w)) return {s:true};
   if(['노성도','성도x','성도ㄴ','성도안함','미성도','노성각','성각x','성도각성x'].includes(w)) return {s:false};
@@ -1955,10 +1965,10 @@ function statusWord(word){
 }
 // 커뮤니티 줄임말: 어 = AS, 엑 = ES, 짭 = AC + 기본 캐릭터 이름 일부(어스타 = 세스타(AS), 엑코코 = 네코코(ES), 짭바메 = 츠바메 AC)
 let NICK_L = null;
-const AC_BASE = {shanie_ac:'셰이네', laclair_ac:'라크레아', tsubame_ac:'츠바메', nekoko_ac:'네코코'}; // 이절(AC)은 원래 캐릭터와 묶음 키가 달라 줄임말(짭이네·짭바메)용 원래 이름을 따로
+const AC_BASE = {shanie_ac:'셰이네', laclair_ac:'라클레어', tsubame_ac:'츠바메', nekoko_ac:'네코코'}; // 이절(AC)은 원래 캐릭터와 묶음 키가 달라 줄임말(짭이네·짭바메)용 원래 이름을 따로
 function nickList(){ if(NICK_L) return NICK_L;
   NICK_L = prepped.filter(c=>!c._custom).map(c=>{ const st = (c.raw && c.raw.style) || 'NS', b = c.base || c.id, ns = prepped.find(p=>(p.base||p.id)===b && ((p.raw && p.raw.style)||'NS')==='NS');
-    return {c, st, bn: normName(st==='AC' && AC_BASE[c.id] ? AC_BASE[c.id] : (ns ? ns.title||ns.name : c.title||c.name).replace(/\s*\((AS|ES|AC)\)\s*$/,''))}; });
+    return {c, st, bn: normName(st==='AC' && (AC_BASE[c.id] || ISHI[c.id]) ? (AC_BASE[c.id] || ISHI[c.id].t) : (ns ? ns.title||ns.name : c.title||c.name).replace(/\s*\((AS|ES|AC)\)\s*$/,''))}; });
   return NICK_L; }
 function matchNick(k){
   const st = {'어':'AS', '엑':'ES', '짭':'AC'}[k[0]]; if(!st || k.length<3) return null; const r = k.slice(1);
@@ -2045,8 +2055,10 @@ function renderTap(){
   g.innerHTML = L.length ? L.map(tapChip).join('') : '<p class="hint">맞는 캐릭터가 없어요.</p>';
 }
 let tapRR = 0;
+// 예시 보유(처음 방문)에서 하나씩 체크하기 시작하면 예시 목록을 비우고 내 보유로 시작(붙여넣기의 '초기화'와 같은 효과, 2026-10-17 점검)
+function leaveSample(){ if(!state.sample) return false; state.owned = {}; state.sample = false; flash('예시 보유를 지우고 내 보유로 시작해요'); return true; }
 function onTap(btn){
-  const id = btn.dataset.tap, c = byId.get(id); if(!c) return; const s0 = tapState(c);
+  const id = btn.dataset.tap, c = byId.get(id); if(!c) return; if(leaveSample()){ state.owned[id] = newOwn(id); touchRoster(); renderRoster(); renderPlanControls(); return; } const s0 = tapState(c);
   if(s0===0) state.owned[id] = newOwn(id); else if(s0===1 && c.stellar) state.owned[id].s = false; else delete state.owned[id];
   touchRoster(); const s = tapState(c);
   btn.className = 'tapc'+(s?' on':'')+(s===2?' nos':''); btn.setAttribute('aria-pressed', s?'true':'false'); btn.innerHTML = tapInner(c); tapCount();
@@ -2063,9 +2075,10 @@ function ownPack(){ return Object.entries(state.owned).filter(([id])=>byId.has(i
 function ownUnpack(str){ const out = {}; for(const e of String(str||'').split(',')){ const [id, t, s, m, g] = e.split('.'); if(!id || !byId.has(id)) continue; const c = byId.get(id);
   out[id] = {t: Math.max(0, Math.min(255, +t||0)), s: !!(c.stellar && s==='1'), m: Math.max(0, Math.min(2, +m||0)), g: GDEC[g]||'none', gl: null}; } return out; }
 async function copyOwnLink(){
-  const msg = $('#ownLinkMsg'), n = Object.keys(state.owned).filter(id=>byId.has(id)).length;
+  const msg = $('#ownLinkMsg'), n = Object.keys(state.owned).filter(id=>byId.has(id) && !byId.get(id)._custom).length;
   if(!n || state.sample){ msg.textContent = '먼저 보유 캐릭터를 넣어 주세요.'; return; }
-  const url = location.origin + location.pathname + '#own=' + await packStr(ownPack());
+  const base = location.origin && location.origin!=='null' ? location.origin+location.pathname : location.href.split('#')[0]; // file://에서도
+  const url = base + '#own=' + await packStr(ownPack());
   const done = () => { msg.innerHTML = `<b>${n}명</b>을 담은 링크를 복사했어요. 다른 기기에서 열면 불러올지 물어봐요.`; };
   try{ await navigator.clipboard.writeText(url); done(); }
   catch(e){ msg.innerHTML = `복사가 막혀 있어요. 아래 주소를 직접 복사하세요.<input type="text" class="ownurl" readonly value="${esc(url)}" aria-label="보유 링크">`; const i = msg.querySelector('input'); if(i){ i.focus(); i.select(); } }
@@ -2085,8 +2098,10 @@ async function checkOwnHash(){
 }
 function onOwnIn(act){
   const box = $('#ownInbox');
-  if(act==='replace' || act==='merge'){ if(!OWN_IN) return; if(act==='replace' || state.sample) state.owned = {}; for(const [id,o] of Object.entries(OWN_IN)) state.owned[id] = Object.assign({}, state.owned[id]||{}, o);
-    touchRoster(); renderAll(); setSaveText('이 기기에 저장됨'); flash(`보유 ${Object.keys(OWN_IN).length}명을 불러왔어요`); }
+  if(act==='replace' || act==='merge'){ if(!OWN_IN) return; if(act==='replace' || state.sample) state.owned = {};
+    for(const [id,o] of Object.entries(OWN_IN)){ const cur = state.owned[id], o2 = Object.assign({}, o); if(cur && o2.gl==null) delete o2.gl; state.owned[id] = Object.assign({}, cur||{}, o2); } // 더하기: 이미 있던 캐릭터의 글래스터 설정은 그대로
+    touchRoster(); renderAll(); setSaveText('이 기기에 저장됨'); flash(`보유 ${Object.keys(OWN_IN).length}명을 불러왔어요`);
+    planDirty = false; runPlan(); } // 편성 결과도 새 보유로(2026-10-17 점검: 예시 결과가 남아 있었음)
   OWN_IN = null; if(box){ box.hidden = true; box.innerHTML = ''; }
 }
 
@@ -2263,7 +2278,8 @@ function bind(){
       d.addEventListener('close', ()=>{ try{ localStorage.setItem('aeopt_guide', '1'); }catch(e){} });
       document.addEventListener('click', e=>{ if(e.target.closest('[data-guide]')) openGuide(); });
       let seen = false; try{ seen = !!localStorage.getItem('aeopt_guide'); }catch(e){}
-      if(state.sample && !seen && !navigator.webdriver) setTimeout(openGuide, 600); } }
+      const viaLink = /^#(own|share)=/.test(String(location.hash||''));
+      if(state.sample && !seen && !viaLink && !navigator.webdriver) setTimeout(openGuide, 600); } }
   $('#modeMore').addEventListener('click',()=>{ MODE_OPEN=!MODE_OPEN; renderPlanControls(); });
   document.addEventListener('click',e=>{ const tm=$('#tabMore'); if(tm && tm.open && !tm.contains(e.target)) tm.open=false;
     const g=e.target.closest('[data-goto]'); if(g){ showTab(g.dataset.goto); window.scrollTo(0,0); } });
@@ -2352,7 +2368,9 @@ function bind(){
   $('#pcTable').addEventListener('click', e=>{ const b=e.target.closest('button[data-focus]'); if(!b) return; const id=b.dataset.focus;
     state.plan.locked=[id]; state.plan.excluded=state.plan.excluded.filter(x=>x!==id); save(); renderPlanControls(); showTab('plan'); runPlan(); });
   ['#rq','#rel','#rwp','#ral','#rtier','#rown','#rkind'].forEach(s=>$(s).addEventListener('input',renderRoster));
-  $('#trueName').addEventListener('change', e=>{ state.ui = state.ui || {}; state.ui.trueName = e.target.checked; save(); rebuildChars(); renderAll(); runPlan(); }); // 진명 공개: 이름만 바뀌고 계산은 그대로(결과는 저장해 둔 것으로 다시 그림)
+  $('#trueName').addEventListener('change', e=>{ state.ui = state.ui || {}; state.ui.trueName = e.target.checked; save(); applyTrueNames(); renderAll(); // 진명 공개: 이름만 바뀌고 계산은 그대로 — 지난 결과를 다시 그리기만
+    if(LAST_PLAN && !$('#runBtn').disabled){ for(const x of (LAST_PLAN.r.results||[]).concat(LAST_PLAN.r.decks||[])) delete x.ex; renderResults(LAST_PLAN.r, LAST_PLAN.boss, LAST_PLAN.enemy, LAST_PLAN.mode); }
+    if(pcResult) renderPerChar(); });
   $('#roster').addEventListener('change',onRosterChange);
   $('#bulkTop').addEventListener('click',()=>{ for(const c of prepped) if((c.tier==='SS'||c.tier==='S')&&!state.owned[c.id]) state.owned[c.id]=newOwn(c.id); touchRoster(); renderRoster(); renderTap(); });
   $('#roster').addEventListener('click',e=>{ const b=e.target.closest('[data-bact]'); if(b) onBuildAct(b);
@@ -2408,7 +2426,7 @@ function bind(){
   $('#constBox').addEventListener('change',onConst);
   $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','useStats','gearSpd','enemyHits','enemyAoE','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','pglAssumeAll','afStart','burstTurns','sbPerAct','muleSlots','mulePct','auraGl','afRepAnim'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
-function renderAll(){ renderPlanControls(); renderRoster(); renderDb(); renderBudGrid(); renderPglTbl(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
+function renderAll(){ { const nt = $('#newT'); if(nt) nt.value = String(newT()); } renderPlanControls(); renderRoster(); { const pd = $('#p-db'); if(pd && pd.classList.contains('on')) renderDb(); } renderBudGrid(); renderPglTbl(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
 
 
 /* ---------- 캐릭터 DB(2026-10-17, 사용자 '캐릭터 DB도 추가'): 스킬·버프·존·생존·스탯을 캐릭터마다 한눈에 (계산에 쓰는 정리값) ---------- */
@@ -2496,7 +2514,7 @@ function dbDetailHtml(c){
   const rv = (r.revive && r.revive.fx || []).map(f=>`${esc(REV_KR[f.k]||f.k)} ${esc(REVT_KR[f.t]||f.t||'')}${f.w?' · '+esc(REVW_KR[f.w]||f.w):''}`);
   if(sup.length || rv.length) H.push(`<h3>생존·지원</h3><ul class="dbul">${li('지원', sup.join(' · '))}${li('부활', rv.join(' / '))}</ul>`);
   // 운용
-  const ru = [li('운용 포인트', r.play_kr ? esc(r.play_kr) : ''), li('조건', (r.req_ko||r.req) ? esc(r.req_ko||r.req) : ''), li('메모', r.note_kr ? esc(r.note_kr) : '')];
+  const ru = [li('운용 포인트', r.play_kr ? esc(maskTN(c, r.play_kr)) : ''), li('조건', (r.req_ko||r.req) ? esc(maskTN(c, r.req_ko||r.req)) : ''), li('메모', r.note_kr ? esc(maskTN(c, r.note_kr)) : '')];
   if(ru.join('')) H.push(`<h3>운용</h3><ul class="dbul">${ru.join('')}</ul>`);
   H.push(`<h3>스탯</h3>${statBoxHtml(c, o ? +o.t||0 : 0)}<p class="hint">버프 지속 ${esc(tu.buff!=null?tu.buff:3)}턴 · 디버프 지속 ${esc(tu.debuff!=null?tu.debuff:3)}턴${ex.manifest?` · 현현 ${esc(ex.manifest)}단계`:''}</p>`);
   return H.join('');
@@ -2513,9 +2531,9 @@ function bindDb(){
   $('#dbList').addEventListener('click', e=>{ const b = e.target.closest('button[data-db]'); if(b) dbPick(b.dataset.db); });
   $('#dbDetail').addEventListener('click', e=>{
     const id = state.ui && state.ui.dbSel; if(!id || !byId.has(id)) return;
-    if(e.target.closest('[data-dbown]')){ if(state.owned[id]){ delete state.owned[id]; state.plan.locked = (state.plan.locked||[]).filter(x=>x!==id); } else state.owned[id] = newOwn(id); touchRoster(); renderRoster(); renderPlanControls(); renderDb(); return; }
+    if(e.target.closest('[data-dbown]')){ if(leaveSample()){ state.owned[id] = newOwn(id); touchRoster(); renderRoster(); renderPlanControls(); renderDb(); return; } if(state.owned[id]){ delete state.owned[id]; state.plan.locked = (state.plan.locked||[]).filter(x=>x!==id); } else state.owned[id] = newOwn(id); touchRoster(); renderRoster(); renderPlanControls(); renderDb(); return; }
     if(e.target.closest('[data-dblock]')){ const L = state.plan.locked || (state.plan.locked=[]);
-      if(L.includes(id)) state.plan.locked = L.filter(x=>x!==id); else if(L.length>=4){ flash('꼭 쓸 캐릭터는 4명까지예요'); return; } else { L.push(id); state.plan.excluded = (state.plan.excluded||[]).filter(x=>x!==id); }
+      if(L.includes(id)) state.plan.locked = L.filter(x=>x!==id); else if(L.length>=3){ flash('꼭 쓸 캐릭터는 3명까지예요'); return; } else { L.push(id); state.plan.excluded = (state.plan.excluded||[]).filter(x=>x!==id); state.plan.backLocked = (state.plan.backLocked||[]).filter(x=>x!==id); } // 편성 탭 고르기와 같은 최대 3명
       planDirty = true; save(); renderPlanControls(); renderDbDetail(); flash(state.plan.locked.includes(id) ? '편성 탭 꼭 쓸 캐릭터에 넣었어요' : '꼭 쓸 캐릭터에서 뺐어요'); }
   });
 }

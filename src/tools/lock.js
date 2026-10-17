@@ -81,7 +81,7 @@ async function go(code,auto){
   }catch(err){ m.textContent=err&&err.message==='old'?'브라우저가 오래돼서 열 수 없어요. 최신 버전으로 업데이트해 주세요.':'열지 못했어요. 코드를 다시 확인해 주세요.'; }
   b.disabled=false;
 }
-$('f').addEventListener('submit',function(ev){ev.preventDefault(); var c=$('k').value; if(norm(c)) go(c,false);});
+$('f').addEventListener('submit',function(ev){ev.preventDefault(); var c=$('k').value; if(norm(c)) go(c,false); else $('m').textContent='영문·숫자로 된 코드를 넣어 주세요.';});
 var saved=null; try{ saved=localStorage.getItem(LS); }catch(e){}
 if(!window.crypto||!crypto.subtle){ $('m').textContent='이 주소는 https로 열어야 해요.'; $('b').disabled=true; }
 else if(saved) go(saved,true); else $('k').focus();

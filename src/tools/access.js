@@ -13,6 +13,8 @@ const [cmd, name] = process.argv.slice(2), d = load();
 if (cmd === 'add' && name) {
   if (d.users.some(u => u.name === name)) { console.error('이미 있는 이름입니다: ' + name); process.exit(1); }
   const c = code(); d.users.push({name, code: c, added: new Date().toISOString().slice(0, 10)}); save(d); console.log(name + '\t' + c);
+} else if (cmd === 'set' && name && process.argv[4] && String(process.argv[4]).toUpperCase().replace(/[^0-9A-Z]/g, '').length < 8) {
+  console.error('코드는 영문·숫자 8자 이상이어야 합니다(한글·기호는 무시됨)'); process.exit(1);
 } else if (cmd === 'set' && name && process.argv[4]) {
   d.users = d.users.filter(u => u.name !== name); d.users.push({name, code: process.argv[4], added: new Date().toISOString().slice(0, 10)}); save(d); console.log(name + '\t' + process.argv[4]);
 } else if (cmd === 'remove' && name) {
