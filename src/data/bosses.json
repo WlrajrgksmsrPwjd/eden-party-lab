@@ -929,9 +929,12 @@
       {
         "label": "소피(약점·내성 없음)",
         "need": null,
-        "hp": 2
+        "hp": 0.33
       }
-    ]
+    ],
+    "hp": 2670,
+    "hp_src": "https://anothereden.game-info.wiki/d/%ce%ee%c4%b9%a4%ce%cc%bf%cb%a1EX5",
+    "hp_conf": "low"
   },
   {
     "id": "kaisei_reichou_ex4_kokui",
@@ -940,7 +943,9 @@
     "content": "廻生",
     "level": 0,
     "weak": [],
-    "resist": ["shade"],
+    "resist": [
+      "shade"
+    ],
     "null": [],
     "absorb": [],
     "phases": "5웨이브(緑套の炎使い → 灰燼の刀使い → 金織の雷使い → 枢機の天網 → 黒衣の刀使い). 枢機の天網: HP 50% 스토퍼(내성이 전속성으로 변화), 약점 없음. 黒衣の刀使い: HP 50% / 0.1% 스토퍼, 약점 없음·음 내성, 3턴마다 オールクリア(적 디버프·아군 버프 해제)+AF 게이지 감소.",
@@ -955,10 +960,35 @@
       "黒衣 오라: 화·수·풍·지 피해 시 적 선공, 약점 피해 시 적 피해 +50%, 황혼/払暁の型 물리·물마 반격 → 반격 턴에는 공격 자제",
       "3턴마다 オールクリア → 버프 재부여 타이밍 설계"
     ],
-    "needs": {"barrier_pierce": false, "cleanse": true, "guard": false, "status_immune": true, "break": false, "burst": true, "sustain": true, "zone_control": true, "single_target": true, "multi_target": false},
-    "recommended": ["オルレイア(AS)", "ヴェレット(AS)", "ウツハラ", "イヅナ", "オボロ", "ガンス(AS)", "テトラ", "ねここ(ES)", "シグレ(ES)", "セヴェン"],
+    "needs": {
+      "barrier_pierce": false,
+      "cleanse": true,
+      "guard": false,
+      "status_immune": true,
+      "break": false,
+      "burst": true,
+      "sustain": true,
+      "zone_control": true,
+      "single_target": true,
+      "multi_target": false
+    },
+    "recommended": [
+      "オルレイア(AS)",
+      "ヴェレット(AS)",
+      "ウツハラ",
+      "イヅナ",
+      "オボロ",
+      "ガンス(AS)",
+      "テトラ",
+      "ねここ(ES)",
+      "シグレ(ES)",
+      "セヴェン"
+    ],
     "strategy_kr": "4웨이브 枢機の天網은 매 턴 제시되는 금기를 확인하고 그 행동만 피하면서 선제 디버프(속도 디버프 포함)로 선제 공격을 눌러야 하고, 장미를 깨면 최대HP 80% 전체 피해가 오니 깰 때 HP를 채운다. 최종 黒衣の刀使い는 음 내성에 약점이 없고 피격할수록 逢魔 스택이 쌓여 고정 피해가 커지므로 공격 횟수를 조절하고, 반격 자세 턴(16~17턴 등)에는 공격을 쉬었다가 다음 턴 뇌 ZONE+AF로 몰아친다. 3턴마다 オールクリア로 버프가 지워지므로 그 직후 버프를 다시 걸고, 50%/0.1% 스토퍼 뒤 パラダイス・ロスト 고정 피해(최대 6,666)를 견딜 HP를 유지한다. 뇌 ZONE 중심 파티(オルレイア(AS)·ヴェレット(AS)·イヅナ)가 다수 보고되며, 선제 디버프 없이는 매우 어렵다고 평가된다.",
-    "source": "https://altema.jp/anaden/reichounomeihouex4"
+    "source": "https://altema.jp/anaden/reichounomeihouex4",
+    "hp": 3379,
+    "hp_src": "https://anothereden.game-info.wiki/d/%ce%ee%c4%b9%a4%ce%cc%bf%cb%a1EX4",
+    "hp_conf": "low"
   },
   {
     "id": "kaisei_uturo_ex5_terra_nivium",
@@ -1031,7 +1061,9 @@
         ],
         "hp": 1
       }
-    ]
+    ],
+    "hp": 76.8,
+    "hp_src": "https://anothereden.game-info.wiki/d/%B5%F5%A4%ED%A4%CA%A4%EB%BF%BF%BC%C2EX5"
   },
   {
     "id": "kaisei_innga_ex4_deus_ex",
@@ -1090,10 +1122,14 @@
     "name_jp": "サラマンダーの幻霊（赫灼たる豪炎猛火の試練 EXステージ4）",
     "content": "廻生",
     "level": 0,
-    "weak": ["water"],
+    "weak": [
+      "water"
+    ],
     "resist": [],
     "null": [],
-    "absorb": ["fire"],
+    "absorb": [
+      "fire"
+    ],
     "phases": "5웨이브(ゲイルキャリゴ×2+デス/ヘルオーガ → 原初の焔×2+闇サラマンダー → オーガバロン+オーガベイン → 朱雀[50% 변신, 버프·디버프 해제] → サラマンダーの幻霊). 최종: HP 50% 스토퍼, 스토퍼 후 화 존 재전개 + 매 턴 종료 전체 피해 + 위력 상승. 전 웨이브 수 약점, 화 내성/흡수.",
     "mechanics": [
       "개시 화속성 ZONE 전개, 50% 스토퍼에서 재전개 → 수 존 재전개 수단",
@@ -1104,10 +1140,41 @@
       "W3 オーガベイン: AF 사용 후 AF 봉인 / W2 闇サラマンダー: 다운 중 50% 스토퍼 후 기상",
       "W4·5 개막 AF로 스토퍼 행동 취소 유예 활용"
     ],
-    "needs": {"barrier_pierce": false, "cleanse": false, "guard": false, "status_immune": true, "break": false, "burst": true, "sustain": true, "zone_control": true, "single_target": true, "multi_target": true},
-    "recommended": ["ピチカ", "ヒスメナ", "ガラムバレル", "シーラ(AS)", "イーファ(AS)", "デューイ(AS)", "エヴァ", "マリエル(ES)", "エニ", "フラムラピス", "ミストレア(AS)", "アィシャ", "レレ(AS)", "ラディアス(AS)", "チヨ(AS)", "クロード(ES)"],
+    "needs": {
+      "barrier_pierce": false,
+      "cleanse": false,
+      "guard": false,
+      "status_immune": true,
+      "break": false,
+      "burst": true,
+      "sustain": true,
+      "zone_control": true,
+      "single_target": true,
+      "multi_target": true
+    },
+    "recommended": [
+      "ピチカ",
+      "ヒスメナ",
+      "ガラムバレル",
+      "シーラ(AS)",
+      "イーファ(AS)",
+      "デューイ(AS)",
+      "エヴァ",
+      "マリエル(ES)",
+      "エニ",
+      "フラムラピス",
+      "ミストレア(AS)",
+      "アィシャ",
+      "レレ(AS)",
+      "ラディアス(AS)",
+      "チヨ(AS)",
+      "クロード(ES)"
+    ],
     "strategy_kr": "전 웨이브가 수 약점·화 내성이므로 수속성 파티로 통일하고 화 공격은 아예 배제한다(최종 보스는 화 흡수). 4·5웨이브는 개막 AF로 50% 스토퍼까지 밀어 행동 취소 유예를 만들고, AF 중에 버프·디버프를 정비한 뒤 남은 HP를 짧게 끝낸다. 스토퍼 후에는 화 존 재전개+매 턴 전체 피해+위력 상승으로 급격히 어려워지니 水天陣 재전개와 회복·버프 유지를 우선한다. 혼란 대책과 화 내성 장비를 준비하고, 화력이 모자라면 九死一生 연성으로 사고를 막는다.",
-    "source": "https://altema.jp/anaden/gouenmoukaex4"
+    "source": "https://altema.jp/anaden/gouenmoukaex4",
+    "hp": 2.66,
+    "hp_src": "https://anothereden.game-info.wiki/d/%b3%d2%bc%de%a4%bf%a4%eb%b9%eb%b1%ea%cc%d4%b2%d0EX4",
+    "hp_conf": "low"
   },
   {
     "id": "kaisei_resshin_ex4_gnome",
@@ -1165,8 +1232,14 @@
     "name_jp": "夜雀×2（封じられし禍つ魍魎の試練 EXステージ4）",
     "content": "廻生",
     "level": 0,
-    "weak": ["fire"],
-    "resist": ["water", "wind", "earth"],
+    "weak": [
+      "fire"
+    ],
+    "resist": [
+      "water",
+      "wind",
+      "earth"
+    ],
     "null": [],
     "absorb": [],
     "phases": "5웨이브(赤殿中[수] → 拒魔×2[수, 50% 스토퍼 시 상대 회복] → 黒坊主[풍] → 巴蛇×2[지, 50% 스토퍼 毒牙] → 夜雀×2[화]). 최종: HP 50% 스토퍼 시 滅魔・虚(전체 MP 999 피해). 개막 夜雀の鱗粉 독(HP 20%).",
@@ -1179,10 +1252,37 @@
       "매 웨이브 약점이 다름(수→수→풍→지→화) → 존 전환형 파티 또는 AF로 비약점 웨이브 돌파",
       "MP 회복 수단(ピチカ オラトリオ, キュモス) 권장"
     ],
-    "needs": {"barrier_pierce": false, "cleanse": true, "guard": false, "status_immune": true, "break": false, "burst": true, "sustain": true, "zone_control": true, "single_target": false, "multi_target": true},
-    "recommended": ["ナギ(ES)", "チヨ(AS)", "フラムラピス", "ロゼッタ(AS)", "いいマクマク", "ねここ(AS)", "碧光の鎌使い", "ピチカ", "イーファ(AS)", "マリエル(ES)", "ベネディト", "デューイ(AS)", "ラディアス(AS)"],
+    "needs": {
+      "barrier_pierce": false,
+      "cleanse": true,
+      "guard": false,
+      "status_immune": true,
+      "break": false,
+      "burst": true,
+      "sustain": true,
+      "zone_control": true,
+      "single_target": false,
+      "multi_target": true
+    },
+    "recommended": [
+      "ナギ(ES)",
+      "チヨ(AS)",
+      "フラムラピス",
+      "ロゼッタ(AS)",
+      "いいマクマク",
+      "ねここ(AS)",
+      "碧光の鎌使い",
+      "ピチカ",
+      "イーファ(AS)",
+      "マリエル(ES)",
+      "ベネディト",
+      "デューイ(AS)",
+      "ラディアス(AS)"
+    ],
     "strategy_kr": "웨이브마다 약점이 수·풍·지·화로 바뀌므로 존 전환이 가능한 다속성 마법 파티(ねここ(AS)+碧光の鎌使い+フラムラピス 등)를 쓰거나, 약점을 못 찌르는 웨이브는 AF로 조기 돌파한다. 최종 夜雀×2는 1턴째 전체 MP 999 피해로 시작하므로 4웨이브를 AF 게이지 50% 이상으로 끝내고 개막 AF로 50% 스토퍼까지 밀거나, MP 회복(ピチカ オラトリオ, キュモス)을 준비한다. 매 턴 독과 기절이 들어오니 상태이상 대책과 회복을 유지하고, 물리·마법 버프/디버프로 피해를 줄이며 AF 폭딜로 HP를 깎는 운영이 권장된다. 마법 파티는 지성 디버프 내성 그라스타를 장비한다.",
-    "source": "https://altema.jp/anaden/fuuziex4"
+    "source": "https://altema.jp/anaden/fuuziex4",
+    "hp": 4.27,
+    "hp_src": "https://anothereden.game-info.wiki/d/%b2%d2%a4%c4%f2%b3%f2%b4EX4"
   },
   {
     "id": "kaisei_dennou_ex4_mother",
@@ -1263,7 +1363,9 @@
       "セルジュ"
     ],
     "strategy_kr": "전 웨이브가 화 약점·풍지 내성으로 통일되어 있으므로 화속성 존 파티가 기본이다. 다른 속성 환령 시련과 같은 구조이므로 최종 シルフの幻霊도 50% 스토퍼에서 행동이 취소되고 풍 존을 전개할 것으로 보이며, 개막 AF로 50%까지 밀어 유예를 만든 뒤 버프·디버프를 정비하고 끝내는 흐름이 유효하다. 풍 공격은 흡수될 가능성이 있어 배제한다. 세부 기믹은 미확인이므로 개별 EX4 페이지(kyouhubouranex4)로 보완이 필요하다.",
-    "source": "https://altema.jp/anaden/kyouhubouranex4"
+    "source": "https://altema.jp/anaden/kyouhubouranex4",
+    "hp": 3.4,
+    "hp_src": "https://anothereden.game-info.wiki/d/%BD%D4%CE%F5%A4%BF%A4%EB%B6%B8%C9%F7%CB%BD%CD%F0EX4"
   },
   {
     "id": "kaisei_suirou_ex4_ondine",
