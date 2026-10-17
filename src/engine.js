@@ -1703,7 +1703,10 @@ function muleShare(team, S, ctx, progs){
   });
   // 파티 단위 배분(pglPlan): 빌드 코드로 실제 P글래를 넘긴 셔틀이 없으면. 셔틀 칸 = 후열 셔틀마다 칸 수(자동 가정은 퍼스널리티 제한 없음)
   const plan = !mules.some(m=>m.shares), carriers = mules.map(m=>({slots:m.slots, pers: auto ? null : m.pers}));
-  return {k, kd, cs, inv: pglWP(ctx), auto, wp, front: plan ? [] : front, plan, carriers, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
+  const pool = auto && ctx && Array.isArray(ctx.pool) && ctx.pool.length ? ctx.pool.filter(p=>!team.some(c=>c.id===p.id)) : null;
+  const mo = {k, kd, cs, inv: pglWP(ctx), auto, wp, front: plan ? [] : front, plan, carriers, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
+  Object.defineProperty(mo, 'pool', {value: pool, enumerable: false}); // 셔틀 후보는 계산용(결과로 넘기지 않음)
+  return mo;
 }
 /* 빌드 코드의 P글래 공유 효과 → 받는 캐릭터 기준 % (e: 속성·HP 그룹, z: ZONE 전개 중, t: 특정 ZONE) */
 const ELEM_B = {fire:'불',water:'물',earth:'땅',wind:'바람',thunder:'번개',shade:'그림자',crystal:'결정'};
@@ -1853,15 +1856,27 @@ function pglPlan(team, progs, A, S, zone){
     }
     return {score, Rc, used, q51, q50};
   };
-  let best=null, wsel=null;
-  if(mu.auto){
+  let best=null, wsel=null, shut=null;
+  const nbA = mu.carriers.length, slA = mu.carriers.length ? mu.carriers[0].slots : 3;
+  if(mu.auto && mu.pool && nbA>0){
+    // 실제 보유 캐릭터를 셔틀로(2026-10-17): 퍼스널리티 P글래(무기 P 포함)는 그 퍼스널리티가 있는 셔틀만 달 수 있다.
+    // 셔틀 후보를 '이 조합에 쓸모 있는 퍼스널리티' 묶음으로 줄이고(같은 묶음은 하나), 한 명씩 점수 상위 8묶음에서 셔틀 수만큼 고른다
+    const K = new Set(T.filter(t=>t.carrier).map(t=>t.carrier)), prof = new Map();
+    for(const p of mu.pool){ const ps = p.pers.filter(x=>K.has(x)).sort(), key = ps.join(','); const o = prof.get(key); if(o){ o.n++; o.names.push(p.name); } else prof.set(key, {key, pers:new Set(ps), n:1, names:[p.name]}); }
+    const L = [...prof.values()].map(o=>Object.assign(o, {s: run([{left:slA, pers:o.pers}]).score})).sort((a,b)=>b.s-a.s || (a.key<b.key?-1:a.key>b.key?1:0)).slice(0, 8);
+    const combos = []; const rec = (k, from, acc) => { if(k===nbA){ combos.push(acc.slice()); return; } for(let a=from;a<L.length;a++){ if(acc.filter(x=>x===L[a]).length >= L[a].n) continue; acc.push(L[a]); rec(k+1, a, acc); acc.pop(); } };
+    rec(0, 0, []);
+    for(const cb of combos){ const r = run(cb.map(o=>({left:slA, pers:o.pers}))); if(!best || r.score>best.score+1e-12){ best=r; shut=cb; } }
+    if(shut) wsel = shut.map(o=>{ const w = [...o.pers].find(x=>WPS.includes(x)); return w || null; }).filter(Boolean);
+  }
+  if(!best && mu.auto){
     const ws = [...new Set(R.map(r=>r.wp).filter(Boolean))].sort(), nb = mu.carriers.length, sl = mu.carriers.length ? mu.carriers[0].slots : 3;
     const combos = []; const rec = (k, from, acc) => { if(k===nb){ combos.push(acc.slice()); return; } for(let a=from;a<ws.length;a++){ acc.push(ws[a]); rec(k+1, a, acc); acc.pop(); } };
     if(ws.length && nb>0) rec(0, 0, []); else combos.push([]);
-    for(const cb of combos){ const r = run(cb.length ? cb.map(w=>({left:sl, weap:w})) : mu.carriers.map(m=>({left:m.slots}))); if(!best || r.score>best.score+1e-12){ best=r; wsel=cb; } }
+    for(const cb of combos){ const r = run(cb.length ? cb.map(w=>({left:sl, pers:new Set([w])})) : mu.carriers.map(m=>({left:m.slots, pers:new Set()}))); if(!best || r.score>best.score+1e-12){ best=r; wsel=cb; } } // 셔틀 후보 목록이 없을 때: 무기 퍼스널리티 하나짜리 가상 셔틀(다른 퍼스널리티 P글래는 못 담)
   } else best = run(mu.carriers.map(m=>({left:m.slots, pers:m.pers||null})));
   const out = {per: best.Rc.map(r=>({e:r.add, z:r.zp, names:r.names})), r51:best.q51, r50:best.q50, used:best.used, slots: mu.carriers.reduce((a,m)=>a+m.slots,0), nb: mu.carriers.length,
-    shuttleWeap: wsel ? wsel.map(w=>PERS_KR[w]||w) : null};
+    shuttleWeap: wsel ? wsel.map(w=>PERS_KR[w]||w) : null, shuttles: shut ? shut.map(o=>({names:o.names.slice(0,3), n:o.n, pers:[...o.pers].map(x=>PERS_KR[x]||x)})) : null};
   memo.set(zk, out); return out;
 }
 /* 보스가 행동불능 상태이상(기절·수면·마비·석화·빙결·혼란·매료·공포)을 거는지 — 걸리면 요격이 안 나감 */
@@ -1874,8 +1889,10 @@ function buildCtx(input, ownedAll){
   const boss=input.boss;
   const maxBack = backOf(input);
   const mules = (input.backLocked||[]).slice(0,maxBack).map(id=>(ownedAll||[]).find(o=>o.pc.id===id)).filter(Boolean)
-    .map(o=>({id:o.pc.id, name:o.pc.name, pers:o.pc.pers, slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
-  return {needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null,
+    .map(o=>({id:o.pc.id, name:o.pc.name, pers:new Set([...(o.pc.pers||[]), WEAPON_PERS[o.pc.weapon]].filter(Boolean)), slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
+  // 셔틀 후보(보유 캐릭터): 퍼스널리티 P글래는 그 퍼스널리티가 있는 캐릭터만 달 수 있음(사용자 확인 2026-10-17) — 무기 퍼스널리티는 무기로도 보장
+  const pool = (ownedAll||[]).filter(o=>o && o.pc).map(o=>({id:o.pc.id, name:o.pc.name, pers:[...new Set([...(o.pc.pers||[]), WEAPON_PERS[o.pc.weapon]].filter(Boolean))]}));
+  return {pool, needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null,
     burstN: input.pledge && input.pledge.turns>0 ? Math.min(10, input.pledge.turns) : null};
 }
 /* ---------- AF 행동 수 (위키 기준) ----------
