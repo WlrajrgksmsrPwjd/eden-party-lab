@@ -1,5 +1,5 @@
 # 사용법: python3 -I src/build.py  (저장소 루트에서 실행) → index.html 생성
-import json,glob,os
+import re, json,glob,os
 here=os.path.dirname(os.path.abspath(__file__))
 P=lambda *a: os.path.join(here,*a)
 chars=[]
@@ -70,6 +70,10 @@ for c in chars:
 bac=json.load(open(P('data','buff_acts.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in bac and not c['id'].startswith('_'): c['bact']=[{k:v for k,v in a.items() if k in ('s','k','g','h','mp','el','wt','size','mult','hits','afx','z','zk','lv','req','na','once','dur','acts')} for a in bac[c['id']]['acts']]
+for c in chars: # 추천 스킬 칸 표시용 한국어 이름(계산은 원문 s)
+    for a in c.get('bact') or []:
+        nm=re.split(r'[（(]', a.get('s') or '')[0].strip()
+        if has_jp(nm): a['sko']=ko(nm)
 # 루나틱<솔선(挺身)>: 내구→힘·정신→지성 고정값(딩 14·15행)
 lun=json.load(open(P('data','lunatic.json'),encoding='utf-8'))
 for c in chars:
@@ -127,7 +131,7 @@ mp=P('data','meta.json')
 meta=json.load(open(mp,encoding='utf-8')) if os.path.exists(mp) else {}
 rd=lambda n: open(P(n),encoding='utf-8').read()
 head='''<!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111936">
 <title>에덴 편성 연구실</title>
 <meta name="description" content="어나더 에덴 보유 캐릭터·천명치·글래스터 기준 파티 편성 계산기">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

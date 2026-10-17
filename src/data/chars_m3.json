@@ -230,7 +230,7 @@
   "support": {"heal": 0, "barrier": 0, "dmg_cut": 0, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "BP 관리(BP3에서 소비), 해당 속성 ZONE",
   "tags": ["bp", "normal_attack_change", "mental_focus", "multi_element", "weak_dmg_up", "collab_octopath"],
-  "note_kr": "옥토패스 트래블러 콜라보 사이러스(기존 사이러스와 별개). 화/수/뇌 3속성 지팡이 마법 딜러로 3종 ZONE을 혼자 전개(각 전체 소+아군 MP 20 회복). 真理の追求 자신 약점 대미지 UP+ZONE 속성공격 50%. 필살기 碩学王の知識로 MP최대치 마법대미지+지성 70%. SB 강화 아군 마크리대미지 30%. BP3이면 소비되어 화력 불안정. weak_dmg 50은 추정.",
+  "note_kr": "옥토패스 트래블러 콜라보 사이러스(기존 사이러스와 별개). 화/수/뇌 3속성 지팡이 마법 딜러로 3종 ZONE을 혼자 전개(각 전체 소+아군 MP 20 회복). 真理の追求 자신 약점 대미지 UP+ZONE 속성공격 50%. 필살기 碩学王の知識로 MP최대치 마법대미지+지성 70%. SB 강화 아군 마크리대미지 30%. BP3이면 소비되어 화력 불안정. 약점 대미지 UP 50%는 추정.",
   "sb_normal": {"skill": "特大複合魔法", "target": "aoe", "kind": "mag", "stat": "int", "element": "water", "weapon_type": "magic", "mult": 3, "size": "xxl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "SB 아닐 때: 수·화·뇌 극대 마법 3개(극대×3). 크리 시 대미지 2배(확정 크리 없음, 미반영)"},
   "support_src": {"mp_recover": "水/火/雷の魔法陣"},
   "play_kr": "수·화·뇌 마법진으로 水天陣·烈火陣·招雷陣을 혼자 깔고 아군 MP를 20씩 채우는 3속성 지팡이 딜러입니다. 주력 特大氷結魔法은 BP 3일 때 6배이고 깔린 존에 따라 속성이 바뀌며, BP 3에서 쓰면 BP를 다 쓰고 宝珠를 얻어 통상 공격(碩学王の知識)으로 지성 70%·MP 비례 마법 대미지를 겁니다. BP는 주력 외 스킬로만 쌓이니 AF에선 첫 행동만 주력, 이후엔 성도 스킬 特大複合魔法(극대 3연발)이 더 강하고, SB 땐 위력 4배·확정 크리(2배)입니다.",
@@ -258,7 +258,7 @@
   "support": {"heal": 3, "barrier": 2, "dmg_cut": 3, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 2, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "파워게이지 3, MAX 모드, KOF 아군",
   "tags": ["power_gauge", "max_mode", "taunt", "counter", "af_combo", "collab_kof"],
-  "note_kr": "KOF 콜라보 물 권갑. レイ・スピン 단일 물 특대 4회(AF 콤보 2배)+아군 HP 20%·MP 30 회복(MAX 시 2배)+크리율·마크리율 100%(3회 행동). ダイアモンドブレス 아군 완력·지성·물리내성·전속성내성 25%(KOF 2배). ダイアモンドエッジ 전체 3회 8배(MAX 16배). 挑発+迎撃. SB 강화 아군 전속성내성 50%. weak_dmg 50은 추정.",
+  "note_kr": "KOF 콜라보 물 권갑. レイ・スピン 단일 물 특대 4회(AF 콤보 2배)+아군 HP 20%·MP 30 회복(MAX 시 2배)+크리율·마크리율 100%(3회 행동). ダイアモンドブレス 아군 완력·지성·물리내성·전속성내성 25%(KOF 2배). ダイアモンドエッジ 전체 3회 8배(MAX 16배). 挑発+迎撃. SB 강화 아군 전속성내성 50%. 약점 대미지 UP 50%는 추정.",
   "support_src": {"heal": "EXレイ・スピン(S)", "barrier": "ダイアモンドエッジ(MAXモード)", "dmg_cut": "ダイアモンドブレス / ステラバースト強化", "taunt": "挑発", "mp_recover": "EXレイ・スピン(S)"},
   "play_kr": "水 속성 권갑이지만 완력 비례 마법으로 싸우는 서포터 겸 딜러입니다. EXレイ・スピン(S)으로 아군 HP·MP 회복과 크리율 100%(3회 행동)를 주며 AF 콤보 배율을 2배로 올리고, 파워 게이지 3을 모아 ダイアモンドエッジ(전체 8배 3타·크리 확정, MAX 모드면 16배)로 아군 전속성 공격 50%를 겁니다. ダイアモンドブレス는 KOF 아군에게 완력·지성 50%와 내성 50%(6턴)를 2배로 주니 KOF 편성일 때 가장 강합니다. SB는 MAX 모드와 함께 브레스·엣지를 게이지 소모 없이 연속으로 씁니다.",
   "alias_kr": ["쿨라 다이아몬드"]
@@ -337,7 +337,7 @@
   "support": {"heal": 0, "barrier": 0, "dmg_cut": 2, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
   "req": "현현무기 蒼型乃羽舞, 明鏡止水 3 축적, 型 전환",
   "tags": ["manifest", "stance", "pain", "another_skill", "weak_dmg_up"],
-  "note_kr": "바람 도 AS 서포터/디버퍼(현현 기준). 万物斉同 扶揺: 단일 바람 대+완력·지성 30%DOWN+페인 / 胡蝶: 적 전체 바람내성 50%DOWN+아군 MP 30 회복. 垂天之雲 胡蝶 크리율 85%·크리위력 15%. 神速の旋律 아군 완력·속도 50%(5턴)+자신 약점 대미지 UP. 月影 참·바람내성 20%DOWN. 明鏡止水로 속도·물리내성 UP. VC 아군 속도·물리내성 30%. weak_dmg 50은 추정.",
+  "note_kr": "바람 도 AS 서포터/디버퍼(현현 기준). 万物斉同 扶揺: 단일 바람 대+완력·지성 30%DOWN+페인 / 胡蝶: 적 전체 바람내성 50%DOWN+아군 MP 30 회복. 垂天之雲 胡蝶 크리율 85%·크리위력 15%. 神速の旋律 아군 완력·속도 50%(5턴)+자신 약점 대미지 UP. 月影 참·바람내성 20%DOWN. 明鏡止水로 속도·물리내성 UP. VC 아군 속도·물리내성 30%. 약점 대미지 UP 50%는 추정.",
   "support_src": {"dmg_cut": "ヴァリアブルチャント / 明鏡止水", "mp_recover": "万物斉同(胡蝶の型, 顕現)"},
   "play_kr": "風 속성 도 서포터로, 神速の旋律로 아군 전체 완력·속도 +50%(5턴)를 주고 垂天之雲 胡蝶の型으로 아군 크리율 +85%·크리 위력 +15%를 겁니다. 垂天之雲은 쓸 때마다 型이 바뀌어 扶揺の型일 땐 적 전체 특대 공격, 胡蝶の型일 땐 크리 버프가 되므로 공격과 버프를 번갈아 쓰게 됩니다. 万物斉同은 胡蝶の型에서 적 風 내성 −50%와 아군 MP 30 회복, 扶揺の型에서 페인·완력·지성 다운을 걸며, 현현 무기 蒼型乃羽舞가 있어야 이 수치가 나옵니다."
 },

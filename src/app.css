@@ -1,9 +1,12 @@
 /* 작업대 레이아웃: 상단 탭 + (편성) 좌측 조건 패널 / 우측 순위 카드 */
 :root{
-  --bg:#eef1f6; --surface:#ffffff; --surface-2:#f5f7fb; --ink:#1a2238; --muted:#5b6680; --line:#d7dce8;
-  --accent:#9a6f17; --accent-soft:#f3e7cb; --accent-ink:#ffffff;
+  --bg:#e7ecf5; --surface:#fbfcfe; --surface-2:#f0f3f9; --ink:#17203a; --muted:#56627e; --line:#d2d8e6;
+  --accent:#93680e; --accent-soft:#f3e8cc; --accent-ink:#ffffff;
+  --gold:#c9a24a; --gold-2:#e6c97a; --frame:#cdb68a; --frame-in:#e6dcc3;
+  --night:#111936; --night-2:#1d2b5e; --night-ink:#e9edf8; --title:#f2e1af;
+  --btn-1:#2d4ea2; --btn-2:#1b2e6a; --grid:rgba(38,62,124,.055); --glow:rgba(120,150,220,.22); --sh:rgba(23,32,58,.06);
   --light-c:#21818f; --shadow-c:#7346ab;
-  --good:#157f3b; --warn:#a85b06; --bad:#b42318;
+  --good:#157f3b; --warn:#a35505; --bad:#b42318;
   --el-fire:#c8402f; --el-water:#2768c4; --el-earth:#8a5a1c; --el-wind:#2f8a4a; --el-thunder:#a8870a;
   --el-shade:#6b3fa0; --el-crystal:#b03a86; --el-none:#6b7385;
   --f-display:"Gowun Batang", "Nanum Myeongjo", serif;
@@ -12,14 +15,20 @@
   --r:10px;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#0e1422; --surface:#161e31; --surface-2:#1c2640; --ink:#e6e9f2; --muted:#9aa4bd; --line:#2a3550;
-  --accent:#d9a940; --accent-soft:#3a3016; --accent-ink:#1a1406;
+  --bg:#090f22; --surface:#101934; --surface-2:#16213f; --ink:#e6eaf4; --muted:#9ba6c2; --line:#26345a;
+  --accent:#dcb662; --accent-soft:#33290f; --accent-ink:#1a1406;
+  --gold:#c9a24a; --gold-2:#ead08a; --frame:#5a5134; --frame-in:#2b3352;
+  --night:#060b1b; --night-2:#101c42; --night-ink:#e6eaf4; --title:#efd9a0;
+  --btn-1:#3a5fbe; --btn-2:#233c86; --grid:rgba(120,150,230,.05); --glow:rgba(60,90,180,.28); --sh:rgba(0,0,0,.3);
   --light-c:#5cc3d6; --shadow-c:#b48ae6; --good:#4cc47a; --warn:#e9a24b; --bad:#f07369;
   --el-fire:#f07a6c; --el-water:#6ea6f2; --el-earth:#d4a15e; --el-wind:#6fd08c; --el-thunder:#e6c84a;
   --el-shade:#b48ae6; --el-crystal:#ee86c8; --el-none:#a3aabb; color-scheme:dark }}
 :root[data-theme="dark"]{
-  --bg:#0e1422; --surface:#161e31; --surface-2:#1c2640; --ink:#e6e9f2; --muted:#9aa4bd; --line:#2a3550;
-  --accent:#d9a940; --accent-soft:#3a3016; --accent-ink:#1a1406;
+  --bg:#090f22; --surface:#101934; --surface-2:#16213f; --ink:#e6eaf4; --muted:#9ba6c2; --line:#26345a;
+  --accent:#dcb662; --accent-soft:#33290f; --accent-ink:#1a1406;
+  --gold:#c9a24a; --gold-2:#ead08a; --frame:#5a5134; --frame-in:#2b3352;
+  --night:#060b1b; --night-2:#101c42; --night-ink:#e6eaf4; --title:#efd9a0;
+  --btn-1:#3a5fbe; --btn-2:#233c86; --grid:rgba(120,150,230,.05); --glow:rgba(60,90,180,.28); --sh:rgba(0,0,0,.3);
   --light-c:#5cc3d6; --shadow-c:#b48ae6; --good:#4cc47a; --warn:#e9a24b; --bad:#f07369;
   --el-fire:#f07a6c; --el-water:#6ea6f2; --el-earth:#d4a15e; --el-wind:#6fd08c; --el-thunder:#e6c84a;
   --el-shade:#b48ae6; --el-crystal:#ee86c8; --el-none:#a3aabb; color-scheme:dark }
@@ -505,3 +514,54 @@ details.why>.order{margin-bottom:0}
 /* 연성 P글래 셔틀: 셔틀마다 달 글래 */
 .shut{list-style:none; margin:6px 0 0; padding:0; display:grid; gap:6px; font-size:12.5px}
 .shut li{border-left:2px solid var(--accent); padding:2px 0 2px 10px}
+
+:root{--stars:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%2290%22 fill=%22%23ffffff%22%3E %3Ccircle cx=%2218%22 cy=%2214%22 r=%221%22 fill-opacity=%22.55%22/%3E%3Ccircle cx=%2274%22 cy=%2252%22 r=%22.8%22 fill-opacity=%22.4%22/%3E%3Ccircle cx=%22131%22 cy=%2222%22 r=%221.3%22 fill-opacity=%22.6%22/%3E %3Ccircle cx=%22168%22 cy=%2270%22 r=%22.9%22 fill-opacity=%22.45%22/%3E%3Ccircle cx=%22204%22 cy=%2234%22 r=%22.7%22 fill-opacity=%22.35%22/%3E%3Ccircle cx=%2242%22 cy=%2278%22 r=%221.1%22 fill-opacity=%22.5%22/%3E %3Ccircle cx=%2299%22 cy=%228%22 r=%22.6%22 fill-opacity=%22.35%22/%3E%3C/svg%3E")}
+/* ===== 어나더 에덴 테마(2026-10-17, 사용자 요청 '어나더에던 디자인으로 적당하게'): 밤하늘 남색 머리띠 + 금빛 시계 다이얼(직접 그린 도형),
+   주요 창은 금색 두 줄 테두리, 바탕은 연구실 설계도 모눈. 게임 그림·로고는 쓰지 않음 ===== */
+body{background-color:var(--bg); background-image:radial-gradient(1100px 380px at 50% -120px, var(--glow), transparent 72%), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size:auto, 28px 28px, 28px 28px; margin:0; min-height:100vh}
+.top{background-color:var(--night); background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 400%22 fill=%22none%22 stroke=%22%23d8b867%22%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22186%22 stroke-width=%221.2%22 stroke-opacity=%220.35%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22180%22 stroke-width=%22.6%22 stroke-opacity=%220.25%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22170%22 stroke-width=%227%22 stroke-opacity=%220.28%22 stroke-dasharray=%221.1 16.702%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22170%22 stroke-width=%2215%22 stroke-opacity=%220.40%22 stroke-dasharray=%222.6 86.412%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22148%22 stroke-width=%22.8%22 stroke-opacity=%220.25%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22112%22 stroke-width=%221%22 stroke-opacity=%220.23%22 stroke-dasharray=%222 7%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%2264%22 stroke-width=%22.8%22 stroke-opacity=%220.25%22/%3E %3Cpath d=%22M200 200 L200 62%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-opacity=%220.40%22/%3E %3Cpath d=%22M200 200 L300 258%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-opacity=%220.35%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%226%22 fill=%22%23d8b867%22 fill-opacity=%220.42%22 stroke=%22none%22/%3E %3Ccircle cx=%22264%22 cy=%22200%22 r=%223.5%22 fill=%22%23d8b867%22 fill-opacity=%220.35%22 stroke=%22none%22/%3E %3Ccircle cx=%22200%22 cy=%2288%22 r=%222.5%22 fill=%22%23d8b867%22 fill-opacity=%220.35%22 stroke=%22none%22/%3E %3C/svg%3E"), var(--stars), linear-gradient(180deg, var(--night-2), var(--night)); background-repeat:no-repeat, repeat, no-repeat; background-size:340px 340px, 220px 90px, auto; background-position:right max(-150px, calc(50% - 820px)) center, 0 0, 0 0;
+  border-bottom:1px solid var(--gold); color:var(--night-ink)}
+.top::after{content:""; position:absolute; left:0; right:0; bottom:-5px; height:1px; background:linear-gradient(90deg, transparent, var(--gold) 18%, var(--gold) 82%, transparent); opacity:.55; pointer-events:none}
+.brand h1{color:var(--title); display:flex; align-items:center; gap:9px; font-size:22px; text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.brand h1::before{content:""; width:26px; height:26px; flex:none; background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22 fill=%22none%22 stroke=%22%23d8b867%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2213.5%22 stroke-width=%221.6%22/%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2210%22 stroke-width=%222.4%22 stroke-dasharray=%221 4.236%22/%3E%3Cpath d=%22M16 16V7.5M16 16l5.5 3.2%22 stroke-width=%221.8%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%221.8%22 fill=%22%23d8b867%22 stroke=%22none%22/%3E%3C/svg%3E") center/contain no-repeat}
+.brand .sub{color:rgba(233,237,248,.62)}
+.top .tab{color:rgba(233,237,248,.74)}
+.top .tab:hover{color:#fff}
+.top .tab[aria-selected="true"],.top .tabmore>summary.cur{background:rgba(255,255,255,.07); border-color:color-mix(in srgb, var(--gold) 75%, transparent); color:#fff; box-shadow:inset 0 -2px 0 var(--gold)}
+.top .tabmenu .tab{color:var(--muted); box-shadow:none}
+.top .tabmenu .tab:hover{color:var(--ink); background:var(--surface-2)}
+.top .tabmenu .tab[aria-selected="true"]{color:var(--ink); background:var(--surface-2); border-color:transparent; box-shadow:inset 2px 0 0 var(--gold)}
+.tabmenu{border-color:var(--frame)}
+.top .save{color:rgba(233,237,248,.66); background:color-mix(in srgb, var(--night) 72%, transparent); padding:1px 7px; border-radius:5px}
+.top :focus-visible{outline-color:var(--gold-2)}
+/* 창: 금색 두 줄 테두리(바깥 금선 + 안쪽 옅은 선) */
+.controls,.card,.bossdetail,.doc article,.consts,.fcard{border-color:var(--frame); box-shadow:inset 0 0 0 3px var(--surface), inset 0 0 0 4px var(--frame-in), 0 1px 3px var(--sh)}
+.card{position:relative}
+.card.first,.controls,.bossdetail,.doc article{position:relative}
+.controls{position:sticky}
+@media (max-width:900px){ .controls{position:relative; top:auto} }
+.card.first::before,.card.first::after,.controls::before,.controls::after,.bossdetail::before,.bossdetail::after,.doc article::before,.doc article::after{content:""; position:absolute; top:-4px; width:7px; height:7px; background:var(--gold); transform:rotate(45deg); box-shadow:0 0 0 2px var(--bg)}
+.card.first::before,.controls::before,.bossdetail::before,.doc article::before{left:16px}
+.card.first::after,.controls::after,.bossdetail::after,.doc article::after{right:16px}
+.card.first{border-color:var(--gold); box-shadow:inset 0 0 0 3px var(--surface), inset 0 0 0 4px color-mix(in srgb, var(--gold) 45%, var(--frame-in)), 0 2px 10px var(--sh)}
+.card.first .rank{background:linear-gradient(180deg, var(--gold-2), var(--accent)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.toolbar,.fold,.metadecks,.tblwrap,.empty,.goalnew,.defgl,.row,.bossitem,.deckrow{box-shadow:0 1px 2px var(--sh)}
+/* 버튼: 남색 + 금 테두리 */
+.btn.primary{background:linear-gradient(180deg, var(--btn-1), var(--btn-2)); border-color:var(--gold); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 1px 2px var(--sh); letter-spacing:.02em}
+.btn.primary:hover{filter:brightness(1.1); border-color:var(--gold-2)}
+.btn.primary[disabled]{filter:none}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg, var(--btn-1), var(--btn-2)); color:#fff; border-color:var(--gold)}
+.modeseg button[aria-pressed="true"] .rec{color:var(--title)}
+.plcomp button[aria-pressed="true"]{background:linear-gradient(180deg, var(--btn-1), var(--btn-2)); border-color:var(--gold); color:#fff}
+/* 막대: 금빛 */
+.progress i,.scorebar .bar i,.metric.hot .bar i,.pct .sc .bar i,.mdm .bar i,.tmbar i{background:linear-gradient(90deg, var(--accent), var(--gold-2))}
+.mem .share i{background:linear-gradient(90deg, var(--btn-2), var(--btn-1))}
+.zonebadge{border-color:var(--frame); background:color-mix(in srgb, var(--gold) 9%, var(--surface))}
+.tplan > li{border-left-color:color-mix(in srgb, var(--gold) 45%, transparent)}
+.flash{background:var(--night-2); color:var(--night-ink); border:1px solid var(--gold)}
+.bossdetail h2,.doc article h2,.pch,.fhead h3{color:var(--ink)}
+@media (max-width:640px){
+  .top{position:relative; background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 400%22 fill=%22none%22 stroke=%22%23d8b867%22%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22186%22 stroke-width=%221.2%22 stroke-opacity=%22.7%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22180%22 stroke-width=%22.6%22 stroke-opacity=%22.5%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22170%22 stroke-width=%227%22 stroke-opacity=%22.55%22 stroke-dasharray=%221.1 16.702%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22170%22 stroke-width=%2215%22 stroke-opacity=%22.8%22 stroke-dasharray=%222.6 86.412%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22148%22 stroke-width=%22.8%22 stroke-opacity=%22.5%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%22112%22 stroke-width=%221%22 stroke-opacity=%22.45%22 stroke-dasharray=%222 7%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%2264%22 stroke-width=%22.8%22 stroke-opacity=%22.5%22/%3E %3Cpath d=%22M200 200 L200 62%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-opacity=%22.8%22/%3E %3Cpath d=%22M200 200 L300 258%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-opacity=%22.7%22/%3E %3Ccircle cx=%22200%22 cy=%22200%22 r=%226%22 fill=%22%23d8b867%22 fill-opacity=%22.85%22 stroke=%22none%22/%3E %3Ccircle cx=%22264%22 cy=%22200%22 r=%223.5%22 fill=%22%23d8b867%22 fill-opacity=%22.7%22 stroke=%22none%22/%3E %3Ccircle cx=%22200%22 cy=%2288%22 r=%222.5%22 fill=%22%23d8b867%22 fill-opacity=%22.7%22 stroke=%22none%22/%3E %3C/svg%3E"), var(--stars), linear-gradient(180deg, var(--night-2), var(--night)); background-size:240px 240px, 220px 90px, auto; background-position:right -70px top -30px, 0 0, 0 0}
+  .brand h1{font-size:19px} .brand h1::before{width:22px; height:22px}
+}
+@media (prefers-reduced-motion: reduce){ .btn.primary:hover{filter:none} }

@@ -862,7 +862,7 @@ function dmgShares(ev, mode){
   const sum = a => a.reduce((t,v)=>t+(v||0),0);
   let per = null, lab = '';
   if(mode==='burst' && ev.dummy && ev.dummy.per && sum(ev.dummy.per)>0){ per = ev.dummy.per; lab = '최고점 딜 비중'; }
-  else if((mode==='sustain'||mode==='stability') && ev.afPer){ per = ev.normal.per.map((v,k)=>(v||0)*(ev.susNW!=null ? ev.susNW : 1) + (ev.afPer[k]||0)/Math.max(1, ev.afTurns||2) + (ev.sbPerSus ? ev.sbPerSus[k]||0 : 0)); lab = '지속 딜 비중'; }
+  else if((mode==='sustain'||mode==='stability') && ev.afPer){ per = ev.normal.per.map((v,k)=>(v||0)*(ev.susNW!=null ? ev.susNW : 1) + ((ev.afPer[k]||0) + (ev.ctrAF ? ev.ctrAF.per[k]||0 : 0))/Math.max(1, ev.afTurns||2) + (ev.sbPerSus ? ev.sbPerSus[k]||0 : 0)); lab = '지속 딜 비중'; }
   else if(ev.bsim && ev.bsim.per && sum(ev.bsim.per)>0){ per = ev.bsim.per; lab = `실전 ${ev.bsim.N}턴 딜 비중`; }
   else { per = ev.sb.per; lab = 'SB 턴 비중'; }
   const t = sum(per)||1; return {s: per.map(v=>(v||0)/t), lab};
@@ -870,12 +870,14 @@ function dmgShares(ev, mode){
 function memHtml(x, i, key, focus, lockSet){
   const c=x.team[i], ev=x.ev, cs=ev.sb.cores[i], ds=dmgShares(ev, (RES.get(key)||{}).mode || state.plan.mode), share=ds.s[i];
   const gq = cs&&cs.gq;
-  const off = focus && !E.charFocusMatch(c, focus) && !(focus.kind==='elem' && cs && cs.el===focus.v); // 속성 변환(変幻自在 등)으로 지정 속성으로 치면 지정 외가 아님
+  const off = focus && !E.charFocusMatch(c, focus) && !(focus.kind==='elem' && focus.conv && cs && cs.el===focus.v); // 속성 변환(変幻自在 등)으로 지정 속성으로 치면 지정 외가 아님('변환 덱 포함'일 때만)
+  const es = ev.sim && ev.sim.eqSk && ev.sim.eqSk[i], skL = es && es.L.length ? es.L.map(z=>esc(z.n)).join(' · ') : '';
   const notMine = x.shared && x.real && !x.mine[i];
   return `<div class="mem${lockSet&&lockSet.has(c.id)?' locked':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="눌러서 추천 세팅 보기">
     <div class="nm">${esc(c.name)}${notMine?' <span class="badge warn">미보유</span>':''}</div>
     <div class="meta">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
     <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}${ev.sbOff&&ev.sbOff[i]?' <span class="badge" title="성도 스킬도 스킬 칸 1개라, 빼고 그 칸에 버프·공격 스킬을 하나 더 다는 편이 이 조합에선 나음(이 캐릭터는 SB 안 씀)">성도 스킬 안 씀</span>':''}${ev.uni&&ev.uni[i]===true?' <span class="badge" title="전열의 다른 가창 캐릭터가 歌唱 중일 때 エルの唄가 エルの唄・ユニゾン으로 바뀜 → 재공격·AF 콤보 증가량 2배·스킬 위력 1.3배·아군 크리 대미지 50%">유니즌</span>':ev.uni&&ev.uni[i]===false?' <span class="badge" title="다른 가창 캐릭터보다 먼저 혼자 歌唱(아군 주는 대미지 50%·AF 콤보 +3%p)하는 편이 이 조합에선 나음 → 재공격 없음">혼자 가창</span>':''}</div>
+    ${skL ? `<div class="sk" title="주력·성도 스킬 말고 스킬 칸에 다는 버프·공격 스킬 (${es.tot}칸 중 ${es.n}칸)">+ ${skL}</div>` : ''}
     ${gq && glText(gq) && glText(gq)!=='글래 없음' ? `<div class="sk">글래 ${esc(glText(gq))}${gq.painOK||!(gq.pa||gq.po)?'':' (독·페 미부여)'}</div>` : ''}
     <div class="share" title="${ds.lab} ${(share*100).toFixed(0)}%"><i style="width:${(share*100).toFixed(0)}%"></i></div>
     <div class="sk">${ds.lab} <span class="num">${(share*100).toFixed(0)}%</span>${off?' <span class="badge">지정 외 · 지원</span>':''}${cs && cs.el && cs.el!=='none' && !(c.elems||[c.elem]).includes(cs.el) ? ` <span class="badge" title="아군의 속성 변환(変幻自在 등)으로 이 속성으로 공격">${esc(roJ(E.ELEM_KR[cs.el]||cs.el))} 변환</span>` : ''}</div>
@@ -1094,13 +1096,13 @@ function parseShare(hash){
   let mode=q.get('m')||'all'; if(!MODE_KR[mode]) mode='all';
   const fp=(q.get('f')||'').split(':');
   const f=FOCUS_LIST.find(x=>x.kind===fp[0]&&x.v===fp[1]);
-  return {ids, mode, bossId:q.get('b')||'', focus:f?Object.assign({},f):null};
+  return {ids, mode, bossId:q.get('b')||'', focus:f?Object.assign({},f, f.kind==='elem'&&fp[2]==='c'?{conv:true}:{}):null}; // ':c' = 변환 덱 포함
 }
 function shareUrl(rec){
   const base = location.origin && location.origin!=='null' ? location.origin+location.pathname : location.href.split('#')[0];
   let u = base+'#share='+rec.x.team.map(c=>encodeURIComponent(c.id)).join(',')+'&m='+encodeURIComponent(rec.mode||'all');
   if(rec.mode==='boss' && rec.bossId) u+='&b='+encodeURIComponent(rec.bossId);
-  if(rec.focus) u+='&f='+rec.focus.kind+':'+rec.focus.v;
+  if(rec.focus) u+='&f='+rec.focus.kind+':'+rec.focus.v+(rec.focus.conv?':c':'');
   return u;
 }
 function copyShare(key, btn){
@@ -1310,7 +1312,7 @@ function turnPlanHtml(x, boss){
       const sh=team.map((c,i)=>shSB[i]), mi=sh.indexOf(Math.max(...sh));
       try{ const p2=x.progs.map((p,k)=>k===mi?Object.assign({},p,{gl:Object.assign({mode:'auto'},p.gl||{},{ore:true}),_gq0:null,_gq1:null}):p);
         for(const k in p2[mi]) if(k.indexOf('_gq')===0) delete p2[mi][k];
-        const ev2=E.evalTeam(team, p2, null, x.S||settings(), cap, {});
+        const ev2=E.evalTeam(team, p2, null, x.S||settings(), cap, ctxOf({boss:boss||null})); // 원래 계산과 같은 상황(셔틀·후열 등)으로 비교
         const g=ev2.burst/Math.max(1e-9, ev.burst);
         if(g>1.02) o0.push(`독·페인을 거는 캐릭터가 없음 → <b>${esc(team[mi].name)}</b>의 글래스터 1개에 <b>잠재 광석</b>을 달면 공격으로 독·페인이 걸려 독·페인 글래스터가 켜짐 (세팅 후 폭딜 약 +${((g-1)*100).toFixed(0)}%)`);
       }catch(e){}
@@ -1515,14 +1517,18 @@ function setupHtml(x, i){
     G.push(`<li>공격 글래스터: 딜 비중이 낮아 생존·MP 회복 계열 권장</li>`);
   }
   const S2 = [];
-  if(c.stellar && c.sb) S2.push(`<li>SB: ${skillLine(c.sb)}</li>`);
-  if(c.main) S2.push(`<li>평상: ${skillLine(c.main)}</li>`);
+  const sbUse = c.stellar && c.sb && !(ev.sbOff && ev.sbOff[i]);
+  if(c.stellar && c.sb) S2.push(sbUse ? `<li>SB(성도 스킬, 칸 1개): ${skillLine(c.sb)}</li>` : `<li class="hint">성도 스킬: 이 조합에선 안 달고 그 칸에 아래 스킬을 하나 더 다는 편이 나음</li>`);
+  if(c.main) S2.push(`<li>평상 주력: ${skillLine(c.main)}</li>`);
+  { const es = ev.sim && ev.sim.eqSk && ev.sim.eqSk[i], ZK = {deploy:'존 전개', awaken:'존 각성'};
+    if(es && es.L.length) S2.push(`<li>스킬 칸 <span class="hint">(${es.tot}칸 중 주력·성도 스킬 빼고 ${es.n}칸, 위부터 우선)</span><ol class="sklist">${es.L.map(z=>`<li><b>${esc(z.n)}</b>${z.z?` <span class="hint">${ZK[z.z]||'존'}</span>`:z.k==='attack'?' <span class="hint">공격 버프기</span>':''}</li>`).join('')}</ol>${es.L.length<es.n?`<span class="hint">남는 ${es.n-es.L.length}칸은 자유 (회복·생존 스킬 권장)</span>`:''}</li>`);
+    else if(es && es.n>0) S2.push(`<li class="hint">남는 스킬 칸 ${es.n}개는 자유 — 계산에 쓰는 버프 스킬이 없음 (회복·생존 스킬 권장)</li>`); }
   if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req_ko||r.req)}</span></li>`);
   const O = (c.cxWhy||[]).map(w=>`<li>${esc(w)}</li>`);
   return `<div class="shead"><b>${esc(c.name)}</b> ${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> <span class="hint">${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}${(r.ex&&r.ex.pers_ko&&r.ex.pers_ko.length)?' · 퍼스널리티 '+esc(r.ex.pers_ko.join('·')):''}</span><button type="button" class="btn small sclose" data-sclose="1">닫기</button></div>
     <div><h4>이 조합에서</h4><ul>${L.join('')}</ul></div>
     <div><h4>추천 육성·장비</h4><ul>${G.join('')}</ul></div>
-    <div><h4>주력 스킬</h4><ul>${S2.join('')||'<li class="hint">—</li>'}</ul></div>
+    <div><h4>추천 스킬</h4><ul>${S2.join('')||'<li class="hint">—</li>'}</ul></div>
     <div class="eqbox"><h4>장비 <span class="hint">(${esc(E.WEAPON_KR[c.weapon]||'')} · 장비 데이터·계산식 출처: 딩)</span></h4>
       ${o.build?`<p class="hint">내 빌드: ${esc(o.build.weapon||'')} ${buildBadge(o)} — 보유 탭에 넣은 코드로 계산 중</p>`:''}
       <p><button type="button" class="btn small" data-eqrec="${esc(x._key||'')}" data-i="${i}">추천 장비 찾기</button> <span class="hint">이 조합의 버프·존·약점·P글래 공유 조건에서 기대 대미지가 가장 높은 무기·방어구·배지·글래스터·광석을 찾습니다 (몇 초)</span></p>
