@@ -885,6 +885,20 @@ function zoneFactorEff(z, el, wt, S, rel){
   return f;
 }
 
+/* 브레이크(2026-10-17 조사, 공식 X·anaden-style, 스크래치 brk/out.json): 일반 ブレイク = 다음 1타만 2배(소모, 23명 전부 이것 — 예전엔 모든 타격 ×1.3),
+   엘리멘탈·웨폰 브레이크 = 쌓인 수(보통 3)만큼 그 속성·타입 타격 2배(1타에 1개 소모 — 예전엔 맞는 타격 전부 ×1.5).
+   그래서 이득 = 2배가 되는 타수 ÷ 그 창의 타수: 평상 턴은 1번 걸고 전열 한 바퀴(멤버마다 주력 타수), AF는 주력으로 거는 사람이면 행동마다 다시(같은 비율),
+   따로 거는 스킬·개전 1회·SB면 AF 한 번에 1번(행동 약 BRK_AF_R 바퀴로 나눔) */
+const BRK_ONCE = new Set(['all','any','generic','break','weapon','once']), BRK_N = 3, BRK_AF_R = 5;
+function brkGain(A, team, bi, b, sit){
+  const C = A.brkG || (A.brkG = Object.create(null)), key = bi + ':' + b + ':' + sit; if(C[key]!==undefined) return C[key];
+  const j = A.breakJ ? A.breakJ[bi] : -1, br = j>=0 ? team[j] : null, once = b==='once';
+  const hitsOf = c => { const m = (c.raw && c.raw.main) || c.main || {}; return Math.max(1, +m.hits||1) * (1 + Math.max(0, +m.repeat||0)); }; // 원래 주력 타수 × (1 + 재공격) — 상태 변형 복사본과 무관하게(캐시가 넣은 순서에 안 흔들리게)
+  const H = team.reduce((t,c)=> t + (once || c.elem===b || c.wt===b || (b.indexOf('_')>0 && b.split('_').includes(c.wt)) ? hitsOf(c) : 0), 0) || 1;
+  const ba = br && br.bact, perAct = !ba || ba.main.has('brk') || !(ba.auto.has('brk') || ba.sb.has('brk') || ba.steps.some(st=>st.g && st.g.has('brk')));
+  const k = sit==='normal' || perAct ? 1 : 1/BRK_AF_R;
+  return (C[key] = Math.min(1, (once ? 1 : BRK_N)*k/H));
+}
 /* ---------- 팀 단위 공통 집계 ---------- */
 function teamAgg(team){
   // 적에게 거는 것(독·페인, 브레이크, 약점 부여)만 팀 공통. 아군 버프는 attackerCore에서 받는 사람별로 조건을 따진다.
@@ -1299,7 +1313,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const ocP = ocW>0 ? Math.min(Math.max((critR-1)/10,0),1)*Math.min(1,ocW) : 0;
 
   // 브레이크
-  let brk = 1;
+  let brk = 1; const bkG = {};
   for(let bi=0; bi<A.breaks.length; bi++){ const b=A.breaks[bi], bj = A.breakJ ? A.breakJ[bi] : -1, bt = bj>=0 && team[bj] && team[bj].afT && team[bj].afT.deb;
     if(bt && afTV(bt.break, situation, A, !!(progs[bj]&&progs[bj].sbOK), team[bj].afT.real && team[bj].afT.real.deb ? team[bj].afT.real.deb.break : null, sbU(bj)) < 0.5) continue; // 체인·턴 종료 등으로만 거는 브레이크는 AF 땐 없음
     if(bj>=0 && FX && FX[bj] && (b => b!=null && b<0.5)(rowV(FX[bj], idx, 'brk_x'))) continue; // 허수아비: 건 사람이 그 스킬을 쓰기 전
@@ -1308,9 +1322,10 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     if(bz && !(zoneMatch(bz.zone, zone) && (!bz.zlv || (zone && zone.level>=bz.zlv)))) continue;
     const bu = bd.break_up, bf = !bu ? 1 : Math.max(0, Math.min(1, +(situation==='normal' ? bu.n : (A.realT>1 && bu.real!=null ? bu.real : bu.af!=null ? bu.af : 1)) || 0));
     if(!(bf>0)) continue;
-    if(b===el || b===wt || (b.indexOf('_')>0 && b.split('_').includes(wt))) { brk=Math.max(brk,1+0.5*bf); } // 웨폰브레이크(斬突·斬魔 등 두 종류)
-    else if(['all','any','generic','break','weapon'].includes(b)) brk=Math.max(brk,1+0.3*bf);
+    if(b===el || b===wt || (b.indexOf('_')>0 && b.split('_').includes(wt))) bkG[b] = (bkG[b]||0) + brkGain(A, team, bi, b, situation)*bf; // 엘리멘탈·웨폰 브레이크(斬突·斬魔 등 두 종류)
+    else if(BRK_ONCE.has(b)) bkG.once = (bkG.once||0) + brkGain(A, team, bi, 'once', situation)*bf;
   }
+  for(const t in bkG) brk = Math.max(brk, 1 + Math.min(1, bkG[t])); // 같은 종류는 건 사람끼리 더함(쌓임), 종류끼리는 큰 쪽
   dmg *= brk;
 
   // 약점/내성
@@ -3027,7 +3042,7 @@ function soloPotential(c, prog, enemy, S, cap, ctx){
   const sup = pct(p.pwr)+pct(p.int)+pct(p.all_elem_atk)+0.5*Math.max(0,...Object.values(p.elem_atk||{0:0}).map(pct))
     + 0.6*Math.max(0,...Object.values(p.weapon_atk||{0:0}).map(pct)) + pct(p.crit_rate)*0.4 + pct(p.crit_dmg)
     + (p.singular_focus||p.mental_focus?1:0)+(p.overthrow?0.6:0)+(p.multihit?0.8:0)+(p.barrier_pierce?0.5:0)+(p.extra_hit?1:0)+(p.over_crit?0.5:0)
-    + pct(d.all_elem_res)*1.2 + pct(d.phys_res)+pct(d.mag_res)*0.6 + (c.zoneTypes?(c.zoneAwak?1.2:0.6):0) + (c.breakT?0.5:0) + (c.weakExpose?0.8:0);
+    + pct(d.all_elem_res)*1.2 + pct(d.phys_res)+pct(d.mag_res)*0.6 + (c.zoneTypes?(c.zoneAwak?1.2:0.6):0) + (c.breakT?(BRK_ONCE.has(c.breakT)?0.1:0.4):0) + (c.weakExpose?0.8:0);
   const sv = survival([c],[prog]).score;
   return {dps, sup, surv:sv};
 }
