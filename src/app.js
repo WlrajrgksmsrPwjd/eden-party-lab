@@ -224,7 +224,7 @@ const ownedJ = J => J.ids.filter(id=>byId.has(id)).map(id=>({pc:byId.get(id), pr
 /* 편성 계산을 워커 여러 개로 나눔(2026-10-16, 사용자 요청: 처음 쓰는 사람에겐 계산이 너무 오래 걸림).
    엔진 optimize의 shard 단계(scan → dprec(최고점만) → climb → prec)마다 워커 n개가 자기 몫을 계산하고, 값(조합 키 → 값)을 모아 다음 단계로 넘긴다.
    마지막에 워커 하나가 모은 값으로 전체를 다시 돌리면(거의 다 계산된 값) 한 워커로 계산한 것과 같은 결과가 나온다. */
-const NW = (()=>{ try{ const hc = navigator.hardwareConcurrency||2; let n = Math.max(1, Math.min(6, hc-1)); if(navigator.deviceMemory && navigator.deviceMemory<4) n = Math.min(n, 2); return n; }catch(e){ return 1; } })();
+const NW = (()=>{ try{ const hc = navigator.hardwareConcurrency||2; let n = Math.max(1, Math.min(6, hc<=4 ? hc : hc-1)); /* 코어 4개 이하면 전부(계산 중 메인 스레드는 거의 쉼, 2026-10-17) */ if(navigator.deviceMemory && navigator.deviceMemory<4) n = Math.min(n, 2); return n; }catch(e){ return 1; } })();
 const SHARD_TOK = {};
 async function viaShards(chan, msg, onProgress, stagesIn){
   const n = NW, tok = SHARD_TOK[chan] = (SHARD_TOK[chan]||0)+1;
@@ -286,9 +286,12 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
   for(const y of lr.decks||[]){
     if(y.ids.some(id=>!byId.has(id))) continue;
     const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
-    decks.push({focus:y.focus, team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx), reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)),
-      fixedBack:new Set(y.fixedBackIds||[]), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team)});
-    await yieldUI();
+    const d = {focus:y.focus, team, progs, reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)),
+      fixedBack:new Set(y.fixedBackIds||[]), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team)};
+    // 덱 목록 줄은 이름·점수만 보여서 자세한 평가(ev)는 펼칠 때 계산(2026-10-17 계산 속도: 결과 표시가 덱 수만큼 늦어지던 것)
+    Object.defineProperty(d, 'ev', {configurable:true, enumerable:true, get(){ const v = E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx); Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); return v; },
+      set(v){ Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); }});
+    decks.push(d);
   }
   return Object.assign({}, lr, {results, decks});
 }
