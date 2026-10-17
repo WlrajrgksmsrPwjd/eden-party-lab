@@ -98,6 +98,9 @@ function save(){
   }, 1200);
 }
 let planDirty=false; // 보유가 바뀐 뒤 편성 탭으로 돌아오면 다시 계산(2026-10-16)
+// 새로 보유로 체크할 때 기본값(2026-10-17): 천명치는 '새로 체크할 때 천명치'(state.ui.newT, 기본 80 — 0이면 성도 스킬·SB가 안 열려 약하게 계산되던 문제)
+const newT = () => { const v = state.ui && state.ui.newT; return v!=null && isFinite(+v) ? Math.max(0, Math.min(255, +v)) : 80; };
+const newOwn = (id, o={}) => { const c = byId.get(id); return {t: o.t!=null ? o.t : newT(), s: c && c.stellar ? (o.s!=null ? !!o.s : true) : false, m: o.m!=null ? o.m : 0, g: o.g || 'none', gl: null}; };
 function touchRoster(){ if(state.sample){ state.sample=false; } shareDirty=true; planDirty=true; save(); }
 
 /* ---------- 탭 ---------- */
@@ -1816,7 +1819,9 @@ function setupGoalPicker(){
 function rosterFilters(){
   return {q:($('#rq').value||'').trim().toLowerCase(), el:$('#rel').value, wp:$('#rwp').value, al:$('#ral').value, tier:$('#rtier').value, own:$('#rown').value};
 }
-function renderRoster(){
+let TAP_SKIP = false;
+function renderRoster(){ renderRosterBase(); if(TAP_SKIP) tapCount(); else renderTap(); } // 눌러서 고르기 칸도 같이(누르는 중엔 개수만)
+function renderRosterBase(){
   const F=rosterFilters();
   const list = prepped.filter(c=>{
     if(F.q && !(c.name.toLowerCase().includes(F.q) || (c.raw.name_jp||'').toLowerCase().includes(F.q) || (c.raw.alias_kr||[]).some(a=>a.toLowerCase().includes(F.q)))) return false;
@@ -1849,7 +1854,7 @@ function updateRosterCount(){
 }
 function selectAllShown(on){
   if(on){
-    for(const id of rosterShown) if(!state.owned[id]) state.owned[id]={t:0,s:!!byId.get(id).stellar,m:0,g:'none',gl:null};
+    for(const id of rosterShown) if(!state.owned[id]) state.owned[id]=newOwn(id);
     touchRoster(); renderRoster(); return;
   }
   const lose = rosterShown.filter(id=>state.owned[id]);
@@ -1887,7 +1892,7 @@ function onRosterChange(e){
   const t=e.target;
   if(t.dataset.own){
     const id=t.dataset.own;
-    if(t.checked) state.owned[id]={t:0,s:!!byId.get(id).stellar,m:0,g:'none',gl:null};
+    if(t.checked) state.owned[id]=newOwn(id);
     else delete state.owned[id];
     touchRoster();
     const row=t.closest('.row'); row.outerHTML=rowHtml(byId.get(id));
@@ -1923,15 +1928,42 @@ function nameIndex(){
   for(const c of prepped){ put(c.raw.name_jp, c.id); put(c.id, c.id); }
   return m;
 }
+// 이름 뒤 상태 단어(2026-10-17, 사용자 '보유·상태를 쉽고 간편하게'): 숫자 = 천명치, 성도/노성도, 현현/진현현, 극·진·증표·상급(전용 글래스터)
+function statusWord(word){
+  const w = normName(word); if(!w) return null;
+  let m = w.match(/^(?:천명치?|t)?(\d{1,3})$/); if(m) return {t: Math.min(255, parseInt(m[1], 10))};
+  if(['성도','성도o','성도ㅇ','성도각성','성각','성도각성o','sa'].includes(w)) return {s:true};
+  if(['노성도','성도x','성도ㄴ','성도안함','미성도','노성각','성각x','성도각성x'].includes(w)) return {s:false};
+  if(w==='진현현') return {m:2}; if(w==='현현') return {m:1}; if(['노현현','현현x','미현현'].includes(w)) return {m:0};
+  if(['극','극글','극글래','극글래스터','극전용'].includes(w)) return {g:'goku'};
+  if(['진','진글','진글래','진글래스터','진전용'].includes(w)) return {g:'shin'};
+  if(['증표','수호성','수호성의증표'].includes(w)) return {g:'sh'};
+  if(['상급','vc','vc글래'].includes(w)) return {g:'vc'};
+  return null;
+}
+// 커뮤니티 줄임말: 어 = AS, 엑 = ES, 짭 = AC + 기본 캐릭터 이름 일부(어스타 = 세스타(AS), 엑코코 = 네코코(ES), 짭바메 = 츠바메 AC)
+let NICK_L = null;
+const AC_BASE = {shanie_ac:'셰이네', laclair_ac:'라크레아', tsubame_ac:'츠바메', nekoko_ac:'네코코'}; // 이절(AC)은 원래 캐릭터와 묶음 키가 달라 줄임말(짭이네·짭바메)용 원래 이름을 따로
+function nickList(){ if(NICK_L) return NICK_L;
+  NICK_L = prepped.filter(c=>!c._custom).map(c=>{ const st = (c.raw && c.raw.style) || 'NS', b = c.base || c.id, ns = prepped.find(p=>(p.base||p.id)===b && ((p.raw && p.raw.style)||'NS')==='NS');
+    return {c, st, bn: normName(st==='AC' && AC_BASE[c.id] ? AC_BASE[c.id] : (ns ? ns.name : c.name).replace(/\s*\((AS|ES|AC)\)\s*$/,''))}; });
+  return NICK_L; }
+function matchNick(k){
+  const st = {'어':'AS', '엑':'ES', '짭':'AC'}[k[0]]; if(!st || k.length<3) return null; const r = k.slice(1);
+  let L = nickList().filter(x=>x.st===st && x.bn.includes(r));
+  if(L.length>1){ const e = L.filter(x=>x.bn.endsWith(r)); if(e.length) L = e; }
+  if(L.length>1){ const b = L.filter(x=>x.bn.startsWith(r)); if(b.length) L = b; }
+  return L.length===1 ? {id: L[0].c.id} : L.length ? {amb: L.slice(0, 4).map(x=>x.c.name)} : null;
+}
 function matchName(tok, idx){
-  const k=normName(tok);
-  if(idx.has(k)) return {id:idx.get(k), t:null, name:tok};
-  const m=tok.match(/^(.*?)[\s:：=]*(\d{1,3})\s*$/); // 이름 뒤 숫자 = 천명치
-  if(m && normName(m[1])){
-    const t=Math.min(255, parseInt(m[2],10));
-    const k2=normName(m[1]); return {id:idx.get(k2)||null, t, name:m[1].trim()};
-  }
-  return {id:null, t:null, name:tok};
+  const words = String(tok).trim().split(/\s+/), st = {};
+  while(words.length>1){ const w = statusWord(words[words.length-1]); if(!w) break; for(const k in w) if(st[k]===undefined) st[k] = w[k]; words.pop(); }
+  let name = words.join(' ');
+  const look = nm => { const k = normName(nm); if(!k) return null; if(idx.has(k)) return {id: idx.get(k)}; return matchNick(k); };
+  let r = look(name);
+  if(!r || !r.id){ const m = name.match(/^(.*?)[\s:：=]*(\d{1,3})$/); // 이름에 붙은 숫자 = 천명치
+    if(m && normName(m[1])){ const r2 = look(m[1]); if(r2 && r2.id){ r = r2; if(st.t===undefined) st.t = Math.min(255, parseInt(m[2],10)); name = m[1].trim(); } } }
+  return {id: r && r.id || null, amb: r && r.amb || null, t: st.t!=null ? st.t : null, s: st.s, m: st.m, g: st.g, name};
 }
 function editDist(a,b){
   if(a===b) return 0; if(!a.length) return b.length; if(!b.length) return a.length;
@@ -1960,20 +1992,90 @@ function quickCheck(){
   const idx=nameIndex(), found=new Map(), miss=[];
   for(const tok of toks){
     const r=matchName(tok, idx);
-    if(!r.id){ if(!miss.includes(r.name)) miss.push(r.name); continue; }
-    if(r.t!=null || !found.has(r.id)) found.set(r.id, r.t);
+    if(!r.id){ if(!miss.some(x=>x.name===r.name)) miss.push(r); continue; }
+    const prev = found.get(r.id) || {}; found.set(r.id, {t: r.t!=null ? r.t : prev.t, s: r.s!==undefined ? r.s : prev.s, m: r.m!==undefined ? r.m : prev.m, g: r.g!==undefined ? r.g : prev.g});
   }
   let added=0, upd=0;
   if(found.size && $('#quickReset').checked) state.owned={};
-  for(const [id,t] of found){
-    const o=state.owned[id];
-    if(!o){ state.owned[id]={t:t!=null?t:0, s:!!byId.get(id).stellar, m:0, g:'none', gl:null}; added++; }
-    else if(t!=null && (+o.t||0)!==t){ o.t=t; upd++; }
+  for(const [id,f] of found){
+    const o=state.owned[id], c=byId.get(id);
+    if(!o){ state.owned[id]=newOwn(id, f); added++; continue; }
+    let ch=false;
+    if(f.t!=null && (+o.t||0)!==f.t){ o.t=f.t; ch=true; }
+    if(f.s!==undefined && c.stellar && !!o.s!==!!f.s){ o.s=!!f.s; ch=true; }
+    if(f.m!==undefined && (+o.m||0)!==f.m){ o.m=f.m; ch=true; }
+    if(f.g!==undefined && (o.g||'none')!==f.g){ o.g=f.g; ch=true; }
+    if(ch) upd++;
   }
-  if(found.size){ touchRoster(); renderRoster(); $('#quickReset').checked=false; }
-  const detail = [added?`새로 ${added}명`:'', upd?`천명치 갱신 ${upd}명`:''].filter(Boolean).join(' · ');
-  msg.innerHTML = `<b>${found.size}명 체크</b>${detail?` (${detail})`:''}`
-    + (miss.length ? `, 못 찾은 이름: ${miss.map(n=>{ const sg=suggestName(n); return `<span class="miss">${esc(n)}</span>${sg?` <span class="hint">(혹시: ${esc(sg)}?)</span>`:''}`; }).join(', ')}` : '');
+  if(found.size){ touchRoster(); renderRoster(); renderTap(); $('#quickReset').checked=false; }
+  const detail = [added?`새로 ${added}명`:'', upd?`상태 바뀜 ${upd}명`:''].filter(Boolean).join(' · ');
+  msg.innerHTML = `<b>${found.size}명 체크</b>${detail?` (${detail})`:''}${added && [...found.values()].some(f=>f.t==null) ? ` <span class="hint">천명치를 안 적은 캐릭터는 ${newT()}으로 넣었어요</span>` : ''}`
+    + (miss.length ? `, 못 찾은 이름: ${miss.map(r=>{ const sg = r.amb ? r.amb.join(' / ') : suggestName(r.name); return `<span class="miss">${esc(r.name)}</span>${sg?` <span class="hint">(${r.amb?'여럿':'혹시'}: ${esc(sg)}?)</span>`:''}`; }).join(', ')}` : '');
+}
+
+/* ---------- 눌러서 고르기(2026-10-17): 이름 칸을 누를 때마다 보유 → 성도각성 안 함 → 해제 ---------- */
+const TAPF = {q:'', el:'', st:''};
+const TAP_EL = [['','전체'],['fire','불'],['water','물'],['earth','땅'],['wind','바람'],['thunder','번개'],['shade','그림자'],['crystal','결정']];
+const TAP_ST = [['','전체'],['NS','기본'],['AS','AS'],['ES','ES'],['AC','AC']];
+const tapState = c => { const o = state.owned[c.id]; return !o ? 0 : (c.stellar && !o.s ? 2 : 1); };
+const tapInner = c => `<span class="dot ${esc(c.elem)}"></span>${esc(c.name)}${tapState(c)===2?'<small>성도✕</small>':''}`;
+const tapChip = c => { const s = tapState(c); return `<button type="button" class="tapc${s?' on':''}${s===2?' nos':''}" data-tap="${esc(c.id)}" aria-pressed="${s?'true':'false'}">${tapInner(c)}</button>`; };
+function renderTapBar(){
+  const seg = (L, cur, key) => L.map(([v,l])=>`<button type="button" data-${key}="${v}" aria-pressed="${cur===v?'true':'false'}">${v && key==='tel' ? `<span class="dot ${v}"></span>` : ''}${esc(l)}</button>`).join('');
+  $('#tapEl').innerHTML = seg(TAP_EL, TAPF.el, 'tel'); $('#tapSt').innerHTML = seg(TAP_ST, TAPF.st, 'tst');
+}
+function tapCount(){ const n = $('#tapN'); if(n) n.textContent = `보유 ${Object.keys(state.owned).filter(id=>byId.has(id)).length}명`; }
+function renderTap(){
+  tapCount(); const g = $('#tapGrid'), f = $('#tapFold'); if(!g || !f || !f.open) return;
+  const q = normName(TAPF.q);
+  const L = prepped.filter(c=>!c._custom && (!TAPF.el || (c.elems||[c.elem]).includes(TAPF.el)) && (!TAPF.st || ((c.raw&&c.raw.style)||'NS')===TAPF.st)
+    && (!q || normName(c.name).includes(q) || normName(c.raw.name_jp).includes(q) || (c.raw.alias_kr||[]).some(a=>normName(a).includes(q)))).sort((a,b)=>a.name.localeCompare(b.name, 'ko'));
+  g.innerHTML = L.length ? L.map(tapChip).join('') : '<p class="hint">맞는 캐릭터가 없어요.</p>';
+}
+let tapRR = 0;
+function onTap(btn){
+  const id = btn.dataset.tap, c = byId.get(id); if(!c) return; const s0 = tapState(c);
+  if(s0===0) state.owned[id] = newOwn(id); else if(s0===1 && c.stellar) state.owned[id].s = false; else delete state.owned[id];
+  touchRoster(); const s = tapState(c);
+  btn.className = 'tapc'+(s?' on':'')+(s===2?' nos':''); btn.setAttribute('aria-pressed', s?'true':'false'); btn.innerHTML = tapInner(c); tapCount();
+  clearTimeout(tapRR); tapRR = setTimeout(()=>{ TAP_SKIP = true; try{ renderRoster(); } finally { TAP_SKIP = false; } }, 500); // 아래 목록은 잠깐 뒤 한 번에
+}
+
+/* ---------- 보유 링크(2026-10-17): 보유·천명치·성도각성·현현·전용 글래스터를 주소 하나에 — 다른 기기에서 열면 불러올지 물어봄 ---------- */
+const b64u = u8 => { let t=''; for(let i=0;i<u8.length;i++) t+=String.fromCharCode(u8[i]); return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
+const unb64u = t => { t = t.replace(/-/g,'+').replace(/_/g,'/'); while(t.length%4) t+='='; const b = atob(t), u = new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i] = b.charCodeAt(i); return u; };
+async function packStr(str){ if(window.CompressionStream){ try{ const buf = await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer(); return 'z'+b64u(new Uint8Array(buf)); }catch(e){} } return 'j'+b64u(new TextEncoder().encode(str)); }
+async function unpackStr(code){ const k = code[0], u = unb64u(code.slice(1)); if(k==='z'){ const buf = await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer(); return new TextDecoder().decode(buf); } return new TextDecoder().decode(u); }
+const GCODE = {goku:'k', shin:'n', sh:'h', vc:'v'}, GDEC = {k:'goku', n:'shin', h:'sh', v:'vc'};
+function ownPack(){ return Object.entries(state.owned).filter(([id])=>byId.has(id) && !byId.get(id)._custom).map(([id,o])=>[id, +o.t||0, o.s?1:0, +o.m||0, GCODE[o.g]||''].join('.')).join(','); }
+function ownUnpack(str){ const out = {}; for(const e of String(str||'').split(',')){ const [id, t, s, m, g] = e.split('.'); if(!id || !byId.has(id)) continue; const c = byId.get(id);
+  out[id] = {t: Math.max(0, Math.min(255, +t||0)), s: !!(c.stellar && s==='1'), m: Math.max(0, Math.min(2, +m||0)), g: GDEC[g]||'none', gl: null}; } return out; }
+async function copyOwnLink(){
+  const msg = $('#ownLinkMsg'), n = Object.keys(state.owned).filter(id=>byId.has(id)).length;
+  if(!n || state.sample){ msg.textContent = '먼저 보유 캐릭터를 넣어 주세요.'; return; }
+  const url = location.origin + location.pathname + '#own=' + await packStr(ownPack());
+  const done = () => { msg.innerHTML = `<b>${n}명</b>을 담은 링크를 복사했어요. 다른 기기에서 열면 불러올지 물어봐요.`; };
+  try{ await navigator.clipboard.writeText(url); done(); }
+  catch(e){ msg.innerHTML = `복사가 막혀 있어요. 아래 주소를 직접 복사하세요.<input type="text" class="ownurl" readonly value="${esc(url)}" aria-label="보유 링크">`; const i = msg.querySelector('input'); if(i){ i.focus(); i.select(); } }
+}
+let OWN_IN = null;
+async function checkOwnHash(){
+  const h = String(location.hash||''); if(!h.startsWith('#own=')) return false;
+  try{ history.replaceState(null, '', location.pathname+location.search); }catch(e){}
+  let got = null; try{ got = ownUnpack(await unpackStr(h.slice(5))); }catch(e){ got = null; }
+  const box = $('#ownInbox'); if(!box) return true;
+  const n = got ? Object.keys(got).length : 0;
+  if(!n){ box.innerHTML = `<span>보유 링크를 읽지 못했어요. 주소가 잘리지 않았는지 확인해 주세요.</span> <button type="button" class="btn small" data-ownin="close">닫기</button>`; box.hidden = false; return true; }
+  OWN_IN = got; const cur = Object.keys(state.owned).length;
+  box.innerHTML = `<span><b>링크로 받은 보유 목록 ${n}명</b> (천명치·성도각성·현현·전용 글래스터 포함)${!state.sample && cur ? ` · 지금 이 기기엔 ${cur}명` : ''}</span>
+    <button type="button" class="btn small primary" data-ownin="replace">${!state.sample && cur ? '이 목록으로 바꾸기' : '불러오기'}</button>${!state.sample && cur ? ' <button type="button" class="btn small" data-ownin="merge">지금 목록에 더하기</button>' : ''} <button type="button" class="btn small" data-ownin="close">닫기</button>`;
+  box.hidden = false; return true;
+}
+function onOwnIn(act){
+  const box = $('#ownInbox');
+  if(act==='replace' || act==='merge'){ if(!OWN_IN) return; if(act==='replace' || state.sample) state.owned = {}; for(const [id,o] of Object.entries(OWN_IN)) state.owned[id] = Object.assign({}, state.owned[id]||{}, o);
+    touchRoster(); renderAll(); setSaveText('이 기기에 저장됨'); flash(`보유 ${Object.keys(OWN_IN).length}명을 불러왔어요`); }
+  OWN_IN = null; if(box){ box.hidden = true; box.innerHTML = ''; }
 }
 
 /* ---------- 직접 추가 ---------- */
@@ -2218,6 +2320,7 @@ function bind(){
     if(e.target.closest('button[data-shareclose]')) closeShare();
   });
   window.addEventListener('hashchange',()=>{
+    if(String(location.hash||'').startsWith('#own=')){ checkOwnHash(); return; }
     const sh=parseShare(location.hash);
     if(sh){ SHARE=sh; renderShare(); showTab('plan'); revealShare(); return; }
     const h=(location.hash||'').slice(1); if(TABS.includes(h)) showTab(h);
@@ -2238,7 +2341,7 @@ function bind(){
     state.plan.locked=[id]; state.plan.excluded=state.plan.excluded.filter(x=>x!==id); save(); renderPlanControls(); showTab('plan'); runPlan(); });
   ['#rq','#rel','#rwp','#ral','#rtier','#rown'].forEach(s=>$(s).addEventListener('input',renderRoster));
   $('#roster').addEventListener('change',onRosterChange);
-  $('#bulkTop').addEventListener('click',()=>{ for(const c of prepped) if((c.tier==='SS'||c.tier==='S')&&!state.owned[c.id]) state.owned[c.id]={t:0,s:!!c.stellar,m:0,g:'none',gl:null}; touchRoster(); renderRoster(); });
+  $('#bulkTop').addEventListener('click',()=>{ for(const c of prepped) if((c.tier==='SS'||c.tier==='S')&&!state.owned[c.id]) state.owned[c.id]=newOwn(c.id); touchRoster(); renderRoster(); renderTap(); });
   $('#roster').addEventListener('click',e=>{ const b=e.target.closest('[data-bact]'); if(b) onBuildAct(b);
     const sb=e.target.closest('[data-stat]'); if(sb){ const row=sb.closest('.row'), w=row&&row.querySelector('.stwrap'); if(!w) return;
       const open = w.hidden; if(open){ const o=state.owned[row.dataset.id]; w.innerHTML=statBoxHtml(byId.get(row.dataset.id), o?(+o.t||0):0); }
@@ -2275,6 +2378,14 @@ function bind(){
   $('#ioOpen').addEventListener('click',()=>$('#ioFile').click());
   $('#ioFile').addEventListener('change',openFile);
   $('#quickGo').addEventListener('click',quickCheck);
+  { const nt = $('#newT'); if(nt){ nt.value = String(newT()); if(nt.value==='') { nt.value = '80'; } nt.addEventListener('change', ()=>{ state.ui = Object.assign({}, state.ui, {newT: +nt.value}); save(); }); } }
+  { const tf = $('#tapFold'); if(tf){ let barOk = false; tf.addEventListener('toggle', ()=>{ if(!tf.open) return; if(!barOk){ renderTapBar(); barOk = true; } renderTap(); });
+      let tq = 0; $('#tapQ').addEventListener('input', e=>{ TAPF.q = e.target.value; clearTimeout(tq); tq = setTimeout(renderTap, 120); });
+      $('#tapEl').addEventListener('click', e=>{ const b = e.target.closest('button[data-tel]'); if(!b) return; TAPF.el = b.dataset.tel; renderTapBar(); renderTap(); });
+      $('#tapSt').addEventListener('click', e=>{ const b = e.target.closest('button[data-tst]'); if(!b) return; TAPF.st = b.dataset.tst; renderTapBar(); renderTap(); });
+      $('#tapGrid').addEventListener('click', e=>{ const b = e.target.closest('button[data-tap]'); if(b) onTap(b); }); } }
+  { const ob = $('#ownLinkBtn'); if(ob) ob.addEventListener('click', copyOwnLink); }
+  document.addEventListener('click', e=>{ const b = e.target.closest('button[data-ownin]'); if(b) onOwnIn(b.dataset.ownin); });
   $('#pglMode').addEventListener('click',e=>{ const b=e.target.closest('button[data-pm]'); if(!b || b.disabled) return; const m=b.dataset.pm;
     state.ui = Object.assign({}, state.ui, {pglMark: m==='mark'}); if(m!=='mark') state.settings.pglAssumeAll = m==='all'; touchRoster(); renderPglTbl(); });
   $('#rowAdv').addEventListener('change',e=>{ state.ui = Object.assign({}, state.ui, {rowAdv: e.target.checked}); save(); $('#roster').classList.toggle('simple', !e.target.checked); });
@@ -2300,6 +2411,7 @@ function renderAll(){ renderPlanControls(); renderRoster(); renderBudGrid(); ren
   if(SHARE) requestAnimationFrame(revealShare);
   setSaveText(state.sample?'예시 데이터 · 아직 저장 안 함':'이 기기에 저장됨');
   if(state.sample) $('#quickFold').open = true; // 처음 방문: 이름 붙여넣기로 보유 체크를 바로 보이게
+  checkOwnHash(); // 보유 링크(#own=)로 들어왔으면 불러올지 묻기
   runPlan();
   connectDb();
 })();

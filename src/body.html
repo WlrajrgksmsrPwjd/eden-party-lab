@@ -22,6 +22,7 @@
 </header>
 
 <div class="inbox wrap" id="inboxBar" role="region" aria-label="장비 빌더에서 보낸 빌드" hidden></div>
+<div class="inbox wrap" id="ownInbox" role="region" aria-label="링크로 받은 보유 목록" hidden></div>
 <main class="wrap">
   <!-- 편성 추천 -->
   <section class="panel on" id="p-plan" role="tabpanel">
@@ -168,15 +169,33 @@
       <button type="button" class="btn small" id="bulkNone">보유 전부 해제</button>
       <span id="bulkConfirm" hidden class="hint">정말 해제할까요? <button type="button" class="btn small" id="bulkNoneYes">해제</button> <button type="button" class="btn small" id="bulkNoneNo">취소</button></span>
     </div>
+    <div class="newtrow"><label for="newT">새로 보유로 체크할 때 천명치</label> <select id="newT"><option value="0">0</option><option value="15">15</option><option value="30">30</option><option value="50">50</option><option value="80">80</option><option value="120">120</option><option value="200">200</option><option value="255">255</option></select> <span class="hint">이름만 넣거나 눌러서 체크할 때 들어가는 값 · 15 미만이면 성도 스킬을 못 써요</span></div>
     <details class="fold quick" id="quickFold">
       <summary>이름으로 한 번에 체크</summary>
-      <p class="hint">캐릭터 이름을 줄바꿈이나 쉼표로 나눠 붙여 넣으세요. 띄어쓰기·괄호 차이는 무시하고, 이름 뒤에 숫자를 붙이면 천명치로 넣습니다. 예: <span class="num">질퍼니(AS) 80, 하보크, 메릿 120</span></p>
-      <textarea id="quickText" aria-label="보유 캐릭터 이름 목록" placeholder="질퍼니(AS) 80&#10;하보크&#10;메릿 120"></textarea>
+      <p class="hint">한 줄에 한 명씩, 또는 쉼표로 나눠 붙여 넣으세요. 이름 뒤에 상태를 붙일 수 있어요.</p>
+      <dl class="qkeys">
+        <dt>숫자</dt><dd>천명치 (예: 255)</dd>
+        <dt>성도 · 노성도</dt><dd>성도각성 했음 · 안 했음</dd>
+        <dt>현현 · 진현현</dt><dd>현현 무기</dd>
+        <dt>극 · 진 · 증표</dt><dd>전용 글래스터</dd>
+      </dl>
+      <p class="hint">줄임말도 알아들어요: <b>어</b> = AS, <b>엑</b> = ES, <b>짭</b> = AC에 이름 일부를 붙이면 돼요 (어스타 = 세스타(AS), 엑코코 = 네코코(ES), 짭바메 = 츠바메 AC). 띄어쓰기·괄호 차이는 무시해요.</p>
+      <textarea id="quickText" aria-label="보유 캐릭터 이름 목록" placeholder="어스타 255 성도 극&#10;엑코코 120 진현현&#10;하보크 80 노성도&#10;질퍼니(AS)"></textarea>
       <div class="quickbar">
         <button type="button" class="btn small" id="quickGo">보유로 체크</button>
         <label class="checkrow" id="quickResetRow"><input type="checkbox" id="quickReset"> <span>지금 체크된 보유를 모두 풀고 이 목록만 보유로</span></label>
       </div>
       <div class="hint quickmsg" id="quickMsg" role="status"></div>
+    </details>
+    <details class="fold quick" id="tapFold">
+      <summary>눌러서 고르기 <span class="hint">이름 칸을 누를 때마다 보유 → 성도각성 안 함 → 해제</span> <span class="num" id="tapN"></span></summary>
+      <div class="tapbar">
+        <input type="text" id="tapQ" placeholder="이름 검색" aria-label="이름 검색" autocomplete="off">
+        <div class="seg" id="tapEl" aria-label="속성"></div>
+        <div class="seg" id="tapSt" aria-label="스타일"></div>
+      </div>
+      <p class="hint tapleg"><span class="tapc on" aria-hidden="true">보유</span> <span class="tapc on nos" aria-hidden="true">보유<small>성도✕</small></span> <span class="tapc" aria-hidden="true">미보유</span> 천명치는 위에서 고른 값으로 들어가요. 캐릭터마다 다르면 아래 목록에서 고치거나 붙여넣기로 넣으세요.</p>
+      <div class="tapgrid" id="tapGrid"></div>
     </details>
     <details class="fold quick" id="growFold">
       <summary>육성 수준 <span class="hint">아직 키우는 중이면 (레벨·글래스터 미개방)</span> <span class="num" id="growN">기본</span></summary>
@@ -272,6 +291,7 @@
       <div class="iobar"><button type="button" class="btn small" id="ioSave">파일로 저장</button><button type="button" class="btn small" id="ioOpen">파일 불러오기</button><input type="file" id="ioFile" accept=".json,application/json" hidden></div>
       <textarea id="ioText" aria-label="백업 텍스트"></textarea>
       <div class="iobar"><button type="button" class="btn small" id="ioExport">내보내기 (복사)</button><button type="button" class="btn small" id="ioImport">불러오기</button><span class="hint" id="ioMsg" role="status"></span></div>
+      <div class="ownlink"><button type="button" class="btn small primary" id="ownLinkBtn">보유 링크 복사</button> <span class="hint" id="ownLinkMsg" role="status">보유 캐릭터·천명치·성도각성·현현·전용 글래스터를 링크 하나에 담아요. 폰에서 그 링크를 열면 불러올지 물어봐요.</span></div>
     </details>
   </section>
 

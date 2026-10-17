@@ -602,3 +602,26 @@ dialog.guide::backdrop{background:rgba(8,12,30,.62)}
   .gsteps > li{padding-left:38px}
   .guidebtn{padding:4px 10px; font-size:12.5px}
 }
+/* 보유 입력 쉽게(2026-10-17): 새로 체크할 때 천명치 · 붙여넣기 상태 단어 · 눌러서 고르기 · 보유 링크 */
+.newtrow{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; margin-top:12px; font-size:13px}
+.newtrow label{font-weight:700}
+.newtrow select{min-height:32px}
+.qkeys{display:grid; grid-template-columns:max-content minmax(0,1fr); gap:3px 12px; margin:6px 0 8px; padding:8px 10px; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; font-size:12.5px; max-width:560px}
+.qkeys dt{font-weight:700} .qkeys dd{margin:0; color:var(--muted)}
+.tapbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px}
+.tapbar input{flex:1 1 180px; min-height:34px}
+.tapbar .seg button{padding:5px 9px; font-size:12.5px; display:inline-flex; align-items:center; gap:4px}
+.tapleg{margin:8px 0 4px; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.tapleg .tapc{cursor:default; pointer-events:none}
+.tapgrid{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; max-height:60vh; overflow:auto; padding:2px}
+.tapc{display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line); background:var(--surface); color:var(--muted); border-radius:8px; padding:6px 10px; font:inherit; font-size:13px; cursor:pointer; min-height:36px}
+.tapc:hover{border-color:var(--muted)}
+.tapc:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.tapc.on{background:linear-gradient(180deg, var(--btn-1), var(--btn-2)); color:#fff; border-color:var(--gold); font-weight:700}
+.tapc.on .dot{box-shadow:0 0 0 1px rgba(255,255,255,.7)}
+.tapc.nos{background:var(--surface); color:var(--ink); border:2px dashed var(--gold); font-weight:700}
+.tapc small{font-size:10.5px; font-weight:700; color:var(--warn); margin-left:2px}
+.ownlink{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line)}
+.ownlink .hint{flex:1 1 260px}
+.ownurl{display:block; width:100%; margin-top:6px; font-family:var(--f-mono); font-size:12px}
+#ownInbox{margin-top:12px}
