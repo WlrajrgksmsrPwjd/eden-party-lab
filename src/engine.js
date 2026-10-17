@@ -1703,7 +1703,7 @@ function muleShare(team, S, ctx, progs){
   });
   // 파티 단위 배분(pglPlan): 빌드 코드로 실제 P글래를 넘긴 셔틀이 없으면. 셔틀 칸 = 후열 셔틀마다 칸 수(자동 가정은 퍼스널리티 제한 없음)
   const plan = !mules.some(m=>m.shares), carriers = mules.map(m=>({slots:m.slots, pers: auto ? null : m.pers}));
-  const pool = auto && ctx && Array.isArray(ctx.pool) && ctx.pool.length ? ctx.pool.filter(p=>!team.some(c=>c.id===p.id)) : null;
+  const pool = auto && ctx && Array.isArray(ctx.pool) && ctx.pool.length ? ctx.pool.filter(p=>!team.some(c=>c.id===p.id || (p.base && c.base===p.base))) : null; // 전열과 같은 캐릭터(다른 스타일 포함)는 셔틀 불가
   const mo = {k, kd, cs, inv: pglWP(ctx), auto, wp, front: plan ? [] : front, plan, carriers, mules:mules.map(m=>({id:m.id||null, name:m.name||null, slots:m.slots, fromBuild:!!m.shares, pers:[...m.pers].filter(p=>Object.values(WEAPON_PERS).includes(p))}))};
   Object.defineProperty(mo, 'pool', {value: pool, enumerable: false}); // 셔틀 후보는 계산용(결과로 넘기지 않음)
   return mo;
@@ -1862,7 +1862,7 @@ function pglPlan(team, progs, A, S, zone){
     // 실제 보유 캐릭터를 셔틀로(2026-10-17): 퍼스널리티 P글래(무기 P 포함)는 그 퍼스널리티가 있는 셔틀만 달 수 있다.
     // 셔틀 후보를 '이 조합에 쓸모 있는 퍼스널리티' 묶음으로 줄이고(같은 묶음은 하나), 한 명씩 점수 상위 8묶음에서 셔틀 수만큼 고른다
     const K = new Set(T.filter(t=>t.carrier).map(t=>t.carrier)), prof = new Map();
-    for(const p of mu.pool){ const ps = p.pers.filter(x=>K.has(x)).sort(), key = ps.join(','); const o = prof.get(key); if(o){ o.n++; o.names.push(p.name); } else prof.set(key, {key, pers:new Set(ps), n:1, names:[p.name]}); }
+    for(const p of mu.pool){ const ps = p.pers.filter(x=>K.has(x)).sort(), key = ps.join(','); const o = prof.get(key); if(o){ o.n++; o.names.push(p.name); o.ids.push(p.id); if(p.own) o.own++; } else prof.set(key, {key, pers:new Set(ps), n:1, names:[p.name], ids:[p.id], own:p.own?1:0}); } // 후보 순서 = 보유 먼저
     const L = [...prof.values()].map(o=>Object.assign(o, {s: run([{left:slA, pers:o.pers}]).score})).sort((a,b)=>b.s-a.s || (a.key<b.key?-1:a.key>b.key?1:0)).slice(0, 8);
     const combos = []; const rec = (k, from, acc) => { if(k===nbA){ combos.push(acc.slice()); return; } for(let a=from;a<L.length;a++){ if(acc.filter(x=>x===L[a]).length >= L[a].n) continue; acc.push(L[a]); rec(k+1, a, acc); acc.pop(); } };
     rec(0, 0, []);
@@ -1876,12 +1876,15 @@ function pglPlan(team, progs, A, S, zone){
     for(const cb of combos){ const r = run(cb.length ? cb.map(w=>({left:sl, pers:new Set([w])})) : mu.carriers.map(m=>({left:m.slots, pers:new Set()}))); if(!best || r.score>best.score+1e-12){ best=r; wsel=cb; } } // 셔틀 후보 목록이 없을 때: 무기 퍼스널리티 하나짜리 가상 셔틀(다른 퍼스널리티 P글래는 못 담)
   } else best = run(mu.carriers.map(m=>({left:m.slots, pers:m.pers||null})));
   const out = {per: best.Rc.map(r=>({e:r.add, z:r.zp, names:r.names})), r51:best.q51, r50:best.q50, used:best.used, slots: mu.carriers.reduce((a,m)=>a+m.slots,0), nb: mu.carriers.length,
-    shuttleWeap: wsel ? wsel.map(w=>PERS_KR[w]||w) : null, shuttles: shut ? shut.map(o=>({names:o.names.slice(0,3), n:o.n, pers:[...o.pers].map(x=>PERS_KR[x]||x)})) : null};
+    shuttleWeap: wsel ? wsel.map(w=>PERS_KR[w]||w) : null, shuttles: shut ? (seen => shut.map(o=>{ const k = seen.get(o)||0; seen.set(o, k+1); // 같은 묶음을 두 번 쓰면 둘째는 그 묶음의 다음 캐릭터
+      return {names:o.names.slice(k,k+3), ids:o.ids.slice(k,k+6), n:o.n, own:Math.max(0, o.own-k), pers:[...o.pers].map(x=>PERS_KR[x]||x)}; }))(new Map()) : null};
   memo.set(zk, out); return out;
 }
 /* 보스가 행동불능 상태이상(기절·수면·마비·석화·빙결·혼란·매료·공포)을 거는지 — 걸리면 요격이 안 나감 */
 const CC_RE = /기절|스턴|수면|마비|석화|빙결|혼란|매료|공포|행동 ?불능|睡眠|麻痺|気絶|石化|凍結|混乱|魅了|恐怖|スタン/;
 function enemyCCOf(boss){ if(!boss) return null; return !!((boss.needs&&boss.needs.status_immune) || (boss.mechanics||[]).some(m=>CC_RE.test(m)) || CC_RE.test(boss.strategy_kr||'')); }
+/* 셔틀 후보 목록(전체 캐릭터 → id·이름·퍼스널리티(무기 퍼스널리티 포함)·같은 캐릭터 묶음) */
+function shuttlePoolOf(pcs){ return (pcs||[]).filter(Boolean).map(pc=>({id:pc.id, name:pc.name, base:pc.base||pc.id, ns:!(pc.raw && pc.raw.style && pc.raw.style!=='NS'), pers:[...new Set([...(pc.pers||[]), WEAPON_PERS[pc.weapon]].filter(Boolean))]})); }
 /* 계산 상황: 배리어 관통 필요 여부, 속성·타입 지정, 후열 고정 셔틀 */
 /* 후열 인원(0~2): 결현현은 서약 인원(6명이면 2), 그 밖엔 편성 탭 '후열 인원'(input.backN, 기본 2 — 사용자 요청 2026-10-16: 4명뿐인 콘텐츠면 후열 셔틀·아군 전체 글래·후열 추천 없음) */
 function backOf(input){ if(input && input.pledge && input.pledge.size) return Math.max(0, Math.min(2, input.pledge.size-4)); const b = input && input.backN; return b!=null && b!=='' && isFinite(+b) ? Math.max(0, Math.min(2, Math.round(+b))) : 2; }
@@ -1890,8 +1893,12 @@ function buildCtx(input, ownedAll){
   const maxBack = backOf(input);
   const mules = (input.backLocked||[]).slice(0,maxBack).map(id=>(ownedAll||[]).find(o=>o.pc.id===id)).filter(Boolean)
     .map(o=>({id:o.pc.id, name:o.pc.name, pers:new Set([...(o.pc.pers||[]), WEAPON_PERS[o.pc.weapon]].filter(Boolean)), slots:(o.prog&&o.prog.slots)||3, shares:(o.prog&&o.prog.gear)?o.prog.gear.ps:null}));
-  // 셔틀 후보(보유 캐릭터): 퍼스널리티 P글래는 그 퍼스널리티가 있는 캐릭터만 달 수 있음(사용자 확인 2026-10-17) — 무기 퍼스널리티는 무기로도 보장
-  const pool = (ownedAll||[]).filter(o=>o && o.pc).map(o=>({id:o.pc.id, name:o.pc.name, pers:[...new Set([...(o.pc.pers||[]), WEAPON_PERS[o.pc.weapon]].filter(Boolean))]}));
+  // 셔틀 후보: 퍼스널리티 P글래는 그 퍼스널리티가 있는 캐릭터만 달 수 있음(사용자 확인 2026-10-17) — 무기 퍼스널리티는 무기로도 보장.
+  // 셔틀은 보통 4성 태생처럼 천명치 200을 넘기기 쉬운 캐릭터라(사용자 확인) 보유 여부와 무관하게 전체 캐릭터(input.shuttlePool)에서 고르고, 이름·후열 추천은 보유 캐릭터를 먼저
+  const ownIds = new Set((ownedAll||[]).filter(o=>o && o.pc).map(o=>o.pc.id));
+  const pool = (Array.isArray(input.shuttlePool) && input.shuttlePool.length ? input.shuttlePool : shuttlePoolOf((ownedAll||[]).filter(o=>o && o.pc).map(o=>o.pc)))
+    .map(p=>Object.assign({}, p, {own: ownIds.has(p.id)})).filter(p=>p.own || p.ns!==false) // 보유하지 않은 캐릭터는 기본 스타일(NS)만 — AS·ES·AC는 셔틀로 따로 키우기 어려움
+    .sort((a,b)=>(b.own-a.own) || (a.id<b.id?-1:a.id>b.id?1:0));
   return {pool, needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null,
     burstN: input.pledge && input.pledge.turns>0 ? Math.min(10, input.pledge.turns) : null};
 }
@@ -3221,9 +3228,14 @@ async function optimize(input, onProgress){
     const fixedBack = nRes>0 ? backLocked.map(id=>owned.find(o=>o.pc.id===id)).filter(Boolean).slice(0,nRes).map(o=>o.pc) : [];
     fixedBack.forEach(c=>baseIn.add(c.base||c.id));
     const mw = ev.mule && ev.mule.auto ? ev.mule.wp : null; // 셔틀 가정이면 그 무기 퍼스널리티 캐릭터를 후열 우선
+    // 후열은 보통 글래 셔틀(사용자 확인 2026-10-17): P글래 셔틀 계획이 있으면 그 셔틀(보유 캐릭터 중 같은 퍼스널리티 묶음)을 먼저 후열로
+    const muP = ev.mule || (ev.dummy && ev.dummy.mule), zq = ev.sb && ev.sb.zone, zk = zq && zq.level>0 ? (zq.key||zq.kind)+':'+zq.level : '-';
+    const plS = muP && muP.auto && muP._pm && muP._pm.size ? (muP._pm.get(zk) || [...muP._pm.values()].pop()) : null, shutPick = [];
+    if(plS && plS.shuttles) for(const sh of plS.shuttles){ const id = (sh.ids||[]).find(x=>!inTeam.has(x) && !shutPick.includes(x) && own.some(o=>o.pc.id===x && !baseIn.has(o.pc.base||o.pc.id))); if(id) shutPick.push(id); }
     const needComp = compM ? Math.max(0, pl.comp.n - team.filter(compM).length) : 0;
-    const reserves = fixedBack.concat(own.filter(o=>!inTeam.has(o.pc.id) && !baseIn.has(o.pc.base||o.pc.id)).map(o=>({o, v:survival(team.concat([o.pc]),progs.concat([o.prog]),ev.A&&ev.A.bud).score - ev.surv + (+o.pc.sup.revive||0) + (mw && o.pc.pers.has(mw) ? 8 + ((o.prog&&o.prog.slots)||3) : 0) + (needComp && compM(o.pc) ? 100 : 0)}))
-      .sort((a,b)=>b.v-a.v).filter(x=>{ const b=x.o.pc.base||x.o.pc.id; if(baseIn.has(b)) return false; baseIn.add(b); return true; }).slice(0,Math.max(0,nRes-fixedBack.length)).map(x=>x.o.pc));
+    const shutPc = shutPick.slice(0, Math.max(0, nRes-fixedBack.length)).map(id=>own.find(o=>o.pc.id===id).pc); shutPc.forEach(c=>baseIn.add(c.base||c.id));
+    const reserves = fixedBack.concat(shutPc, own.filter(o=>!inTeam.has(o.pc.id) && !baseIn.has(o.pc.base||o.pc.id)).map(o=>({o, v:survival(team.concat([o.pc]),progs.concat([o.prog]),ev.A&&ev.A.bud).score - ev.surv + (+o.pc.sup.revive||0) + (mw && o.pc.pers.has(mw) ? 8 + ((o.prog&&o.prog.slots)||3) : 0) + (needComp && compM(o.pc) ? 100 : 0)}))
+      .sort((a,b)=>b.v-a.v).filter(x=>{ const b=x.o.pc.base||x.o.pc.id; if(baseIn.has(b)) return false; baseIn.add(b); return true; }).slice(0,Math.max(0,nRes-fixedBack.length-shutPc.length)).map(x=>x.o.pc));
     return {reserves, fixedBack};
   }
   const results = finalList.map((c,rank)=>{
@@ -3363,7 +3375,7 @@ async function perCharBest(input, onProgress){
 
 const API = {hitInfo, dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   SURV_CATS, SURV_W, prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
-  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
+  explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, shuttlePoolOf, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
   statsAt, charStats, STAT_ORDER, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO, dupBase, PGL_ALL, PGL_HPMAX, PGL_ZONE5, PGL_HPLOW, PGL_ELEMP, pglPlan};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);

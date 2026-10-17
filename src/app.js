@@ -123,7 +123,7 @@ function workerMain(){
   'use strict';
   /* 이 함수는 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
   const E = self.AEOpt;
-  let byId = new Map();
+  let byId = new Map(), SP = null;
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])]})),
@@ -137,13 +137,14 @@ function workerMain(){
     if(m.type==='init'){
       const chars = JSON.parse(m.base).concat(m.custom||[]);
       byId = new Map(chars.map(c=>{ const p=E.prepChar(c); return [p.id,p]; }));
+      SP = E.shuttlePoolOf([...byId.values()]); // P글래 셔틀 후보(전체 캐릭터 — 셔틀은 4성 태생처럼 키우기 쉬운 캐릭터라 보유 무관, 2026-10-17)
       self.postMessage({type:'ready', n:byId.size});
       return;
     }
     const id = m.id;
     try{
       const owned = m.ids.filter(k=>byId.has(k)).map(k=>({pc:byId.get(k), prog:E.charProg(byId.get(k), m.own[k], m.S)}));
-      const input = Object.assign({}, m.input, {owned, settings:m.S, cap:m.cap});
+      const input = Object.assign({}, m.input, {owned, settings:m.S, cap:m.cap, shuttlePool:SP});
       const prog = f=>self.postMessage({type:'progress', id, f});
       let r;
       if(m.type==='optimize'){ const r0 = await E.optimize(input, prog); r = r0 && r0.shard ? r0 : liteOpt(r0); } // shard: 나눠 계산한 조각(조합 키·값)
@@ -211,7 +212,8 @@ function jobSnap(){
 const progJ = (J,id) => E.charProg(byId.get(id), J.own[id], J.S);
 // timeline: 실전(N턴 총딜)의 1턴을 속도·선제 순서로 — 화면에 되살리는 팀도 엔진 탐색과 같은 값이 되게
 const backNow = () => state.plan.mode==='kesshitsu' ? undefined : (state.plan.backN!=null ? +state.plan.backN : 2); // 후열 인원(결현현은 서약 인원으로)
-const ctxOf = (inp, J) => Object.assign(E.buildCtx(Object.assign({pgl: pglInput(), backN: backNow()}, inp), J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)}))), {timeline:true});
+let SPOOL = null, SPOOL_SRC = null; const shuttlePool = () => { if(SPOOL_SRC!==prepped){ SPOOL = E.shuttlePoolOf(prepped); SPOOL_SRC = prepped; } return SPOOL; }; // P글래 셔틀 후보(전체 캐릭터)
+const ctxOf = (inp, J) => Object.assign(E.buildCtx(Object.assign({pgl: pglInput(), backN: backNow(), shuttlePool: shuttlePool()}, inp), J ? ownedJ(J) : ownedList().map(id=>({pc:byId.get(id), prog:progOf(id)}))), {timeline:true});
 const ownedJ = J => J.ids.filter(id=>byId.has(id)).map(id=>({pc:byId.get(id), prog:progJ(J,id)}));
 /* E.optimize와 같은 모양의 결과를 돌려준다. 새 계산에 밀려 버려지면 null */
 /* 편성 계산을 워커 여러 개로 나눔(2026-10-16, 사용자 요청: 처음 쓰는 사람에겐 계산이 너무 오래 걸림).
@@ -261,7 +263,7 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
     if(hit && opt.onStale) opt.onStale(hit); // 사이트가 바뀌기 전 결과: 다시 계산하는 동안 보여 줌
     lr = await (opt.shard ? viaShards(chan, msg, onProgress) : viaWorker(chan, msg, onProgress));
     if(lr===CANCELED) return null;
-    if(lr===FALLBACK){ calcStat('main'); return E.optimize(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap}), onProgress); }
+    if(lr===FALLBACK){ calcStat('main'); return E.optimize(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap, shuttlePool:shuttlePool()}), onProgress); }
     calcStat('worker');
     if(ck && !lr.error) rcPut(ck, lr);
   }
@@ -296,7 +298,7 @@ async function calcPerChar(inp, onProgress){
     const stages = inp.mode==='burst' ? [['scan',0,0.8],['dprec',0.8,0.88],['prec',0.88,0.97]] : [['scan',0,0.85],['prec',0.85,0.97]];
     lr = await viaShards('pc', msg, onProgress, stages); // 캐릭터별 최적도 워커 여러 개로 나눠 계산(2026-10-16)
     if(lr===CANCELED) return null;
-    if(lr===FALLBACK){ calcStat('main'); return E.perCharBest(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap}), onProgress); }
+    if(lr===FALLBACK){ calcStat('main'); return E.perCharBest(Object.assign({}, inp, {owned:ownedJ(J), settings:J.S, cap:J.cap, shuttlePool:shuttlePool()}), onProgress); }
     calcStat('worker');
     if(!lr.error) rcPut(ck, lr);
   }
@@ -1232,7 +1234,7 @@ function muleLine(x){
   const fr = (mu.front||[]).map(j=>esc(x.team[j].name));
   const zoneTip = x.ev.sb.zone && x.ev.sb.zone.level>=2 ? ' · 극존(ZONE 각성)이 깔리면 셔틀마다 각성의 힘(+25%)을 섞는 게 이득 (속성 P글래와 다른 그룹이라 곱해짐)' : '';
   if(mu.auto && mu.plan){ const sl = (mu.carriers||[]).reduce((a,m)=>a+m.slots,0), pl = mu._pm && mu._pm.size ? [...mu._pm.values()].pop() : null, sw = pl && pl.shuttleWeap;
-    const shN = pl && pl.shuttles && pl.shuttles.length ? pl.shuttles.map(o=>`${esc(o.names[0])}${o.n>1?` 등 ${o.n}명 중 하나`:''}${o.pers&&o.pers.length?`(${o.pers.map(esc).join('·')})`:''}`).join(' + ') : null; // 보유 캐릭터 중 고른 셔틀(퍼스널리티 P글래는 그 퍼스널리티가 있어야 장착)
+    const shN = pl && pl.shuttles && pl.shuttles.length ? pl.shuttles.map(o=>`${esc(o.names[0])}${o.own>0 ? (o.own>1?` 등 보유 ${o.own}명`:'') : ' <span class="ng">미보유</span>'}${o.pers&&o.pers.length?`(${o.pers.map(esc).join('·')})`:''}`).join(' + ') : null; // 보유 캐릭터 중 고른 셔틀(퍼스널리티 P글래는 그 퍼스널리티가 있어야 장착)
     return `<div class="hint">P글래 셔틀 가정: 후열 ${shN ? shN : sw&&sw.length?sw.map(w=>esc(w)+' 캐릭터').join(' + '):'셔틀 '+mu.mules.length+'명'}(천명치 200, ${sl}칸)이 ${pglCount()?'표시한':'모든'} 잠재 연성 P글래를 종류마다 ${pglCount()?'표시한 수만큼':'1개씩'} 나눠 달고(퍼스널리티 P글래는 그 퍼스널리티가 있는 셔틀만), 장착 조건(무기종·퍼스널리티·속성)이 같은 아군에게 공유 → ${got.join(', ')||'—'}. 남는 칸엔 아군 전체 글래(공명·격진의 힘)</div>`; }
   if(mu.auto) return `<div class="hint">P글래 셔틀 가정: ${esc(E.PERS_KR[mu.wp]||mu.wp)} 퍼스널리티 ${mu.mules.length?`후열 ${mu.mules.length}명`:''}${mu.mules.length&&fr.length?' + ':''}${fr.length?`전열 서포터 ${fr.join(', ')}`:''}이 잠재 연성한 P글래를 공유 → ${got.join(', ')||'—'}${zoneTip}</div>`;
   return `<div class="hint">후열 고정 셔틀의 P글래 공유: ${got.join(', ')||'<span class="ng">무기 퍼스널리티가 맞는 전열 캐릭터 없음</span>'}</div>`;
