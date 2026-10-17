@@ -22,6 +22,11 @@ function applyTrueNames(){ const tn = trueOn(); for(const p of prepped){ const e
 const maskTN = (c, t) => { t = String(t||''); const e = c && ISHI[c.id]; if(!e || trueOn()) return t; return t.split(e.t).join('?').split(e.j).join('?'); };
 const ROLE_KR = {dps:'딜러',support:'버퍼',debuffer:'디버퍼',healer:'힐러',tank:'탱커',zone:'존',breaker:'브레이커'};
 const STYLE_KR = {NS:'노멀',AS:'어나더',ES:'엑스트라',AC:'이시층'};
+/* 보스 콘텐츠 분류(2026-10-17 사용자 '보스러시·서가·외사·외사 히든 등으로 카테고리'): content 원문으로 */
+const BOSS_CATS = [['rush','보스러시'],['shoka','성영의 서가'],['gaishi','외사'],['gaishi_h','외사 히든'],['kaisei','회생(과거와의 결투)'],['kengen','현현'],['kesshitsu','결실 현현'],['ad','어나더 던전'],['etc','기타']];
+const bossCat = b => { const c = String(b.content||''); if(b.kesshitsu || /結実/.test(c)) return 'kesshitsu'; if(/ボスラッシュ|보스러시|ボス・ラッシュ/.test(c)) return 'rush'; if(/書架/.test(c)) return 'shoka';
+  if(/^外史/.test(c)) return /裏ボス|隠し|ヒドゥン|hidden/i.test(c) ? 'gaishi_h' : 'gaishi'; if(/^廻生/.test(c)) return 'kaisei'; if(/^顕現/.test(c)) return 'kengen'; if(/アナザーダンジョン|封域/.test(c)) return 'ad'; return 'etc'; };
+const BOSS_CAT_KR = Object.fromEntries(BOSS_CATS);
 const CONTENT_KR = c => (c||'').replace('星詠みの書架','성영의 서가').replace(/^廻生$/,'회생(과거와의 결투)').replace(/^顕現/,'현현').replace(/^外史/,'외사');
 const ENEMY_TYPES = ['fire','water','earth','wind','thunder','shade','crystal','slash','pierce','blunt','magic'];
 const REL_CYCLE = [null,'weak','resist','null','absorb'];
@@ -152,7 +157,9 @@ function workerMain(){
   const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, azBy: ev.azBy || null} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
-      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev)})),
+      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null})),
+    results2: r.results2 ? r.results2.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
+      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null})) : null,
     decks:(r.decks||[]).map(d=>({focus:d.focus, ids:d.team.map(c=>c.id), reserveIds:d.reserves.map(c=>c.id), fixedBackIds:[...(d.fixedBack||[])], score:d.score, rel:d.rel, norm:d.norm, miss:d.miss, recCount:d.recCount, v:vOf(d.ev)})),
     evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, focus:r.focus||null};
   const litePc = r => r.error ? {error:r.error} : {
@@ -298,12 +305,21 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
   for(const y of lr.results||[]){
     if(y.ids.some(id=>!byId.has(id))) continue;
     const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
-    results.push({rank:y.rank, team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, y.v ? Object.assign({}, ctx, {variant:y.v}) : ctx),
+    const cx = Object.assign({}, ctx, y.v ? {variant:y.v} : null, y.bud && budObj(y.bud) ? {buddy:budObj(y.bud)} : null); // 계산이 고른 변형·버디 그대로
+    results.push({rank:y.rank, team, progs, bud:y.bud||null, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, cx),
       reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[],
       recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])});
-    Object.defineProperty(results[results.length-1], 'ctx', {value:ctx, writable:true, configurable:true, enumerable:false}); // 같은 상황으로 다시 평가할 때(잠재 광석 추정)
+    Object.defineProperty(results[results.length-1], 'ctx', {value:Object.assign({}, cx, {variant:null}), writable:true, configurable:true, enumerable:false}); // 같은 상황으로 다시 평가할 때(잠재 광석 추정)
     await yieldUI(); // 화면 다시 그리기를 막지 않게 조합마다 쉬어 감
   }
+  // 보스 안정성 목록(results2): 펼쳐 볼 때 평가(ev 게터) — 결과 표시가 늦어지지 않게
+  const results2 = lr.results2 ? lr.results2.filter(y=>!y.ids.some(id=>!byId.has(id))).map(y=>{ const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
+    const d = {rank:y.rank, team, progs, bud:y.bud||null, reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])};
+    const cx2 = Object.assign({}, ctx, y.bud && budObj(y.bud) ? {buddy:budObj(y.bud)} : null);
+    Object.defineProperty(d, 'ctx', {value:cx2, writable:true, configurable:true, enumerable:false});
+    Object.defineProperty(d, 'ev', {configurable:true, enumerable:true, get(){ const v = E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, y.v ? Object.assign({}, cx2, {variant:y.v}) : cx2); Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); return v; },
+      set(v){ Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); }});
+    return d; }) : null;
   const decks = [];
   for(const y of lr.decks||[]){
     if(y.ids.some(id=>!byId.has(id))) continue;
@@ -315,7 +331,7 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
       set(v){ Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); }});
     decks.push(d);
   }
-  return Object.assign({}, lr, {results, decks});
+  return Object.assign({}, lr, {results, results2, decks});
 }
 async function calcPerChar(inp, onProgress){
   const J = jobSnap();
@@ -634,10 +650,14 @@ const ownBud = ()=>Object.keys(state.buddies||{}).filter(k=>state.buddies[k] && 
 function budPick(){
   const P=state.plan, B=P.buddy||(P.buddy={main:'auto',sub:'auto'}), own=ownBud();
   if(!own.length) return {main:null, auto:true};
-  const main = B.main==='none' ? null : B.main==='auto' ? (BUD_SURV.find(k=>own.includes(k)) || own[0]) : (own.includes(B.main) ? B.main : null);
-  return {main}; // 서브 버디는 오라가 발동하지 않아 계산에서 뺌(사용자 확인 2026-10-16)
+  // 자동(2026-10-17 사용자 '보통 모케를 쓰는데 테트라로 고정'): 편성 계산은 결과마다 후보 버디를 바꿔 계산해 고름(buddyAutoInput),
+  // 그 밖(캐릭터별·속성별·세팅 화면)은 성향에 맞는 대표 버디(안정성이면 생존, 그 밖은 화력 효과 값이 큰 버디)
+  const main = B.main==='none' ? null : B.main==='auto' ? ((E.budCands(own.map(k=>Object.assign({id:k}, BUDDIES[k])), P.mode==='stability')[0]||{}).id || own[0]) : (own.includes(B.main) ? B.main : null);
+  return {main, auto: B.main==='auto'}; // 서브 버디는 오라가 발동하지 않아 계산에서 뺌(사용자 확인 2026-10-16)
 }
 function buddyInput(){ const b=budPick(); if(!b.main) return null; return {main: Object.assign({id:b.main}, BUDDIES[b.main]), sub:null}; }
+function buddyAutoInput(){ const P=state.plan, B=P.buddy||{}, own=ownBud(); return B.main==='auto' && own.length>1 ? own.map(k=>Object.assign({id:k}, BUDDIES[k])) : null; }
+const budObj = k => k && BUDDIES[k] ? {main: Object.assign({id:k}, BUDDIES[k]), sub:null} : null;
 const budName = k => k && BUDDIES[k] ? BUDDIES[k].kr : '';
 function renderBudGrid(){
   const g=$('#budGrid'); if(!g) return;
@@ -734,10 +754,16 @@ function renderPlanControls(){
   $('#weightRow').hidden = P.mode!=='custom';
   $('#kesRow').hidden = P.mode!=='kesshitsu';
   const sel=$('#bossSel');
-  if(!sel.options.length){
-    sel.innerHTML = '<option value="">보스 선택…</option>' + BOSSES.filter(b=>!b.kesshitsu).map(b=>`<option value="${esc(b.id)}">${esc(b.name_kr)} · ${esc(CONTENT_KR(b.content))}</option>`).join('');
+  { // 보스 검색(2026-10-17, 사용자 '보스도 검색할 수 있게'): 이름·일본어·콘텐츠로 거른 목록, 고른 보스는 늘 남김
+    const q = normBoss($('#planBossQ').value), L = BOSSES.filter(b=>!b.kesshitsu && (!q || b.id===P.bossId || bossHay(b).includes(q)));
+    const key = q+'|'+(P.bossId||'');
+    if(sel.dataset.k!==key){ sel.dataset.k = key; const grp = {}; for(const b of L){ (grp[bossCat(b)] = grp[bossCat(b)] || []).push(b); }
+      sel.innerHTML = `<option value="">${q ? `검색 결과 ${L.filter(b=>b.id!==P.bossId||bossHay(b).includes(q)).length}개…` : '보스 선택…'}</option>` + BOSS_CATS.filter(([k])=>grp[k]).map(([k,v])=>`<optgroup label="${esc(v)}">${grp[k].map(b=>`<option value="${esc(b.id)}">${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</option>`).join('')}</optgroup>`).join(''); }
   }
   sel.value = P.bossId||'';
+  $('#enemyBlock').hidden = P.mode==='boss' || P.mode==='kesshitsu'; // 실제 상대가 있으면 약점·내성은 보스 정보로(따로 설정 안 함, 사용자 2026-10-17)
+  { const bs = $('#bossSum'), cb = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : P.mode==='kesshitsu' ? BOSSES.find(b=>b.id===P.kesId) : null;
+    bs.hidden = !cb; bs.innerHTML = cb ? bossSumHtml(cb) : ''; }
   { // 버디
     const own=ownBud(), B=P.buddy||(P.buddy={main:'auto',sub:'auto'});
     const opt=(sel,v)=>`<option value="auto"${v==='auto'?' selected':''}>자동</option><option value="none"${v==='none'?' selected':''}>없음</option>`+own.map(k=>`<option value="${esc(k)}"${v===k?' selected':''}>${esc(budName(k))}</option>`).join('');
@@ -751,7 +777,8 @@ function renderPlanControls(){
   }
   { // 결현현
     const ks=$('#kesSel');
-    if(!ks.options.length) ks.innerHTML='<option value="">보스 선택…</option>'+BOSSES.filter(b=>b.kesshitsu).map(b=>{ const rq=byId.get(b.required); return `<option value="${esc(b.id)}">${esc(b.name_kr)}${rq?' · 필수 '+esc(rq.name):''}</option>`; }).join('');
+    { const q = normBoss($('#kesQ').value), L = BOSSES.filter(b=>b.kesshitsu && (!q || b.id===P.kesId || (bossHay(b)+normBoss((byId.get(b.required)||{}).name)).includes(q))), key = q+'|'+(P.kesId||'');
+      if(ks.dataset.k!==key){ ks.dataset.k = key; ks.innerHTML='<option value="">보스 선택…</option>'+L.map(b=>{ const rq=byId.get(b.required); return `<option value="${esc(b.id)}">${esc(b.name_kr)}${rq?' · 필수 '+esc(rq.name):''}</option>`; }).join(''); } }
     ks.value=P.kesId||'';
     const kb=BOSSES.find(b=>b.id===P.kesId);
     if(kb){ const rid=kesRequired(kb), rq=byId.get(kb.required);
@@ -842,14 +869,14 @@ async function runPlan(){
   const ids=ownedList();
   if(ids.length<4){ out.innerHTML=`<div class="empty">보유 캐릭터가 4명 이상이어야 편성을 짤 수 있습니다. <b>보유 캐릭터</b> 탭에서 체크해 주세요.</div>`; return; }
   const enemy={}; let any=false;
-  for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
+  for(const [k,v] of Object.entries(enemyNow(P))) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   const mode = kes ? 'boss' : P.mode;
   const pledge = kes ? pledgeInput(boss) : null;
   $('#runBtn').disabled=true; $('#prog').hidden=false; $('#prog i').style.width='0%';
   const t0=Date.now(), ptx=$('#progTxt'); ptx.textContent='계산 중…';
   const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null, noConv:noConvOf(P),
-      weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, pledge, buddy: buddyInput()},
+      weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, pledge, buddy: buddyAutoInput() ? null : buddyInput(), buddyAuto: buddyAutoInput()},
     f=>{ if(my===runToken){ $('#prog i').style.width=Math.round(f*100)+'%'; ptx.textContent=`계산 중 ${Math.round(f*100)}% · ${Math.round((Date.now()-t0)/1000)}초${NW>1?` · 워커 ${NW}개`:''}`; } }, null, {shard:true, cache:true});
   if(my!==runToken || !r) return;
   $('#runBtn').disabled=false; $('#prog').hidden=true;
@@ -922,9 +949,9 @@ const HOT = {opener:'o',burst:'b',sustain:'s',stability:'t',weak:'s',boss:'',kes
 function keyMetrics(x, mode, ref){
   const ev=x.ev, N=settings().burstTurns||3;
   const M = {real:[`실전 ${N}턴 총딜`, ev.burst, 'burst'], sus:['지속 딜 (턴당)', ev.sustain, 'sustain'], surv:['생존력', ev.surv, 'surv', true],
-    dummy:['최고점 (허수아비)', ev.dummyT, 'dummyT'], af:['AF 1회', ev.af, 'af'], op:['1턴 총딜', ev.opener, 'opener']};
+    dummy:['최고점 (허수아비)', ()=>ev.dummyT, 'dummyT'], af:['AF 1회', ev.af, 'af'], op:['1턴 총딜', ev.opener, 'opener']}; // 허수아비는 쓸 때만 계산
   const ord = {burst:['dummy','af','sus'], opener:['op','sus','surv'], sustain:['sus','real','surv'], stability:['surv','sus','real']}[mode] || ['real','sus','surv'];
-  return `<div class="keys">${ord.map((k,j)=>{ const [lab,v,rk,isS]=M[k]; return metric(lab, +v||0, ref&&ref[rk] ? (+v||0)/ref[rk] : null, j===0, isS); }).join('')}</div>`;
+  return `<div class="keys">${ord.map((k,j)=>{ const [lab,v0,rk,isS]=M[k], v = typeof v0==='function' ? v0() : v0; return metric(lab, +v||0, ref&&ref[rk] ? (+v||0)/ref[rk] : null, j===0, isS); }).join('')}</div>`;
 }
 function renderResults(r, boss, enemy, mode){
   const P=state.plan, out=$('#results'); BUDQ.tok++; BUDQ.q.length = 0;
@@ -936,12 +963,16 @@ function renderResults(r, boss, enemy, mode){
   const W=r.weights, wTxt = mode==='custom'&&W ? ` (공격성 ${Math.round(W.b*100)}% · 유지력 ${Math.round(W.s*100)}% · 안정성 ${Math.round(W.t*100)}%)` : '';
   h+=`<div class="runmeta">${esc(MODE_KR[mode])}${esc(wTxt)}${r.pledge?' · 서약: <b>'+esc(pledgeText(r.pledge))+'</b>':''}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''}${!(r.focus && r.focus.kind==='elem') && noConvOf(state.plan, r.focus||null) ? ' · <b>속성 변환 캐릭터 제외</b>' : ''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
   if(!r.results.length) h+=`<div class="empty">조건을 만족하는 조합이 없습니다. 난이도 상한을 올리거나 고정·제외 캐릭터를 줄여 보세요.</div>`;
-  const all=r.results, mx=k=>Math.max(...all.map(y=>y.ev[k]));
-  const ref = all.length ? {sbTurn:all[0].ev.sbTurn, af:mx('af'), sustain:mx('sustain'), surv:mx('surv'), burst:mx('burst'), dummyT:mx('dummyT'), opener:mx('opener')} : null;
+  const bv = (r.results2 && r.results2.length) ? ((state.ui && state.ui.bossView)==='stable' ? 'stable' : 'fast') : null;
+  if(bv) h+=`<div class="bossview"><div class="seg" id="bossViewSeg" role="group" aria-label="보스 추천 기준"><button type="button" data-bv="fast" aria-pressed="${bv==='fast'}">턴 단축</button><button type="button" data-bv="stable" aria-pressed="${bv==='stable'}">안정성</button></div>
+    <span class="hint">${bv==='fast' ? '빨리 깨는 조합(실전 딜·지속 딜 위주, 생존은 너무 낮을 때만 감점)' : '안 죽고 깨는 조합(생존 위주 + 깰 만큼의 딜)'}${boss && +boss.hp>0 ? ' · 예상 처치 턴은 보스 HP의 1.3배를 기준으로 넉넉하게' : boss ? ' · 이 보스는 HP 정보가 없어 예상 턴을 못 냅니다' : ''}</span></div>`;
+  const all = bv==='stable' ? r.results2 : r.results, mx=k=>Math.max(...all.map(y=>y.ev[k]));
+  if(boss) for(const x of all) if(x.kt===undefined) x.kt = E.killTurns(x.ev, boss);
+  const ref = all.length ? {sbTurn:all[0].ev.sbTurn, af:mx('af'), sustain:mx('sustain'), surv:mx('surv'), burst:mx('burst'), dummyT: showDummy(mode) ? mx('dummyT') : 0, opener:mx('opener')} : null;
   const lockSet=new Set(P.locked);
   for(const x of all){
     const key='p'+x.rank; RES.set(key, {x, focus:r.focus, mode, bossId:boss?boss.id:''});
-    h+=cardHtml(x, key, {boss, enemy, focus:r.focus, ref, hot:HOT[mode], lockSet, mode});
+    h+=cardHtml(x, key, {boss, enemy, focus:r.focus, ref, hot:HOT[mode], lockSet, mode, pledge:r.pledge||null});
   }
   const decks=(r.decks||[]).filter(d=>!all.some(x=>sameTeam(x.team,d.team)));
   if(decks.length){
@@ -968,7 +999,8 @@ const BUDQ = {q:[], run:false, tok:0};
 const budTipHtml = b => b ? ` · 화력 위주면 메인 버디 <b>${esc(budName(b.k))}</b> (세팅 후 폭딜 +${(b.g*100).toFixed(0)}%)` : '';
 function budLine(x, o, key){
   const own=ownBud(); if(!own.length) return '';
-  const cur=buddyInput(); const cm=cur&&cur.main?cur.main.id:null;
+  const cur=buddyInput(); const cm = x.bud || (cur&&cur.main?cur.main.id:null);
+  if(x.bud) return `<div class="hint">버디: 메인 <b>${esc(budName(x.bud))}</b> <span class="hint">(자동 — 이 조합에서 점수가 가장 높은 버디)</span></div>`;
   if(x._budBest===undefined && own.length>1){ BUDQ.q.push({x, o, cm, own, tok:BUDQ.tok}); if(!BUDQ.run) setTimeout(runBudQ, 60); }
   return `<div class="hint">버디: 메인 ${esc(budName(cm)||'없음')}<span class="budtip" data-budk="${esc(key||'')}">${budTipHtml(x._budBest)}</span></div>`;
 }
@@ -1000,7 +1032,9 @@ function bsimHtml(ev){
   return `<div class="bsim"><div class="hint">실전 참고: 개전부터 ${b.N}턴 총 <b class="num">${fmtN(b.total)}</b> · 시작 AF ${st.g}%${st.why&&st.why.length?` (${esc(st.why.join(', '))})`:''} · 시작 SB ${ev.hasSB?Math.round(b.s0)+'%':'성도 없음'}</div><ol>${b.turns.map(turn).join('')}</ol></div>`;
 }
 /* 최고점 = 허수아비 어포딜 한 줄: AF 행동 딜 + AF 끝 SB(콤보 배율) */
-function dummyHtml(x){
+const showDummy = mode => mode==='burst'; // 허수아비(최고점) 값은 최고점 성향에서만 — 보스·결현현 등 실전·종합에선 의미 없음(사용자 2026-10-17)
+function dummyHtml(x, o){
+  if(!showDummy(o && o.mode || state.plan.mode)) return '';
   const d=x.ev.dummy; if(!d || d.fast) return '';
   const nm=i=>esc(x.team[i].name), tot=d.per.reduce((a,b)=>a+b,0)||1;
   const top=d.per.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).filter(p=>p[0]/tot>=0.05).map(([v,i])=>`${nm(i)} ${Math.round(v/tot*100)}%`).join(' · ');
@@ -1015,7 +1049,7 @@ function dummyHtml(x){
   return `<div class="dummy"><div><b>최고점(허수아비 어포딜)</b> <b class="num">${fmtN(d.total)}</b> = AF 행동 <span class="num">${fmtN(d.af)}</span> <span class="hint">(${ord.map(i=>nm(i)+' '+d.n[i]).join(' · ')}회, 콤보 75%→${Math.round(d.fin*100)}%)</span>${sbTxt}</div><div class="hint">허수아비 1턴 · AF 100%로 시작 · 존 ${esc(d.zFull&&d.zFull.level?d.zFull.label+(d.zFull.byName?' ('+d.zFull.byName+')':''):'없음')}${d.sbAt!=null&&x.ev.sb.zone&&x.ev.sb.zone.level&&x.ev.sb.zone.how==='SB 시'&&(!d.zFull||x.ev.sb.zone.key!==d.zFull.key)?' → SB 후 '+esc(x.ev.sb.zone.label):''} · 왼쪽 버퍼부터 행동하며 버프를 깔고, 버프는 그 스킬을 쓴 뒤부터${mu} · 딜 비중 ${top}</div>${buTxt}</div>`;
 }
 function timelineHtml(x, o){
-  const tl=tlOf(x,o), ev=x.ev; if(!tl) return dummyHtml(x)+bsimHtml(ev);
+  const tl=tlOf(x,o), ev=x.ev; if(!tl) return dummyHtml(x, o)+bsimHtml(ev);
   const pTxt = tl.known ? (tl.p>=0.99?'버퍼가 모두 빠름':tl.p<=0.01?'버퍼가 모두 느림':`버퍼가 빠른 쌍 ${Math.round(tl.p*100)}%`) : '속도 모름 → 반반';
   const cell=(k,v,sub,hot)=>`<div class="tlc${hot?' hot':''}"><div class="k">${k}</div><div class="v">${fmtN(v)}</div>${sub?`<div class="s">${sub}</div>`:''}</div>`;
   return `<div class="tline" aria-label="턴별 화력">
@@ -1023,7 +1057,7 @@ function timelineHtml(x, o){
     ${cell('2턴', tl.t2, '버프 깔린 평타 턴')}
     ${cell('SB 턴', ev.sbTurn, ev.hasSB?'게이지 차면':'성도 없음')}
     ${cell('AF 1회', ev.af, `${ev.afA&&ev.afA.auto?`행동 ${ev.afA.n.join('·')}회 · 약 ${ev.afA.dur.toFixed(0)}초 · `:''}콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
-  </div>${dummyHtml(x)}${bsimHtml(ev)}`;
+  </div>${dummyHtml(x, o)}${bsimHtml(ev)}`;
 }
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
 function cardHtml(x, key, o){
@@ -1052,14 +1086,15 @@ function cardHtml(x, key, o){
       <div class="setup" data-for="${key}" hidden></div>
       <div class="order hint">왼쪽부터 이 순서로 전방에 · 이름을 누르면 추천 세팅${shared?'':` · 후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}`).join(', '):'—'}`}</div>
       ${keyMetrics(x, o.mode, ref)}
+      ${x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(보스 HP 1.3배 기준, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}</div>` : ''}
       ${warns.length?`<div class="warns">${wHtml(wShow)}${wMore>0?`<span class="warn more">외 ${wMore}개 (자세히 보기)</span>`:''}</div>`:''}
-      <details class="why"><summary>자세히 보기 · 턴별 화력 · 최고점</summary>
+      <details class="why"><summary>자세히 보기 · 턴별 화력${showDummy(o.mode)?' · 최고점':''}</summary>
         <div class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span>${sbz&&sbz.how&&sbz.level?` · 존 ${esc(sbz.how)}`:''}</div>
         <div class="order">전방 배치 <span class="hint">왼쪽 → 오른쪽${ex.posTotal?` · 위치 버프 ${ex.posOk}/${ex.posTotal} 성립`:''} · 버퍼·서포터 왼쪽, 주 딜러 오른쪽 (AF는 왼쪽부터 자동 선택)</span></div>
         ${shared?'':`<div class="reserve">후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}${muleBadge(x,c)}`).join(', '):'—'} <span class="hint">(셔틀·회복·수호·해제 보강 기준)</span>${budLine(x, o, key)}${muleLine(x)}</div>`}
         ${timelineHtml(x, o)}
         <div class="metrics">
-          ${metric('최고점 (허수아비 어포딜)', ev.dummyT, rel('dummyT'), hot==='b')}
+          ${showDummy(o.mode) ? metric('최고점 (허수아비 어포딜)', ev.dummyT, rel('dummyT'), hot==='b') : ''}
           ${metric('SB 턴 화력', ev.sbTurn, rel('sbTurn'), false)}
           ${metric('AF 1회 화력', ev.af, rel('af'), false)}
           ${metric('지속 (평상+AF 주기)', ev.sustain, rel('sustain'), hot==='s')}
@@ -1082,9 +1117,9 @@ function cardHtml(x, key, o){
 }
 
 /* 계산 근거: 최고점(허수아비)의 주 딜러 1명, 버프가 다 깔린 AF 중 공격 1회를 딩 계산기 순서대로 */
-function basisTop(x){ const d=x.ev.dummy; const per=(d&&!d.fast&&d.per&&d.per.length===x.team.length)?d.per:x.ev.sb.per; return per.indexOf(Math.max(...per)); }
+function basisTop(x){ const d=showDummy(state.plan.mode) ? x.ev.dummy : null; const per=(d&&!d.fast&&d.per&&d.per.length===x.team.length)?d.per:x.ev.sb.per; return per.indexOf(Math.max(...per)); }
 function basisHtml(x){
-  const ev=x.ev, d=ev.dummy, i=basisTop(x), c=x.team[i], S=x.S||settings();
+  const ev=x.ev, d=showDummy(state.plan.mode) ? ev.dummy : null, i=basisTop(x), c=x.team[i], S=x.S||settings();
   const useD = d && !d.fast && d.full;
   const co = useD ? d.full[i] : ev.sb.cores[i], z = useD ? d.zFull : ev.sb.zone;
   if(!co) return '<p class="hint">주 딜러의 공격 정보가 없습니다.</p>';
@@ -1268,8 +1303,8 @@ function muleGot(x){
 /* 셔틀마다 달 연성 P글래 목록(같은 이름은 ×개수) */
 function shuttleItems(o){ const m = new Map(); for(const t of (o.items||[])) m.set(t, (m.get(t)||0)+1); return [...m].map(([t,n])=>esc(t)+(n>1?` ×${n}`:'')).join(', '); }
 /* 셔틀 계획: 종합 등은 ev.mule, 최고점은 허수아비 계산의 셔틀(ev.dummy.mule) — 그 존의 계획 */
-function shuttlePlan(x){ const ev = x.ev, mu = ev.mule || (ev.dummy && ev.dummy.mule); if(!mu || !mu.auto || !mu._pm || !mu._pm.size) return null;
-  const z = (!ev.mule && ev.dummy && ev.dummy.zFull) || (ev.sb && ev.sb.zone), zk = z && z.level>0 ? (z.key||z.kind)+':'+z.level : '-';
+function shuttlePlan(x){ const ev = x.ev, dm = ev.dummyLazy ? ev.dummyIfReady() : ev.dummy, mu = ev.mule || (dm && dm.mule); if(!mu || !mu.auto || !mu._pm || !mu._pm.size) return null;
+  const z = (!ev.mule && dm && dm.zFull) || (ev.sb && ev.sb.zone), zk = z && z.level>0 ? (z.key||z.kind)+':'+z.level : '-';
   return mu._pm.get(zk) || [...mu._pm.values()].pop(); }
 function shuttleHtml(pl){ if(!pl || !pl.shuttles || !pl.shuttles.length) return '';
   return `<ul class="shut">${pl.shuttles.map(o=>`<li><b>${o.names[0] ? esc(o.names[0]) : '셔틀'}</b>${o.names[0] ? (o.own>0 ? (o.own>1?` <span class="hint">(보유 ${o.own}명 중 하나)</span>`:'') : ' <span class="ng">미보유</span>') : ''}${o.pers&&o.pers.length?` <span class="hint">${o.pers.map(esc).join('·')}</span>`:''}<br>${shuttleItems(o)||'<span class="hint">달 것 없음</span>'}</li>`).join('')}</ul>`; }
@@ -1591,7 +1626,7 @@ async function runPerChar(){
   const boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
   const ids=ownedList();
   if(ids.length<4){ $('#pcTable').innerHTML='<div class="empty">보유 캐릭터가 4명 이상이어야 합니다.</div>'; return; }
-  const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
+  const enemy={}; let any=false; for(const [k,v] of Object.entries(enemyNow(P))) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   $('#pcRun').disabled=true; $('#pcProg').hidden=false; $('#pcProg i').style.width='0%';
   const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null, noConv:noConvOf(P),
@@ -1630,7 +1665,7 @@ async function runFocusAll(){
   const boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
   const ids=ownedList(), grid=$('#fxGrid');
   if(ids.length<4){ grid.innerHTML='<div class="empty">보유 캐릭터가 4명 이상이어야 합니다.</div>'; return; }
-  const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
+  const enemy={}; let any=false; for(const [k,v] of Object.entries(enemyNow(P))) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   const mode = P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, J = jobSnap(), cond = {mode, bossId:boss?boss.id:''};
   for(const k of [...RES.keys()]) if(k[0]==='f') RES.delete(k);
@@ -1679,7 +1714,7 @@ const G_RANK={none:0,sh:0.5,vc:1,shin:2,goku:3}, G_KR={none:'없음',sh:'수호�
 const BASE_OWN = ()=>({t:0,s:false,m:0,g:'none',gl:null});
 function planCtx(){
   const P=state.plan, boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : null;
-  const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
+  const enemy={}; let any=false; for(const [k,v] of Object.entries(enemyNow(P))) if(v){ enemy[k]=v; any=true; }
   return {boss, enemy:any?enemy:null, ctx:ctxOf({boss, backLocked:P.backLocked||[]}), mode:P.mode};
 }
 function evalWith(team, owns){
@@ -2136,8 +2171,9 @@ function renderCustomList(){
 /* ---------- 보스 탭 ---------- */
 let curBoss = null;
 function renderBossList(){
-  const f=$('#bossFilter').value, q=($('#bossQ').value||'').trim().toLowerCase();
-  const list=BOSSES.filter(b=>(!f||b.content.startsWith(f)) && (!q || b.name_kr.toLowerCase().includes(q) || (b.name_jp||'').toLowerCase().includes(q)));
+  { const sel = $('#bossFilter'); if(sel && sel.options.length<=1){ const cnt = {}; for(const b of BOSSES){ const k = bossCat(b); cnt[k] = (cnt[k]||0)+1; } sel.innerHTML = '<option value="">모든 콘텐츠</option>' + BOSS_CATS.filter(([k])=>cnt[k]).map(([k,v])=>`<option value="${k}">${esc(v)} (${cnt[k]})</option>`).join(''); } }
+  const f=$('#bossFilter').value, q=normBoss($('#bossQ').value);
+  const list=BOSSES.filter(b=>(!f||bossCat(b)===f) && (!q || bossHay(b).includes(q)));
   $('#bossList').innerHTML=list.map(b=>`<button type="button" class="bossitem" data-boss="${esc(b.id)}" aria-current="${curBoss===b.id}"><div class="bn">${esc(b.name_kr)}</div><div class="bc">${esc(CONTENT_KR(b.content))} · 약점 ${b.weak.length?b.weak.map(t=>E.ELEM_KR[t]||E.WT_KR[t]).join('·'):'없음'}</div></button>`).join('') || '<div class="hint">일치하는 보스가 없습니다.</div>';
   if(!curBoss && list.length){ curBoss=list[0].id; renderBossList(); return; }
   renderBossDetail();
@@ -2158,6 +2194,23 @@ function renderBossDetail(){
     <div class="sec"><h3>공략 추천 캐릭터 <span class="hint">(초록 = 보유)</span></h3><div class="recs">${(b.recommended||[]).map(j=>{const kr=allJp.get(j); const own=ownJp.has(j); return `<span class="rec ${own?'own':kr?'':'no'}">${esc(kr||j)}</span>`;}).join('')||'<span class="hint">—</span>'}</div></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button type="button" class="btn primary" id="bossGo">이 보스로 편성 추천</button>${b.source?`<a href="${esc(b.source)}" target="_blank" rel="noopener" class="hint">출처: altema</a>`:''}</div>`;
 }
+const normBoss = t => String(t||'').normalize('NFKC').toLowerCase().replace(/[\s·・()（）\-]/g,'');
+const bossHay = b => normBoss([b.name_kr, b.name_jp, b.id, CONTENT_KR(b.content), b.content, BOSS_CAT_KR[bossCat(b)]].join(' '));
+/* 보스 핵심 요약(편성 탭, 사용자 '보스는 있는 내용만 보내 주고 핵심 요약'): 약점·내성, HP, 부위별 통하는 공격, 필요 요소, 기믹 3개, 공략 한 줄 */
+function bossSumHtml(b){
+  const chips = (lab, arr, cls) => (arr||[]).length ? `<span class="bsl">${lab}</span>${arr.map(t=>`<span class="rel ${cls}">${esc(E.ELEM_KR[t]||E.WT_KR[t]||t)}</span>`).join('')}` : '';
+  const rels = [chips('약점', b.weak, 'weak'), chips('내성', b.resist, 'resist'), chips('무효', b.null, 'null'), chips('흡수', b.absorb, 'absorb')].filter(Boolean).join(' ');
+  const needs = Object.entries(b.needs||{}).filter(([k,v])=>v).map(([k])=>`<span class="need">${esc(NEED_KR[k]||k)}</span>`).join('');
+  const parts = (b.parts||[]).length ? `<div class="bsparts"><b>부위마다 통하는 공격</b> ${b.parts.map(q=>`<span class="need">${esc(q.label)}${q.need?'':' · 전부'}</span>`).join('')} <span class="hint">— 모든 부위에 통하는 딜러를 섞어야 점수가 오릅니다</span></div>` : '';
+  const mech = (b.mechanics||[]).slice(0, 3).map(m=>`<li>${esc(m)}</li>`).join('');
+  const strat = String(b.strategy_kr||'').split(/(?<=[.다요])\s+/)[0] || '';
+  return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
+    <div class="bsrels">${rels || '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>'}</div>${parts}
+    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}
+    ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}`;
+}
+/* 상대 약점·내성: 보스·결현현이면 보스 정보 그대로(따로 설정 안 함, 2026-10-17), 그 밖은 직접 설정 */
+function enemyNow(P){ P = P || state.plan; const b = P.mode==='boss' ? BOSSES.find(x=>x.id===P.bossId) : P.mode==='kesshitsu' ? BOSSES.find(x=>x.id===P.kesId) : null; return b ? bossToEnemy(b) : (P.enemy||{}); }
 function bossToEnemy(b){ const en={}; (b.absorb||[]).forEach(t=>en[t]='absorb'); (b.null||[]).forEach(t=>en[t]='null'); (b.resist||[]).forEach(t=>en[t]='resist'); (b.weak||[]).forEach(t=>en[t]='weak'); return en; }
 function applyBoss(id){
   const b=BOSSES.find(x=>x.id===id); if(!b) return;
@@ -2323,6 +2376,8 @@ function bind(){
     const i=L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); C.on=true; plChanged(); });
   $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
   $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); });
+  $('#planBossQ').addEventListener('input', ()=>renderPlanControls()); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
+  $('#bossSum').addEventListener('click', e=>{ const b = e.target.closest('[data-bossinfo]'); if(!b) return; curBoss = b.dataset.bossinfo; showTab('boss'); renderBossList(); renderBossDetail(); window.scrollTo(0,0); });
   $('#bossSel').addEventListener('change',e=>{ if(e.target.value) applyBoss(e.target.value); else { state.plan.bossId=''; save(); renderPlanControls(); } runPlan(); });
   $('#enemyGrid').addEventListener('click',e=>{ const b=e.target.closest('.etype'); if(!b) return; const t=b.dataset.t; const cur=state.plan.enemy[t]||null; const nx=REL_CYCLE[(REL_CYCLE.indexOf(cur)+1)%REL_CYCLE.length]; if(nx) state.plan.enemy[t]=nx; else delete state.plan.enemy[t]; save(); renderPlanControls(); });
   $('#enemyClear').addEventListener('click',()=>{ state.plan.enemy={}; save(); renderPlanControls(); });
@@ -2368,6 +2423,7 @@ function bind(){
   $('#pcTable').addEventListener('click', e=>{ const b=e.target.closest('button[data-focus]'); if(!b) return; const id=b.dataset.focus;
     state.plan.locked=[id]; state.plan.excluded=state.plan.excluded.filter(x=>x!==id); save(); renderPlanControls(); showTab('plan'); runPlan(); });
   ['#rq','#rel','#rwp','#ral','#rtier','#rown','#rkind'].forEach(s=>$(s).addEventListener('input',renderRoster));
+  $('#results').addEventListener('click', e=>{ const b = e.target.closest('#bossViewSeg button[data-bv]'); if(!b || !LAST_PLAN) return; state.ui = state.ui || {}; state.ui.bossView = b.dataset.bv; save(); renderResults(LAST_PLAN.r, LAST_PLAN.boss, LAST_PLAN.enemy, LAST_PLAN.mode); });
   $('#trueName').addEventListener('change', e=>{ state.ui = state.ui || {}; state.ui.trueName = e.target.checked; save(); applyTrueNames(); renderAll(); // 진명 공개: 이름만 바뀌고 계산은 그대로 — 지난 결과를 다시 그리기만
     if(LAST_PLAN && !$('#runBtn').disabled){ for(const x of (LAST_PLAN.r.results||[]).concat(LAST_PLAN.r.decks||[])) delete x.ex; renderResults(LAST_PLAN.r, LAST_PLAN.boss, LAST_PLAN.enemy, LAST_PLAN.mode); }
     if(pcResult) renderPerChar(); });

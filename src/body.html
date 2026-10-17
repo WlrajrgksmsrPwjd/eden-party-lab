@@ -55,6 +55,7 @@
         </div>
         <div id="kesRow" hidden>
           <label class="lbl" for="kesSel">결실 현현 보스</label>
+          <input type="search" id="kesQ" class="bossq" placeholder="보스·필수 캐릭터 이름 검색" autocomplete="off" aria-label="결실 현현 보스 검색">
           <select id="kesSel" style="width:100%"></select>
           <p class="hint" id="kesReq" style="margin:4px 0 0"></p>
           <fieldset class="pledge">
@@ -70,8 +71,10 @@
         </div>
         <div id="bossRow" hidden>
           <label class="lbl" for="bossSel">보스</label>
+          <input type="search" id="planBossQ" class="bossq" placeholder="보스 이름·콘텐츠 검색 (예: 키마이라, 외사)" autocomplete="off" aria-label="보스 검색">
           <select id="bossSel" style="width:100%"></select>
         </div>
+        <div id="bossSum" class="bosssum" hidden></div>
         <div id="enemyMain"></div>
         <div>
           <label class="lbl" for="lockIn">꼭 쓸 캐릭터 <span class="hint" style="letter-spacing:0;font-weight:400">최대 3명 · 비워 두면 보유 전체에서</span></label>
@@ -352,9 +355,9 @@
   <!-- 보스 공략 -->
   <section class="panel" id="p-boss" role="tabpanel">
     <div class="bossbar">
-      <select id="bossFilter" aria-label="콘텐츠"><option value="">모든 콘텐츠</option><option value="星詠みの書架">성영의 서가</option><option value="廻生">회생</option><option value="外史">외사</option><option value="顕現">현현</option></select>
+      <select id="bossFilter" aria-label="콘텐츠 분류"><option value="">모든 콘텐츠</option></select>
       <input type="text" id="bossQ" placeholder="보스 이름 검색" aria-label="보스 이름 검색">
-      <span class="hint">약점·기믹은 altema 공략 페이지 요약입니다. (미확인) 표시는 한국어 이름이 확인되지 않은 보스입니다.</span>
+      <span class="hint">약점·기믹은 알테마 공략 페이지 요약입니다. (미확인) 표시는 한국어 이름이 확인되지 않은 보스입니다. 콘텐츠 분류로 거를 수 있어요.</span>
     </div>
     <div class="bosslayout">
       <div class="bosslist" id="bossList"></div>

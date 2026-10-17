@@ -658,3 +658,20 @@ dialog.guide::backdrop{background:rgba(8,12,30,.62)}
   .dbul li{grid-template-columns:1fr; gap:2px}
 }
 .dk .dz, .fhead h3 .dz{font-size:11px; font-weight:500; color:var(--muted); margin-left:2px}
+/* 보스 검색·핵심 요약(편성 탭) */
+.bossq{width:100%; margin:0 0 6px}
+.bosssum{border:1px solid var(--frame); border-radius:10px; padding:10px 12px; background:color-mix(in srgb, var(--gold) 6%, var(--surface)); display:grid; gap:6px; font-size:13px; box-shadow:inset 0 0 0 3px var(--surface), inset 0 0 0 4px var(--frame-in)}
+.bosssum .bshead{display:flex; flex-wrap:wrap; gap:6px; align-items:baseline}
+.bosssum .bsrels, .bosssum .bsneeds, .bosssum .bsparts{display:flex; flex-wrap:wrap; gap:4px; align-items:center}
+.bosssum .bsl{font-size:11.5px; font-weight:700; color:var(--muted); margin-right:2px}
+.bosssum .rel{font-size:11.5px; padding:1px 7px; border-radius:999px; border:1px solid var(--line)}
+.bosssum .rel.weak{color:var(--good); border-color:color-mix(in srgb, var(--good) 50%, transparent)}
+.bosssum .rel.resist, .bosssum .rel.null, .bosssum .rel.absorb{color:var(--bad); border-color:color-mix(in srgb, var(--bad) 45%, transparent)}
+.bosssum .need{font-size:11.5px; padding:1px 7px; border-radius:999px; background:var(--surface-2); border:1px solid var(--line)}
+.bosssum .bsmech{margin:0; padding-left:18px; display:grid; gap:2px; font-size:12.5px}
+.bosssum .bsstrat{margin:0}
+/* 보스 추천 기준 전환·예상 처치 턴 */
+.bossview{display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; margin:4px 0 10px}
+.kt{font-size:13px; margin:2px 0 4px}
+.kt .warn{color:var(--warn); font-weight:600; margin-left:4px}
+
