@@ -2,7 +2,7 @@
 
 어나더 에덴 보유 캐릭터, 천명치, 글래스터를 넣으면 성향별(최고점 딜 / 지속 딜 / 안정성 / 약점 맞춤 / 보스 맞춤) 1~5순위 파티를 계산해 주는 페이지입니다.
 
-- 바로 쓰기: https://wlrajrgksmsrpwjd.github.io/eden-party-lab/
+- 바로 쓰기: https://wlrajrgksmsrpwjd.github.io/eden-party-lab/ (승인 코드가 있어야 열립니다. 코드는 운영자에게 요청하세요.)
 - 조건부 버프(속성·무기·위치·존·SB 한정 등)는 `src/data/buff_rules.json` 규칙대로 받는 캐릭터별로 따집니다.
 - 속성(7)·공격 타입(참격·타격·돌격·마법) 지정 편성, 속성·타입별 상위 조합 한눈표, 캐릭터를 누르면 이 조합 기준 추천 세팅(배치·글래스터·천명치 목표·운용)을 보여줍니다.
 - 결과 카드마다 턴별 운영(보스 맞춤이면 보스 기믹별 담당 캐릭터 포함)과 "목표로 저장"이 있고, 목표 세팅 탭에서 남은 육성 항목을 화력 오르는 순서로 보여줍니다.
@@ -11,7 +11,11 @@
 - 보유 정보는 쓰는 사람 브라우저에만 저장됩니다. 다른 기기로 옮길 때는 "보유 캐릭터" 탭의 백업 기능을 쓰세요.
 - 캐릭터·보스 수치는 altema 공략 페이지 기준으로 정리했고, 일부는 추정값입니다. 화력 숫자는 조합끼리 비교하기 위한 상대값입니다.
 
-수정은 `src/` 아래 파일을 고친 뒤 `python3 -I src/build.py`로 `index.html`을 다시 만듭니다.
+수정은 `src/` 아래 파일을 고친 뒤 `python3 -I src/build.py`로 다시 만듭니다. 전체 페이지는 `dist/`(저장소에 안 올림)에, 공개되는 루트 `index.html`·`builder.html`은 승인 코드로 잠긴 페이지로 만들어집니다(`src/tools/lock.js`, 코드 목록 `access.json`은 저장소에 안 올림, 관리는 `node src/tools/access.js add|set|remove|list`).
+
+## 이용 조건
+
+이 저장소의 코드·계산 로직·정리 데이터는 무단 사용·복제·재배포를 허락하지 않습니다(LICENSE). 장비 빌더(`vendor/`)의 계산 공식·장비 데이터는 딩 님 것으로 허락을 받아 출처를 밝혀 씁니다. 게임 이름·캐릭터 이름 등은 각 권리자의 것입니다.
 
 ## 데이터 업데이트 절차
 
@@ -20,5 +24,5 @@
 3. MP·지속 턴·퍼스널리티·현현·한국어 스킬명은 `src/data/extra/*.json`에 `src/data/EXTRA_BRIEF.md` 형식으로 보강합니다.
    - 디버프 지속·조건은 `debuff_rules.json`, 체인 어빌리티는 `chain.json`, 조건부 스킬 배율은 `skill_cond.json`, 결실 현현 보스·서약은 `bosses_kesshitsu.json`, 기본 스탯은 `stats.json`(위키 Stats Index) (형식은 SCHEMA.md)
 4. `src/data/meta.json`의 `updated` 날짜를 갱신합니다. (화면의 "데이터 기준" 표시에 쓰입니다)
-5. `python3 -I src/build.py`로 `index.html`을 다시 만듭니다.
-6. 페이지를 열어 새 캐릭터가 보유 목록·편성 결과에 제대로 나오는지 확인한 뒤 push 합니다.
+5. `python3 -I src/build.py`로 다시 만듭니다. (`access.json`이 없으면 잠긴 공개 페이지는 그대로 두고 경고만 냅니다)
+6. `dist/index.html`을 열어 새 캐릭터가 보유 목록·편성 결과에 제대로 나오는지 확인한 뒤 push 합니다.

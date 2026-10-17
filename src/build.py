@@ -1,4 +1,4 @@
-# 사용법: python3 -I src/build.py  (저장소 루트에서 실행) → index.html 생성
+# 사용법: python3 -I src/build.py  (저장소 루트에서 실행) → dist/index.html·dist/builder.html(전체) + access.json이 있으면 루트 index.html·builder.html(잠긴 공개용)
 import re, json,glob,os
 here=os.path.dirname(os.path.abspath(__file__))
 P=lambda *a: os.path.join(here,*a)
@@ -167,8 +167,10 @@ if os.path.exists(_sc):
 out+='<script id="aecalc-js">\n'+open(os.path.join(here,'..','vendor','ae-builder','ae-engine.js'),encoding='utf-8').read()+'\n</script>\n'
 out+='<script id="eqopt-js">\n'+rd('eqopt.js')+'\n</script>\n'
 out+='<script id="engine-js">\n'+rd('engine.js')+'\n</script>\n<script>\n'+rd('app.js')+'\n</script>\n</body></html>\n'
-open(os.path.join(here,'..','index.html'),'w',encoding='utf-8').write(out)
-print('index.html',len(out.encode())//1024,'KB · 캐릭터',len(chars),'· 보스',len(bosses),'· 데이터 기준',meta.get('updated','-'))
+# 잠금(2026-10-17): 잠기지 않은 전체 페이지는 dist/에만(.gitignore), 공개되는 저장소 루트 index.html·builder.html은 src/tools/lock.js가 암호화해 만든다
+DIST=os.path.join(here,'..','dist'); os.makedirs(DIST, exist_ok=True)
+open(os.path.join(DIST,'index.html'),'w',encoding='utf-8').write(out)
+print('dist/index.html',len(out.encode())//1024,'KB · 캐릭터',len(chars),'· 보스',len(bosses),'· 데이터 기준',meta.get('updated','-'))
 
 # 장비 빌더 (어나더에덴 빌더, 계산 공식·장비 데이터 출처: 딩) → builder.html
 VB=os.path.join(here,'..','vendor','ae-builder','어나더에덴_빌더.html')
@@ -221,5 +223,15 @@ if os.path.exists(VB):
 '''
     i=b.rfind('</script>')
     b=pre+b[:i+9]+'\n'+hook+b[i+9:]
-    open(os.path.join(here,'..','builder.html'),'w',encoding='utf-8').write(b)
-    print('builder.html',len(b.encode())//1024,'KB')
+    open(os.path.join(DIST,'builder.html'),'w',encoding='utf-8').write(b)
+    print('dist/builder.html',len(b.encode())//1024,'KB')
+
+# 공개용 잠긴 페이지: access.json(승인 코드, git에 안 올림)이 있을 때만 만든다. 없으면 루트 파일은 건드리지 않음(잠기지 않은 페이지가 공개되지 않게)
+import subprocess
+_acc=os.path.join(here,'..','access.json')
+if os.path.exists(_acc):
+    r=subprocess.run(['node', os.path.join(here,'tools','lock.js')], capture_output=True, text=True)
+    print((r.stdout or '').strip())
+    if r.returncode: raise SystemExit('잠금 실패: '+(r.stderr or '').strip())
+else:
+    print('※ access.json이 없어 공개용 잠긴 페이지(index.html·builder.html)를 다시 만들지 않았습니다 → node src/tools/access.js set "이름" 코드')

@@ -1,0 +1,15 @@
+Copyright (c) 2026 WlrajrgksmsrPwjd (에덴 편성 연구실). All rights reserved.
+
+이 저장소의 소스 코드, 계산 엔진·로직, 정리한 데이터(src/ 아래 전부와 빌드된 페이지)는
+저작권자의 서면 허락 없이 사용·복제·수정·재배포·다른 서비스에 탑재할 수 없습니다.
+공개 페이지는 승인 코드를 받은 사람만 개인적으로 이용할 수 있습니다.
+
+No permission is granted to use, copy, modify, merge, publish, distribute,
+sublicense, or sell any part of this repository without prior written
+permission from the copyright holder.
+
+예외 / Third-party:
+- vendor/ae-builder, vendor/ae-builder-core: 계산 공식·장비 데이터 출처 딩 님
+  (AE 대미지 계산기·장비 정리 시트). 원작자 허락·출처 표기 조건으로 사용하며, 권리는 원작자에게 있습니다.
+- 게임 이름, 캐릭터·스킬 이름 등 게임 관련 명칭과 정보는 각 권리자의 것입니다.
+  캐릭터·보스 수치는 공개 공략 사이트(altema 등)·위키를 참고해 정리했습니다.

@@ -16,7 +16,7 @@ srv.listen(0, '127.0.0.1', async ()=>{
   const b = await chromium.launch(opts), p = await b.newPage();
   await p.route(/fonts\.(googleapis|gstatic)/, r=>r.abort());
   const t0 = Date.now();
-  await p.goto(`http://127.0.0.1:${port}/index.html`);
+  await p.goto(`http://127.0.0.1:${port}/dist/index.html`); // 잠기지 않은 빌드(dist/)
   await p.waitForSelector('#results .card', {timeout: 30*60*1000});
   const got = await p.evaluate(()=>{ const ver = (document.querySelector('meta[name="eden-calc"]')||{}).content;
     const L = JSON.parse(localStorage.getItem('aeopt_rc1')||'[]'); const e = L.find(x=>x.b===ver); return e ? {b:e.b, k:e.k, lr:e.lr} : null; });
