@@ -138,6 +138,19 @@ head='''<!doctype html>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}
 '''
+# 캐릭터 DB 표시용 한국어(2026-10-17): 체인·요격·턴 종료 등은 위에서 합친 뒤라 여기서
+for c in chars:
+    for k in ('sb_normal','af_skill'): # 캐릭터 DB 표시용(2026-10-17): 이름·조건 한국어는 덧붙이는 필드에만
+        sk=c.get(k)
+        if not sk: continue
+        if has_jp(sk.get('skill')): sk['skill_disp']=ko(sk['skill'])
+        if has_jp(sk.get('condition')): sk['cond_ko']=ko(sk['condition'])
+    for k in ('chain','turn_end'):
+        for e in (c.get(k) or []):
+            if isinstance(e,dict) and has_jp(e.get('name')): e['name_disp']=ko(e['name'])
+    for k in ('counter','echange'):
+        e=c.get(k)
+        if isinstance(e,dict) and has_jp(e.get('skill')): e['skill_disp']=ko(e['skill'])
 # 계산 버전: 엔진·데이터가 같으면 같은 결과 → 앱이 저장해 둔 편성 결과를 다시 쓸지 정하는 기준(2026-10-16)
 import hashlib
 _bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); _bfx.pop('_doc',None)

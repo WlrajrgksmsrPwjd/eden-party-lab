@@ -11,6 +11,7 @@
         <div class="tabmenu">
           <button class="tab" role="tab" data-tab="perchar" aria-selected="false">캐릭터별 최적</button>
           <button class="tab" role="tab" data-tab="focus" aria-selected="false">속성·타입별</button>
+          <button class="tab" role="tab" data-tab="db" aria-selected="false">캐릭터 DB</button>
           <button class="tab" role="tab" data-tab="method" aria-selected="false">계산 방식</button>
           <a class="tab tablink" href="builder.html" target="_blank" rel="noopener" title="장비 대미지 비교·최적 빌드 (계산 공식·장비 데이터 출처: 딩)">장비 빌더 ↗</a>
         </div>
@@ -362,6 +363,24 @@
   </section>
 
   <!-- 계산 방식 -->
+  <!-- 캐릭터 DB -->
+  <section class="panel" id="p-db" role="tabpanel">
+    <div class="toolbar">
+      <div class="grp grow"><label class="lbl" for="dq">검색</label><input type="text" id="dq" placeholder="이름·일본어·스킬 이름"></div>
+      <div class="grp"><label class="lbl" for="del">속성</label><select id="del"><option value="">전체</option><option value="fire">불</option><option value="water">물</option><option value="earth">땅</option><option value="wind">바람</option><option value="thunder">번개</option><option value="shade">그림자</option><option value="crystal">결정</option><option value="none">무</option></select></div>
+      <div class="grp"><label class="lbl" for="dwp">무기</label><select id="dwp"><option value="">전체</option><option value="staff">지팡이</option><option value="sword">검</option><option value="katana">도</option><option value="ax">도끼</option><option value="lance">창</option><option value="bow">활</option><option value="fist">권갑</option><option value="hammer">망치</option></select></div>
+      <div class="grp"><label class="lbl" for="dst">스타일</label><select id="dst"><option value="">전체</option><option value="NS">노멀</option><option value="AS">어나더</option><option value="ES">엑스트라</option><option value="ishi">이시층·가명</option></select></div>
+      <div class="grp"><label class="lbl" for="drole">역할</label><select id="drole"><option value="">전체</option><option value="dps">딜러</option><option value="support">버퍼</option><option value="debuffer">디버퍼</option><option value="healer">힐러</option><option value="zone">존</option><option value="tank">탱커</option></select></div>
+      <div class="grp"><label class="lbl" for="dtier">티어</label><select id="dtier"><option value="">전체</option><option>SS</option><option>S</option><option>A</option><option>B</option><option>C</option><option value="-">미평가</option></select></div>
+      <div class="grp"><label class="lbl" for="dsort">정렬</label><select id="dsort"><option value="tier">티어순</option><option value="name">이름순</option></select></div>
+    </div>
+    <div class="dbwrap">
+      <div class="dblist"><div class="hint" id="dbN"></div><div id="dbList" class="dbgrid"></div></div>
+      <div class="dbdetail none" id="dbDetail"></div>
+    </div>
+    <p class="hint">계산에 쓰는 정리값이에요(출처: 알테마 캐릭터 페이지, 딩 님 스킬 DB 대조 — 출처: 딩, 영문 위키 스탯). 배율은 스킬 한 번의 전체 위력이고, 게임 문구와 표현이 다를 수 있어요. 이름이 가려진 캐릭터는 보유 탭 '진명 공개'를 켜면 진명으로 보여요.</p>
+  </section>
+
   <section class="panel" id="p-method" role="tabpanel">
     <p class="dbmeta" id="dbMeta"></p>
     <div class="doc">

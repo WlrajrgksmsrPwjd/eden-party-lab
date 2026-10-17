@@ -113,7 +113,7 @@ const newOwn = (id, o={}) => { const c = byId.get(id); return {t: o.t!=null ? o.
 function touchRoster(){ if(state.sample){ state.sample=false; } shareDirty=true; planDirty=true; save(); }
 
 /* ---------- 탭 ---------- */
-const TABS=['plan','roster','perchar','focus','goal','boss','method'];
+const TABS=['plan','roster','perchar','focus','goal','boss','method','db'];
 function openGuide(){ const d = $('#guide'); if(!d || d.open) return; if(typeof d.showModal==='function') d.showModal(); else d.setAttribute('open', ''); const b = d.querySelector('.gbody'); if(b) b.scrollTop = 0; }
 function closeGuide(){ const d = $('#guide'); if(!d) return; if(typeof d.close==='function') d.close(); else { d.removeAttribute('open'); try{ localStorage.setItem('aeopt_guide', '1'); }catch(e){} } }
 function showTab(name){
@@ -124,6 +124,7 @@ function showTab(name){
   if(name==='plan' && SHARE && shareDirty) renderShare(); // 보유가 바뀌었으면 공유 카드 다시 계산
   if(name==='plan' && planDirty){ planDirty=false; runPlan(); }
   if(name==='goal' && goalDirty) renderGoals();
+  if(name==='db') renderDb();
 }
 
 /* ---------- 공용 렌더 조각 ---------- */
@@ -2407,13 +2408,123 @@ function bind(){
   $('#constBox').addEventListener('change',onConst);
   $('#constBox').addEventListener('click',e=>{ if(e.target.id==='constReset'){ ['zoneElem','zoneWeap','zoneOppElem','zoneOffWeap','statK','afActions','afCycle','afAuto','afAnim','afFastDefault','useStats','gearSpd','enemyHits','enemyAoE','simOn','simTurns','mpBase','mpCostMul','muleOn','muleAuto','muleFront','pglAssumeAll','afStart','burstTurns','sbPerAct','muleSlots','mulePct','auraGl','afRepAnim'].forEach(k=>delete state.settings[k]); cap=E.computeCap(prepped, settings()); save(); renderConsts(); } });
 }
-function renderAll(){ renderPlanControls(); renderRoster(); renderBudGrid(); renderPglTbl(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
+function renderAll(){ renderPlanControls(); renderRoster(); renderDb(); renderBudGrid(); renderPglTbl(); renderDefGl(); renderCustomList(); renderBossList(); renderConsts(); renderGoals(); renderShare(); $('#quickReset').checked=!!state.sample; }
+
+
+/* ---------- 캐릭터 DB(2026-10-17, 사용자 '캐릭터 DB도 추가'): 스킬·버프·존·생존·스탯을 캐릭터마다 한눈에 (계산에 쓰는 정리값) ---------- */
+const DBF = {q:'', el:'', wp:'', st:'', role:'', tier:'', sort:'tier'};
+const hasJa = t => /[぀-ヿ㐀-鿿]/.test(String(t||''));
+const koOr = (ko, ja) => ko && !hasJa(ko) ? esc(ko) : `<span lang="ja">${esc(ja||ko||'')}</span>`;
+const GK_P = {pwr:'완력', int:'지성', spd:'속도', crit_rate:'크리율', crit_dmg:'크리 피해', elem_atk:'속성 공격', all_elem_atk:'전속성 공격', weapon_atk:'무기 대미지', singular_focus:'심기일체', mental_focus:'정신통일',
+  dmg_up:'주는 대미지', link:'연계', barrier_pierce:'배리어 관통', mp_up:'최대 MP', mp_flat:'최대 MP', weak_dmg:'약점 대미지', pwr_flat:'완력(고정)', int_flat:'지성(고정)', spd_flat:'속도(고정)', shinan:'심안', over_crit:'오버크리티컬',
+  kesshi:'결사', overthrow:'하극상', charge:'대전', multihit:'다단강화', eagle_eyes:'호시탐탐', extra_hit:'연격수+1', mp_cost_zero:'MP 소비 0', mp_atk:'MP 소비 공격', teishin:'솔선', dmg_el:'속성 대미지', combo_up:'AF 콤보', unison:'유니즌'};
+const GK_D = {pwr:'완력↓', int:'지성↓', spd:'속도↓', end:'내구↓', spr:'정신↓', elem_res:'속성 내성↓', all_elem_res:'전속성 내성↓', phys_res:'물리 내성↓', mag_res:'마법 내성↓', weapon_res:'무기 내성↓', break:'브레이크', pain_poison:'독·페인', weak_expose:'약점 부여', weak_expose_start:'약점 부여', weak_expose_noaf:'약점 부여'};
+function fxLabels(g){
+  const P=[], S=[], D=[], add=(L,v)=>{ if(v && !L.includes(v)) L.push(v); };
+  for(const k of g||[]){ const [a, b] = k.split('.'); if(a==='party') add(P, GK_P[b]); else if(a==='self') add(S, GK_P[b]); else if(a==='debuff') add(D, GK_D[b]); }
+  return [P.length?'아군 '+P.join('·'):'', S.length?'자신 '+S.join('·'):'', D.length?'적 '+D.join('·'):''].filter(Boolean).join(' / ');
+}
+function selfSummary(c){
+  const s=c.self||{}, out=[], on=v=>v && (typeof v!=='object' || Object.keys(v).length>0);
+  const st=[['pwr','완력'],['int','지성'],['spd','속도']].filter(([k])=>+s[k]>0); if(st.length) out.push(st.map(x=>x[1]).join('·')+' '+PCT(Math.max(...st.map(([k])=>+s[k]))));
+  if(+s.elem_atk>0) out.push('속성 공격 '+PCT(+s.elem_atk)); if(+s.all_elem_atk>0) out.push('전속성 공격 '+PCT(+s.all_elem_atk)); if(+s.weapon_atk>0) out.push('무기 대미지 '+PCT(+s.weapon_atk));
+  if(+s.crit_rate>0) out.push('크리율 '+PCT(+s.crit_rate)); if(+s.crit_dmg>0) out.push('크리 피해 '+PCT(+s.crit_dmg)); if(+s.weak_dmg>0) out.push('약점 대미지 '+PCT(+s.weak_dmg)); if(+s.dmg_up>0) out.push('주는 대미지 '+PCT(+s.dmg_up));
+  if(+s.pwr_flat>0) out.push('완력 +'+(+s.pwr_flat)); if(+s.int_flat>0) out.push('지성 +'+(+s.int_flat)); if(+s.spd_flat>0) out.push('속도 +'+(+s.spd_flat)); if(+s.mp_up>0) out.push('최대 MP '+PCT(+s.mp_up));
+  [['singular_focus','심기일체'],['mental_focus','정신통일'],['overthrow','하극상'],['over_crit','오버크리티컬'],['multihit','다단강화'],['extra_hit','연격수+1'],['barrier_pierce','배리어 관통'],['eagle_eyes','호시탐탐'],['kesshi','결사'],['shinan','심안'],['charge','대전']]
+    .forEach(([k,l])=>{ if(on(s[k])) out.push(l+(s[k] && typeof s[k]==='object' && s[k].sb ? '(SB)' : '')); });
+  return out;
+}
+const BK_KR = {auto:'자동', main:'주력에 붙음', buff:'버프 스킬', attack:'공격 스킬', sb:'SB'};
+const REV_KR = {prevent:'전투불능 방지', revive:'부활'}, REVT_KR = {self:'자신', all:'아군 전체', single:'아군 1명', front:'전열', back:'후열'}, REVW_KR = {auto:'자동', sb:'SB', stack:'축적', any:'평소', once:'1회'};
+const zoneTxt = z => String(z.type||'').split('/').filter(Boolean).map(t=>E.ZONE_KR[t]||t).join(' / ');
+function dbList(){
+  const q = DBF.q.trim().toLowerCase(), skName = c => [c.main&&c.main.skill, c.main&&c.main.skill_jp, c.sb&&c.sb.skill, c.sb&&c.sb.skill_jp].filter(Boolean).join(' ').toLowerCase();
+  const TR = {SS:0,S:1,A:2,B:3,C:4};
+  return prepped.filter(c=>!c._custom && (!q || nameHas(c, q) || skName(c).includes(q)) && (!DBF.el || c.elems.includes(DBF.el)) && (!DBF.wp || c.weapon===DBF.wp)
+      && (!DBF.st || (DBF.st==='ishi' ? c.ishi : ((c.raw&&c.raw.style)||'NS')===DBF.st)) && (!DBF.role || (c.roles||[]).includes(DBF.role)) && (!DBF.tier || (c.tier||'-')===DBF.tier))
+    .sort((a,b)=> DBF.sort==='name' ? a.name.localeCompare(b.name,'ko') : ((TR[a.tier]??5)-(TR[b.tier]??5) || b.score-a.score || a.name.localeCompare(b.name,'ko')));
+}
+const dbItem = (c, cur) => `<button type="button" class="dbi${state.owned[c.id]?' own':''}" data-db="${esc(c.id)}" aria-current="${c.id===cur?'true':'false'}"><span class="dbn">${(c.elems.length?c.elems:[c.elem]).map(e=>`<span class="dot ${esc(e)}"></span>`).join('')}${esc(c.name)}</span><span class="dbm">${esc(E.WEAPON_KR[c.weapon]||'')} · ${esc(STYLE_KR[(c.raw&&c.raw.style)||'NS']||'')}${c.tier?` · <span class="tier ${esc(c.tier)}">${esc(c.tier)}</span>`:''}${state.owned[c.id]?' · <span class="ok">보유</span>':''}</span></button>`;
+function renderDb(){
+  const box = $('#dbList'); if(!box) return;
+  const L = dbList(), cur = (state.ui && state.ui.dbSel) || '';
+  $('#dbN').textContent = `${L.length}명 / 전체 ${prepped.filter(c=>!c._custom).length}명`;
+  box.innerHTML = L.map(c=>dbItem(c, cur)).join('') || '<p class="hint">맞는 캐릭터가 없어요.</p>';
+  renderDbDetail();
+}
+function renderDbDetail(){
+  const el = $('#dbDetail'); if(!el) return;
+  const id = state.ui && state.ui.dbSel, c = id && byId.get(id);
+  el.classList.toggle('none', !c);
+  if(!c){ el.innerHTML = '<div class="empty">캐릭터를 고르면 스킬·버프·존·생존·스탯을 보여 줍니다.</div>'; return; }
+  el.innerHTML = dbDetailHtml(c);
+}
+function dbDetailHtml(c){
+  const r = c.raw, ex = r.ex || {}, o = state.owned[c.id], st = r.style || 'NS', mp = ex.mp || {}, tu = ex.turns || {};
+  const li = (lab, html) => html ? `<li><span class="dbk">${lab}</span><div>${html}</div></li>` : '';
+  const mpT = v => v!=null ? ` <span class="hint">MP ${esc(v)}</span>` : '';
+  const H = [];
+  H.push(`<div class="dbh"><h2>${esc(c.name)}${c.title && c.title!==c.name ? ` <small>${esc(c.title)}</small>` : ''}</h2>
+    <div class="hint" lang="ja">${esc(r.name_jp||'')}${STYLE_KR[st]?' · <span lang="ko">'+esc(STYLE_KR[st])+'</span>':''}</div>
+    <div class="meta">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)}${c.align==='light'?'천':'명'} ${c.tier?`<span class="tier ${esc(c.tier)}">${esc(c.tier)}</span>`:''}${c.score?` <span class="hint">알테마 ${esc(c.score)}점</span>`:''}${c.stellar?' · 성도각성':''}${(c.roles||[]).length?' · '+c.roles.map(x=>esc(ROLE_KR[x]||x)).join('·'):''}</div>
+    ${(ex.pers_ko||[]).length?`<div class="hint">퍼스널리티: ${ex.pers_ko.map(esc).join(' · ')}</div>`:''}
+    <div class="dbact"><button type="button" class="btn small" data-dbown>${o?'보유 해제':'보유로 체크'}</button>${o?` <button type="button" class="btn small" data-dblock>${(state.plan.locked||[]).includes(c.id)?'꼭 쓸 캐릭터에서 빼기':'편성에 꼭 넣기'}</button> <span class="hint">천명치 ${esc(o.t||0)}${c.stellar?(o.s?' · 성도각성':' · 성도각성 안 함'):''}</span>`:''}</div></div>`);
+  // 스킬
+  const sk = [li('주력', skillLine(c.main)+mpT(mp.main))];
+  if(c.sb && c.sb.skill) sk.push(li(c.stellar?'성도 스킬 (SB)':'SB', skillLine(c.sb)+mpT(mp.sb)));
+  if(r.sb_normal && r.sb_normal.skill) sk.push(li('성도 스킬 (평소)', skillLine(Object.assign({}, r.sb_normal, {skill: c.sb && c.sb.skill || r.sb_normal.skill_disp || r.sb_normal.skill, skill_jp: r.sb_normal.skill}))));
+  if(r.af_skill && r.af_skill.skill) sk.push(li('AF 때', skillLine(Object.assign({}, r.af_skill, {skill: r.af_skill.skill_disp || r.af_skill.skill, skill_jp: r.af_skill.skill}))));
+  H.push(`<h3>스킬</h3><ul class="dbul">${sk.join('')}</ul>`);
+  // 버프·디버프 스킬
+  const ba = (r.bact||[]).filter(a=>(a.g||[]).length || a.z);
+  if(ba.length) H.push(`<h3>버프·디버프 스킬</h3><ul class="dbul">${ba.map(a=>{ const vc = /ヴァリアブルチャント|VC/.test(String(a.s||'')); const fx = fxLabels(a.g); const zt = a.z ? (a.lv>=2?'극·':'')+(E.ZONE_KR[a.zk||a.z]||'존')+' 전개' : '';
+      return li(vc?'VC':BK_KR[a.k]||a.k, `<b title="${esc(a.s||'')}">${koOr(a.sko, a.s)}</b>${a.mp?mpT(a.mp):''}${fx||zt?`<div class="hint">${esc([zt, fx].filter(Boolean).join(' / '))}${+a.dur>0?` · ${esc(a.dur)}턴`:''}</div>`:''}`); }).join('')}</ul>
+    <p class="hint">자동 = 개전·어빌리티로 처음부터, 주력에 붙음 = 주력 스킬을 쓰면 같이, 버프·공격 스킬 = 스킬 칸에 달고 따로 써야 함.</p>`);
+  // 효과 요약
+  const P = c.party || {}, ef = [];
+  { const b = buffSummary(c); if(b.length) ef.push(li('아군 버프', esc(b.join(' · '))+(P.restrict?`<div class="hint">${esc(P.restrict)}</div>`:''))); }
+  { const b = selfSummary(c); if(b.length) ef.push(li('자신', esc(b.join(' · ')))); }
+  { const b = debuffSummary(c); if(b.length) ef.push(li('디버프', esc(b.join(' · ')))); }
+  if(r.zone && r.zone.type && r.zone.type!=='none') ef.push(li('존', `${esc(zoneTxt(r.zone))}${r.zone.awakened?' <span class="hint">(극 가능)</span>':''}${(r.zone.cond_ko||r.zone.condition)?`<div class="hint">${esc(r.zone.cond_ko||r.zone.condition)}</div>`:''}`));
+  if(r.echange) ef.push(li('속성 변환', `${esc(r.echange.to==='all'?'아군 전체':r.echange.to==='self'?'자신':'일부 아군')} → ${esc(E.ELEM_KR[r.echange.el]||{zone:'속성 존 따라', ally:'아군 속성 따라', weak:'적 약점 따라'}[r.echange.el]||r.echange.el||'')}${r.echange.skill?` <span class="hint">(${koOr(r.echange.skill_disp, r.echange.skill)})</span>`:''}`));
+  for(const ch of r.chain||[]) ef.push(li('체인 어빌리티', `<b title="${esc(ch.name||'')}">${koOr(ch.name_disp, ch.name)}</b> <span class="hint">${esc(chainOnText(ch.on||{}))}에 반응${ch.max?` · 턴 최대 ${esc(ch.max)}번`:''}</span>${ch.effect?`<div class="hint">${esc(ch.effect)}</div>`:''}`));
+  if(r.counter) ef.push(li('요격', `${r.counter.skill?`<b title="${esc(r.counter.skill)}">${koOr(r.counter.skill_disp, r.counter.skill)}</b> 사용 중 `:''}<span class="hint">${esc({any:'피격 시', phys:'물리 피격 시', mag:'마법 피격 시'}[r.counter.trig]||(E.ELEM_KR[r.counter.trig]?E.ELEM_KR[r.counter.trig]+' 피격 시':'피격 시'))} 반격${r.counter.taunt?' · 도발':''}</span>`));
+  for(const te of r.turn_end||[]) ef.push(li('턴 종료 공격', `<span title="${esc(te.name||'')}">${koOr(te.name_disp, te.name)}</span>`));
+  if(ef.length) H.push(`<h3>효과 요약</h3><ul class="dbul">${ef.join('')}</ul>`);
+  // 생존·지원
+  const sup = Object.entries(SUP_KR).filter(([k])=>(+c.sup[k]||0)>0).map(([k,l])=>{ const sr = c.supSrc && c.supSrc[k]; return `${esc(l)} <span class="stars">${'★'.repeat(Math.min(3, +c.sup[k]))}</span>${sr && !hasJa(sr) ? ` <span class="hint">(${esc(String(sr).split(/\s*[\/／]\s*/)[0].slice(0,24))})</span>` : ''}`; });
+  const rv = (r.revive && r.revive.fx || []).map(f=>`${esc(REV_KR[f.k]||f.k)} ${esc(REVT_KR[f.t]||f.t||'')}${f.w?' · '+esc(REVW_KR[f.w]||f.w):''}`);
+  if(sup.length || rv.length) H.push(`<h3>생존·지원</h3><ul class="dbul">${li('지원', sup.join(' · '))}${li('부활', rv.join(' / '))}</ul>`);
+  // 운용
+  const ru = [li('운용 포인트', r.play_kr ? esc(r.play_kr) : ''), li('조건', (r.req_ko||r.req) ? esc(r.req_ko||r.req) : ''), li('메모', r.note_kr ? esc(r.note_kr) : '')];
+  if(ru.join('')) H.push(`<h3>운용</h3><ul class="dbul">${ru.join('')}</ul>`);
+  H.push(`<h3>스탯</h3>${statBoxHtml(c, o ? +o.t||0 : 0)}<p class="hint">버프 지속 ${esc(tu.buff!=null?tu.buff:3)}턴 · 디버프 지속 ${esc(tu.debuff!=null?tu.debuff:3)}턴${ex.manifest?` · 현현 ${esc(ex.manifest)}단계`:''}</p>`);
+  return H.join('');
+}
+function dbPick(id){
+  state.ui = state.ui || {}; state.ui.dbSel = id; save();
+  $$('#dbList .dbi').forEach(b=>b.setAttribute('aria-current', b.dataset.db===id ? 'true' : 'false'));
+  renderDbDetail();
+  if(window.matchMedia && window.matchMedia('(max-width: 900px)').matches){ const d = $('#dbDetail'); if(d && d.scrollIntoView) d.scrollIntoView({block:'start', behavior:'smooth'}); }
+}
+function bindDb(){
+  const sel = {dq:'q', del:'el', dwp:'wp', dst:'st', drole:'role', dtier:'tier', dsort:'sort'};
+  for(const [i,k] of Object.entries(sel)){ const e = $('#'+i); if(e) e.addEventListener('input', ()=>{ DBF[k] = e.value; renderDb(); }); }
+  $('#dbList').addEventListener('click', e=>{ const b = e.target.closest('button[data-db]'); if(b) dbPick(b.dataset.db); });
+  $('#dbDetail').addEventListener('click', e=>{
+    const id = state.ui && state.ui.dbSel; if(!id || !byId.has(id)) return;
+    if(e.target.closest('[data-dbown]')){ if(state.owned[id]){ delete state.owned[id]; state.plan.locked = (state.plan.locked||[]).filter(x=>x!==id); } else state.owned[id] = newOwn(id); touchRoster(); renderRoster(); renderPlanControls(); renderDb(); return; }
+    if(e.target.closest('[data-dblock]')){ const L = state.plan.locked || (state.plan.locked=[]);
+      if(L.includes(id)) state.plan.locked = L.filter(x=>x!==id); else if(L.length>=4){ flash('꼭 쓸 캐릭터는 4명까지예요'); return; } else { L.push(id); state.plan.excluded = (state.plan.excluded||[]).filter(x=>x!==id); }
+      planDirty = true; save(); renderPlanControls(); renderDbDetail(); flash(state.plan.locked.includes(id) ? '편성 탭 꼭 쓸 캐릭터에 넣었어요' : '꼭 쓸 캐릭터에서 뺐어요'); }
+  });
+}
 
 /* ---------- 시작 ---------- */
 (async function init(){
   await loadState();
   rebuildChars();
-  bind();
+  bind(); bindDb();
   SHARE = parseShare(location.hash);
   renderAll(); renderMeta();
   let tab='plan'; try{ tab=localStorage.getItem('aeopt_tab')||'plan'; }catch(e){}
