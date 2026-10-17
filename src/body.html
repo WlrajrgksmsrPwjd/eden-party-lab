@@ -16,6 +16,7 @@
         </div>
       </details>
     </nav>
+    <button type="button" class="guidebtn" id="guideOpen" aria-haspopup="dialog">사용법</button>
     <span class="save" id="saveState">불러오는 중…</span>
   </div>
 </header>
@@ -496,3 +497,63 @@
     </div>
   </section>
 </main>
+
+<dialog class="guide" id="guide" aria-labelledby="guideTitle">
+  <div class="ghead">
+    <h2 id="guideTitle">처음 쓰는 분을 위한 사용법</h2>
+    <button type="button" class="gx" data-gclose aria-label="닫기">✕</button>
+  </div>
+  <div class="gbody">
+    <p class="glead">내가 가진 캐릭터로 쓸 만한 4인 편성을 찾아 주는 계산기예요. 아래 순서대로 하면 돼요.</p>
+    <ol class="gsteps">
+      <li>
+        <h3>보유 캐릭터 넣기</h3>
+        <p>보유 탭의 <b>이름으로 한 번에 체크</b>에 가진 캐릭터 이름을 붙여 넣고 <b>보유로 체크</b>를 누르세요. 이름 뒤에 숫자를 붙이면 천명치로 들어가요.</p>
+        <p class="gex">질퍼니(AS) 80, 하보크, 메릿 120</p>
+        <p>성도각성을 안 한 캐릭터는 목록에서 체크를 풀어 주세요. 아직 레벨이나 글래스터를 키우는 중이면 바로 아래 <b>육성 수준</b>에서 맞출 수 있어요.</p>
+        <button type="button" class="btn small" data-ggo="roster">보유 탭 열기</button>
+      </li>
+      <li>
+        <h3>찾을 편성 고르기</h3>
+        <p>편성 탭 맨 위에서 어떤 편성을 찾을지 골라요.</p>
+        <dl class="gmodes">
+          <dt>종합</dt><dd>딜·버티기·지속력을 고루 봐요. 처음엔 이걸로 하세요.</dd>
+          <dt>보스 맞춤</dt><dd>고른 보스의 약점과 기믹에 맞춰요.</dd>
+          <dt>약점 맞춤</dt><dd>상대 약점·내성을 직접 찍어서 맞춰요.</dd>
+          <dt>최고점</dt><dd>허수아비에 한 턴 어나더 포스로 넣는 최대 딜이에요. 재미로 보세요.</dd>
+        </dl>
+        <p>꼭 넣고 싶은 캐릭터는 <b>꼭 쓸 캐릭터</b>에 최대 3명까지 넣어요. 네코코(ES)처럼 아군 속성을 바꿔 주는 캐릭터를 빼고 싶으면 <b>속성 변환 캐릭터 포함</b> 체크를 끄세요.</p>
+      </li>
+      <li>
+        <h3>편성 계산 누르기</h3>
+        <p>보유 수와 기기 성능에 따라 수십 초에서 몇 분 걸려요. 같은 조건으로 한 번 계산한 결과는 저장돼서 다음엔 바로 떠요.</p>
+        <button type="button" class="btn small" data-ggo="plan">편성 탭 열기</button>
+      </li>
+      <li>
+        <h3>결과 읽기</h3>
+        <ul>
+          <li>카드의 네 명은 <b>왼쪽부터 그 순서대로</b> 전열에 세우면 돼요.</li>
+          <li><b>후열</b>에는 글래 셔틀을 세워요. 셔틀마다 달 글래가 적혀 있어요.</li>
+          <li>숫자 세 개는 성향별 핵심 지표예요. 종합이면 실전 3턴 총딜·지속 딜·생존력이에요.</li>
+          <li>주황색 칸은 주의할 점이에요. 배치나 버프 조건이 안 맞으면 여기에 떠요.</li>
+          <li>캐릭터 칸을 누르면 <b>추천 세팅</b>이 열려요. 달 스킬, 글래스터, 장비, 천명치 목표가 나와요.</li>
+          <li><b>자세히 보기</b>를 열면 턴별 화력과 최고점 계산을 볼 수 있어요.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>그다음에</h3>
+        <ul>
+          <li><b>보스 공략</b> 탭에서 보스 기믹과 추천 캐릭터를 보고 <b>이 보스로 편성 추천</b>을 누를 수 있어요.</li>
+          <li>마음에 드는 편성은 <b>목표로 저장</b>해 두면 목표 세팅 탭에서 육성할 거리를 정리해 줘요.</li>
+          <li><b>링크 복사</b>로 조합을 다른 사람에게 보낼 수 있어요.</li>
+        </ul>
+        <button type="button" class="btn small" data-ggo="boss">보스 공략 열기</button>
+      </li>
+    </ol>
+    <div class="gnote">
+      <p>대미지는 딩 님 계산기 식을 바탕으로 한 추정치라 실제 게임과 차이가 날 수 있어요. 자세한 계산 기준은 <b>더보기 → 계산 방식</b>에 있어요.</p>
+      <p>보유 정보는 지금 쓰는 브라우저에만 저장돼요. 다른 기기로 옮기려면 보유 탭 아래 <b>보유 정보 백업</b>을 쓰세요.</p>
+    </div>
+  </div>
+  <div class="gfoot"><button type="button" class="btn primary" data-gclose>시작하기</button></div>
+</dialog>

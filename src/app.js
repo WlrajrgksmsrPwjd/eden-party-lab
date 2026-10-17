@@ -102,6 +102,8 @@ function touchRoster(){ if(state.sample){ state.sample=false; } shareDirty=true;
 
 /* ---------- 탭 ---------- */
 const TABS=['plan','roster','perchar','focus','goal','boss','method'];
+function openGuide(){ const d = $('#guide'); if(!d || d.open) return; if(typeof d.showModal==='function') d.showModal(); else d.setAttribute('open', ''); const b = d.querySelector('.gbody'); if(b) b.scrollTop = 0; }
+function closeGuide(){ const d = $('#guide'); if(!d) return; if(typeof d.close==='function') d.close(); else { d.removeAttribute('open'); try{ localStorage.setItem('aeopt_guide', '1'); }catch(e){} } }
 function showTab(name){
   $$('.tab[data-tab]').forEach(t=>t.setAttribute('aria-selected', t.dataset.tab===name?'true':'false'));
   $$('.panel').forEach(p=>p.classList.toggle('on', p.id==='p-'+name));
@@ -907,7 +909,7 @@ function renderResults(r, boss, enemy, mode){
   mode = mode||P.mode;
   for(const k of [...RES.keys()]) if(k[0]==='p') RES.delete(k);
   let h='';
-  if(state.sample) h+=`<div class="notice"><b>처음이신가요?</b> 지금 결과는 예시 보유 목록(SS·S 티어 전원, 천명치 80·성도각성 가정)으로 짠 것입니다. 가진 캐릭터를 입력하면 그 기준으로 다시 짭니다. <button type="button" class="btn small primary" data-goto="roster">보유 캐릭터 입력하기</button></div>`;
+  if(state.sample) h+=`<div class="notice"><b>처음이신가요?</b> 지금 결과는 예시 보유 목록(SS·S 티어 전원, 천명치 80·성도각성 가정)으로 짠 것입니다. 가진 캐릭터를 입력하면 그 기준으로 다시 짭니다. <button type="button" class="btn small primary" data-goto="roster">보유 캐릭터 입력하기</button> <button type="button" class="btn small" data-guide>사용법 보기</button></div>`;
   const enemyTxt = enemy ? Object.entries(enemy).map(([k,v])=>(E.ELEM_KR[k]||E.WT_KR[k])+' '+REL_KR[v]).join(', ') : '중립(약점·내성 없음)';
   const W=r.weights, wTxt = mode==='custom'&&W ? ` (공격성 ${Math.round(W.b*100)}% · 유지력 ${Math.round(W.s*100)}% · 안정성 ${Math.round(W.t*100)}%)` : '';
   h+=`<div class="runmeta">${esc(MODE_KR[mode])}${esc(wTxt)}${r.pledge?' · 서약: <b>'+esc(pledgeText(r.pledge))+'</b>':''}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''}${!(r.focus && r.focus.kind==='elem') && noConvOf(state.plan, r.focus||null) ? ' · <b>속성 변환 캐릭터 제외</b>' : ''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
@@ -2137,6 +2139,17 @@ function renderMeta(){
 /* ---------- 이벤트 ---------- */
 function bind(){
   $$('.tab[data-tab]').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
+  { // 처음 쓰는 분을 위한 사용법(2026-10-17): 머리띠 '사용법' 버튼·처음이신가요 칸에서 열고, 예시 보유로 처음 들어오면 한 번 자동으로
+    const d = $('#guide');
+    if(d){ $('#guideOpen').addEventListener('click', openGuide);
+      d.addEventListener('click', e=>{ if(e.target===d){ closeGuide(); return; } // 바깥(배경) 누르면 닫기
+        if(e.target.closest('[data-gclose]')){ closeGuide(); return; }
+        const g = e.target.closest('[data-ggo]'); if(g){ closeGuide(); const t = g.dataset.ggo; showTab(t); window.scrollTo(0,0);
+          if(t==='roster'){ const f = $('#quickFold'); if(f){ f.open = true; setTimeout(()=>{ const q = $('#quickText'); if(q){ q.focus(); q.scrollIntoView({block:'center'}); } }, 50); } } } });
+      d.addEventListener('close', ()=>{ try{ localStorage.setItem('aeopt_guide', '1'); }catch(e){} });
+      document.addEventListener('click', e=>{ if(e.target.closest('[data-guide]')) openGuide(); });
+      let seen = false; try{ seen = !!localStorage.getItem('aeopt_guide'); }catch(e){}
+      if(state.sample && !seen && !navigator.webdriver) setTimeout(openGuide, 600); } }
   $('#modeMore').addEventListener('click',()=>{ MODE_OPEN=!MODE_OPEN; renderPlanControls(); });
   document.addEventListener('click',e=>{ const tm=$('#tabMore'); if(tm && tm.open && !tm.contains(e.target)) tm.open=false;
     const g=e.target.closest('[data-goto]'); if(g){ showTab(g.dataset.goto); window.scrollTo(0,0); } });

@@ -565,3 +565,40 @@ body{background-color:var(--bg); background-image:radial-gradient(1100px 380px a
   .brand h1{font-size:19px} .brand h1::before{width:22px; height:22px}
 }
 @media (prefers-reduced-motion: reduce){ .btn.primary:hover{filter:none} }
+
+/* 처음 쓰는 분을 위한 사용법(2026-10-17) */
+.guidebtn{border:1px solid color-mix(in srgb, var(--gold) 60%, transparent); background:rgba(255,255,255,.06); color:var(--title); border-radius:999px; padding:5px 12px; font-weight:700; cursor:pointer; font-size:13px}
+.guidebtn:hover{background:rgba(255,255,255,.12)}
+.guidebtn:focus-visible{outline:2px solid var(--gold-2); outline-offset:2px}
+dialog.guide{padding:0; border:1px solid var(--gold); border-radius:12px; width:min(640px, calc(100vw - 24px)); max-height:min(86vh, 900px); background:var(--surface); color:var(--ink); box-shadow:0 18px 48px rgba(6,10,28,.45); overflow:hidden}
+dialog.guide[open]{display:flex; flex-direction:column}
+dialog.guide::backdrop{background:rgba(8,12,30,.62)}
+.guide .ghead{display:flex; align-items:center; gap:12px; padding:14px 16px 13px 18px; background:linear-gradient(180deg, var(--night-2), var(--night)); border-bottom:1px solid var(--gold)}
+.guide .ghead h2{margin:0; font-family:var(--f-display); font-size:19px; color:var(--title); flex:1}
+.guide .gx{border:0; background:none; color:var(--night-ink); font-size:18px; width:36px; height:36px; border-radius:8px; cursor:pointer}
+.guide .gx:hover{background:rgba(255,255,255,.1)}
+.guide .gx:focus-visible{outline:2px solid var(--gold-2)}
+.guide .gbody{overflow:auto; padding:16px 18px 6px; overscroll-behavior:contain}
+.guide .glead{margin:0 0 14px; font-size:14px}
+.gsteps{list-style:none; margin:0; padding:0; counter-reset:gs; display:flex; flex-direction:column; gap:16px}
+.gsteps > li{counter-increment:gs; position:relative; padding-left:42px; font-size:13.5px; line-height:1.65}
+.gsteps > li::before{content:counter(gs); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-family:var(--f-display); font-weight:700; font-size:15px;
+  color:var(--title); background:linear-gradient(180deg, var(--btn-1), var(--btn-2)); box-shadow:0 0 0 1px var(--gold)}
+.gsteps > li:not(:last-child)::after{content:""; position:absolute; left:13.5px; top:32px; bottom:-14px; width:1px; background:color-mix(in srgb, var(--gold) 45%, transparent)}
+.gsteps h3{margin:3px 0 4px; font-size:15px}
+.gsteps p{margin:0 0 6px; max-width:60ch}
+.gsteps ul{margin:0 0 6px; padding-left:18px; display:flex; flex-direction:column; gap:3px}
+.gsteps .btn{margin-top:4px}
+.gex{font-family:var(--f-mono); font-size:12.5px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:4px 8px; display:inline-block}
+.gmodes{display:grid; grid-template-columns:max-content minmax(0,1fr); gap:4px 12px; margin:4px 0 8px; padding:8px 10px; background:var(--surface-2); border-radius:8px; border:1px solid var(--line)}
+.gmodes dt{font-weight:700}
+.gmodes dd{margin:0; color:var(--muted)}
+.gnote{margin:16px 0 10px; padding:10px 12px; border-left:3px solid var(--gold); background:color-mix(in srgb, var(--gold) 8%, var(--surface)); font-size:12.5px; color:var(--muted); border-radius:0 8px 8px 0}
+.gnote p{margin:0 0 4px} .gnote p:last-child{margin:0}
+.guide .gfoot{padding:12px 18px 16px; border-top:1px solid var(--line); display:flex; justify-content:flex-end}
+@media (max-width:640px){
+  dialog.guide{width:calc(100vw - 16px); max-height:92vh}
+  .guide .gbody{padding:14px 14px 4px}
+  .gsteps > li{padding-left:38px}
+  .guidebtn{padding:4px 10px; font-size:12.5px}
+}
