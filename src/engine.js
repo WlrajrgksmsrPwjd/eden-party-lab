@@ -3136,6 +3136,17 @@ function partsEff(ev, boss){
     pf = Math.min(pf, sh/((+q.hp>0 ? +q.hp : 1)/hpT)); }
   return Math.max(0.05, Math.min(1, pf));
 }
+/* 약점 맞춤 성향(2026-10-18, 사용자 커뮤니티 피드백 '불 약점만 정했는데 휘정진·다른 속성 덱이 1위'): 정한 약점을 실제로 때리는 덱을 우선.
+   실전 N턴 캐릭터별 대미지에서 정한 약점(속성·공격 타입, 변환 뒤 속성 기준 — 약점 부여로 만든 약점은 안 셈)을 때리는 몫 → f = 0.35 + 0.65 × min(1, 몫 ÷ 0.75)(정한 약점을 하나도 안 때리면 ×0.35) */
+function weakFit(ev, enemy){
+  const W = enemy ? Object.keys(enemy).filter(k=>enemy[k]==='weak') : []; if(!W.length) return {f:1, miss:[], share:null};
+  const per = (ev.bsim && Array.isArray(ev.bsim.per) && ev.bsim.per.length) ? ev.bsim.per : ((ev.normal && ev.normal.per) || []);
+  const cs = (ev.normal && ev.normal.cores) || [], sb = (ev.sb && ev.sb.cores) || [];
+  const tot = per.reduce((a,v)=>a+(v>0?v:0), 0); if(!(tot>0)) return {f:1, miss:[], share:null};
+  const sh = per.reduce((a,v,i)=>{ const co = cs[i] || sb[i]; if(!co || !(v>0)) return a; return a + (W.includes(co.el) || W.includes(co.wt) ? v : 0); }, 0)/tot;
+  const f = 0.35 + 0.65*Math.min(1, sh/0.75), WK = W.map(k=>ELEM_KR[k] || WT_KR[k] || k).join('·');
+  return {f, share:sh, miss: sh<0.5 ? [`정한 약점(${WK})을 때리는 공격 ${Math.round(sh*100)}%`] : []};
+}
 function needPenalty(ev, boss){
   if(!boss||(!boss.needs && !boss.parts)) return {f:1, miss:[]};
   const n=boss.needs||{}, d=ev.survDet||{}; let f=1; const miss=[];
@@ -3211,7 +3222,7 @@ async function optimize(input, onProgress){
     if(pi!=null) return [preV[4*pi], preV[4*pi+1], preV[4*pi+2], preV[4*pi+3]];
     const tm = idxs.map(i=>pool[i]), ev = evalTeam(tm.map(o=>o.pc), tm.map(o=>o.prog), enemy, S, cap, ctx);
     // 4번째 값 = 보스 보정(필요 요소·부위별 공격·추천 캐릭터, 2026-10-17): 탐색 중에 바로 곱함 — 예전엔 마지막에 상위 400개를 다시 계산해 보스 모드가 오래 걸렸음
-    const pen = mode==='boss' ? needPenalty(ev, boss).f*(1+0.06*tm.filter(o=>recSet.has(o.pc.id)).length) : 1;
+    const pen = mode==='boss' ? needPenalty(ev, boss).f*(1+0.06*tm.filter(o=>recSet.has(o.pc.id)).length) : mode==='weak' ? weakFit(ev, enemy).f : 1;
     const r = [BR(ev), ev.sustain, ev.surv, pen];
     if(shard){ newK.push(ck); newV.push(r[0], r[1], r[2], r[3]); }
     return r;
@@ -3420,7 +3431,7 @@ async function optimize(input, onProgress){
     return {reserves, fixedBack};
   }
   const budPickFor = (team, progs, wq) => { // 결과 조합마다 버디 후보를 바꿔 계산해 그 성향 점수가 가장 높은 것
-    const scoreEv = ev => { const t = ev.surv/mt; let v = (wq.b*BR(ev)/mb + wq.s*ev.sustain/ms + wq.t*t); if((mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all'||mode==='boss') && t<0.25 && wq.t<0.5) v *= 0.85; return v*(mode==='boss' ? needPenalty(ev, boss).f : 1); };
+    const scoreEv = ev => { const t = ev.surv/mt; let v = (wq.b*BR(ev)/mb + wq.s*ev.sustain/ms + wq.t*t); if((mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all'||mode==='boss') && t<0.25 && wq.t<0.5) v *= 0.85; return v*(mode==='boss' ? needPenalty(ev, boss).f : mode==='weak' ? weakFit(ev, enemy).f : 1); };
     const evB = b => evalTeam(team,progs,enemy,S,cap, b ? ({...ctx, ...{buddy:{main:b, sub:null}}}) : ctx);
     let best = null;
     if(!budC || budC.length<2){ const b0 = budC && budC[0] ? budC[0] : (ctx.buddy && ctx.buddy.main) || null, ev = evB(b0); best = {ev, v: scoreEv(ev), b: b0}; }
@@ -3432,7 +3443,7 @@ async function optimize(input, onProgress){
   const results = finalList.map((c,rank)=>{
     const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog);
     const bp = budPickFor(team, progs, w), ev = bp.ev;
-    const np=needPenalty(ev,boss);
+    const np=needPenalty(ev,boss); if(mode==='weak') np.miss = np.miss.concat(weakFit(ev, enemy).miss);
     // 후방 2명: 남은 보유 캐릭터 중 생존 기여 상위
     const {reserves, fixedBack} = pickReserves(team, progs, ev);
     return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topScore,
@@ -3490,7 +3501,7 @@ async function perCharBest(input, onProgress){
     const key = mem.map(o=>o.pc.id).sort().join()+'|'+flg(), pi = preI.get(key);
     if(pi!=null) return [preV[4*pi], preV[4*pi+1], preV[4*pi+2], preV[4*pi+3]];
     const team = mem.map(o=>o.pc), ev = evalTeam(team, mem.map(o=>o.prog), enemy, S, cap, ctx);
-    const pen = mode==='boss' ? needPenalty(ev,boss).f * (1+0.06*team.filter(c=>recSet.has(c.id)).length) : 1;
+    const pen = mode==='boss' ? needPenalty(ev,boss).f * (1+0.06*team.filter(c=>recSet.has(c.id)).length) : mode==='weak' ? weakFit(ev, enemy).f : 1;
     const r = [BRv(ev), ev.sustain, ev.surv, pen];
     if(shard){ newK.push(key); newV.push(r[0], r[1], r[2], r[3]); }
     return r;
@@ -3553,15 +3564,27 @@ async function perCharBest(input, onProgress){
       R[5*i] = r[0]; R[5*i+1]=r[1]; R[5*i+2]=r[2]; await tick(); }
     if(shard && shard.stage==='prec') return shardOut();
     mb=1e-9; ms=1e-9; mt=1e-9; for(let i=0;i<N;i++){ mb=Math.max(mb,R[5*i]); ms=Math.max(ms,R[5*i+1]); mt=Math.max(mt,R[5*i+2]); } }
-  const bestSc = new Float64Array(own.length).fill(-1), bestI = new Int32Array(own.length).fill(-1);
+  /* 캐릭터마다 고르는 덱(2026-10-18, 커뮤니티 피드백 '성각 안 나온 캐릭터들은 전부 휘정진에 넣어버림'): 가장 센 덱에 4번째로 끼워 넣기만 하면 의미가 없어서,
+     그 캐릭터가 제 몫을 하는 덱 = 같은 세 명에 다른 4번째를 넣은 조합(계산한 것 중)보다 점수가 높은 덱 중 가장 높은 것. 그런 덱이 없으면 끼워 넣기(filler 표시) */
+  const SC = new Float64Array(N).fill(-1);
   for(let i=0;i<N;i++){
     if(R[5*i+4]>maxLv) continue;
     const b=R[5*i]/mb, sv=R[5*i+1]/ms, t=R[5*i+2]/mt;
     let sc = w.b*b + w.s*sv + w.t*t;
     if(mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all') sc *= (t<0.25?0.85:1);
-    sc *= R[5*i+3];
-    for(let j=0;j<4;j++){ const k=T[4*i+j]; if(sc>bestSc[k]){ bestSc[k]=sc; bestI[k]=i; } }
+    SC[i] = sc * R[5*i+3];
   }
+  const triK = (i, j) => { const a = []; for(let q=0;q<4;q++) if(q!==j) a.push(T[4*i+q]); a.sort((x,y)=>x-y); return (a[0]*1024 + a[1])*1024 + a[2]; };
+  const TB = new Map(); // 세 명 → [최고 점수, 그 조합, 둘째 점수]
+  for(let i=0;i<N;i++){ if(SC[i]<0) continue; for(let j=0;j<4;j++){ const k = triK(i, j), e = TB.get(k);
+    if(!e) TB.set(k, [SC[i], i, -1]); else if(SC[i]>e[0]){ e[2] = e[0]; e[0] = SC[i]; e[1] = i; } else if(SC[i]>e[2]) e[2] = SC[i]; } }
+  const bestSc = new Float64Array(own.length).fill(-1), bestI = new Int32Array(own.length).fill(-1), fillSc = new Float64Array(own.length).fill(-1), fillI = new Int32Array(own.length).fill(-1);
+  for(let i=0;i<N;i++){ if(SC[i]<0) continue; const sc = SC[i];
+    for(let j=0;j<4;j++){ const k=T[4*i+j], e = TB.get(triK(i, j)), alt = e ? (e[1]===i ? e[2] : e[0]) : -1;
+      if(sc>fillSc[k]){ fillSc[k]=sc; fillI[k]=i; }
+      if(sc >= alt*(1-1e-9) && sc>bestSc[k]){ bestSc[k]=sc; bestI[k]=i; } } }
+  const filler = new Uint8Array(own.length);
+  for(let k=0;k<own.length;k++) if(bestI[k]<0 && fillI[k]>=0){ bestI[k]=fillI[k]; bestSc[k]=fillSc[k]; filler[k]=1; }
   let top=1e-9; for(const v of bestSc) top=Math.max(top,v);
   const evM = new Map(); // 같은 조합은 한 번만(워커에선 ev를 버리므로 input.noEv면 계산 안 함)
   const list = own.map((o,k)=>{
@@ -3569,7 +3592,7 @@ async function perCharBest(input, onProgress){
     const i=bestI[k]; const mem=[0,1,2,3].map(j=>own[T[4*i+j]]);
     const team=mem.map(m=>m.pc), progs=mem.map(m=>m.prog), tk=team.map(c=>c.id).sort().join();
     if(!input.noEv && !evM.has(tk)) evM.set(tk, evalTeam(team,progs,enemy,S,cap,ctx));
-    return {pc:o.pc, score:bestSc[k], rel:bestSc[k]/top, team, progs, ev:evM.get(tk)||null, diff:teamDifficulty(team), norm:{b:R[5*i]/mb, s:R[5*i+1]/ms, t:R[5*i+2]/mt}};
+    return {pc:o.pc, score:bestSc[k], rel:bestSc[k]/top, team, progs, ev:evM.get(tk)||null, diff:teamDifficulty(team), norm:{b:R[5*i]/mb, s:R[5*i+1]/ms, t:R[5*i+2]/mt}, filler: !!filler[k], best: fillI[k]>=0 && fillI[k]!==i ? fillSc[k]/top : null};
   }).sort((a,b)=>(b.score||0)-(a.score||0));
   return {list, evaluated:N, poolSize:pool.length, nmax:{b:mb, s:ms, t:mt}};
 }
@@ -3577,6 +3600,6 @@ async function perCharBest(input, onProgress){
 const API = {hitInfo, dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   SURV_CATS, SURV_W, prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
   explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, shuttlePoolOf, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
-  statsAt, charStats, STAT_ORDER, killTurns, needPenalty, budCands, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO, dupBase, PGL_ALL, PGL_HPMAX, PGL_ZONE5, PGL_HPLOW, PGL_ELEMP, pglPlan};
+  statsAt, charStats, STAT_ORDER, killTurns, needPenalty, weakFit, budCands, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO, dupBase, PGL_ALL, PGL_HPMAX, PGL_ZONE5, PGL_HPLOW, PGL_ELEMP, pglPlan};
 if(typeof module!=='undefined' && module.exports) module.exports = API; else root.AEOpt = API;
 })(typeof window!=='undefined'?window:globalThis);

@@ -167,7 +167,7 @@ function workerMain(){
     decks:(r.decks||[]).map(d=>({focus:d.focus, ids:d.team.map(c=>c.id), reserveIds:d.reserves.map(c=>c.id), fixedBackIds:[...(d.fixedBack||[])], score:d.score, rel:d.rel, norm:d.norm, miss:d.miss, recCount:d.recCount, v:vOf(d.ev)})),
     evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, focus:r.focus||null};
   const litePc = r => r.error ? {error:r.error} : {
-    list: r.list.map(x=>x.none ? {id:x.pc.id, none:true} : {id:x.pc.id, teamIds:x.team.map(c=>c.id), score:x.score, rel:x.rel}),
+    list: r.list.map(x=>x.none ? {id:x.pc.id, none:true} : {id:x.pc.id, teamIds:x.team.map(c=>c.id), score:x.score, rel:x.rel, filler:!!x.filler}),
     evaluated:r.evaluated, poolSize:r.poolSize};
   self.onmessage = async e=>{
     const m = e.data;
@@ -361,7 +361,7 @@ async function calcPerChar(inp, onProgress){
     let t=memo.get(k);
     if(!t){ const team=y.teamIds.map(id=>byId.get(id)), progs=y.teamIds.map(id=>progJ(J,id));
       t={team, progs, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, ctx), diff:E.teamDifficulty(team)}; memo.set(k,t); await yieldUI(); }
-    list.push({pc, score:y.score, rel:y.rel, team:t.team, progs:t.progs, ev:t.ev, diff:t.diff});
+    list.push({pc, score:y.score, rel:y.rel, team:t.team, progs:t.progs, ev:t.ev, diff:t.diff, filler:!!y.filler});
   }
   return {list, evaluated:lr.evaluated, poolSize:lr.poolSize};
 }
@@ -844,7 +844,7 @@ let MODE_OPEN = false;
 const MODE_DESC = {
   all:'실전에 쓸 팔방미인 덱: 개전부터 N턴 총딜 40% + 지속 딜 30% + 생존력 30%',
   boss:'고른 보스의 약점·내성과 기믹(배리어·상태이상 등)에 맞춘 편성',
-  weak:'아래에 정한 상대 약점·내성 기준 화력(실전 N턴)과 지속 딜',
+  weak:'아래에 정한 상대 약점을 때리는 덱 우선: 약점·내성 기준 화력(실전 N턴)과 지속 딜, 정한 약점을 때리는 몫이 적으면 감점',
   burst:'기록·재미용 1턴 최대치: 허수아비, AF 100%로 시작해 AF 한 번 + SB',
   opener:'1턴 총 대미지(시작 게이지로 쓸 수 있는 AF 포함)',
   sustain:'일반 턴 평균 딜(MP·버프를 다시 거는 턴, AF·SB 주기 포함)',
@@ -923,7 +923,7 @@ const RES = new Map(); // 카드 키 → 결과 (추천 세팅 패널용)
 function teamWarns(x, boss, enemy, ex){
   const ev=x.ev, sbz=ev.sb.zone;
   const top = ev.sb.per.indexOf(Math.max(...ev.sb.per)), co = ev.sb.cores[top];
-  const warns = (x.miss||[]).slice();
+  const warns = (x.miss||[]).map(w=>typeof w==='string' ? {t:w} : w); // 엔진 경고는 글자(보스 필요 요소·부위·약점 맞춤) — 예전엔 {t} 없이 넣어 빈 칸으로 보였음(2026-10-18)
   const needPierce = boss&&boss.needs&&boss.needs.barrier_pierce;
   if(needPierce && co && !co.pierce) warns.push({t:'주딜 배리어 관통 없음'});
   if(ev.survDet.heal===0) warns.push({t:'회복 수단 없음'});
@@ -1681,7 +1681,7 @@ function renderPerChar(){
       return `<tr><td class="num">${pcResult.list.indexOf(x)+1}</td>
         <td class="who">${elChips(x.pc)} ${esc(x.pc.name)}</td>
         <td><div class="sc"><span class="num">${Math.round(x.rel*100)}</span><div class="bar"><i style="width:${Math.round(x.rel*100)}%"></i></div></div></td>
-        <td class="mates">${mates.map(c=>`<b>${esc(c.name)}</b>`).join(' · ')}</td>
+        <td class="mates">${mates.map(c=>`<b>${esc(c.name)}</b>`).join(' · ')}${x.filler?'<div class="hint">이 캐릭터가 제 몫을 하는 덱을 못 찾아 가장 센 덱에 넣은 결과</div>':''}</td>
         <td>${esc(z&&z.level?z.label:'—')}${z&&z.how?`<div class="zonehow">${esc(z.how)}</div>`:''}</td>
         <td><span class="diff lv${x.diff.lv}">Lv${x.diff.lv} ${esc(x.diff.kr)}</span></td>
         <td><button type="button" class="btn small" data-focus="${esc(x.pc.id)}">1~5위 보기</button></td></tr>`;
