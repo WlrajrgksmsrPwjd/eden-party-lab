@@ -186,6 +186,8 @@ for dk in mdk:
 out+='<script type="application/json" id="db-decks">'+js(mdk)+'</script>\n'
 bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); bfx.pop('_doc',None)
 out+='<script type="application/json" id="db-buddies">'+js(bfx)+'</script>\n'
+_bg=json.load(open(P('data','buddy_gear.json'),encoding='utf-8')); _bg={'items':[{k:v for k,v in it.items() if k in ('id','kr','jp','slot','stats','fx','effect')} for it in _bg['items']],'recommend':_bg['recommend']}
+out+='<script type="application/json" id="db-bgear">'+js(_bg)+'</script>\n' # 버디 장비(2026-10-17): 계산에 쓰는 값은 편성 입력(버디 객체)에 들어가 결과 캐시 키에 반영
 # 처음 방문(예시 보유) 결과: src/tools/sample_cache.js가 만든 것. 계산 버전이 다르면 앱이 무시한다
 _sc=P('data','sample_cache.json')
 if os.path.exists(_sc):

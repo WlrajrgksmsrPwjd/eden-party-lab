@@ -7,6 +7,10 @@ const CHARS_TEXT = document.getElementById('db-chars').textContent;
 const CHARS_BASE = JSON.parse(CHARS_TEXT);
 const BOSSES = JSON.parse(document.getElementById('db-bosses').textContent);
 const BUDDIES = (()=>{ try{ return JSON.parse((document.getElementById('db-buddies')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
+/* 버디 장비(2026-10-17 조사, src/data/buddy_gear.json): 버디마다 1칸, +10 가정. 오토 스킬 버프·디버프는 버디 스탯(支援·妨害)으로 커지고(장비 武装力·고정 스탯),
+   장비 자체 효과(물리 내성 −15% 등)는 따로. 스탯 → 보정 % ≈ 0.1869·s + 1.107e-4·s²(조사로 맞춘 식, 공표값 아님) */
+const BGEAR = (()=>{ try{ return JSON.parse((document.getElementById('db-bgear')||{}).textContent||'null') || {items:[], recommend:{}}; }catch(e){ return {items:[], recommend:{}}; } })();
+const BG_BY = new Map((BGEAR.items||[]).map(x=>[x.id, x]));
 const DECKS = (()=>{ try{ return JSON.parse((document.getElementById('db-decks')||{}).textContent||'[]')||[]; }catch(e){ return []; } })();
 const META = (()=>{ try{ return JSON.parse((document.getElementById('db-meta')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
 // 이름이 가려진 캐릭터(이시층 등)의 진명 {id: {t 한국어, j 일본어, k 이시층 1}} — 보유 탭 '진명 공개'를 켜면 표시 이름을 진명으로(2026-10-17, 사용자 요청)
@@ -56,7 +60,7 @@ const convOn = (P, f) => { f = f===undefined ? P.focus : f; return P.conv!=null 
 const noConvOf = (P, f) => { f = f===undefined ? P.focus : f; return !(f && f.kind==='elem') && !convOn(P, f); };
 const focusIn = (P, f) => { f = f===undefined ? P.focus : f; return f && f.kind==='elem' && convOn(P, f) ? Object.assign({}, f, {conv:true}) : f; }; // 속성 지정: 기본은 원래 그 속성인 공격만, '변환 덱 포함'이면 남의 속성 변환으로 그 속성이 된 공격도
 const sameFocus = (a,b) => (!a&&!b) || (a&&b&&a.kind===b.kind&&a.v===b.v);
-function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1, ownedIds: ownedList()}); } // ownedIds: 다른 스타일 보드 완성 보너스(보유 = 완성으로 봄)
+function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1, ownedIds: ownedList()}, modSettings()); } // ownedIds: 다른 스타일 보드 완성 보너스(보유 = 완성으로 봄)
 function rebuildChars(){
   chars = CHARS_BASE.concat(state.custom||[]);
   prepped = chars.map(E.prepChar);
@@ -157,9 +161,9 @@ function workerMain(){
   const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, azBy: ev.azBy || null} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
-      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null})),
+      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})),
     results2: r.results2 ? r.results2.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
-      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null})) : null,
+      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})) : null,
     decks:(r.decks||[]).map(d=>({focus:d.focus, ids:d.team.map(c=>c.id), reserveIds:d.reserves.map(c=>c.id), fixedBackIds:[...(d.fixedBack||[])], score:d.score, rel:d.rel, norm:d.norm, miss:d.miss, recCount:d.recCount, v:vOf(d.ev)})),
     evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, focus:r.focus||null};
   const litePc = r => r.error ? {error:r.error} : {
@@ -305,8 +309,8 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
   for(const y of lr.results||[]){
     if(y.ids.some(id=>!byId.has(id))) continue;
     const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
-    const cx = Object.assign({}, ctx, y.v ? {variant:y.v} : null, y.bud && budObj(y.bud) ? {buddy:budObj(y.bud)} : null); // 계산이 고른 변형·버디 그대로
-    results.push({rank:y.rank, team, progs, bud:y.bud||null, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, cx),
+    const bdY = budOfY(y), cx = Object.assign({}, ctx, y.v ? {variant:y.v} : null, bdY ? {buddy:bdY} : null); // 계산이 고른 변형·버디·버디 장비 그대로
+    results.push({rank:y.rank, team, progs, bud:y.bud||null, bg:y.bg||null, ev:E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, cx),
       reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[],
       recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])});
     Object.defineProperty(results[results.length-1], 'ctx', {value:Object.assign({}, cx, {variant:null}), writable:true, configurable:true, enumerable:false}); // 같은 상황으로 다시 평가할 때(잠재 광석 추정)
@@ -314,8 +318,8 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
   }
   // 보스 안정성 목록(results2): 펼쳐 볼 때 평가(ev 게터) — 결과 표시가 늦어지지 않게
   const results2 = lr.results2 ? lr.results2.filter(y=>!y.ids.some(id=>!byId.has(id))).map(y=>{ const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
-    const d = {rank:y.rank, team, progs, bud:y.bud||null, reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])};
-    const cx2 = Object.assign({}, ctx, y.bud && budObj(y.bud) ? {buddy:budObj(y.bud)} : null);
+    const d = {rank:y.rank, team, progs, bud:y.bud||null, bg:y.bg||null, reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])};
+    const bdY2 = budOfY(y), cx2 = Object.assign({}, ctx, bdY2 ? {buddy:bdY2} : null);
     Object.defineProperty(d, 'ctx', {value:cx2, writable:true, configurable:true, enumerable:false});
     Object.defineProperty(d, 'ev', {configurable:true, enumerable:true, get(){ const v = E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, y.v ? Object.assign({}, cx2, {variant:y.v}) : cx2); Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); return v; },
       set(v){ Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); }});
@@ -645,24 +649,49 @@ async function saveInbox(){
 }
 
 /* ---------- 버디 ---------- */
-const BUD_SURV = ['tetra','tetra_as','gansu_as','choco','tyusia','jiruya','pisuke'];
 const ownBud = ()=>Object.keys(state.buddies||{}).filter(k=>state.buddies[k] && BUDDIES[k]);
 function budPick(){
   const P=state.plan, B=P.buddy||(P.buddy={main:'auto',sub:'auto'}), own=ownBud();
   if(!own.length) return {main:null, auto:true};
   // 자동(2026-10-17 사용자 '보통 모케를 쓰는데 테트라로 고정'): 편성 계산은 결과마다 후보 버디를 바꿔 계산해 고름(buddyAutoInput),
   // 그 밖(캐릭터별·속성별·세팅 화면)은 성향에 맞는 대표 버디(안정성이면 생존, 그 밖은 화력 효과 값이 큰 버디)
-  const main = B.main==='none' ? null : B.main==='auto' ? ((E.budCands(own.map(k=>Object.assign({id:k}, BUDDIES[k])), P.mode==='stability')[0]||{}).id || own[0]) : (own.includes(B.main) ? B.main : null);
+  const main = B.main==='none' ? null : B.main==='auto' ? ((E.budCands(own.map(k=>budOf(k)), P.mode==='stability', P.mode==='burst')[0]||{}).id || own[0]) : (own.includes(B.main) ? B.main : null);
   return {main, auto: B.main==='auto'}; // 서브 버디는 오라가 발동하지 않아 계산에서 뺌(사용자 확인 2026-10-16)
 }
-function buddyInput(){ const b=budPick(); if(!b.main) return null; return {main: Object.assign({id:b.main}, BUDDIES[b.main]), sub:null}; }
-function buddyAutoInput(){ const P=state.plan, B=P.buddy||{}, own=ownBud(); return B.main==='auto' && own.length>1 ? own.map(k=>Object.assign({id:k}, BUDDIES[k])) : null; }
-const budObj = k => k && BUDDIES[k] ? {main: Object.assign({id:k}, BUDDIES[k]), sub:null} : null;
+function buddyInput(){ const b=budPick(); if(!b.main) return null; return {main: budOf(b.main), sub:null}; }
+function buddyAutoInput(){ const P=state.plan, B=P.buddy||{}, own=ownBud(); return B.main==='auto' && own.length>1 ? own.map(k=>budOf(k)) : null; }
+const bgBonus = v => 0.1869*v + 1.107e-4*v*v; // 스탯 → 효과량 보정 %
+const bgS0 = lv => { const b = (lv-1)*100, A = 1.107e-4, B = 0.1869; return b>0 ? (-B + Math.sqrt(B*B + 4*A*b))/(2*A) : 0; };
+function bgX(k, it){ // 그 장비를 +10으로 낄 때 오토 스킬 버프·디버프 배율(장비 없음 대비)
+  const m = (BUDDIES[k] && BUDDIES[k].main) || {}, lv = +m.lv||0, st = it && it.stats; if(!(lv>1) || !st) return 1;
+  const s0 = bgS0(lv), typ = m.deb ? 'obs' : 'sup', fl = +((st[typ] || st.obs_or_sup || [])[2]) || 0, eq = +st.eqp10 || (+st.eqp ? +st.eqp*4.9 : 0);
+  return (1 + bgBonus(s0 + eq*s0/4431 + fl)/100)/lv; }
+const bgObj = (k, id) => { const it = id && BG_BY.get(id); return it ? {id, kr: it.kr, x: Math.round(bgX(k, it)*1000)/1000, fx: it.fx||null} : null; };
+// 버디 장비 후보: 추천 목록 순서, 계산에 차이가 나는 것만(배율·장비 효과)
+const bgUseful = (k, it) => it && (bgX(k, it)>1.005 || (it.fx && (it.fx.main || it.fx.chg || (it.fx.by_form && it.fx.by_form[k]) || it.fx.sup)));
+const bgCands = k => ((BGEAR.recommend||{})[k]||[]).map(id=>BG_BY.get(id)).filter(it=>bgUseful(k, it));
+const bgList = k => { if(!((BGEAR.recommend||{})[k]||[]).length && k==='choco') return []; const rec = new Set((BGEAR.recommend||{})[k]||[]);
+  const fxOK = it => it.fx && (it.fx.main || it.fx.chg || it.fx.sup); // 추천 밖은 계산에 들어가는 장비 효과가 있는 것만(스탯만 오르는 장비는 목록이 길어져 뺌)
+  return [...bgCands(k), ...(BGEAR.items||[]).filter(it=>!rec.has(it.id) && /^버디 장비$/.test(it.slot||'') && fxOK(it) && bgUseful(k, it))]; };
+const bgSet = k => ((state.budGear||{})[k]) || 'auto';
+function budOf(k, gid){ // 엔진에 넘길 버디: 장비 설정(자동 = 추천 후보를 결과마다 바꿔 계산)
+  const b = Object.assign({id:k}, BUDDIES[k]); if(k==='choco') return b;
+  const set = gid || bgSet(k);
+  if(set==='none') return Object.assign(b, {gear:null});
+  if(set!=='auto') return Object.assign(b, {gear: bgObj(k, set)});
+  const C = bgCands(k).slice(0,3).map(it=>bgObj(k, it.id)); return C.length ? Object.assign(b, {gear:C[0], gearAlts:C}) : b; }
+const bgName = id => id && id!=='none' && BG_BY.get(id) ? BG_BY.get(id).kr : '';
+const budObj = (k, gid) => k && BUDDIES[k] ? {main: budOf(k, gid), sub:null} : null;
+const budOfY = y => { const k = y.bud || (y.bg ? ((buddyInput()||{}).main||{}).id : null); return k ? budObj(k, y.bg || null) : null; }; // 결과가 고른 버디·장비
 const budName = k => k && BUDDIES[k] ? BUDDIES[k].kr : '';
 function renderBudGrid(){
   const g=$('#budGrid'); if(!g) return;
   g.innerHTML = Object.entries(BUDDIES).map(([k,b])=>`<label><input type="checkbox" data-bud="${esc(k)}" ${state.buddies&&state.buddies[k]?'checked':''}><span>${esc(b.kr)}<span class="hint">${esc(b.jp)}</span></span></label>`).join('');
   $('#budN').textContent = ownBud().length;
+  const gb = $('#budGear'); if(!gb) return; const own = ownBud().filter(k=>k!=='choco' && bgList(k).length);
+  gb.hidden = !own.length;
+  gb.innerHTML = own.length ? `<p class="hint" style="margin:8px 0 4px"><b>버디 장비</b> — '자동'은 추천 장비(+10) 중 조합마다 점수가 가장 높은 것을 고릅니다. 가진 장비만 쓰려면 직접 고르세요.</p><div class="bgrows">` + own.map(k=>{ const v = bgSet(k), L = bgList(k), rec = new Set((BGEAR.recommend||{})[k]||[]);
+    return `<label class="bgrow"><span>${esc(budName(k))}</span><select data-bgear="${esc(k)}" aria-label="${esc(budName(k))} 장비"><option value="auto"${v==='auto'?' selected':''}>자동(추천)</option><option value="none"${v==='none'?' selected':''}>없음</option>${L.map(it=>{ const x = bgX(k, it); return `<option value="${esc(it.id)}"${v===it.id?' selected':''}>${esc(it.kr)}${rec.has(it.id)?' ★':''}${x>1.005?` (오토 ×${x.toFixed(2)})`:''}</option>`; }).join('')}</select></label>`; }).join('') + '</div>' : '';
 }
 
 /* ---------- 연성 P글래 보유 (무기 퍼스널리티 × 대미지 P글래, 딩 님 빌더 목록 기준) ---------- */
@@ -763,13 +792,13 @@ function renderPlanControls(){
   sel.value = P.bossId||'';
   $('#enemyBlock').hidden = P.mode==='boss' || P.mode==='kesshitsu'; // 실제 상대가 있으면 약점·내성은 보스 정보로(따로 설정 안 함, 사용자 2026-10-17)
   { const bs = $('#bossSum'), cb = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : P.mode==='kesshitsu' ? BOSSES.find(b=>b.id===P.kesId) : null;
-    bs.hidden = !cb; bs.innerHTML = cb ? bossSumHtml(cb) : ''; }
+    bs.hidden = !cb; bs.innerHTML = cb ? bossSumHtml(effBoss(cb).boss) : ''; } // 흉성·서약을 켠 상태의 약점·흡수로
   { // 버디
     const own=ownBud(), B=P.buddy||(P.buddy={main:'auto',sub:'auto'});
     const opt=(sel,v)=>`<option value="auto"${v==='auto'?' selected':''}>자동</option><option value="none"${v==='none'?' selected':''}>없음</option>`+own.map(k=>`<option value="${esc(k)}"${v===k?' selected':''}>${esc(budName(k))}</option>`).join('');
     $('#budMain').innerHTML=opt('m',B.main);
     const pk=budPick();
-    $('#budHint').textContent = own.length ? `지금 계산: 메인 ${budName(pk.main)||'없음'}` : '보유 캐릭터 탭의 "보유 버디"에서 가진 버디를 체크하면 버디 효과를 넣어 계산합니다.';
+    $('#budHint').textContent = own.length ? `지금 계산: 메인 ${budName(pk.main)||'없음'}${pk.main && pk.main!=='choco' && bgCands(pk.main).length ? ` · 장비 ${bgSet(pk.main)==='auto' ? '자동(추천)' : bgName(bgSet(pk.main))||'없음'}` : ''}` : '보유 캐릭터 탭의 "보유 버디"에서 가진 버디를 체크하면 버디 효과를 넣어 계산합니다.';
   }
   { // 성향 직접 조절
     const W=P.weights||(P.weights={b:70,s:40,t:30});
@@ -862,7 +891,7 @@ async function runPlan(){
   const P=state.plan, my=++runToken;
   const out=$('#results');
   const kes = P.mode==='kesshitsu';
-  const boss = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : kes ? BOSSES.find(b=>b.id===P.kesId) : null;
+  const boss0 = P.mode==='boss' ? BOSSES.find(b=>b.id===P.bossId) : kes ? BOSSES.find(b=>b.id===P.kesId) : null, EB = effBoss(boss0), boss = EB.boss; // 흉성·서약을 켠 보스(약점·필요 요소·턴)
   if(P.mode==='boss' && !boss){ out.innerHTML=`<div class="empty">보스를 고르면 그 보스의 약점·기믹에 맞춘 1~5순위 편성을 계산합니다.</div>`; return; }
   if(kes && !boss){ out.innerHTML=`<div class="empty">결실 현현 보스를 고르고 이번 주 서약을 체크하면, 필수 캐릭터를 넣고 서약 조건에 맞는 1~5순위 편성을 계산합니다.</div>`; return; }
   if(kes && !kesRequired(boss)){ const rq=byId.get(boss.required); out.innerHTML=`<div class="empty">필수 캐릭터: <b>${esc(rq?rq.name:boss.required_jp||'')}</b> (미보유) — 이 보스는 필수 캐릭터가 파티에 있어야 도전할 수 있습니다. 보유 캐릭터 탭에서 체크해 주세요.</div>`; return; }
@@ -872,7 +901,7 @@ async function runPlan(){
   for(const [k,v] of Object.entries(enemyNow(P))) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   const mode = kes ? 'boss' : P.mode;
-  const pledge = kes ? pledgeInput(boss) : null;
+  const pledge = kes ? pledgeInput(boss) : EB.pledge;
   $('#runBtn').disabled=true; $('#prog').hidden=false; $('#prog i').style.width='0%';
   const t0=Date.now(), ptx=$('#progTxt'); ptx.textContent='계산 중…';
   const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null, noConv:noConvOf(P),
@@ -1000,16 +1029,17 @@ const budTipHtml = b => b ? ` · 화력 위주면 메인 버디 <b>${esc(budName
 function budLine(x, o, key){
   const own=ownBud(); if(!own.length) return '';
   const cur=buddyInput(); const cm = x.bud || (cur&&cur.main?cur.main.id:null);
-  if(x.bud) return `<div class="hint">버디: 메인 <b>${esc(budName(x.bud))}</b> <span class="hint">(자동 — 이 조합에서 점수가 가장 높은 버디)</span></div>`;
+  const gTx = x.bg ? (x.bg==='none' ? ' · 장비 없음' : ` · 장비 <b>${esc(bgName(x.bg))}</b>`) : '';
+  if(x.bud) return `<div class="hint">버디: 메인 <b>${esc(budName(x.bud))}</b>${gTx} <span class="hint">(자동 — 이 조합에서 점수가 가장 높은 버디${x.bg && bgSet(x.bud)==='auto' ? '·장비' : ''})</span></div>`;
   if(x._budBest===undefined && own.length>1){ BUDQ.q.push({x, o, cm, own, tok:BUDQ.tok}); if(!BUDQ.run) setTimeout(runBudQ, 60); }
-  return `<div class="hint">버디: 메인 ${esc(budName(cm)||'없음')}<span class="budtip" data-budk="${esc(key||'')}">${budTipHtml(x._budBest)}</span></div>`;
+  return `<div class="hint">버디: 메인 ${esc(budName(cm)||'없음')}${gTx}<span class="budtip" data-budk="${esc(key||'')}">${budTipHtml(x._budBest)}</span></div>`;
 }
 async function runBudQ(){
   if(BUDQ.run) return; BUDQ.run = true;
   try{
     while(BUDQ.q.length){ const it = BUDQ.q.shift(); if(it.tok!==BUDQ.tok || it.x._budBest!==undefined) continue;
       const x = it.x, o = it.o, BV = ev => state.plan.mode==='burst' ? ev.dummyT : ev.burst; let best=null; const base=BV(x.ev), c0 = ctxOf({focus:o&&o.focus||null, boss:o&&o.boss||null});
-      for(const k of it.own){ if(it.tok!==BUDQ.tok) break; const bd={main:Object.assign({id:k},BUDDIES[k]), sub:null};
+      for(const k of it.own){ if(it.tok!==BUDQ.tok) break; const bd={main:budOf(k), sub:null};
         try{ const ev=E.evalTeam(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, Object.assign({}, c0, {buddy:bd})); if(!best || BV(ev)>best.v) best={k, v:BV(ev)}; }catch(e){}
         await new Promise(r=>setTimeout(r, 0)); }
       if(it.tok!==BUDQ.tok) continue;
@@ -2207,10 +2237,45 @@ function bossSumHtml(b){
   return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
     <div class="bsrels">${rels || '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>'}</div>${parts}
     ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}
-    ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}`;
+    ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}${modsHtml(b)}`;
+}
+/* 보스 흉성·서약(modifiers, 2026-10-17 사용자 '안키 디그마처럼 흉성 안 켜고·다 켜고·일부만 켜고 깨기'): 켠 것을 보스·설정에 반영
+   absorb(흡수 속성 지정)·needs·피해 경감 턴(kt_extra)·최소 턴(kt_min), 설정: afBan(AF 게이지 이월 불가 → AF 없음)·buffTurnCap 1(턴 종료 버프 해제)·zoneBan(턴 종료 존 파괴)·zoneBanAll(존 금지), 편성 조건(comp)·전투불능 금지는 서약으로 */
+const curBossOf = P => { P = P || state.plan; return P.mode==='boss' ? BOSSES.find(x=>x.id===P.bossId) : P.mode==='kesshitsu' ? BOSSES.find(x=>x.id===P.kesId) : null; };
+const modsOn = b => { const P = state.plan, on = (P.mods && P.mods[b.id]) || []; return (b.modifiers||[]).filter(m=>on.includes(m.id)); };
+function effBoss(b){
+  if(!b || !(b.modifiers||[]).length) return {boss:b, S:null, pledge:null};
+  const ms = modsOn(b); if(!ms.length) return {boss:b, S:null, pledge:null};
+  const P = state.plan, B2 = JSON.parse(JSON.stringify(b)), S2 = {}; let pl = null, extra = 0, kmin = 0;
+  for(const m of ms){ const f = m.fx||{}, ban = f.ban||[];
+    if(f.absorb_pick || (Array.isArray(f.absorb) && f.absorb.length)){ const els = (Array.isArray(f.absorb) && f.absorb.length ? f.absorb : []).concat((P.modAbs && P.modAbs[b.id]) ? [P.modAbs[b.id]] : []);
+      for(const el of els){ B2.weak = (B2.weak||[]).filter(x=>x!==el); B2.resist = (B2.resist||[]).filter(x=>x!==el); B2.absorb = [...new Set([...(B2.absorb||[]), el])]; } }
+    if(+f.dmg_cut>=0.5 && +f.dmg_cut_turns>0) extra += +f.dmg_cut_turns*(+b.lives||1);
+    if(+f.min_turns>0) kmin = Math.max(kmin, +f.min_turns);
+    if(f.af_drain || ban.includes('af_carry') || ban.includes('af')) S2.afBan = true;
+    if(f.buff_clear || ban.includes('buff_carry')) S2.buffTurnCap = 1;
+    if(f.zone_break) S2.zoneBan = [...new Set([...(S2.zoneBan||[]), f.zone_kind==='elem' ? 'elem' : 'nonelem'])];
+    if(ban.includes('zone')) S2.zoneBanAll = true;
+    if(f.needs) B2.needs = Object.assign({}, B2.needs||{}, f.needs);
+    if(f.comp) pl = Object.assign(pl || {nokill:false, size:6, turns:0}, {comp:{on:true, elem:f.comp.elem||[], weap:f.comp.weap||[], n:+f.comp.n||2}});
+    if(ban.includes('ko')) pl = Object.assign(pl || {size:6, turns:0, comp:{on:false, elem:[], weap:[], n:3}}, {nokill:true}); }
+  if(extra) B2.kt_extra = extra; if(kmin) B2.kt_min = kmin;
+  if(pl && !pl.comp) pl.comp = {on:false, elem:[], weap:[], n:3};
+  return {boss:B2, S:Object.keys(S2).length ? S2 : null, pledge:pl};
+}
+function modSettings(){ const P = state && state.plan; if(!P || (P.mode!=='boss' && P.mode!=='kesshitsu')) return null; const b = curBossOf(P); return b ? effBoss(b).S : null; }
+function modsHtml(b){
+  const ms = b.modifiers||[]; if(!ms.length) return '';
+  const on = new Set(((state.plan.mods||{})[b.id])||[]), pre = b.modifier_presets||[], kyo = ms.some(m=>m.kind!=='pledge');
+  const curP = pre.find(p=>Array.isArray(p.on) && p.on.length===on.size && p.on.every(x=>on.has(x)));
+  const absM = ms.find(m=>m.fx && m.fx.absorb_pick && on.has(m.id)), absV = (state.plan.modAbs||{})[b.id]||'';
+  return `<div class="bsmods"><div class="bsmh"><b>${kyo?'흉성':'서약'}</b>${pre.map(p=>`<button type="button" class="btn small" data-modp="${esc(p.id)}" aria-pressed="${(curP && curP.id===p.id) || (!curP && p.on==='pick' && on.size>0) || (p.id==='none' && !on.size) ? 'true' : 'false'}">${esc(p.kr.replace(/\(.*\)/,'').trim())}</button>`).join('')}</div>
+    <div class="bsml">${ms.map(m=>`<label class="checkrow" title="${esc(m.effect_kr||'')}"><input type="checkbox" data-mod="${esc(m.id)}"${on.has(m.id)?' checked':''}> <span><b>${esc(m.kr)}</b> <span class="hint">${esc(String(m.effect_kr||'').split(/[→(]/)[0].slice(0,46))}</span></span></label>`).join('')}</div>
+    ${absM?`<div class="bsabs">흡수로 바뀐 속성 <select data-modabs="1"><option value="">고르기</option>${E.ELEMS.filter(e=>e!=='none').map(e=>`<option value="${e}"${absV===e?' selected':''}>${esc(E.ELEM_KR[e])}</option>`).join('')}</select> <span class="hint">앞 전투에서 약점으로 친 속성</span></div>`:''}
+    ${on.size?`<p class="hint" style="margin:0">켠 ${kyo?'흉성':'서약'}을 계산에 반영해요: ${[...ms.filter(m=>on.has(m.id)).map(m=>m.kr)].join('·')}</p>`:''}</div>`;
 }
 /* 상대 약점·내성: 보스·결현현이면 보스 정보 그대로(따로 설정 안 함, 2026-10-17), 그 밖은 직접 설정 */
-function enemyNow(P){ P = P || state.plan; const b = P.mode==='boss' ? BOSSES.find(x=>x.id===P.bossId) : P.mode==='kesshitsu' ? BOSSES.find(x=>x.id===P.kesId) : null; return b ? bossToEnemy(b) : (P.enemy||{}); }
+function enemyNow(P){ P = P || state.plan; const b = curBossOf(P); return b ? bossToEnemy(effBoss(b).boss) : (P.enemy||{}); }
 function bossToEnemy(b){ const en={}; (b.absorb||[]).forEach(t=>en[t]='absorb'); (b.null||[]).forEach(t=>en[t]='null'); (b.resist||[]).forEach(t=>en[t]='resist'); (b.weak||[]).forEach(t=>en[t]='weak'); return en; }
 function applyBoss(id){
   const b=BOSSES.find(x=>x.id===id); if(!b) return;
@@ -2276,13 +2341,13 @@ function onConst(e){
 }
 
 /* ---------- 내보내기/불러오기 ---------- */
-const exportObj = ()=>({owned:state.owned, custom:state.custom, settings:state.settings, goals:state.goals||[], buddies:state.buddies||{}, pgl:state.pgl||{}});
+const exportObj = ()=>({owned:state.owned, custom:state.custom, settings:state.settings, goals:state.goals||[], buddies:state.buddies||{}, budGear:state.budGear||{}, pgl:state.pgl||{}});
 function exportState(){ const ta=$('#ioText'); ta.value=JSON.stringify(exportObj()); ta.select();
   if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(()=>{$('#ioMsg').textContent='복사했습니다. 메모장 등에 붙여 두세요.';},()=>{$('#ioMsg').textContent='선택된 텍스트를 직접 복사하세요.';});
   else $('#ioMsg').textContent='선택된 텍스트를 직접 복사하세요.'; }
 function applyImport(text, okMsg, badMsg){
   try{ const d=JSON.parse(text); if(!d||!d.owned||typeof d.owned!=='object') throw 0;
-    state.owned=d.owned; state.custom=Array.isArray(d.custom)?d.custom:[]; state.settings=d.settings||{}; state.sample=false; if(Array.isArray(d.goals)) state.goals=d.goals; if(d.buddies&&typeof d.buddies==='object') state.buddies=d.buddies; if(d.pgl&&typeof d.pgl==='object') state.pgl=d.pgl;
+    state.owned=d.owned; state.custom=Array.isArray(d.custom)?d.custom:[]; state.settings=d.settings||{}; state.sample=false; if(Array.isArray(d.goals)) state.goals=d.goals; if(d.buddies&&typeof d.buddies==='object') state.buddies=d.buddies; if(d.budGear&&typeof d.budGear==='object') state.budGear=d.budGear; if(d.pgl&&typeof d.pgl==='object') state.pgl=d.pgl;
     save(); rebuildChars(); renderAll(); $('#ioMsg').textContent=okMsg||'불러왔습니다.'; return true; }
   catch(e){ $('#ioMsg').textContent=badMsg||'형식이 맞지 않습니다. 내보내기로 만든 텍스트 전체를 붙여 넣으세요.'; return false; }
 }
@@ -2357,6 +2422,7 @@ function bind(){
     for(const id in state.owned){ const o=state.owned[id]; if(!o) continue; o.g=g; n++; }
     if(!n){ flash('보유한 캐릭터가 없습니다.'); return; } touchRoster(); renderRoster(); flash(`보유 ${n}명 전용 글래를 ${G_KR[g]}(으)로 바꿨습니다`); });
   renderGrow();
+  { const gb = $('#budGear'); if(gb) gb.addEventListener('change', e=>{ const k = e.target.dataset.bgear; if(!k) return; state.budGear = state.budGear || {}; if(e.target.value==='auto') delete state.budGear[k]; else state.budGear[k] = e.target.value; touchRoster(); renderPlanControls(); }); }
   $('#budGrid').addEventListener('change',e=>{ const k=e.target.dataset.bud; if(!k) return; state.buddies=state.buddies||{}; if(e.target.checked) state.buddies[k]=true; else delete state.buddies[k]; touchRoster(); renderBudGrid(); renderPlanControls(); });
   renderBudGrid(); renderPglTbl();
   // 성향 직접 조절
@@ -2377,6 +2443,13 @@ function bind(){
   $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
   $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); });
   $('#planBossQ').addEventListener('input', ()=>renderPlanControls()); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
+  $('#bossSum').addEventListener('click', e=>{ const mp = e.target.closest('[data-modp]'); if(mp){ const b = curBossOf(); if(!b) return; const pr = (b.modifier_presets||[]).find(p=>p.id===mp.dataset.modp); if(!pr) return;
+      state.plan.mods = state.plan.mods || {}; if(Array.isArray(pr.on)) state.plan.mods[b.id] = pr.on.slice(); save(); renderPlanControls(); if(Array.isArray(pr.on)) runPlan(); return; } });
+  $('#bossSum').addEventListener('change', e=>{ const b = curBossOf(); if(!b) return; const P = state.plan;
+    if(e.target.dataset.mod){ P.mods = P.mods || {}; const L = new Set(P.mods[b.id]||[]); if(e.target.checked) L.add(e.target.dataset.mod); else L.delete(e.target.dataset.mod); P.mods[b.id] = [...L]; }
+    else if(e.target.dataset.modabs){ P.modAbs = P.modAbs || {}; P.modAbs[b.id] = e.target.value; }
+    else return;
+    save(); renderPlanControls(); runPlan(); });
   $('#bossSum').addEventListener('click', e=>{ const b = e.target.closest('[data-bossinfo]'); if(!b) return; curBoss = b.dataset.bossinfo; showTab('boss'); renderBossList(); renderBossDetail(); window.scrollTo(0,0); });
   $('#bossSel').addEventListener('change',e=>{ if(e.target.value) applyBoss(e.target.value); else { state.plan.bossId=''; save(); renderPlanControls(); } runPlan(); });
   $('#enemyGrid').addEventListener('click',e=>{ const b=e.target.closest('.etype'); if(!b) return; const t=b.dataset.t; const cur=state.plan.enemy[t]||null; const nx=REL_CYCLE[(REL_CYCLE.indexOf(cur)+1)%REL_CYCLE.length]; if(nx) state.plan.enemy[t]=nx; else delete state.plan.enemy[t]; save(); renderPlanControls(); });

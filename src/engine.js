@@ -1236,7 +1236,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   { let ma = pct(me.mp_atk); for(let j=0;j<team.length;j++){ const p=team[j].party; if(!p || p.scope==='none' || !p.mp_atk) continue; row = FX&&FX[j] ? FX[j] : null; ma = Math.max(ma, pct(p.mp_atk)*F(j,'mp_atk')); }
     mpAtkSk = ma; if(ma > MPATK_GEAR) dmgUp *= (1+ma)/(1+MPATK_GEAR); }
   let budDmg = 0;
-  const BUD = A.bud ? A.bud.parts.filter(b=>!(b.sbOnly && situation!=='sb') && !(b.zone && !(zone && zone.level>0 && zoneMatch(b.zone, zone))) && !(b.st && sk.target!=='st')) : null;
+  let BUD = null; if(A.bud){ BUD = []; for(const b of A.bud.parts){ if((b.zone && !(zone && zone.level>0 && zoneMatch(b.zone, zone))) || (b.st && sk.target!=='st')) continue; const f = b.p*budF(b, situation, A, zone, team); if(f>0) BUD.push(f===b.p ? b : ({...b, p:f})); } }
   if(BUD) for(const b of BUD){ const p=b.party; if(!p) continue; const f=b.p;
     if(p[stat]) sv.push(pct(p[stat])*f);
     if(p.all_elem_atk && el!=='none') ev.push(pct(p.all_elem_atk)*f);
@@ -1625,7 +1625,8 @@ function simTeam(team, progs, S, stepV){
     // MP消費攻撃(질퍼니(AS) クルオルエンシス 등): 대미지 +100% 대신 공격 스킬 소비 MP +100% — AF(MP 소비 없음)엔 공짜지만 평상 턴엔 MP가 두 배로 듦
     const mpAtkX = (+((c.self||{}).mp_atk)||0)>0 || team.some(m=>m.party && m.party.scope!=='none' && (+m.party.mp_atk||0)>0) ? 2 : 1;
     const costMain = Math.round((c.mpMain!=null?c.mpMain:55)*mul*mpAtkX), costBuff = Math.round((c.mpBuff!=null?c.mpBuff:50)*mul);
-    const bt = c.buffTurns>=99 ? H+1 : Math.max(1, c.buffTurns||3), dt = c.debTurns>=99 ? H+1 : Math.max(1, c.debTurns||3);
+    let bt = c.buffTurns>=99 ? H+1 : Math.max(1, c.buffTurns||3), dt = c.debTurns>=99 ? H+1 : Math.max(1, c.debTurns||3);
+    if(S.buffTurnCap>0){ bt = Math.min(bt, S.buffTurnCap); dt = Math.min(dt, S.buffTurnCap); } // 보스 흉성 등: 턴 종료에 버프·디버프 해제
     const costAlt = Math.min(costMain, Math.round(ALT_MP*mul*mpAtkX));
     // 버프 스킬(buff_acts): 하나씩 따로 써야 해서 끊긴 것이 있으면 그 턴은 그 스킬(공격 버프기는 주력의 30%쯤으로 셈). 데이터가 없으면 예전대로 버퍼만 1개
     const steps0 = c.bact ? c.bact.steps : (c.buffAct ? [{k:'buff'}] : []);
@@ -2126,16 +2127,55 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
   return {t1, t1g:g, t1u:Math.max(g,u), t2, p, known:known===pairs && pairs>0, givers, z1:gz, actT1};
 }
 /* 버디: 메인은 오토 스킬+오라(+폭딜 턴 차지 스킬), 서브는 오라 발동 안 함(계산 없음). 약점 조건 오라는 상대 정보가 없으면 반반 */
+/* 버디(2026-10-17 조사 반영, 스크래치 buddy/): 메인 버디만(서브는 오라 발동 안 함, 사용자 확인 2026-10-16).
+   - 오토 스킬(main·main2): 데이터 값 = 최대 누적. 버디가 행동한 횟수 k로 (k+1)/(stk+1), k=0이면 0 → 허수아비 1턴·1턴째 AF엔 없음(버디는 아군 뒤에 행동),
+     실전 t턴째 AF·SB는 k = t−1, 평상 턴은 k = 2(실전 N턴·지속 딜 중간)로 봄. 장비(gear.x)는 오토 스킬 수치를 키움(스탯 보정), 장비 자체 효과는 그대로
+   - 오라: 늘(when 조건). post_af(첫 AF 뒤)는 AF·SB에 없음, 평상 턴 절반
+   - 차지 스킬(sb·sb2): 차지 턴당 1 + chg_plus 조건 1 + 장비(판도라 가끔 +1)가 cost만큼 모인 턴부터 → 그 턴 확률(budChgP). at:'af'면 AF 턴 시작에 써서 그 AF에도 */
+const binomP = (n, k, q) => { let c = 1; for(let i=0;i<k;i++) c = c*(n-i)/(i+1); return c * q**k * (1-q)**(n-k); };
+function budChgPlus(pl, zone, team){ if(!pl) return 0; const zOn = zone && zone.level>0;
+  if(pl==='zone_any') return zOn ? 1 : 0;
+  if(pl.startsWith('zone:')){ if(!zOn) return 0; const ks = pl.slice(5).split('|'); return ks.includes(zone.key) || (zone.types||[]).some(t=>ks.includes(t)) ? 1 : 0; }
+  if(pl.startsWith('weap3:')){ const w = pl.slice(6); return team.filter(c=>c.wt===w).length>=3 ? 1 : 0; }
+  if(pl.startsWith('partner:')){ const id = pl.slice(8); return team.some(c=>c.id===id) ? 1 : 0; }
+  if(pl==='hp80') return 0.5; return 0; }
+function budChgP(ch, t, zone, team){ // t턴째 시작에 차지 스킬을 쓸 수 있는 확률(1턴째 = 전투 시작 차지만)
+  if(!ch || !(ch.cost>0)) return 0;
+  const r = 1 + budChgPlus(ch.plus, zone, team), n = Math.max(0, t-1), need = ch.cost - (ch.c0||0) - r*n;
+  let P = 0; if(need<=0) P = 1; else if(ch.rnd>0) for(let x=Math.ceil(need-1e-9); x<=n; x++) P += binomP(n, x, ch.rnd);
+  if(t>=3){ const st = Math.min(1, (r + (ch.rnd||0))*3/ch.cost); P = Math.max(P, 0.5*P + 0.5*st); } // 3턴째 AF는 지속 딜에도 쓰는 값 → 긴 전투의 사용 비율(AF 주기 약 3턴)과 반반
+  return Math.min(1, P); }
+function budF(b, sit, A, zone, team){
+  const T = sit==='normal' ? 0 : (A && A.realT>1 ? A.realT : 1);
+  if(b.kind==='chg'){ if(sit==='normal' || (sit==='af' && b.at!=='af')) return 0; let f = budChgP(b.ch, T, zone, team); if(sit==='af' && b.act) f *= Math.min(1, b.act/5); return f; }
+  if(b.kind==='auto'){ if(b.noaf && sit!=='normal') return 0; const k = sit==='normal' ? 2 : T-1, st = Math.max(1, b.stk||1);
+    let f = k<=0 ? 0 : Math.min(1, (Math.min(k, st)+1)/(st+1)); if(sit!=='normal' && b.act) f *= Math.min(1, b.act/5); return f; }
+  if(b.postAF) return sit==='normal' ? 0.5 : 0;
+  return 1; }
+const budScale = (o, x) => { if(x===1 || !o) return o; const r = {}; for(const k in o){ const v = o[k]; r[k] = typeof v==='number' ? v*x : v && typeof v==='object' ? budScale(v, x) : v; } return r; };
 function budAgg(bd, team, enemy, A){
-  if(!bd || (!bd.main && !bd.sub)) return null;
+  if(!bd || !bd.main) return null;
+  const b = bd.main, gear = b.gear || null, gx = gear && +gear.x>0 ? +gear.x : 1, gfx0 = gear && gear.fx || null, gfx = gfx0 && gfx0.by_form ? (gfx0.by_form[b.id] || null) : gfx0;
   const weakP = enemy ? (team.some(c=>c.elems.some(e=>enemyRel(enemy,e)==='weak') || enemyRel(enemy,c.wt)==='weak') ? 1 : Math.max(0, ...A.weakAdd.map(t=>weakFrac(A, t, 'normal')))) : 0.5;
+  const has = f => team.some(f) ? 1 : 0;
+  const whenP = w => !w || w==='zone' ? 1 : w==='weak' ? weakP : w==='mag' ? has(c=>c.atkKind==='mag') : w==='fire' || w==='wind' ? has(c=>c.elems.includes(w)) : w==='slashmag' ? has(c=>c.atkKind==='mag' || c.wt==='slash') : w==='spd300' ? 0.5 : 1;
+  const reqOK = r => { if(!r) return true; const m = String(r).match(/^pers3:(.+)$/); if(m){ const ps = m[1].split('|'); return team.filter(c=>c.pers && ps.some(x=>c.pers.has(x))).length>=3; } return team.some(c=>c.id===r); };
+  const ch = {cost: +b.cost>0 ? +b.cost : 6, plus: b.chg_plus||null, rnd: gfx && +gfx.chg>0 ? +gfx.chg : 0, c0: 0};
   const parts=[], sup={}; let enemyDown=0;
-  const add = (x, extra)=>{ if(!x) return; const p = x.when==='weak' ? weakP : 1; parts.push(Object.assign({party:x.party||null, deb:x.deb||null, p, zone:x.when==='zone'?x.zone:null, st:!!x.st}, extra||{}));
-    if(x.deb) enemyDown = Math.max(enemyDown, pct(Math.max(x.deb.pwr||0, x.deb.int||0))*p); };
-  if(bd.main){ add(bd.main.main); add(bd.main.aura); add(bd.main.sb, {sbOnly:true}); for(const k in (bd.main.sup||{})) sup[k]=bd.main.sup[k]; }
-  // 서브 버디는 오라가 발동하지 않음(사용자 확인 2026-10-16) — 메인만
-  return {parts, sup, enemyDown};
+  const add = (x, kind, x2) => { if(!x) return; if(Array.isArray(x)){ x.forEach(y=>add(y, kind, x2)); return; } if(!reqOK(x.req)) return;
+    const sc = kind==='auto' && x2 ? gx : 1, party = budScale(x.party||null, sc), deb = budScale(x.deb||null, sc);
+    if(!party && !deb) return;
+    const p = x.p!=null && x.when!=='weak' ? +x.p : whenP(x.when);
+    parts.push({party, deb, p, zone:x.when==='zone'?x.zone:null, st:!!x.st, kind, stk: +x.stk||+(kind==='auto' && b.main && b.main.stk)||1, at: x.at || (kind==='chg' && b.sb && b.sb.at) || null, act: +x.act||0, noaf: !!x.noaf, postAF: x.when==='post_af', ch});
+    if(deb) enemyDown = Math.max(enemyDown, pct(Math.max(deb.pwr||0, deb.int||0))*p); };
+  add(b.main, 'auto', true); add(b.main2, 'auto', true); add(b.aura, 'aura'); add(b.sb, 'chg'); add(b.sb2, 'chg');
+  for(const k in (b.sup||{})) sup[k]=b.sup[k];
+  if(gfx){ if(gfx.main) add(Object.assign({stk: gfx.stk||1}, gfx.main), 'auto', false); // 장비 자체 오토 효과: 스탯 보정을 받는지 미확인 → 그대로(보수적)
+    for(const k in (gfx.sup||{})) sup[k] = Math.max(+sup[k]||0, +gfx.sup[k]||0); }
+  const afgC = [b.sb].concat(b.sb2||[]).reduce((s,x)=>s + (x && reqOK(x.req) && +x.afg>0 ? +x.afg : 0), 0); // 차지 1회 AF 게이지 → 평상 턴엔 턴당 (차지 속도 ÷ 소모)로 나눠
+  return {parts, sup, enemyDown, afgA: +b.afg||0, afgC, ch, gear: gear ? gear.id : null};
 }
+const budAfg = (bud, zone, team) => !bud ? 0 : (bud.afgA||0) + (bud.afgC ? bud.afgC*Math.min(1, (1 + budChgPlus(bud.ch.plus, zone, team) + (bud.ch.rnd||0))/bud.ch.cost) : 0);
 /* 속성 변환(변환자재): 아군 전체를 존 속성·특정 속성으로 바꾸는 서포터, 자기 속성을 존·약점·옆 아군에 맞추는 캐릭터 */
 function echgOf(team, progs){
   const L=[]; team.forEach((c,i)=>{ const e=c.echange; if(!e) return; if(e.req && !reqMet(e.req, team, c)) return; L.push(Object.assign({i}, e)); });
@@ -2248,6 +2288,7 @@ function counterCalc(team, progs, A, enemy, S, cx, FX, z, cap, fw){
    게이지: AF 시작 50%(캐릭터·버디 조건이면 100%), 평상 턴 충전은 afGain. SB 시작 = 성향이 같은 전열 1명당 12.5%(최대 50%),
    아군 행동 1회당 2.5%(AF 중 행동 포함). 상태(턴, AF%, SB%)마다 남은 턴의 최댓값을 기억하는 동적 계획으로 가장 좋은 순서를 찾는다 */
 function afStartOf(team, ctx, S){
+  if(S && S.afBan) return 0;
   let g = +S.afStart; if(!(g>=0)) g = 50;
   const bud = ctx && ctx.buddy ? [ctx.buddy.main&&ctx.buddy.main.id, ctx.buddy.sub&&ctx.buddy.sub.id].filter(Boolean) : [];
   const why = [];
@@ -2396,7 +2437,10 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const runSit = (sit, zOnly) => { // zOnly: 이 존만(실전 3턴째 SB — 1턴째에 고른 존으로, 계산량)
     const s2 = (sit==='sb'&&!hasSB)?'normal':sit;
     const useSim = sit==='normal' && simUse, w = sit==='normal' ? wN : null;
-    const zs = zOnly ? [zOnly] : zoneForce(zoneCandidates(team, progs, sit), A.azPick);
+    let zs = zOnly ? [zOnly] : zoneForce(zoneCandidates(team, progs, sit), A.azPick);
+    if(S.zoneBanAll && !zOnly){ zs = [{kind:'none', types:[], level:0, by:null, label:'존 없음'}]; } // 보스 서약 등: 아군 ZONE 전개 금지
+    else if(sit==='normal' && !zOnly && Array.isArray(S.zoneBan) && S.zoneBan.length){ const ban = z => z && z.level>0 && ((z.kind==='elem' && S.zoneBan.includes('elem')) || (z.kind!=='elem' && S.zoneBan.includes('nonelem')));
+      const z2 = zs.filter(z=>!ban(z)); zs = z2.length ? z2 : [{kind:'none', types:[], level:0, by:null, label:'존 없음'}]; } // 보스 흉성 등: 턴 종료에 존 파괴 → 평상 턴엔 그 종류 존 없음
     const shared = zdep ? null : coresFor(s2, null, useSim);
     // 요격·체인: 존마다 속성이 바뀔 수 있어(変幻自在 등) 존을 고를 때 같이 센다. 체인은 요격으로도 발동(요격 횟수를 공격으로 셈)
     const extra = (z, cores) => { let ctr = null, ch = null, te = null;
@@ -2474,7 +2518,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       g += pM * (za!=null ? za : byHit) + pA * (za1!=null ? za1 : byHit1);
       g += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)];
     });
-    if(A.bud && ctx && ctx.buddy && ctx.buddy.main && ['moke','korobo','gansu_as'].includes(ctx.buddy.main.id)) g += 5;
+    if(A.bud) g += budAfg(A.bud, z, team); // 버디 AF 게이지(2026-10-17 조사): 모케 오토 스킬 턴당 5, 코로보·건스(AS) 차지 30 ÷ 차지 소모(예전엔 셋 다 턴당 5)
     // 요격은 AF 게이지를 채우지 않음(사용자 확인 2026-10-16 — 예전엔 note.com 글 하나를 근거로 요격 1번 = 행동 1번으로 채웠음). counterCalc의 afg는 참고값
     return g; };
   /* 평상 턴 존 고르기에 AF도(2026-10-17 점검: 평상 턴 대미지만으로 존을 고르면 52→54억 조금 나은 존을 고르다 AF 게이지 22→13·AF가 한 턴 늦어
@@ -2492,7 +2536,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     const xN = (res.normal.chain?res.normal.chain.total:0) + (res.normal.counter?res.normal.counter.total:0) + (res.normal.turnEnd?res.normal.turnEnd.total:0); // 일반 존 턴에도 체인·요격·턴 종료(근사: 극 존 때 값)
     return (sumZ(cores1, z1, null, wN).v + xN)*0.6 + res.normal.total*0.4; };
   let sustain = susOf();
-  let afGain = afGainOf(nz, res.normal.cores);
+  let afGain = S.afBan ? 0 : afGainOf(nz, res.normal.cores); // S.afBan: 보스 흉성 등으로 AF 게이지를 이월 못 함 → AF 없음(2026-10-17)
   const afTurns = 1 + Math.max(1, Math.min(19, 100/Math.max(1, afGain))); // AF 주기 = 게이지를 채우는 평상 턴 + AF 턴(AF 턴엔 평상 행동·게이지 충전 없음, 2026-10-16)
   const susNW = S.afCycle!==false ? (afTurns-1)/afTurns : 1; // 지속 딜에서 평상 턴 비율
   // 허수아비는 1턴만, AF 100%로 시작(사용자 확인) → 세팅 턴 없음: 축적은 AF 중 행동 횟수만큼
@@ -3062,9 +3106,10 @@ function modeWeights(mode, boss, cw, pl){
 function killTurns(ev, boss, margin){
   if(!boss || !(+boss.hp>0) || !ev) return null;
   const need = +boss.hp*1e8*(margin||1.3), pf = partsEff(ev, boss), turns = (ev.bsim && ev.bsim.turns) || [], sus = Math.max(0, +ev.sustain||0)*pf;
-  let cum = 0, t = 0; for(const r of turns){ t++; cum += Math.max(0, +r.d||0)*pf; if(cum >= need) return {t, sure:true}; }
+  const fin = x => ({t: Math.min(99, Math.max(+boss.kt_min||0, x.t + (+boss.kt_extra||0))), sure: x.sure}); // kt_extra·kt_min: 보스 흉성(피해 경감 턴·최소 턴)
+  let cum = 0, t = 0; for(const r of turns){ t++; cum += Math.max(0, +r.d||0)*pf; if(cum >= need) return fin({t, sure:true}); }
   if(!(sus>0)) return {t:99, sure:false};
-  const more = Math.ceil((need - cum)/sus); return {t: Math.min(99, t + more), sure: t + more <= 99};
+  const more = Math.ceil((need - cum)/sus); return fin({t: Math.min(99, t + more), sure: t + more <= 99});
 }
 function partsEff(ev, boss){
   if(!boss || !Array.isArray(boss.parts) || !boss.parts.length) return 1;
@@ -3100,12 +3145,14 @@ function needPenalty(ev, boss){
 }
 
 /* 버디 자동(2026-10-17 사용자 '보통 모케를 쓰는데 테트라로 고정 — 버디도 유동적으로'): 후보를 효과 값으로 거른 뒤(화력 상위 3 + 생존 1) 결과 조합마다 계산해 그 성향 점수가 가장 높은 버디 */
-function budDmgScore(b){ let v = 0; const add = x => { if(!x) return; const p = x.party||{}, d = x.deb||{}, er = Object.values(d.elem_res||{}).map(Number), ea = Object.values(p.elem_atk||{}).map(Number);
-    v += (+d.phys_res||0)*0.5 + (+d.mag_res||0)*0.5 + (+d.all_elem_res||0) + (er.length ? Math.max(...er)*0.6 : 0) + (+p.crit_dmg||0)*0.5 + (+p.crit_rate||0)*0.15 + (+p.all_elem_atk||0)*0.8 + (ea.length ? Math.max(...ea)*0.5 : 0) + (+p.pwr||0)*0.3 + (+p.int||0)*0.3 + (+p.dmg_up||0)*0.8; };
-  add(b.main); add(b.aura); add(b.sb); return v; }
+function budDmgScore(b, burst){ let v = 0; const gx = b.gear && +b.gear.x>0 ? +b.gear.x : 1; // 후보 고르기용 어림(2026-10-17: 오토 스킬은 누적·장비 반영, 최고점(허수아비 1턴)은 오라만)
+  const add = (x, w) => { if(!x || !w) return; if(Array.isArray(x)){ x.forEach(y=>add(y, w)); return; } const p = x.party||{}, d = x.deb||{}, er = Object.values(d.elem_res||{}).map(Number), ea = Object.values(p.elem_atk||{}).map(Number), wa = Object.values(p.weapon_atk||{}).map(Number), wd = Object.values(p.wt_dmg||{}).map(Number), wr = Object.values(d.weapon_res||{}).map(Number);
+    v += w*((+d.phys_res||0)*0.5 + (+d.mag_res||0)*0.5 + (+d.all_elem_res||0) + (er.length ? Math.max(...er)*0.6 : 0) + (wr.length ? Math.max(...wr)*0.35 : 0) + (+p.crit_dmg||0)*0.5 + (+p.crit_rate||0)*0.15 + (+p.all_elem_atk||0)*0.8 + (ea.length ? Math.max(...ea)*0.5 : 0) + (wa.length ? Math.max(...wa)*0.35 : 0) + (wd.length ? Math.max(...wd)*0.4 : 0) + (+p.pwr||0)*0.3 + (+p.int||0)*0.3 + (+p.dmg_up||0)*0.8 + (+p.dmg||0)*0.8); };
+  add(b.main, burst ? 0 : 0.6*gx); add(b.main2, burst ? 0 : 0.6*gx); add(b.aura, b.aura && b.aura.when==='post_af' ? (burst ? 0 : 0.5) : 1); add(b.sb, burst ? 0 : 0.3); add(b.sb2, burst ? 0 : 0.3);
+  const g = b.gear && b.gear.fx; if(g && g.main && !burst) add(g.main, 0.6); return v; }
 function budSurvScore(b){ const s = b.sup||{}; return (+s.heal||0)*3 + (+s.cleanse||0)*2 + (s.revive ? 5 : 0) + (+s.barrier||0)*2 + (+s.dmg_cut||0)*2 + (+s.guard||0)*2; }
-function budCands(list, survFirst){ const L = (list||[]).filter(b=>b && b.id); if(L.length<2) return L;
-  const byD = L.slice().sort((a,b)=>budDmgScore(b)-budDmgScore(a) || (a.id<b.id?-1:1)), byS = L.slice().sort((a,b)=>budSurvScore(b)-budSurvScore(a) || (a.id<b.id?-1:1));
+function budCands(list, survFirst, burst){ const L = (list||[]).filter(b=>b && b.id); if(L.length<2) return L;
+  const byD = L.slice().sort((a,b)=>budDmgScore(b, burst)-budDmgScore(a, burst) || (a.id<b.id?-1:1)), byS = L.slice().sort((a,b)=>budSurvScore(b)-budSurvScore(a) || (a.id<b.id?-1:1));
   const out = []; for(const b of (survFirst ? [byS[0]].concat(byD.slice(0,3)) : byD.slice(0,3).concat([byS[0]]))) if(b && !out.includes(b)) out.push(b); return out; }
 
 /* 메인 진입점. 진행 콜백을 받는 비동기 함수 */
@@ -3115,7 +3162,7 @@ async function optimize(input, onProgress){
   const ctx = buildCtx(input, owned);
   ctx.mode = mode;
   // 버디 자동: 탐색은 성향에 맞는 대표 버디 하나로, 마지막 결과마다 후보를 바꿔 봄(budPickFor)
-  const budAuto = Array.isArray(input.buddyAuto) && input.buddyAuto.length ? input.buddyAuto : null, budC = budAuto ? budCands(budAuto, mode==='stability') : null;
+  const budAuto = Array.isArray(input.buddyAuto) && input.buddyAuto.length ? input.buddyAuto : null, budC = budAuto ? budCands(budAuto, mode==='stability', mode==='burst') : null;
   if(budAuto && !ctx.buddy && budC.length) ctx.buddy = {main: budC[0], sub:null};
   if(mode==='opener' || mode==='weak' || mode==='boss' || mode==='kesshitsu' || mode==='custom' || mode==='all') ctx.timeline = true; // 실전(N턴 총딜)의 1턴은 속도·선제 순서
   const BR = ev => mode==='opener' ? ev.opener : mode==='burst' ? ev.dummyT : ev.burst; // 최고점 = 허수아비 어포딜, 실전(약점·보스 등) = N턴 시뮬
@@ -3359,9 +3406,14 @@ async function optimize(input, onProgress){
   }
   const budPickFor = (team, progs, wq) => { // 결과 조합마다 버디 후보를 바꿔 계산해 그 성향 점수가 가장 높은 것
     const scoreEv = ev => { const t = ev.surv/mt; let v = (wq.b*BR(ev)/mb + wq.s*ev.sustain/ms + wq.t*t); if((mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all'||mode==='boss') && t<0.25 && wq.t<0.5) v *= 0.85; return v*(mode==='boss' ? needPenalty(ev, boss).f : 1); };
-    if(!budC || budC.length<2) return {ev: evalTeam(team,progs,enemy,S,cap,ctx), bud: budC && budC[0] ? budC[0].id : null};
-    let best = null; for(const b of budC){ const ev = evalTeam(team,progs,enemy,S,cap,({...ctx, ...{buddy:{main:b, sub:null}}})), v = scoreEv(ev); if(!best || v > best.v*(1+1e-9)) best = {ev, v, bud:b.id}; }
-    return best; };
+    const evB = b => evalTeam(team,progs,enemy,S,cap, b ? ({...ctx, ...{buddy:{main:b, sub:null}}}) : ctx);
+    let best = null;
+    if(!budC || budC.length<2){ const b0 = budC && budC[0] ? budC[0] : (ctx.buddy && ctx.buddy.main) || null, ev = evB(b0); best = {ev, v: scoreEv(ev), b: b0}; }
+    else for(const b of budC){ const ev = evB(b), v = scoreEv(ev); if(!best || v > best.v*(1+1e-9)) best = {ev, v, b}; }
+    // 버디 장비 자동(2026-10-17, 사용자 '맞는 버디 장비도 세팅'): 고른 버디의 추천 장비 후보(최대 3)를 바꿔 계산. 최고점은 오토 스킬이 없어(허수아비 1턴) 장비 차이가 없음
+    const b = best.b; if(b && mode!=='burst' && Array.isArray(b.gearAlts) && b.gearAlts.length>1)
+      for(const g of b.gearAlts.slice(0,3)){ if(b.gear && g.id===b.gear.id) continue; const b2 = ({...b, gear:g}), ev = evB(b2), v = scoreEv(ev); if(v > best.v*(1+1e-6)) best = {ev, v, b:b2}; }
+    return {ev: best.ev, bud: budC && budC.length && best.b ? best.b.id : null, gear: best.b && best.b.gearAlts ? (best.b.gear ? best.b.gear.id : 'none') : null}; };
   const results = finalList.map((c,rank)=>{
     const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog);
     const bp = budPickFor(team, progs, w), ev = bp.ev;
@@ -3369,12 +3421,12 @@ async function optimize(input, onProgress){
     // 후방 2명: 남은 보유 캐릭터 중 생존 기여 상위
     const {reserves, fixedBack} = pickReserves(team, progs, ev);
     return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topScore,
-      norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss, kt: killTurns(ev, boss), bud: bp.bud,
+      norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss, kt: killTurns(ev, boss), bud: bp.bud, bg: bp.gear,
       recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))};
   });
   const topS = finalListS && finalListS.length ? finalListS[0].sc : 1;
   const results2 = finalListS ? finalListS.map((c,rank)=>{ const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog), bp=budPickFor(team, progs, modeWeights('boss_stable', boss)), ev=bp.ev, np=needPenalty(ev,boss), {reserves, fixedBack} = pickReserves(team, progs, ev);
-    return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topS, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss, kt: killTurns(ev, boss), bud: bp.bud,
+    return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topS, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss, kt: killTurns(ev, boss), bud: bp.bud, bg: bp.gear,
       recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))}; }) : null;
   // 속성덱·타입덱: 각 속성·타입에서 점수가 가장 높은 조합
   const FOCL = ELEMS.map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));

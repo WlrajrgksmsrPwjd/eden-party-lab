@@ -1,3612 +1,3677 @@
 [
  {
-  "id": "kesshitsu_hismena",
-  "name_kr": "결실 히스메나",
-  "name_jp": "結実ヒスメナ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "hismena",
-  "required_jp": "ヒスメナ",
-  "required_alt": [
-   "m2_hismena_as"
-  ],
-  "weak": [
-   "water",
-   "pierce"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "Mystery",
-    "represents": "ヒスメナ",
-    "hp": 50000000000,
-    "weak": [
-     "water"
-    ],
-    "resist": []
-   },
-   {
-    "name_jp": "innocence",
-    "represents": "イスカ",
-    "hp": 62500000000,
-    "weak": [
+   "id": "kesshitsu_hismena",
+   "name_kr": "결실 히스메나",
+   "name_jp": "結実ヒスメナ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "hismena",
+   "required_jp": "ヒスメナ",
+   "required_alt": [
+     "m2_hismena_as"
+   ],
+   "weak": [
+     "water",
      "pierce"
-    ],
-    "resist": []
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "Mystery",
+       "represents": "ヒスメナ",
+       "hp": 50000000000,
+       "weak": [
+         "water"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "innocence",
+       "represents": "イスカ",
+       "hp": 62500000000,
+       "weak": [
+         "pierce"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "クラロ・デ・ルーナ",
+       "represents": "クロード",
+       "hp": 42500000000,
+       "weak": [
+         "pierce"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "적 3체(Mystery=히스메나 HP 500억 / innocence=이스카 625억 / クラロ・デ・ルーナ=클로드 425억). 세 적 모두 HP 10%에 스토퍼(히스메나: 百戦錬磨の技로 완력·속도 버프, 이스카: 적 전체 속도 디버프, 클로드: 자기 속도 버프). 히스메나는 HP 0이 되면 클로드·이스카가 모두 쓰러질 때까지 다운, 둘 다 쓰러지면 1회 HP 전회복 부활(이스카·클로드는 부활 없음). 부활 후 ZONE 파괴, ロサリア(완력·물리/마법 내성 20%↑) + 50% 경감 배리어×50(3턴) + 크리 버프, 이후 버프 해제·迎撃 태세를 반복. [hp 2,050억 = 히스메나 500억 × 2(1회 부활) + 이스카 625억 + 클로드 425억]",
+   "mechanics": [
+     "약점: 히스메나=수, 이스카·클로드=돌(突). 내성·무효 없음. 3체 모두 エリート(물리·마법 내성 UP 中, 영구)",
+     "クラロ・デ・ルーナ(클로드): 개시 시 히스메나·이스카에 50% 경감 배리어 + 물리/마법 버프(3턴), 보스측에 50% 경감 배리어×50, 디버프 해제, 전체 10% 회복 → 최우선 격파 권장, 다음은 이스카",
+     "이스카: 턴 종료마다 히스메나에 IDEAの絆(스택당 완력 +20, 최대 10) / 클로드: 턴 종료마다 ケリュケールの矜持(스택당 속도 +20, 최대 10)",
+     "오라 【回線パンク】: 속도 200 이하가 된 적 단체의 물리 내성 50% DOWN",
+     "고정 피해: ソルプレッサ 1,500×2(수 내성 디버프), ドゥーロ・ランサ 2,000, 胡蝶の夢 출혈 1,500 / この槍が示す未来へ！ 버프 해제 / 이스카의 MP 100% 피해",
+     "부활 후 ランサ・アズレア로 물리·마법 迎撃 태세(반격 단체 2,000 고정) → AF로 마무리하는 투고가 많음. 투고 의견: ZONE은 전개하지 않는 편이 낫다"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": true
    },
-   {
-    "name_jp": "クラロ・デ・ルーナ",
-    "represents": "クロード",
-    "hp": 42500000000,
-    "weak": [
-     "pierce"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "적 3체(Mystery=히스메나 HP 500억 / innocence=이스카 625억 / クラロ・デ・ルーナ=클로드 425억). 세 적 모두 HP 10%에 스토퍼(히스메나: 百戦錬磨の技로 완력·속도 버프, 이스카: 적 전체 속도 디버프, 클로드: 자기 속도 버프). 히스메나는 HP 0이 되면 클로드·이스카가 모두 쓰러질 때까지 다운, 둘 다 쓰러지면 1회 HP 전회복 부활(이스카·클로드는 부활 없음). 부활 후 ZONE 파괴, ロサリア(완력·물리/마법 내성 20%↑) + 50% 경감 배리어×50(3턴) + 크리 버프, 이후 버프 해제·迎撃 태세를 반복.",
-  "mechanics": [
-   "약점: 히스메나=수, 이스카·클로드=돌(突). 내성·무효 없음. 3체 모두 エリート(물리·마법 내성 UP 中, 영구)",
-   "クラロ・デ・ルーナ(클로드): 개시 시 히스메나·이스카에 50% 경감 배리어 + 물리/마법 버프(3턴), 보스측에 50% 경감 배리어×50, 디버프 해제, 전체 10% 회복 → 최우선 격파 권장, 다음은 이스카",
-   "이스카: 턴 종료마다 히스메나에 IDEAの絆(스택당 완력 +20, 최대 10) / 클로드: 턴 종료마다 ケリュケールの矜持(스택당 속도 +20, 최대 10)",
-   "오라 【回線パンク】: 속도 200 이하가 된 적 단체의 물리 내성 50% DOWN",
-   "고정 피해: ソルプレッサ 1,500×2(수 내성 디버프), ドゥーロ・ランサ 2,000, 胡蝶の夢 출혈 1,500 / この槍が示す未来へ！ 버프 해제 / 이스카의 MP 100% 피해",
-   "부활 후 ランサ・アズレア로 물리·마법 迎撃 태세(반격 단체 2,000 고정) → AF로 마무리하는 투고가 많음. 투고 의견: ZONE은 전개하지 않는 편이 낫다"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": true
-  },
-  "recommended": [
-   "リナリア",
-   "義侠の猟人",
-   "ソイラ(AS)",
-   "セリエス",
-   "ベルトラン",
-   "メルピピア",
-   "シオン(ES)",
-   "セスタ(AS)",
-   "ガリアード",
-   "ノーナ(AS)",
-   "リュゼ",
-   "ラブリ(AS)",
-   "烏夜の隠密",
-   "フラムラピス(AS)",
-   "エヴァ",
-   "チルリル(ES)",
-   "シグレ(ES)"
-  ],
-  "recommended_ids": [
-   "linaria",
-   "laclair_ac",
-   "soira_as",
-   "series",
-   "bertrand",
-   "melpiphia",
-   "shion_es",
-   "sesta_as",
-   "galliard",
-   "nona_as",
-   "ryuze",
-   "lovely_as",
-   "tsubame_ac",
-   "flammelapis_as",
-   "eva",
-   "tilril_es",
-   "shigure_es"
-  ],
-  "pledges": {
-   "as_of": "2026-10-06~2026-10-13",
-   "heading": "10月6日～10月13日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "4人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 4,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 4
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
-     "jp_parts": [
-      "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
-      "10ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "elem": [
-      "fire"
-     ],
-     "weap": [
-      "bow",
-      "lance"
-     ],
-     "n": 3,
-     "turns": 10,
-     "conds": [
-      {
-       "kind": "comp",
-       "elem": [
-        "fire"
-       ],
-       "weap": [
-        "bow",
-        "lance"
-       ],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 10
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzituhisumena"
+   "recommended": [
+     "リナリア",
+     "義侠の猟人",
+     "ソイラ(AS)",
+     "セリエス",
+     "ベルトラン",
+     "メルピピア",
+     "シオン(ES)",
+     "セスタ(AS)",
+     "ガリアード",
+     "ノーナ(AS)",
+     "リュゼ",
+     "ラブリ(AS)",
+     "烏夜の隠密",
+     "フラムラピス(AS)",
+     "エヴァ",
+     "チルリル(ES)",
+     "シグレ(ES)"
+   ],
+   "recommended_ids": [
+     "linaria",
+     "laclair_ac",
+     "soira_as",
+     "series",
+     "bertrand",
+     "melpiphia",
+     "shion_es",
+     "sesta_as",
+     "galliard",
+     "nona_as",
+     "ryuze",
+     "lovely_as",
+     "tsubame_ac",
+     "flammelapis_as",
+     "eva",
+     "tilril_es",
+     "shigure_es"
+   ],
+   "pledges": {
+     "as_of": "2026-10-06~2026-10-13",
+     "heading": "10月6日～10月13日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "4人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 4,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 4
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
+         "jp_parts": [
+           "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
+           "10ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "elem": [
+           "fire"
+         ],
+         "weap": [
+           "bow",
+           "lance"
+         ],
+         "n": 3,
+         "turns": 10,
+         "conds": [
+           {
+             "kind": "comp",
+             "elem": [
+               "fire"
+             ],
+             "weap": [
+               "bow",
+               "lance"
+             ],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 10
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzituhisumena",
+   "hp": 2050,
+   "source": "https://altema.jp/anaden/ketuzituhisumena"
  },
  {
-  "id": "kesshitsu_isuka",
-  "name_kr": "결실 이스카",
-  "name_jp": "結実イスカ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "isuka",
-  "required_jp": "イスカ",
-  "required_alt": [
-   "m3_isuka_as"
-  ],
-  "weak": [
-   "wind"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実イスカ",
-    "represents": "イスカ",
-    "hp": 120000000000,
-    "weak": [
+   "id": "kesshitsu_isuka",
+   "name_kr": "결실 이스카",
+   "name_jp": "結実イスカ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "isuka",
+   "required_jp": "イスカ",
+   "required_alt": [
+     "m3_isuka_as"
+   ],
+   "weak": [
      "wind"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 1,200억. 약 50% 스토퍼: 자기 디버프 해제 + 적 전체 脱力(완력·지성 30%↓), 히스메나·클로드가 출현해 전체 물리 공격 + 완력·지성 디버프, 자신에 전속성 내성 버프(3턴)·奇襲 5 축적 → 이후 烈空閃·無何有郷(전체 풍 참격) 패턴. 약 25% 스토퍼: HP 100% 회복 + 50% 경감 배리어(영구) + 물리·마법 내성 버프(大 3턴) 후 50% 이후 패턴 이어서. HP 0 시 夢幻空華(최대HP 30% + 1%×10 + 30% 고정 피해).",
-  "mechanics": [
-   "약점 풍. 엘리트: 물리·마법 내성 UP(中, 영구). 개시 시 적 전체 완력·지성 디버프(中 3턴) + AF 게이지 0",
-   "오라 【抜刃空間】: 페인 피해를 받은 적/아군 단체의 물리 내성 50% DOWN → 아군의 페인 부여로 보스 물리 내성 하락",
-   "7턴째 夢幻空華: 적 전체 99,999 고정 / 胡蝶の夢: 단체 무속성 참격 + 전속성 내성·속도 디버프 + 페인 / 3턴째 버프 해제",
-   "奇襲(5 축적): 턴 종료 시 추가 공격, 전체 고정 2,000(50% 이후 3,000) + 완력·지성 디버프",
-   "HP 0 때의 夢幻空華로 쓰러지지 않게 마무리 전에 회복. 감싸기+회피 탱커 권장(シグレ(ES)·ヒイナ(AS)·ガリアード)"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": true,
-   "guard": true,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "ねここ(ES)",
-   "シュゼット",
-   "ソイラ(AS)",
-   "シグレ(ES)",
-   "セスタ(AS)",
-   "メルピピア",
-   "リナリア",
-   "白磁の魔人",
-   "ジルバー(AS)",
-   "ヒイナ(AS)",
-   "ガリアード",
-   "イーファ(AS)",
-   "ねここ(AS)",
-   "アルド(AS)",
-   "アシュティア",
-   "茨呪の艶女",
-   "アルマ(AS)",
-   "烏夜の隠密"
-  ],
-  "recommended_ids": [
-   "nekoko_es",
-   "suzette",
-   "soira_as",
-   "shigure_es",
-   "sesta_as",
-   "melpiphia",
-   "linaria",
-   "hakuji_no_majin",
-   "zilva_as",
-   "m2_hiina_as",
-   "galliard",
-   "eva_as",
-   "nekoko_as",
-   "aldo_as",
-   "ashtear",
-   "shanie_ac",
-   "alma_as",
-   "tsubame_ac"
-  ],
-  "pledges": {
-   "as_of": "2026-10-06~2026-10-13",
-   "heading": "10月6日～10月13日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "4人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 4,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 4
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
-     "jp_parts": [
-      "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
-      "10ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "elem": [
-      "fire"
-     ],
-     "weap": [
-      "bow",
-      "lance"
-     ],
-     "n": 3,
-     "turns": 10,
-     "conds": [
-      {
-       "kind": "comp",
-       "elem": [
-        "fire"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実イスカ",
+       "represents": "イスカ",
+       "hp": 120000000000,
+       "weak": [
+         "wind"
        ],
-       "weap": [
-        "bow",
-        "lance"
-       ],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 10
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzituisuka"
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 1,200억. 약 50% 스토퍼: 자기 디버프 해제 + 적 전체 脱力(완력·지성 30%↓), 히스메나·클로드가 출현해 전체 물리 공격 + 완력·지성 디버프, 자신에 전속성 내성 버프(3턴)·奇襲 5 축적 → 이후 烈空閃·無何有郷(전체 풍 참격) 패턴. 약 25% 스토퍼: HP 100% 회복 + 50% 경감 배리어(영구) + 물리·마법 내성 버프(大 3턴) 후 50% 이후 패턴 이어서. HP 0 시 夢幻空華(최대HP 30% + 1%×10 + 30% 고정 피해). [hp 2,100억 = 1,200억 — 25% 스토퍼에서 HP 100% 회복 → 900억 + 1,200억]",
+   "mechanics": [
+     "약점 풍. 엘리트: 물리·마법 내성 UP(中, 영구). 개시 시 적 전체 완력·지성 디버프(中 3턴) + AF 게이지 0",
+     "오라 【抜刃空間】: 페인 피해를 받은 적/아군 단체의 물리 내성 50% DOWN → 아군의 페인 부여로 보스 물리 내성 하락",
+     "7턴째 夢幻空華: 적 전체 99,999 고정 / 胡蝶の夢: 단체 무속성 참격 + 전속성 내성·속도 디버프 + 페인 / 3턴째 버프 해제",
+     "奇襲(5 축적): 턴 종료 시 추가 공격, 전체 고정 2,000(50% 이후 3,000) + 완력·지성 디버프",
+     "HP 0 때의 夢幻空華로 쓰러지지 않게 마무리 전에 회복. 감싸기+회피 탱커 권장(シグレ(ES)·ヒイナ(AS)·ガリアード)"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": true,
+     "guard": true,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "ねここ(ES)",
+     "シュゼット",
+     "ソイラ(AS)",
+     "シグレ(ES)",
+     "セスタ(AS)",
+     "メルピピア",
+     "リナリア",
+     "白磁の魔人",
+     "ジルバー(AS)",
+     "ヒイナ(AS)",
+     "ガリアード",
+     "イーファ(AS)",
+     "ねここ(AS)",
+     "アルド(AS)",
+     "アシュティア",
+     "茨呪の艶女",
+     "アルマ(AS)",
+     "烏夜の隠密"
+   ],
+   "recommended_ids": [
+     "nekoko_es",
+     "suzette",
+     "soira_as",
+     "shigure_es",
+     "sesta_as",
+     "melpiphia",
+     "linaria",
+     "hakuji_no_majin",
+     "zilva_as",
+     "m2_hiina_as",
+     "galliard",
+     "eva_as",
+     "nekoko_as",
+     "aldo_as",
+     "ashtear",
+     "shanie_ac",
+     "alma_as",
+     "tsubame_ac"
+   ],
+   "pledges": {
+     "as_of": "2026-10-06~2026-10-13",
+     "heading": "10月6日～10月13日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "4人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 4,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 4
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
+         "jp_parts": [
+           "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
+           "10ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "elem": [
+           "fire"
+         ],
+         "weap": [
+           "bow",
+           "lance"
+         ],
+         "n": 3,
+         "turns": 10,
+         "conds": [
+           {
+             "kind": "comp",
+             "elem": [
+               "fire"
+             ],
+             "weap": [
+               "bow",
+               "lance"
+             ],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 10
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzituisuka",
+   "hp": 2100,
+   "source": "https://altema.jp/anaden/ketuzituisuka"
  },
  {
-  "id": "kesshitsu_cetie",
-  "name_kr": "결실 세티",
-  "name_jp": "結実セティー",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "cetie",
-  "required_jp": "セティー",
-  "required_alt": [
-   "m3_cetie_as"
-  ],
-  "weak": [
-   "fire"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "ボルトクリムゾン",
-    "represents": "",
-    "hp": 100000000000,
-    "weak": [
+   "id": "kesshitsu_cetie",
+   "name_kr": "결실 세티",
+   "name_jp": "結実セティー",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "cetie",
+   "required_jp": "セティー",
+   "required_alt": [
+     "m3_cetie_as"
+   ],
+   "weak": [
      "fire"
-    ],
-    "resist": [],
-    "note": "본체(대응 캐릭터 표기 없음)"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "ボルトクリムゾン",
+       "represents": "",
+       "hp": 100000000000,
+       "weak": [
+         "fire"
+       ],
+       "resist": [],
+       "note": "본체(대응 캐릭터 표기 없음)"
+     },
+     {
+       "name_jp": "クロック",
+       "represents": "",
+       "hp": 68000000000,
+       "weak": [
+         "fire"
+       ],
+       "resist": [],
+       "note": "개시 소환"
+     },
+     {
+       "name_jp": "レトロ",
+       "represents": "",
+       "hp": 5000000000,
+       "weak": [
+         "fire"
+       ],
+       "resist": [],
+       "note": "개시 소환, レトロカウント로 부활"
+     }
+   ],
+   "phases": "본체 ボルトクリムゾン HP 1,000억 + 개시 소환 クロック(680억)·レトロ(50억). HP 20% 스토퍼: バックアップは任せた！로 HP 100% 회복 → 信じる正義のために！로 적·아군 전체 버프/디버프 해제 + 적 전체 속도 디버프 → ホールドアップ(전체 화 돌격×5, 화·전속성 내성 디버프)부터 재개. [hp 1,800억 = 본체 1,000억 — 20% 스토퍼에서 HP 100% 회복 → 800억 + 1,000억 (クロック 680억·レトロ 50억은 처치 선택이라 제외)]",
+   "mechanics": [
+     "전 적 약점 화. 본체는 正義の信念으로 물리·마법 내성 UP(영구)",
+     "クロックカウント: クロック 생존 중 본체 전속성 내성 90% UP / ジャミング: 아군 HP·완력·지성·속도 10% DOWN(クロック 격파 시 소멸) → 전속성·물리 내성 디버프 유효",
+     "レトロ: 매 턴 デコイ(적 전체 도발) → 단체 공격이 분산되므로 전체 공격 딜러 권장. HP 0이 되면 턴 종료 시 レトロカウント 소비로 부활",
+     "レトロボンバー: 일정 턴 종료 시·본체 일정 HP 도달 시 축적 수(최대 5)만큼 연속, 적 전체 최대HP 50% 피해 → 4~5회 맞으면 버티기 어려움. 크리티컬 가드 또는 감싸기+회피 권장(シグレ(ES)·ガリアード·リナリア)",
+     "투고에 따라 レトロ 격파 후 クロック를 노리는 운영과 クロック를 무시하는 운영이 갈림"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": false,
+     "guard": true,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": false,
+     "multi_target": true
    },
-   {
-    "name_jp": "クロック",
-    "represents": "",
-    "hp": 68000000000,
-    "weak": [
-     "fire"
-    ],
-    "resist": [],
-    "note": "개시 소환"
+   "recommended": [
+     "韜晦の討手",
+     "茨呪の艶女",
+     "ユーイン",
+     "ミナルカ(AS)",
+     "リナリア",
+     "義侠の猟人",
+     "アナベル(ES)",
+     "メルピピア",
+     "シグレ(ES)",
+     "セスタ(AS)",
+     "ガリアード",
+     "シオン(ES)",
+     "アルド(AS)",
+     "ツキハ",
+     "レンリ",
+     "ルーフス(AS)",
+     "赤套の炎使い(AS)",
+     "ラブリ(AS)",
+     "ハーディー(AS)"
+   ],
+   "recommended_ids": [
+     "tokai_no_ute",
+     "shanie_ac",
+     "yuin",
+     "minalca_as",
+     "linaria",
+     "laclair_ac",
+     "anabel_es",
+     "melpiphia",
+     "shigure_es",
+     "sesta_as",
+     "galliard",
+     "shion_es",
+     "aldo_as",
+     "tsukiha",
+     "renri",
+     "rufus_as",
+     "dewey_ac_as",
+     "lovely_as",
+     "m2_hardy_as"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
    },
-   {
-    "name_jp": "レトロ",
-    "represents": "",
-    "hp": 5000000000,
-    "weak": [
-     "fire"
-    ],
-    "resist": [],
-    "note": "개시 소환, レトロカウント로 부활"
-   }
-  ],
-  "phases": "본체 ボルトクリムゾン HP 1,000억 + 개시 소환 クロック(680억)·レトロ(50억). HP 20% 스토퍼: バックアップは任せた！로 HP 100% 회복 → 信じる正義のために！로 적·아군 전체 버프/디버프 해제 + 적 전체 속도 디버프 → ホールドアップ(전체 화 돌격×5, 화·전속성 내성 디버프)부터 재개.",
-  "mechanics": [
-   "전 적 약점 화. 본체는 正義の信念으로 물리·마법 내성 UP(영구)",
-   "クロックカウント: クロック 생존 중 본체 전속성 내성 90% UP / ジャミング: 아군 HP·완력·지성·속도 10% DOWN(クロック 격파 시 소멸) → 전속성·물리 내성 디버프 유효",
-   "レトロ: 매 턴 デコイ(적 전체 도발) → 단체 공격이 분산되므로 전체 공격 딜러 권장. HP 0이 되면 턴 종료 시 レトロカウント 소비로 부활",
-   "レトロボンバー: 일정 턴 종료 시·본체 일정 HP 도달 시 축적 수(최대 5)만큼 연속, 적 전체 최대HP 50% 피해 → 4~5회 맞으면 버티기 어려움. 크리티컬 가드 또는 감싸기+회피 권장(シグレ(ES)·ガリアード·リナリア)",
-   "투고에 따라 レトロ 격파 후 クロック를 노리는 운영과 クロック를 무시하는 운영이 갈림"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": false,
-   "guard": true,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": false,
-   "multi_target": true
-  },
-  "recommended": [
-   "韜晦の討手",
-   "茨呪の艶女",
-   "ユーイン",
-   "ミナルカ(AS)",
-   "リナリア",
-   "義侠の猟人",
-   "アナベル(ES)",
-   "メルピピア",
-   "シグレ(ES)",
-   "セスタ(AS)",
-   "ガリアード",
-   "シオン(ES)",
-   "アルド(AS)",
-   "ツキハ",
-   "レンリ",
-   "ルーフス(AS)",
-   "赤套の炎使い(AS)",
-   "ラブリ(AS)",
-   "ハーディー(AS)"
-  ],
-  "recommended_ids": [
-   "tokai_no_ute",
-   "shanie_ac",
-   "yuin",
-   "minalca_as",
-   "linaria",
-   "laclair_ac",
-   "anabel_es",
-   "melpiphia",
-   "shigure_es",
-   "sesta_as",
-   "galliard",
-   "shion_es",
-   "aldo_as",
-   "tsukiha",
-   "renri",
-   "rufus_as",
-   "dewey_ac_as",
-   "lovely_as",
-   "m2_hardy_as"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzituseteli"
+   "src": "https://altema.jp/anaden/ketuzituseteli",
+   "hp": 1800,
+   "source": "https://altema.jp/anaden/ketuzituseteli"
  },
  {
-  "id": "kesshitsu_myrus",
-  "parts": [{"label": "稔杖(물리로)", "need": ["phys"], "hp": 1}, {"label": "바레스(마법으로)", "need": ["mag"], "hp": 1}],
-  "name_kr": "결실 뮬루스",
-  "name_jp": "結実ミュルス",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "myrus",
-  "required_jp": "ミュルス",
-  "required_alt": [
-   "m3_myrus_as"
-  ],
-  "weak": [
-   "earth"
-  ],
-  "resist": [
-   "magic"
-  ],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "魔兎の稔杖",
-    "represents": "",
-    "hp": 100000000000,
-    "weak": [
+   "id": "kesshitsu_myrus",
+   "parts": [
+     {
+       "label": "稔杖(물리로)",
+       "need": [
+         "phys"
+       ],
+       "hp": 1
+     },
+     {
+       "label": "바레스(마법으로)",
+       "need": [
+         "mag"
+       ],
+       "hp": 1
+     }
+   ],
+   "name_kr": "결실 뮬루스",
+   "name_jp": "結実ミュルス",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "myrus",
+   "required_jp": "ミュルス",
+   "required_alt": [
+     "m3_myrus_as"
+   ],
+   "weak": [
      "earth"
-    ],
-    "resist": []
+   ],
+   "resist": [
+     "magic"
+   ],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "魔兎の稔杖",
+       "represents": "",
+       "hp": 100000000000,
+       "weak": [
+         "earth"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "魔獣ヴァレス",
+       "represents": "",
+       "hp": 120000000000,
+       "weak": [],
+       "resist": [
+         "magic"
+       ]
+     }
+   ],
+   "phases": "적 2체(魔兎の稔杖 1,000억 / 魔獣ヴァレス 1,200억). 각각 HP 약 25% 스토퍼(稔杖: 자기 속도 버프 大 / ヴァレス: AF 게이지 고갈)와 HP 1% 스토퍼. 1% 스토퍼에서 자신의 魔の結束이 사라지고 상대의 내성이 내려가며, 상대가 남아 있으면 그때까지 행동하지 않음. 이후 稔杖은 전체 버프/디버프 해제 + ZONE 파괴 + 지성·속도 버프, ヴァレス는 보스측 HP 50% 회복 + ビーストカース. [hp 2,200억 = 魔兎の稔杖 1,000억 + 魔獣ヴァレス 1,200억]",
+   "mechanics": [
+     "魔の結束: 稔杖=마법 내성 90%↑·정신 +800(ヴァレス HP 0 시 소멸) / ヴァレス=물리 내성 90%↑·내구 +800(稔杖 HP 0 시 소멸) → 격파 순서가 핵심",
+     "두 적 모두 秘めたる意志: 전속성 내성 UP(中, 영구). 약점: 稔杖=지 / ヴァレス=없음, 내성 마법",
+     "오라 マナ・オーバー: AF 게이지 최대 시 적·아군 전체 주는 피해 20% UP",
+     "ヴァレス: パワーチャージ로 매 턴 완력 버프 누적(최대 7) → 장기전일수록 위험, 고배율 완력 디버프·디버프 해제로 대응. ビーストカース: 최대 HP·MP 30% DOWN. ベノムスラッシュ 독(1,500 고정)",
+     "아군 버프/디버프를 자주 해제 → 한 번에 많이 거는 캐릭터나 AF/SB로 재부여"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": true
    },
-   {
-    "name_jp": "魔獣ヴァレス",
-    "represents": "",
-    "hp": 120000000000,
-    "weak": [],
-    "resist": [
-     "magic"
-    ]
-   }
-  ],
-  "phases": "적 2체(魔兎の稔杖 1,000억 / 魔獣ヴァレス 1,200억). 각각 HP 약 25% 스토퍼(稔杖: 자기 속도 버프 大 / ヴァレス: AF 게이지 고갈)와 HP 1% 스토퍼. 1% 스토퍼에서 자신의 魔の結束이 사라지고 상대의 내성이 내려가며, 상대가 남아 있으면 그때까지 행동하지 않음. 이후 稔杖은 전체 버프/디버프 해제 + ZONE 파괴 + 지성·속도 버프, ヴァレス는 보스측 HP 50% 회복 + ビーストカース.",
-  "mechanics": [
-   "魔の結束: 稔杖=마법 내성 90%↑·정신 +800(ヴァレス HP 0 시 소멸) / ヴァレス=물리 내성 90%↑·내구 +800(稔杖 HP 0 시 소멸) → 격파 순서가 핵심",
-   "두 적 모두 秘めたる意志: 전속성 내성 UP(中, 영구). 약점: 稔杖=지 / ヴァレス=없음, 내성 마법",
-   "오라 マナ・オーバー: AF 게이지 최대 시 적·아군 전체 주는 피해 20% UP",
-   "ヴァレス: パワーチャージ로 매 턴 완력 버프 누적(최대 7) → 장기전일수록 위험, 고배율 완력 디버프·디버프 해제로 대응. ビーストカース: 최대 HP·MP 30% DOWN. ベノムスラッシュ 독(1,500 고정)",
-   "아군 버프/디버프를 자주 해제 → 한 번에 많이 거는 캐릭터나 AF/SB로 재부여"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": true
-  },
-  "recommended": [
-   "白磁の魔人",
-   "クチナワ",
-   "レイヴン(AS)",
-   "ヘレナ",
-   "トゥーヴァ",
-   "シグレ(ES)",
-   "シオン(ES)",
-   "セスタ(AS)",
-   "ガリアード",
-   "テオドロス",
-   "イヅナ",
-   "アルド(AS)",
-   "フラムラピス(AS)",
-   "アルマ(AS)",
-   "エヴァ",
-   "ラブリ(AS)"
-  ],
-  "recommended_ids": [
-   "hakuji_no_majin",
-   "kuchinawa",
-   "raven_as",
-   "helena",
-   "toova",
-   "shigure_es",
-   "shion_es",
-   "sesta_as",
-   "galliard",
-   "theodoros",
-   "izuna",
-   "aldo_as",
-   "flammelapis_as",
-   "alma_as",
-   "eva",
-   "lovely_as"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzitumyurusu"
+   "recommended": [
+     "白磁の魔人",
+     "クチナワ",
+     "レイヴン(AS)",
+     "ヘレナ",
+     "トゥーヴァ",
+     "シグレ(ES)",
+     "シオン(ES)",
+     "セスタ(AS)",
+     "ガリアード",
+     "テオドロス",
+     "イヅナ",
+     "アルド(AS)",
+     "フラムラピス(AS)",
+     "アルマ(AS)",
+     "エヴァ",
+     "ラブリ(AS)"
+   ],
+   "recommended_ids": [
+     "hakuji_no_majin",
+     "kuchinawa",
+     "raven_as",
+     "helena",
+     "toova",
+     "shigure_es",
+     "shion_es",
+     "sesta_as",
+     "galliard",
+     "theodoros",
+     "izuna",
+     "aldo_as",
+     "flammelapis_as",
+     "alma_as",
+     "eva",
+     "lovely_as"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzitumyurusu",
+   "hp": 2200,
+   "source": "https://altema.jp/anaden/ketuzitumyurusu"
  },
  {
-  "id": "kesshitsu_renri",
-  "name_kr": "결실 렌리",
-  "name_jp": "結実レンリ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "renri",
-  "required_jp": "レンリ",
-  "required_alt": [
-   "m5_renri_as"
-  ],
-  "weak": [
-   "slash"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実レンリ",
-    "represents": "レンリ",
-    "hp": 65000000000,
-    "weak": [
+   "id": "kesshitsu_renri",
+   "name_kr": "결실 렌리",
+   "name_jp": "結実レンリ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "renri",
+   "required_jp": "レンリ",
+   "required_alt": [
+     "m5_renri_as"
+   ],
+   "weak": [
      "slash"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 650억. HP 스토퍼 없음, 라이프포인트 2(HP 0 시 2회 부활). 1회 부활 후 자기 디버프 해제 + 強行突破するわよ！로 ZONE 파괴, ジャッジメント(전체 무속성 참격 + 완력·지성 디버프). 2회 부활 후 자기 완력 버프(中 99턴), 날려버리기 3연속, ラストスカー·フレイムレイジ(참 내성 디버프) 등 강화.",
-  "mechanics": [
-   "약점 참(斬). 正義の信念: 물리·마법 내성 UP(中, 영구). 개시 시 AF 게이지 0",
-   "雲隠れ: 1턴에 2종 이상의 속성으로 피격되면 축적, 다음 턴 종료까지 회피율 50% → 파티 공격 속성은 1종으로(무속성은 카운트 안 됨)",
-   "오라 ハイテンション: 크리티컬률 400% 이상인 아군 단체 주는 피해 50% UP",
-   "吹き飛ばし(날려버리기)·선제 기절(ファイアスラッシュ·ロールエッジ)·페인 → 상태이상 무효를 여러 번 걸 수 있는 캐릭터 권장. 부활할수록 날려버리기 횟수 증가"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": true,
-   "guard": false,
-   "status_immune": true,
-   "break": false,
-   "burst": true,
-   "sustain": false,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "シグレ(ES)",
-   "シオン(ES)",
-   "アルド(AS)",
-   "韜晦の討手",
-   "茨呪の艶女",
-   "ユーイン",
-   "リナリア",
-   "サザンカ",
-   "キッド",
-   "アシュティア",
-   "セティー",
-   "イーファ(AS)",
-   "セスタ(AS)",
-   "アナベル(ES)",
-   "ねここ(ES)"
-  ],
-  "recommended_ids": [
-   "shigure_es",
-   "shion_es",
-   "aldo_as",
-   "tokai_no_ute",
-   "shanie_ac",
-   "yuin",
-   "linaria",
-   "sazanka",
-   "kid",
-   "ashtear",
-   "cetie",
-   "eva_as",
-   "sesta_as",
-   "anabel_es",
-   "nekoko_es"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuziturenri"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実レンリ",
+       "represents": "レンリ",
+       "hp": 65000000000,
+       "weak": [
+         "slash"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 650억. HP 스토퍼 없음, 라이프포인트 2(HP 0 시 2회 부활). 1회 부활 후 자기 디버프 해제 + 強行突破するわよ！로 ZONE 파괴, ジャッジメント(전체 무속성 참격 + 완력·지성 디버프). 2회 부활 후 자기 완력 버프(中 99턴), 날려버리기 3연속, ラストスカー·フレイムレイジ(참 내성 디버프) 등 강화. [hp 1,950억 = 650억 × 3(라이프포인트 2)]",
+   "mechanics": [
+     "약점 참(斬). 正義の信念: 물리·마법 내성 UP(中, 영구). 개시 시 AF 게이지 0",
+     "雲隠れ: 1턴에 2종 이상의 속성으로 피격되면 축적, 다음 턴 종료까지 회피율 50% → 파티 공격 속성은 1종으로(무속성은 카운트 안 됨)",
+     "오라 ハイテンション: 크리티컬률 400% 이상인 아군 단체 주는 피해 50% UP",
+     "吹き飛ばし(날려버리기)·선제 기절(ファイアスラッシュ·ロールエッジ)·페인 → 상태이상 무효를 여러 번 걸 수 있는 캐릭터 권장. 부활할수록 날려버리기 횟수 증가"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": true,
+     "guard": false,
+     "status_immune": true,
+     "break": false,
+     "burst": true,
+     "sustain": false,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "シグレ(ES)",
+     "シオン(ES)",
+     "アルド(AS)",
+     "韜晦の討手",
+     "茨呪の艶女",
+     "ユーイン",
+     "リナリア",
+     "サザンカ",
+     "キッド",
+     "アシュティア",
+     "セティー",
+     "イーファ(AS)",
+     "セスタ(AS)",
+     "アナベル(ES)",
+     "ねここ(ES)"
+   ],
+   "recommended_ids": [
+     "shigure_es",
+     "shion_es",
+     "aldo_as",
+     "tokai_no_ute",
+     "shanie_ac",
+     "yuin",
+     "linaria",
+     "sazanka",
+     "kid",
+     "ashtear",
+     "cetie",
+     "eva_as",
+     "sesta_as",
+     "anabel_es",
+     "nekoko_es"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuziturenri",
+   "hp": 1950,
+   "source": "https://altema.jp/anaden/ketuziturenri"
  },
  {
-  "id": "kesshitsu_mariel",
-  "name_kr": "결실 마리엘",
-  "name_jp": "結実マリエル",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "mariel",
-  "required_jp": "マリエル",
-  "required_alt": [
-   "mariel_as"
-  ],
-  "weak": [
-   "magic"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実マリエル",
-    "represents": "マリエル",
-    "hp": 120000000000,
-    "weak": [
+   "id": "kesshitsu_mariel",
+   "name_kr": "결실 마리엘",
+   "name_jp": "結実マリエル",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "mariel",
+   "required_jp": "マリエル",
+   "required_alt": [
+     "mariel_as"
+   ],
+   "weak": [
      "magic"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 1,200억. 개시 시 80% 경감 배리어(3턴) + 白亜の教え 3. HP 0 시 1회 HP 전회복 부활(80% 배리어 3턴 + 白亜の教え 3 재부여, 聖なる光で世界を癒します！ HP 100% 회복), 부활 후 HP 50%에 스토퍼.",
-  "mechanics": [
-   "약점 마법. 聖者の衣: 물리 내성 UP(大, 영구)",
-   "白亜の教え(최대 3): 스택당 물리·마법 내성 30%↑·정신/내구 +300, 턴 종료 시 1 소비해 HP 10% 회복",
-   "오라 【マジカル・ハイ】: AF 게이지 최대 시 아군 마법 크리티컬률 +100%, 적 마법 내성 50% DOWN",
-   "聖罰: 스택당 HP 15% DOWN(ホーリーバースト로 축적) / 無垢の揺籠: 단체 수면 + 자기 HP 20% 회복 / リフレッシュリープ: 자기 상태이상 해제 + 속도 버프(特大, 최대 5)",
-   "シャイニングアロー: 전체 고정 1,600 + 완력·지성 디버프 / 부활 후 ねこさんラッシュ: 적 전체 최대HP 49% 피해, オーロラフォース(자기 내성 버프)"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": true,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "シグレ(ES)",
-   "メルピピア",
-   "セスタ(AS)",
-   "オルレイア(AS)",
-   "ヴェレット(AS)",
-   "イヅナ",
-   "チルリル(ES)",
-   "赤套の炎使い(AS)",
-   "エヴァ",
-   "氷塵の歌姫",
-   "シェンファ",
-   "ガリユ"
-  ],
-  "recommended_ids": [
-   "shigure_es",
-   "melpiphia",
-   "sesta_as",
-   "orleya_as",
-   "velette_as",
-   "izuna",
-   "tilril_es",
-   "dewey_ac_as",
-   "eva",
-   "hyojin_no_utahime",
-   "shenfa",
-   "gariyu"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzitumarieru"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実マリエル",
+       "represents": "マリエル",
+       "hp": 120000000000,
+       "weak": [
+         "magic"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 1,200억. 개시 시 80% 경감 배리어(3턴) + 白亜の教え 3. HP 0 시 1회 HP 전회복 부활(80% 배리어 3턴 + 白亜の教え 3 재부여, 聖なる光で世界を癒します！ HP 100% 회복), 부활 후 HP 50%에 스토퍼. [hp 2,400억 = 1,200억 × 2(1회 전회복 부활)]",
+   "mechanics": [
+     "약점 마법. 聖者の衣: 물리 내성 UP(大, 영구)",
+     "白亜の教え(최대 3): 스택당 물리·마법 내성 30%↑·정신/내구 +300, 턴 종료 시 1 소비해 HP 10% 회복",
+     "오라 【マジカル・ハイ】: AF 게이지 최대 시 아군 마법 크리티컬률 +100%, 적 마법 내성 50% DOWN",
+     "聖罰: 스택당 HP 15% DOWN(ホーリーバースト로 축적) / 無垢の揺籠: 단체 수면 + 자기 HP 20% 회복 / リフレッシュリープ: 자기 상태이상 해제 + 속도 버프(特大, 최대 5)",
+     "シャイニングアロー: 전체 고정 1,600 + 완력·지성 디버프 / 부활 후 ねこさんラッシュ: 적 전체 최대HP 49% 피해, オーロラフォース(자기 내성 버프)"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": true,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "シグレ(ES)",
+     "メルピピア",
+     "セスタ(AS)",
+     "オルレイア(AS)",
+     "ヴェレット(AS)",
+     "イヅナ",
+     "チルリル(ES)",
+     "赤套の炎使い(AS)",
+     "エヴァ",
+     "氷塵の歌姫",
+     "シェンファ",
+     "ガリユ"
+   ],
+   "recommended_ids": [
+     "shigure_es",
+     "melpiphia",
+     "sesta_as",
+     "orleya_as",
+     "velette_as",
+     "izuna",
+     "tilril_es",
+     "dewey_ac_as",
+     "eva",
+     "hyojin_no_utahime",
+     "shenfa",
+     "gariyu"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzitumarieru",
+   "hp": 2400,
+   "source": "https://altema.jp/anaden/ketuzitumarieru"
  },
  {
-  "id": "kesshitsu_yuna",
-  "name_kr": "결실 유나",
-  "name_jp": "結実ユナ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "yuna",
-  "required_jp": "ユナ",
-  "required_alt": [
-   "m4_yuna_as"
-  ],
-  "weak": [
-   "thunder",
-   "shade",
-   "crystal"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "大禊魂串",
-    "represents": "ユナ",
-    "hp": 110000000000,
-    "weak": [
+   "id": "kesshitsu_yuna",
+   "name_kr": "결실 유나",
+   "name_jp": "結実ユナ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "yuna",
+   "required_jp": "ユナ",
+   "required_alt": [
+     "m4_yuna_as"
+   ],
+   "weak": [
      "thunder",
      "shade",
      "crystal"
-    ],
-    "resist": []
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "大禊魂串",
+       "represents": "ユナ",
+       "hp": 110000000000,
+       "weak": [
+         "thunder",
+         "shade",
+         "crystal"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "式影巫(治療)",
+       "represents": "",
+       "hp": 0,
+       "weak": [],
+       "resist": [],
+       "note": "소환체, 데이터 없음"
+     },
+     {
+       "name_jp": "式影巫(支援)",
+       "represents": "",
+       "hp": 0,
+       "weak": [],
+       "resist": [],
+       "note": "소환체, 데이터 없음"
+     }
+   ],
+   "phases": "본체 大禊魂串 HP 1,100억. 개시 시 50% 경감 배리어(5턴). HP 50% 스토퍼: 지성 버프(中 99턴) + ZONE 파괴 + 水天陣 전개. HP 0 시 1회 HP 전회복 부활(자기 디버프 해제, ZONE 파괴, 水天陣 전개), 부활 후 神威依代(전체 무속성 마법×2) 패턴 추가. [hp 2,200억 = 1,100억 × 2(1회 전회복 부활)]",
+   "mechanics": [
+     "약점 뇌·음·정. 御加護: 물리·마법 내성 UP(中, 영구)",
+     "매 턴 式影巫 소환(없으면 治療, 있으면 支援 / 부활 후엔 없는 쪽 또는 둘 다): 治療=턴 종료 시 보스에 回護(스택당 물리·마법 내성 +10%, 최대 5), 支援=턴 종료 시 아군에 闇祓(스택당 최대HP·물리/마법 내성 −15%) → 소환체 처리 필요",
+     "오라 穢れの代償: 독 피해를 받은 적/아군 단체 물리·마법 내성 50% DOWN → 아군의 독 부여가 유효",
+     "やぁっ/えいっ: 단체 날려버리기 / 버프 해제·디버프 해제 / 退魔の符: 아군 마법 내성 디버프, 威勢の符: 완력·지성 디버프"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": true,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": true,
+     "single_target": true,
+     "multi_target": true
    },
-   {
-    "name_jp": "式影巫(治療)",
-    "represents": "",
-    "hp": 0,
-    "weak": [],
-    "resist": [],
-    "note": "소환체, 데이터 없음"
+   "recommended": [
+     "シグレ(ES)",
+     "シオン(ES)",
+     "オボロ",
+     "黒衣の刀使い(AS)",
+     "センヤ(AS)",
+     "茨呪の艶女"
+   ],
+   "recommended_ids": [
+     "shigure_es",
+     "shion_es",
+     "oboro",
+     "black_katana_as",
+     "senya_as",
+     "shanie_ac"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
    },
-   {
-    "name_jp": "式影巫(支援)",
-    "represents": "",
-    "hp": 0,
-    "weak": [],
-    "resist": [],
-    "note": "소환체, 데이터 없음"
-   }
-  ],
-  "phases": "본체 大禊魂串 HP 1,100억. 개시 시 50% 경감 배리어(5턴). HP 50% 스토퍼: 지성 버프(中 99턴) + ZONE 파괴 + 水天陣 전개. HP 0 시 1회 HP 전회복 부활(자기 디버프 해제, ZONE 파괴, 水天陣 전개), 부활 후 神威依代(전체 무속성 마법×2) 패턴 추가.",
-  "mechanics": [
-   "약점 뇌·음·정. 御加護: 물리·마법 내성 UP(中, 영구)",
-   "매 턴 式影巫 소환(없으면 治療, 있으면 支援 / 부활 후엔 없는 쪽 또는 둘 다): 治療=턴 종료 시 보스에 回護(스택당 물리·마법 내성 +10%, 최대 5), 支援=턴 종료 시 아군에 闇祓(스택당 최대HP·물리/마법 내성 −15%) → 소환체 처리 필요",
-   "오라 穢れの代償: 독 피해를 받은 적/아군 단체 물리·마법 내성 50% DOWN → 아군의 독 부여가 유효",
-   "やぁっ/えいっ: 단체 날려버리기 / 버프 해제·디버프 해제 / 退魔の符: 아군 마법 내성 디버프, 威勢の符: 완력·지성 디버프"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": true,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": true,
-   "single_target": true,
-   "multi_target": true
-  },
-  "recommended": [
-   "シグレ(ES)",
-   "シオン(ES)",
-   "オボロ",
-   "黒衣の刀使い(AS)",
-   "センヤ(AS)",
-   "茨呪の艶女"
-  ],
-  "recommended_ids": [
-   "shigure_es",
-   "shion_es",
-   "oboro",
-   "black_katana_as",
-   "senya_as",
-   "shanie_ac"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketujituyuna"
+   "src": "https://altema.jp/anaden/ketujituyuna",
+   "hp": 2200,
+   "source": "https://altema.jp/anaden/ketujituyuna"
  },
  {
-  "id": "kesshitsu_lokido",
-  "name_kr": "결실 로키드",
-  "name_jp": "結実ロキド",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "lokido",
-  "required_jp": "ロキド",
-  "required_alt": [
-   "m3_lokido_as"
-  ],
-  "weak": [
-   "blunt"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実ロキド",
-    "represents": "ロキド",
-    "hp": 65000000000,
-    "weak": [
+   "id": "kesshitsu_lokido",
+   "name_kr": "결실 로키드",
+   "name_jp": "結実ロキド",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "lokido",
+   "required_jp": "ロキド",
+   "required_alt": [
+     "m3_lokido_as"
+   ],
+   "weak": [
      "blunt"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 650억. HP 스토퍼 없음, 라이프포인트 2. 1회 부활 후 디버프 해제 + 40% 경감 배리어(5턴), 이후 仁王撃壁拳 등. 2회 부활 후 まだまだ 力は余っているぞ！(디버프 해제, 60% 경감 배리어 5턴, 물리·마법 내성 버프 2턴) 후 夜叉鬼神拳(기절·혼란)·延天・鬼獣拳(전체 지 타격)·크리티컬률 버프로 강화.",
-  "mechanics": [
-   "약점 타(打). 魔獣の剛体: 물리·마법 내성 UP(中, 영구). 개시 시 AF 게이지 0",
-   "豪気: 매 턴 종료 1 축적, 스택당 완력 +100(최대 10), 해제 불가 → 장기전 위험",
-   "오라 赤手空拳: 타격 피해를 받은 적/아군 단체의 내구 50% DOWN",
-   "1턴째부터 기절·혼란(金剛破城拳)·날려버리기 → 상태이상 해제/무효 배리어/배지로 대비",
-   "공격이 전부 물리 → 완력 디버프·물리 내성 버프 유효. 단일 탱커보다 파티 전체 내구 지원 권장. 回し蹴り 전체 고정 2,000"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": true,
-   "guard": false,
-   "status_immune": true,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "韜晦の討手",
-   "茨呪の艶女",
-   "ユーイン",
-   "ミュルス(ES)",
-   "アナベル(ES)",
-   "ニルヤ",
-   "ハヴォック",
-   "イヅナ",
-   "マリエル(ES)",
-   "ティティ"
-  ],
-  "recommended_ids": [
-   "tokai_no_ute",
-   "shanie_ac",
-   "yuin",
-   "myrus_es",
-   "anabel_es",
-   "nilya",
-   "havoc",
-   "izuna",
-   "mariel_es",
-   "m3_tithi"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketujiturokido"
- },
- {
-  "id": "kesshitsu_anabel",
-  "name_kr": "결실 아나벨",
-  "name_jp": "結実アナベル",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "anabel",
-  "required_jp": "アナベル",
-  "required_alt": [
-   "m5_anabel_as"
-  ],
-  "weak": [
-   "water"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "エクス・ミグランス",
-    "represents": "アナベル",
-    "hp": 100000000000,
-    "weak": [
-     "water"
-    ],
-    "resist": []
-   },
-   {
-    "name_jp": "魔剣フェアヴァイレ",
-    "represents": "ディアドラ",
-    "hp": 60000000000,
-    "weak": [
-     "water"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "적 2체(エクス・ミグランス=아나벨 1,000억 / 魔剣フェアヴァイレ=디아드라 600억). 개시 시 디아드라에 聖騎士の守護(모든 공격이 통하지 않음). 아나벨 HP 50% 스토퍼: HP 10% 회복×3 + 상태이상 해제. 아나벨 HP 0 → 행동불능 + 디아드라의 守護 해제 → 디아드라 HP 0 시 아나벨이 HP 50%로 부활(디버프·상태이상 해제, 堅守陣 전개, イージスヴーン: 90% 경감 배리어×50).",
-  "mechanics": [
-   "두 적 모두 약점 수. 剣士の誇り: 물리·마법 내성 UP(中, 영구)",
-   "迎撃: 祈りの聖剣=물리 반격, ホーリーセーバー=마법 반격(턴마다 교대). 반격 시 보스측 5% 회복 + 아군에 【負傷】(스택당 완력·지성 50% DOWN) → 2턴째부터 반격 유발 금지, AF는 반격 무시",
-   "오라 【戦意喪失】: HP 30% 이하인 아군 단체 주는 피해 50% DOWN → 딜러 HP 유지",
-   "디아드라: 매 턴 종료 완력 버프(최대 9), ブラッドクルーエル 페인·고정 2,000, ロックスラッシュ 2,500, 散れ！ 날려버리기, 버프 해제 → 아나벨 부활 전까지 디아드라 대책 우선",
-   "모든 공격이 물리 → 완력 디버프·물리 내성 버프 유효"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": true,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": true
-  },
-  "recommended": [
-   "エルシール",
-   "ジルファニー",
-   "月華の令嬢",
-   "赤套の炎使い(AS)",
-   "フラムラピス(AS)",
-   "エヴァ"
-  ],
-  "recommended_ids": [
-   "elseal",
-   "zilva",
-   "gekka_no_reijo",
-   "dewey_ac_as",
-   "flammelapis_as",
-   "eva"
-  ],
-  "pledges": {
-   "as_of": "2026-10-06~2026-10-13",
-   "heading": "10月6日～10月13日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "4人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 4,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 4
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
-     "jp_parts": [
-      "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
-      "10ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "elem": [
-      "fire"
-     ],
-     "weap": [
-      "bow",
-      "lance"
-     ],
-     "n": 3,
-     "turns": 10,
-     "conds": [
-      {
-       "kind": "comp",
-       "elem": [
-        "fire"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実ロキド",
+       "represents": "ロキド",
+       "hp": 65000000000,
+       "weak": [
+         "blunt"
        ],
-       "weap": [
-        "bow",
-        "lance"
-       ],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 10
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketujituanaberu"
- },
- {
-  "id": "kesshitsu_rosetta",
-  "name_kr": "결실 로제타",
-  "name_jp": "結実ロゼッタ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "rosetta",
-  "required_jp": "ロゼッタ",
-  "required_alt": [
-   "m3_rosetta_as"
-  ],
-  "weak": [
-   "fire",
-   "magic"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実ロゼッタ(ドミナ・ユスティ)",
-    "represents": "ロゼッタ",
-    "hp": 120000000000,
-    "weak": [
-     "fire"
-    ],
-    "resist": [],
-    "note": "HP 0 시 약점이 마법으로 변화"
-   }
-  ],
-  "phases": "단일 적 HP 1,200억. HP 0이 된 시점에 약점이 화 → 마법으로 변화(【バリアチェンジ】), 1회 HP 전회복 부활(ZONE 파괴 + 幻魔陣 전개 → テミスの天秤), 부활 후 HP 50%에 스토퍼. HP 50% 이하에서 敵対する者に 罰をっ！(아군 전체 속도 디버프 大 99턴).",
-  "mechanics": [
-   "약점 화(부활 후 마법). 暴力の粛清: 물리 내성 UP(大)·마법 내성 UP(中) 영구. 개시 시 AF 게이지 0",
-   "断罪: 개시 9 축적, 매 턴 종료 1 소비해 아군 전체 버프 해제 → 버프는 걸고 그 턴에 쓰는 운영",
-   "告罪(최대 8): プリーオブギルティ(단체 화 마법×2)로 축적, 스택당 최대HP 10% DOWN",
-   "오라 【二重苦】: HP 50% 이하인 아군 단체 마법 내성 50% DOWN",
-   "プロセキュート: 전체 고정 2,000 + 완력·지성 디버프 + 봉인 / ビブリア: 50% 경감 배리어(10회) / 断罪っ!·テミスの天秤(부활 후): 전체 현재HP 40% 피해"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": true,
-   "guard": false,
-   "status_immune": true,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": true,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "韜晦の討手",
-   "ミナルカ(AS)",
-   "ユーイン",
-   "ポム(AS)",
-   "イヅナ",
-   "エヴァ",
-   "フィーネ(AS)",
-   "アルド(AS)",
-   "チルリル(ES)"
-  ],
-  "recommended_ids": [
-   "tokai_no_ute",
-   "minalca_as",
-   "yuin",
-   "pom_as",
-   "izuna",
-   "eva",
-   "fiene_as",
-   "aldo_as",
-   "tilril_es"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketujiturosetta"
- },
- {
-  "id": "kesshitsu_tilril",
-  "name_kr": "결실 틸릴",
-  "name_jp": "結実チルリル",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "cerrine",
-  "required_jp": "チルリル",
-  "required_alt": [
-   "m2_tilril_as"
-  ],
-  "weak": [
-   "slash",
-   "fire",
-   "shade"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "アリス・ジェミネ",
-    "represents": "チルリル",
-    "hp": 70000000000,
-    "weak": [],
-    "resist": [],
-    "note": "프라이 격파 후 참(斬) 약점"
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 650억. HP 스토퍼 없음, 라이프포인트 2. 1회 부활 후 디버프 해제 + 40% 경감 배리어(5턴), 이후 仁王撃壁拳 등. 2회 부활 후 まだまだ 力は余っているぞ！(디버프 해제, 60% 경감 배리어 5턴, 물리·마법 내성 버프 2턴) 후 夜叉鬼神拳(기절·혼란)·延天・鬼獣拳(전체 지 타격)·크리티컬률 버프로 강화. [hp 1,950억 = 650억 × 3(라이프포인트 2)]",
+   "mechanics": [
+     "약점 타(打). 魔獣の剛体: 물리·마법 내성 UP(中, 영구). 개시 시 AF 게이지 0",
+     "豪気: 매 턴 종료 1 축적, 스택당 완력 +100(최대 10), 해제 불가 → 장기전 위험",
+     "오라 赤手空拳: 타격 피해를 받은 적/아군 단체의 내구 50% DOWN",
+     "1턴째부터 기절·혼란(金剛破城拳)·날려버리기 → 상태이상 해제/무효 배리어/배지로 대비",
+     "공격이 전부 물리 → 완력 디버프·물리 내성 버프 유효. 단일 탱커보다 파티 전체 내구 지원 권장. 回し蹴り 전체 고정 2,000"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": true,
+     "guard": false,
+     "status_immune": true,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": false
    },
-   {
-    "name_jp": "聖職者の影",
-    "represents": "プライ",
-    "hp": 80000000000,
-    "weak": [
+   "recommended": [
+     "韜晦の討手",
+     "茨呪の艶女",
+     "ユーイン",
+     "ミュルス(ES)",
+     "アナベル(ES)",
+     "ニルヤ",
+     "ハヴォック",
+     "イヅナ",
+     "マリエル(ES)",
+     "ティティ"
+   ],
+   "recommended_ids": [
+     "tokai_no_ute",
+     "shanie_ac",
+     "yuin",
+     "myrus_es",
+     "anabel_es",
+     "nilya",
+     "havoc",
+     "izuna",
+     "mariel_es",
+     "m3_tithi"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketujiturokido",
+   "hp": 1950,
+   "source": "https://altema.jp/anaden/ketujiturokido"
+ },
+ {
+   "id": "kesshitsu_anabel",
+   "name_kr": "결실 아나벨",
+   "name_jp": "結実アナベル",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "anabel",
+   "required_jp": "アナベル",
+   "required_alt": [
+     "m5_anabel_as"
+   ],
+   "weak": [
+     "water"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "エクス・ミグランス",
+       "represents": "アナベル",
+       "hp": 100000000000,
+       "weak": [
+         "water"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "魔剣フェアヴァイレ",
+       "represents": "ディアドラ",
+       "hp": 60000000000,
+       "weak": [
+         "water"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "적 2체(エクス・ミグランス=아나벨 1,000억 / 魔剣フェアヴァイレ=디아드라 600억). 개시 시 디아드라에 聖騎士の守護(모든 공격이 통하지 않음). 아나벨 HP 50% 스토퍼: HP 10% 회복×3 + 상태이상 해제. 아나벨 HP 0 → 행동불능 + 디아드라의 守護 해제 → 디아드라 HP 0 시 아나벨이 HP 50%로 부활(디버프·상태이상 해제, 堅守陣 전개, イージスヴーン: 90% 경감 배리어×50). [hp 2,400억 = 아나벨 1,000억 + 50% 스토퍼 회복 10%×3(300억) + 디아드라 600억 + 아나벨 HP 50% 부활(500억)]",
+   "mechanics": [
+     "두 적 모두 약점 수. 剣士の誇り: 물리·마법 내성 UP(中, 영구)",
+     "迎撃: 祈りの聖剣=물리 반격, ホーリーセーバー=마법 반격(턴마다 교대). 반격 시 보스측 5% 회복 + 아군에 【負傷】(스택당 완력·지성 50% DOWN) → 2턴째부터 반격 유발 금지, AF는 반격 무시",
+     "오라 【戦意喪失】: HP 30% 이하인 아군 단체 주는 피해 50% DOWN → 딜러 HP 유지",
+     "디아드라: 매 턴 종료 완력 버프(최대 9), ブラッドクルーエル 페인·고정 2,000, ロックスラッシュ 2,500, 散れ！ 날려버리기, 버프 해제 → 아나벨 부활 전까지 디아드라 대책 우선",
+     "모든 공격이 물리 → 완력 디버프·물리 내성 버프 유효"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": true,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": true
+   },
+   "recommended": [
+     "エルシール",
+     "ジルファニー",
+     "月華の令嬢",
+     "赤套の炎使い(AS)",
+     "フラムラピス(AS)",
+     "エヴァ"
+   ],
+   "recommended_ids": [
+     "elseal",
+     "zilva",
+     "gekka_no_reijo",
+     "dewey_ac_as",
+     "flammelapis_as",
+     "eva"
+   ],
+   "pledges": {
+     "as_of": "2026-10-06~2026-10-13",
+     "heading": "10月6日～10月13日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "4人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 4,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 4
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
+         "jp_parts": [
+           "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
+           "10ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "elem": [
+           "fire"
+         ],
+         "weap": [
+           "bow",
+           "lance"
+         ],
+         "n": 3,
+         "turns": 10,
+         "conds": [
+           {
+             "kind": "comp",
+             "elem": [
+               "fire"
+             ],
+             "weap": [
+               "bow",
+               "lance"
+             ],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 10
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketujituanaberu",
+   "hp": 2400,
+   "source": "https://altema.jp/anaden/ketujituanaberu"
+ },
+ {
+   "id": "kesshitsu_rosetta",
+   "name_kr": "결실 로제타",
+   "name_jp": "結実ロゼッタ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "rosetta",
+   "required_jp": "ロゼッタ",
+   "required_alt": [
+     "m3_rosetta_as"
+   ],
+   "weak": [
+     "fire",
+     "magic"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実ロゼッタ(ドミナ・ユスティ)",
+       "represents": "ロゼッタ",
+       "hp": 120000000000,
+       "weak": [
+         "fire"
+       ],
+       "resist": [],
+       "note": "HP 0 시 약점이 마법으로 변화"
+     }
+   ],
+   "phases": "단일 적 HP 1,200억. HP 0이 된 시점에 약점이 화 → 마법으로 변화(【バリアチェンジ】), 1회 HP 전회복 부활(ZONE 파괴 + 幻魔陣 전개 → テミスの天秤), 부활 후 HP 50%에 스토퍼. HP 50% 이하에서 敵対する者に 罰をっ！(아군 전체 속도 디버프 大 99턴). [hp 2,400억 = 1,200억 × 2(1회 전회복 부활)]",
+   "mechanics": [
+     "약점 화(부활 후 마법). 暴力の粛清: 물리 내성 UP(大)·마법 내성 UP(中) 영구. 개시 시 AF 게이지 0",
+     "断罪: 개시 9 축적, 매 턴 종료 1 소비해 아군 전체 버프 해제 → 버프는 걸고 그 턴에 쓰는 운영",
+     "告罪(최대 8): プリーオブギルティ(단체 화 마법×2)로 축적, 스택당 최대HP 10% DOWN",
+     "오라 【二重苦】: HP 50% 이하인 아군 단체 마법 내성 50% DOWN",
+     "プロセキュート: 전체 고정 2,000 + 완력·지성 디버프 + 봉인 / ビブリア: 50% 경감 배리어(10회) / 断罪っ!·テミスの天秤(부활 후): 전체 현재HP 40% 피해"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": true,
+     "guard": false,
+     "status_immune": true,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": true,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "韜晦の討手",
+     "ミナルカ(AS)",
+     "ユーイン",
+     "ポム(AS)",
+     "イヅナ",
+     "エヴァ",
+     "フィーネ(AS)",
+     "アルド(AS)",
+     "チルリル(ES)"
+   ],
+   "recommended_ids": [
+     "tokai_no_ute",
+     "minalca_as",
+     "yuin",
+     "pom_as",
+     "izuna",
+     "eva",
+     "fiene_as",
+     "aldo_as",
+     "tilril_es"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketujiturosetta",
+   "hp": 2400,
+   "source": "https://altema.jp/anaden/ketujiturosetta"
+ },
+ {
+   "id": "kesshitsu_tilril",
+   "name_kr": "결실 틸릴",
+   "name_jp": "結実チルリル",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "cerrine",
+   "required_jp": "チルリル",
+   "required_alt": [
+     "m2_tilril_as"
+   ],
+   "weak": [
+     "slash",
      "fire",
      "shade"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "적 2체(アリス・ジェミネ=틸릴 700억 / 聖職者の影=프라이 800억). 둘 다 라이프포인트(HP 0 시 1회 HP 전회복 부활). HP% 스토퍼 기재 없음. 틸릴 LP 소비 시 剣持つ救世主パワー(완력 +50·물리 내성 50% DOWN) + ZONE 파괴·混沌陣 전개, 이후 크리 버프·イクリプスブレイド(음 참격)로 강화. 프라이 LP 소비 시 보스측 전속성 내성 버프(大 2턴).",
-  "mechanics": [
-   "프라이: 御加護なり！로 틸릴에 聖職者の加護(피해 100% 경감 배리어, 1턴)를 매 턴 부여 → 배리어 관통 캐릭터가 있으면 수월, 없으면 프라이부터 격파",
-   "聖職者の守護: 프라이가 쓰러지면 소멸 → 틸릴이 참(斬) 약점으로 변화(그 전엔 약점 없음). 프라이 약점: 화·음",
-   "信仰の力: 두 적 모두 물리 내성 UP(中)·마법 내성 UP(大) 영구",
-   "오라 底力: 최대HP 1,000 이하가 된 아군 단체 주는 피해 50% UP(페이지 표기 그대로)",
-   "フレアクリーヴ: 전체 화 참격 + 기절 / ヴォイドストライク: 속도·물리 내성 디버프 / 프라이: 전속성 내성·지성 디버프, 보스측 HP 15% 회복·디버프 해제·완력 버프"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": true,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": true,
-   "single_target": true,
-   "multi_target": true
-  },
-  "recommended": [
-   "銀織の雷使い(AS)",
-   "クラグホーン",
-   "ミルディ",
-   "シグレ(ES)",
-   "シオン(ES)",
-   "ツキハ"
-  ],
-  "recommended_ids": [
-   "silver_thunder_as",
-   "craghorn",
-   "mildy",
-   "shigure_es",
-   "shion_es",
-   "tsukiha"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketujitutiruriru"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "アリス・ジェミネ",
+       "represents": "チルリル",
+       "hp": 70000000000,
+       "weak": [],
+       "resist": [],
+       "note": "프라이 격파 후 참(斬) 약점"
+     },
+     {
+       "name_jp": "聖職者の影",
+       "represents": "プライ",
+       "hp": 80000000000,
+       "weak": [
+         "fire",
+         "shade"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "적 2체(アリス・ジェミネ=틸릴 700억 / 聖職者の影=프라이 800억). 둘 다 라이프포인트(HP 0 시 1회 HP 전회복 부활). HP% 스토퍼 기재 없음. 틸릴 LP 소비 시 剣持つ救世主パワー(완력 +50·물리 내성 50% DOWN) + ZONE 파괴·混沌陣 전개, 이후 크리 버프·イクリプスブレイド(음 참격)로 강화. 프라이 LP 소비 시 보스측 전속성 내성 버프(大 2턴). [hp 3,000억 = 틸릴 700억 × 2 + 프라이 800억 × 2(각 1회 전회복 부활)]",
+   "mechanics": [
+     "프라이: 御加護なり！로 틸릴에 聖職者の加護(피해 100% 경감 배리어, 1턴)를 매 턴 부여 → 배리어 관통 캐릭터가 있으면 수월, 없으면 프라이부터 격파",
+     "聖職者の守護: 프라이가 쓰러지면 소멸 → 틸릴이 참(斬) 약점으로 변화(그 전엔 약점 없음). 프라이 약점: 화·음",
+     "信仰の力: 두 적 모두 물리 내성 UP(中)·마법 내성 UP(大) 영구",
+     "오라 底力: 최대HP 1,000 이하가 된 아군 단체 주는 피해 50% UP(페이지 표기 그대로)",
+     "フレアクリーヴ: 전체 화 참격 + 기절 / ヴォイドストライク: 속도·물리 내성 디버프 / 프라이: 전속성 내성·지성 디버프, 보스측 HP 15% 회복·디버프 해제·완력 버프"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": true,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": true,
+     "single_target": true,
+     "multi_target": true
+   },
+   "recommended": [
+     "銀織の雷使い(AS)",
+     "クラグホーン",
+     "ミルディ",
+     "シグレ(ES)",
+     "シオン(ES)",
+     "ツキハ"
+   ],
+   "recommended_ids": [
+     "silver_thunder_as",
+     "craghorn",
+     "mildy",
+     "shigure_es",
+     "shion_es",
+     "tsukiha"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketujitutiruriru",
+   "hp": 3000,
+   "source": "https://altema.jp/anaden/ketujitutiruriru"
  },
  {
-  "id": "kesshitsu_claude",
-  "name_kr": "결실 클로드",
-  "name_jp": "結実クロード",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "claude",
-  "required_jp": "クロード",
-  "required_alt": [
-   "m4_claude_as"
-  ],
-  "weak": [
-   "pierce"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実クロード(クラロ・デ・ルーナ)",
-    "represents": "クロード",
-    "hp": 90000000000,
-    "weak": [
+   "id": "kesshitsu_claude",
+   "name_kr": "결실 클로드",
+   "name_jp": "結実クロード",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "claude",
+   "required_jp": "クロード",
+   "required_alt": [
+     "m4_claude_as"
+   ],
+   "weak": [
      "pierce"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 900억. HP% 스토퍼 기재 없음, 라이프포인트 2. 1회 부활 후 デュオン・セレーネ(전체 풍 돌격 + 페인 + 月堕, 70% 경감 배리어 2턴)로 개시, ストームバイツ 고정 피해 3,000→4,000, ケリュケールの王威·AFディレイ 추가. 2회 부활 후 明敏なる策励(속도 버프 大 4턴)·亡国の建国王, ストームバイツ 5,000.",
-  "mechanics": [
-   "약점 돌(突). ケリュケールの加護: 받는 피해 경감(大, 영구) + 전속성 내성 60% UP(영구)",
-   "デュオン: 매 턴 종료 1 축적, 스택당 완력 +100(최대 7) → 단기전 권장",
-   "오라 スラスト・エンハンス: 極・瞬突陣 전개 시 아군 전체 주는 피해 50% UP",
-   "月堕(스택당 완력·지성 20% DOWN, 최대 4): デュオン・セレーネ로 축적. 알테마는 성도각성 クロード 편성을 권장(月堕 축적으로 적 내성·내구·정신 저하)",
-   "ストームバイツ: 전체 고정 피해 + 돌격 내성 디버프 / ケリュケールの誇り: 전체 무속성 돌격 + 완력·지성·속도 디버프 / ブラストショット: 단체 풍 돌격×2"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": true,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "義侠の猟人",
-   "ヒスメナ",
-   "クラグホーン",
-   "ベルトラン",
-   "白磁の魔人",
-   "シェンファ"
-  ],
-  "recommended_ids": [
-   "laclair_ac",
-   "hismena",
-   "craghorn",
-   "bertrand",
-   "hakuji_no_majin",
-   "shenfa"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzitukurodo"
+   ],
+   "resist": [
+     "fire",
+     "water",
+     "wind",
+     "earth",
+     "thunder",
+     "shade",
+     "crystal"
+   ],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実クロード(クラロ・デ・ルーナ)",
+       "represents": "クロード",
+       "hp": 90000000000,
+       "weak": [
+         "pierce"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 900억. HP% 스토퍼 기재 없음, 라이프포인트 2. 1회 부활 후 デュオン・セレーネ(전체 풍 돌격 + 페인 + 月堕, 70% 경감 배리어 2턴)로 개시, ストームバイツ 고정 피해 3,000→4,000, ケリュケールの王威·AFディレイ 추가. 2회 부활 후 明敏なる策励(속도 버프 大 4턴)·亡国の建国王, ストームバイツ 5,000. [hp 2,700억 = 900억 × 3(라이프포인트 2)]",
+   "mechanics": [
+     "약점 돌(突). ケリュケールの加護: 받는 피해 경감(大, 영구) + 전속성 내성 60% UP(영구)",
+     "デュオン: 매 턴 종료 1 축적, 스택당 완력 +100(최대 7) → 단기전 권장",
+     "오라 スラスト・エンハンス: 極・瞬突陣 전개 시 아군 전체 주는 피해 50% UP",
+     "月堕(스택당 완력·지성 20% DOWN, 최대 4): デュオン・セレーネ로 축적. 알테마는 성도각성 クロード 편성을 권장(月堕 축적으로 적 내성·내구·정신 저하)",
+     "ストームバイツ: 전체 고정 피해 + 돌격 내성 디버프 / ケリュケールの誇り: 전체 무속성 돌격 + 완력·지성·속도 디버프 / ブラストショット: 단체 풍 돌격×2"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": true,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "義侠の猟人",
+     "ヒスメナ",
+     "クラグホーン",
+     "ベルトラン",
+     "白磁の魔人",
+     "シェンファ"
+   ],
+   "recommended_ids": [
+     "laclair_ac",
+     "hismena",
+     "craghorn",
+     "bertrand",
+     "hakuji_no_majin",
+     "shenfa"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzitukurodo",
+   "hp": 2700,
+   "source": "https://altema.jp/anaden/ketuzitukurodo"
  },
  {
-  "id": "kesshitsu_eni",
-  "name_kr": "결실 애니",
-  "name_jp": "結実エニ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "eni",
-  "required_jp": "エニ",
-  "required_alt": [],
-  "weak": [
-   "fire",
-   "shade"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実エニ(アルジョン・ロゼ)",
-    "represents": "エニ",
-    "hp": 10000000000,
-    "weak": [],
-    "resist": []
-   },
-   {
-    "name_jp": "ブラッディ・バット",
-    "represents": "",
-    "hp": 3000000000,
-    "weak": [
+   "id": "kesshitsu_eni",
+   "name_kr": "결실 애니",
+   "name_jp": "結実エニ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "eni",
+   "required_jp": "エニ",
+   "required_alt": [],
+   "weak": [
      "fire",
      "shade"
-    ],
-    "resist": [],
-    "note": "개시 2마리 소환"
-   }
-  ],
-  "phases": "본체 HP 100억 + 박쥐(ブラッディ・バット) 2마리(각 30억). 본체는 反魂(개시 14)이 남아 있는 한 HP 0이 되어도 몇 번이든 부활, 박쥐 HP 0마다 反魂 1 소비 → 박쥐를 14회 처치한 뒤 본체 격파. HP% 스토퍼 없음.",
-  "mechanics": [
-   "본체 약점 없음, 박쥐 약점 화·음 → 화/음 전체 공격·연격·체인·추격·迎撃으로 박쥐를 효율적으로 처리",
-   "ワルプルギスの闇夜(개시·5턴째): 刻陰陣 전개 + 박쥐에 血の誓約 1 축적(박쥐 HP 0 시 1 소비해 부활). 행동표에는 血の誓約 박쥐 처치 시 다음 턴 종료에 ZONE 파괴 + 전체 피해라고도 적혀 있음(페이지 내 기재 불일치)",
-   "오라 力の制約: AF 게이지가 0이 되면 아군 전체의 AF 중 주는 피해 99% DOWN",
-   "큰 고정 피해: ブラッドリチュアル 단체 99,999, ロードウェスペル 전체 9,000, イコルフィリア 1,300×3 → 버티기·수호 탱커 권장",
-   "독(1,500 고정)·수면(ヒュプノフォビア)·날려버리기·완력/지성 디버프, 버프 해제, 박쥐 MP 흡수"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": true,
-   "guard": true,
-   "status_immune": false,
-   "break": false,
-   "burst": false,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": false,
-   "multi_target": true
-  },
-  "recommended": [
-   "韜晦の討手",
-   "ミナルカ(AS)",
-   "メリト",
-   "センヤ(AS)",
-   "白磁の魔人",
-   "黒衣の刀使い(AS)"
-  ],
-  "recommended_ids": [
-   "tokai_no_ute",
-   "minalca_as",
-   "melito",
-   "senya_as",
-   "hakuji_no_majin",
-   "black_katana_as"
-  ],
-  "pledges": {
-   "as_of": "2026-10-06~2026-10-13",
-   "heading": "10月6日～10月13日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "4人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 4,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 4
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
-     "jp_parts": [
-      "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
-      "10ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "elem": [
-      "fire"
-     ],
-     "weap": [
-      "bow",
-      "lance"
-     ],
-     "n": 3,
-     "turns": 10,
-     "conds": [
-      {
-       "kind": "comp",
-       "elem": [
-        "fire"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実エニ(アルジョン・ロゼ)",
+       "represents": "エニ",
+       "hp": 10000000000,
+       "weak": [],
+       "resist": []
+     },
+     {
+       "name_jp": "ブラッディ・バット",
+       "represents": "",
+       "hp": 3000000000,
+       "weak": [
+         "fire",
+         "shade"
        ],
-       "weap": [
-        "bow",
-        "lance"
-       ],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 10
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzitueni"
+       "resist": [],
+       "note": "개시 2마리 소환"
+     }
+   ],
+   "phases": "본체 HP 100억 + 박쥐(ブラッディ・バット) 2마리(각 30억). 본체는 反魂(개시 14)이 남아 있는 한 HP 0이 되어도 몇 번이든 부활, 박쥐 HP 0마다 反魂 1 소비 → 박쥐를 14회 처치한 뒤 본체 격파. HP% 스토퍼 없음. [hp 520억 = 박쥐 30억 × 14회(反魂 14) + 본체 100억]",
+   "mechanics": [
+     "본체 약점 없음, 박쥐 약점 화·음 → 화/음 전체 공격·연격·체인·추격·迎撃으로 박쥐를 효율적으로 처리",
+     "ワルプルギスの闇夜(개시·5턴째): 刻陰陣 전개 + 박쥐에 血の誓約 1 축적(박쥐 HP 0 시 1 소비해 부활). 행동표에는 血の誓約 박쥐 처치 시 다음 턴 종료에 ZONE 파괴 + 전체 피해라고도 적혀 있음(페이지 내 기재 불일치)",
+     "오라 力の制約: AF 게이지가 0이 되면 아군 전체의 AF 중 주는 피해 99% DOWN",
+     "큰 고정 피해: ブラッドリチュアル 단체 99,999, ロードウェスペル 전체 9,000, イコルフィリア 1,300×3 → 버티기·수호 탱커 권장",
+     "독(1,500 고정)·수면(ヒュプノフォビア)·날려버리기·완력/지성 디버프, 버프 해제, 박쥐 MP 흡수"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": true,
+     "guard": true,
+     "status_immune": false,
+     "break": false,
+     "burst": false,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": false,
+     "multi_target": true
+   },
+   "recommended": [
+     "韜晦の討手",
+     "ミナルカ(AS)",
+     "メリト",
+     "センヤ(AS)",
+     "白磁の魔人",
+     "黒衣の刀使い(AS)"
+   ],
+   "recommended_ids": [
+     "tokai_no_ute",
+     "minalca_as",
+     "melito",
+     "senya_as",
+     "hakuji_no_majin",
+     "black_katana_as"
+   ],
+   "pledges": {
+     "as_of": "2026-10-06~2026-10-13",
+     "heading": "10月6日～10月13日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "4人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 4,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 4
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
+         "jp_parts": [
+           "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
+           "10ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "elem": [
+           "fire"
+         ],
+         "weap": [
+           "bow",
+           "lance"
+         ],
+         "n": 3,
+         "turns": 10,
+         "conds": [
+           {
+             "kind": "comp",
+             "elem": [
+               "fire"
+             ],
+             "weap": [
+               "bow",
+               "lance"
+             ],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 10
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzitueni",
+   "hp": 520,
+   "source": "https://altema.jp/anaden/ketuzitueni"
  },
  {
-  "id": "kesshitsu_hoozuki",
-  "name_kr": "결실 호오즈키",
-  "name_jp": "結実ホオズキ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "hoozuki",
-  "required_jp": "ホオズキ",
-  "required_alt": [
-   "m4_hoozuki_as"
-  ],
-  "weak": [
-   "pierce",
-   "fire"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実ホオズキ(火ヶ千羽根)",
-    "represents": "ホオズキ",
-    "hp": 100000000000,
-    "weak": [
+   "id": "kesshitsu_hoozuki",
+   "name_kr": "결실 호오즈키",
+   "name_jp": "結実ホオズキ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "hoozuki",
+   "required_jp": "ホオズキ",
+   "required_alt": [
+     "m4_hoozuki_as"
+   ],
+   "weak": [
      "pierce",
      "fire"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 1,000억. HP% 스토퍼 없음, 라이프포인트 1. 개시 ヨーコはん 상태(완력·지성 +250, 받는 피해 대폭 경감), 金運(20)이 0이 되면 해제되고 火照り(1턴 기절) → 회복 후 金運 20 재축적·ヨーコはん 재돌입. 부활 시 ヨーコはん + 金運 20, 디버프 해제, ZONE 파괴 + 烈火陣 전개 후 狐熾・焔一箭(전체 화 9연타 + 내구/정신 디버프 99턴 + 페인 2,500).",
-  "mechanics": [
-   "약점 돌·화. 九尾の守護: 물리·마법·전속성 내성 UP(大, 영구)",
-   "金運: 턴 종료 시 보스에 걸린 디버프 종류 수에 따라 감소 → 여러 종류 디버프를 거는 캐릭터(ホオズキ·クラグホーン·ミルディ)로 2~3턴에 소진",
-   "先制準備·자기 디버프 해제를 자주 씀 → 보스 행동 전에 건 디버프는 지워질 수 있음",
-   "다단·화 공격이 강함 → 디버프보다 내성 버프·경감 배리어로 받는 피해 감소. 부활 후 ゾーンブレイク, 黄金祓(전체 1,000 고정 + 金運 5)"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": true,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "リナリア",
-   "サザンカ",
-   "ラビナ(AS)",
-   "韜晦の討手",
-   "ユーイン",
-   "ミナルカ(AS)",
-   "義侠の猟人",
-   "クロード",
-   "クラグホーン",
-   "ミルディ"
-  ],
-  "recommended_ids": [
-   "linaria",
-   "sazanka",
-   "rabina_as",
-   "tokai_no_ute",
-   "yuin",
-   "minalca_as",
-   "laclair_ac",
-   "claude",
-   "craghorn",
-   "mildy"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzituhoozuki"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実ホオズキ(火ヶ千羽根)",
+       "represents": "ホオズキ",
+       "hp": 100000000000,
+       "weak": [
+         "pierce",
+         "fire"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 1,000억. HP% 스토퍼 없음, 라이프포인트 1. 개시 ヨーコはん 상태(완력·지성 +250, 받는 피해 대폭 경감), 金運(20)이 0이 되면 해제되고 火照り(1턴 기절) → 회복 후 金運 20 재축적·ヨーコはん 재돌입. 부활 시 ヨーコはん + 金運 20, 디버프 해제, ZONE 파괴 + 烈火陣 전개 후 狐熾・焔一箭(전체 화 9연타 + 내구/정신 디버프 99턴 + 페인 2,500). [hp 2,000억 = 1,000억 × 2(라이프포인트 1)]",
+   "mechanics": [
+     "약점 돌·화. 九尾の守護: 물리·마법·전속성 내성 UP(大, 영구)",
+     "金運: 턴 종료 시 보스에 걸린 디버프 종류 수에 따라 감소 → 여러 종류 디버프를 거는 캐릭터(ホオズキ·クラグホーン·ミルディ)로 2~3턴에 소진",
+     "先制準備·자기 디버프 해제를 자주 씀 → 보스 행동 전에 건 디버프는 지워질 수 있음",
+     "다단·화 공격이 강함 → 디버프보다 내성 버프·경감 배리어로 받는 피해 감소. 부활 후 ゾーンブレイク, 黄金祓(전체 1,000 고정 + 金運 5)"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": true,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "リナリア",
+     "サザンカ",
+     "ラビナ(AS)",
+     "韜晦の討手",
+     "ユーイン",
+     "ミナルカ(AS)",
+     "義侠の猟人",
+     "クロード",
+     "クラグホーン",
+     "ミルディ"
+   ],
+   "recommended_ids": [
+     "linaria",
+     "sazanka",
+     "rabina_as",
+     "tokai_no_ute",
+     "yuin",
+     "minalca_as",
+     "laclair_ac",
+     "claude",
+     "craghorn",
+     "mildy"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzituhoozuki",
+   "hp": 2000,
+   "source": "https://altema.jp/anaden/ketuzituhoozuki"
  },
  {
-  "id": "kesshitsu_victor",
-  "name_kr": "결실 빅트",
-  "name_jp": "結実ヴィクト",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "victor",
-  "required_jp": "ヴィクト",
-  "required_alt": [
-   "victor_as"
-  ],
-  "weak": [
-   "slash",
-   "thunder"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実ヴィクト(雷嵐丸)",
-    "represents": "ヴィクト",
-    "hp": 150000000000,
-    "weak": [
+   "id": "kesshitsu_victor",
+   "name_kr": "결실 빅트",
+   "name_jp": "結実ヴィクト",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "victor",
+   "required_jp": "ヴィクト",
+   "required_alt": [
+     "victor_as"
+   ],
+   "weak": [
      "slash",
      "thunder"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 1,500억. HP% 스토퍼 없음, 라이프포인트 1. 부활 시 応用編だ！ついてこれるか？(歴戦 5 축적, ZONE 파괴, 아군 버프 해제, 자기 디버프 해제), 이후 電光雷刃·雷皇斬・双滅(전체 뇌 참격×3), 8턴째 크리티컬률 버프(大 5턴).",
-  "mechanics": [
-   "약점 참·뇌. 받는 피해 경감(大, 영구)",
-   "歴戦: 스택당 내구·정신 +200·내성 20%↑, 턴 종료 시 1 감소. 개시·8턴째 5 축적 → 스택이 빠질 때까지 버티거나 내성 디버프 중첩",
-   "오라 豪気の波動: AF 게이지가 0이 되면 아군 전체 주는 피해 30% DOWN → AF로 몰아친 뒤 부활 후 화력 필요",
-   "ヴァジュラ: 전체 현재HP 40% 피해 + 참 내성 디버프 / かまいたち: 전체 4,000 / 雷神降ろし: 자해 99,999 + 완력 버프 / AF・ディレイ(AF 게이지 50% 감소)"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "シグレ(ES)",
-   "シオン(ES)",
-   "セスタ(AS)",
-   "オルレイア(AS)",
-   "ヴェレット(AS)",
-   "ジルバー(AS)",
-   "アルド(AS)",
-   "イスカ",
-   "オボロ",
-   "ヒスメナ(ES)",
-   "フラムラピス(ES)",
-   "イヅナ"
-  ],
-  "recommended_ids": [
-   "shigure_es",
-   "shion_es",
-   "sesta_as",
-   "orleya_as",
-   "velette_as",
-   "zilva_as",
-   "aldo_as",
-   "isuka",
-   "oboro",
-   "hismena_es",
-   "flammelapis_es",
-   "izuna"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzituvict"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実ヴィクト(雷嵐丸)",
+       "represents": "ヴィクト",
+       "hp": 150000000000,
+       "weak": [
+         "slash",
+         "thunder"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 1,500억. HP% 스토퍼 없음, 라이프포인트 1. 부활 시 応用編だ！ついてこれるか？(歴戦 5 축적, ZONE 파괴, 아군 버프 해제, 자기 디버프 해제), 이후 電光雷刃·雷皇斬・双滅(전체 뇌 참격×3), 8턴째 크리티컬률 버프(大 5턴). [hp 3,000억 = 1,500억 × 2(라이프포인트 1)]",
+   "mechanics": [
+     "약점 참·뇌. 받는 피해 경감(大, 영구)",
+     "歴戦: 스택당 내구·정신 +200·내성 20%↑, 턴 종료 시 1 감소. 개시·8턴째 5 축적 → 스택이 빠질 때까지 버티거나 내성 디버프 중첩",
+     "오라 豪気の波動: AF 게이지가 0이 되면 아군 전체 주는 피해 30% DOWN → AF로 몰아친 뒤 부활 후 화력 필요",
+     "ヴァジュラ: 전체 현재HP 40% 피해 + 참 내성 디버프 / かまいたち: 전체 4,000 / 雷神降ろし: 자해 99,999 + 완력 버프 / AF・ディレイ(AF 게이지 50% 감소)"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "シグレ(ES)",
+     "シオン(ES)",
+     "セスタ(AS)",
+     "オルレイア(AS)",
+     "ヴェレット(AS)",
+     "ジルバー(AS)",
+     "アルド(AS)",
+     "イスカ",
+     "オボロ",
+     "ヒスメナ(ES)",
+     "フラムラピス(ES)",
+     "イヅナ"
+   ],
+   "recommended_ids": [
+     "shigure_es",
+     "shion_es",
+     "sesta_as",
+     "orleya_as",
+     "velette_as",
+     "zilva_as",
+     "aldo_as",
+     "isuka",
+     "oboro",
+     "hismena_es",
+     "flammelapis_es",
+     "izuna"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzituvict",
+   "hp": 3000,
+   "source": "https://altema.jp/anaden/ketuzituvict"
  },
  {
-  "id": "kesshitsu_fermina",
-  "name_kr": "결실 펠미나",
-  "name_jp": "結実フェルミナ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "fermina",
-  "required_jp": "フェルミナ",
-  "required_alt": [
-   "m6_fermina_as"
-  ],
-  "weak": [
-   "blunt",
-   "wind"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "ポイズン・リリー",
-    "represents": "フェルミナ",
-    "hp": 100000000000,
-    "weak": [
+   "id": "kesshitsu_fermina",
+   "name_kr": "결실 펠미나",
+   "name_jp": "結実フェルミナ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "fermina",
+   "required_jp": "フェルミナ",
+   "required_alt": [
+     "m6_fermina_as"
+   ],
+   "weak": [
      "blunt",
      "wind"
-    ],
-    "resist": []
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "ポイズン・リリー",
+       "represents": "フェルミナ",
+       "hp": 100000000000,
+       "weak": [
+         "blunt",
+         "wind"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "アムレト・エイジス",
+       "represents": "ベルトラン",
+       "hp": 100000000000,
+       "weak": [
+         "wind"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "リトルグリッター",
+       "represents": "ミーユ",
+       "hp": 30000000000,
+       "weak": [
+         "blunt"
+       ],
+       "resist": [],
+       "note": "1회 부활 시 등장"
+     }
+   ],
+   "phases": "적: ポイズン・リリー(펠미나 1,000억)·アムレト・エイジス(베르트랑 1,000억), 첫 부활 시 リトルグリッター(미유 300억) 등장. ミグランスの加護로 부활(리리 2, 베르트랑 1). 1회 부활 후 ZONE 파괴 + 버프 해제, サイレントキル·AF・ディレイ 추가. 2회 부활 후 隠密(피해 100% 경감 3턴) + ZONE 파괴. HP% 스토퍼 기재 없음. [hp 5,300억 = 펠미나 1,000억 × 3(가호 2) + 베르트랑 1,000억 × 2(가호 1) + 미유 300억]",
+   "mechanics": [
+     "약점: 리리=타·풍, 베르트랑=풍, 미유=타. 미유는 プリンセスの守護(받는 피해 경감 大, 영구)·내구/정신 +200",
+     "베르트랑: 護るべきものがあるのだ(자신 외 99% 배리어 1턴), 迎撃 → 아군이 전체 공격하면 カウンター・ガード(보스측 물리·마법·전속성 내성 버프, 최대 10 누적) → AF 밖에서는 전체 공격 자제",
+     "瘴蝕: 리리 피격 1회당 1 축적, 스택당 완력·지성·물리 내성 10% DOWN, 10 스택 대상은 턴 종료 시 99,999 피해 → 隠密 중엔 고정 피해(펠미나 瘴蝕)가 주 딜, AF/SB로 스택을 빠르게",
+     "오라 風の恩寵: 風王陣 전개 시 아군 주는 피해 50% UP",
+     "독·페인, 고정 피해(デュアルムーン 750×2 등), AF・ディレイ(약 40%), 미유 보스측 HP 75%/50% 회복"
+   ],
+   "needs": {
+     "barrier_pierce": true,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": true,
+     "single_target": true,
+     "multi_target": true
    },
-   {
-    "name_jp": "アムレト・エイジス",
-    "represents": "ベルトラン",
-    "hp": 100000000000,
-    "weak": [
-     "wind"
-    ],
-    "resist": []
+   "recommended": [
+     "メルピピア",
+     "シグレ(ES)",
+     "セスタ(AS)",
+     "メルピピア(AS)",
+     "烏夜の隠密",
+     "碧光の鎌使い(AS)",
+     "ラビナ(AS)",
+     "茨呪の艶女"
+   ],
+   "recommended_ids": [
+     "melpiphia",
+     "shigure_es",
+     "sesta_as",
+     "melpipia_as",
+     "tsubame_ac",
+     "green_scythe_as",
+     "rabina_as",
+     "shanie_ac"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
    },
-   {
-    "name_jp": "リトルグリッター",
-    "represents": "ミーユ",
-    "hp": 30000000000,
-    "weak": [
-     "blunt"
-    ],
-    "resist": [],
-    "note": "1회 부활 시 등장"
-   }
-  ],
-  "phases": "적: ポイズン・リリー(펠미나 1,000억)·アムレト・エイジス(베르트랑 1,000억), 첫 부활 시 リトルグリッター(미유 300억) 등장. ミグランスの加護로 부활(리리 2, 베르트랑 1). 1회 부활 후 ZONE 파괴 + 버프 해제, サイレントキル·AF・ディレイ 추가. 2회 부활 후 隠密(피해 100% 경감 3턴) + ZONE 파괴. HP% 스토퍼 기재 없음.",
-  "mechanics": [
-   "약점: 리리=타·풍, 베르트랑=풍, 미유=타. 미유는 プリンセスの守護(받는 피해 경감 大, 영구)·내구/정신 +200",
-   "베르트랑: 護るべきものがあるのだ(자신 외 99% 배리어 1턴), 迎撃 → 아군이 전체 공격하면 カウンター・ガード(보스측 물리·마법·전속성 내성 버프, 최대 10 누적) → AF 밖에서는 전체 공격 자제",
-   "瘴蝕: 리리 피격 1회당 1 축적, 스택당 완력·지성·물리 내성 10% DOWN, 10 스택 대상은 턴 종료 시 99,999 피해 → 隠密 중엔 고정 피해(펠미나 瘴蝕)가 주 딜, AF/SB로 스택을 빠르게",
-   "오라 風の恩寵: 風王陣 전개 시 아군 주는 피해 50% UP",
-   "독·페인, 고정 피해(デュアルムーン 750×2 등), AF・ディレイ(약 40%), 미유 보스측 HP 75%/50% 회복"
-  ],
-  "needs": {
-   "barrier_pierce": true,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": true,
-   "single_target": true,
-   "multi_target": true
-  },
-  "recommended": [
-   "メルピピア",
-   "シグレ(ES)",
-   "セスタ(AS)",
-   "メルピピア(AS)",
-   "烏夜の隠密",
-   "碧光の鎌使い(AS)",
-   "ラビナ(AS)",
-   "茨呪の艶女"
-  ],
-  "recommended_ids": [
-   "melpiphia",
-   "shigure_es",
-   "sesta_as",
-   "melpipia_as",
-   "tsubame_ac",
-   "green_scythe_as",
-   "rabina_as",
-   "shanie_ac"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzitufelmina"
+   "src": "https://altema.jp/anaden/ketuzitufelmina",
+   "hp": 5300,
+   "source": "https://altema.jp/anaden/ketuzitufelmina"
  },
  {
-  "id": "kesshitsu_mistrea",
-  "name_kr": "결실 미스트레아",
-  "name_jp": "結実ミストレア",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "mistrea",
-  "required_jp": "ミストレア",
-  "required_alt": [
-   "mistrea_as"
-  ],
-  "weak": [
-   "pierce",
-   "crystal"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "歴史を紡ぐ輝矢",
-    "represents": "ミストレア",
-    "hp": 100000000000,
-    "weak": [
+   "id": "kesshitsu_mistrea",
+   "name_kr": "결실 미스트레아",
+   "name_jp": "結実ミストレア",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "mistrea",
+   "required_jp": "ミストレア",
+   "required_alt": [
+     "mistrea_as"
+   ],
+   "weak": [
      "pierce",
      "crystal"
-    ],
-    "resist": []
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "歴史を紡ぐ輝矢",
+       "represents": "ミストレア",
+       "hp": 100000000000,
+       "weak": [
+         "pierce",
+         "crystal"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "アルス・ノヴァ",
+       "represents": "メリナ",
+       "hp": 150000000000,
+       "weak": [
+         "pierce"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "人魚の影",
+       "represents": "ミルシャ",
+       "hp": 120000000000,
+       "weak": [
+         "crystal"
+       ],
+       "resist": []
+     }
+   ],
+   "phases": "적 3체(歴史を紡ぐ輝矢=미스트레아 1,000억 / アルス・ノヴァ=메리나 1,500억 / 人魚の影=밀샤 1,200억). 미스트레아 라이프포인트 2. 메리나·밀샤는 HP 0 시 다운, 미스트레아 2회째 부활 때 함께 부활. 2회째 부활 시 보스측 전원 소생 + ルナティック + ZONE 파괴 + 보스측 디버프 해제. HP% 스토퍼 기재 없음. [hp 8,400억 = 미스트레아 1,000억 × 3(LP 2) + 메리나 1,500억 × 2 + 밀샤 1,200억 × 2(미스트레아 2회째 부활 때 함께 부활)]",
+   "mechanics": [
+     "약점: 미스트레아=돌·정, 메리나=돌, 밀샤=정. 3체 모두 翼持つ者の加護(받는 피해 대폭 경감)",
+     "エルの唄(최대 10): オウル・ナカル로 축적, 메리나·밀샤가 둘 다 살아 있으면 턴 종료마다 1 축적. 최대 축적 다음 턴 종료 시 전체 최대HP 30%×3 + 최대HP·MP 디버프(99턴, 2누적) → 메리나·밀샤 우선 격파",
+     "개시 시 AF 게이지 0. 메리나 AFディレイ(약 30%), 밀샤 トモスペトラ(단체 HP 80% 피해)·40% 경감 배리어(6회)",
+     "보스측 버프/디버프 해제가 잦음, 전속성·물리 내성 디버프, 독"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": true
    },
-   {
-    "name_jp": "アルス・ノヴァ",
-    "represents": "メリナ",
-    "hp": 150000000000,
-    "weak": [
-     "pierce"
-    ],
-    "resist": []
+   "recommended": [
+     "ヴェレット(AS)",
+     "ヴィクト",
+     "イヅナ",
+     "フラムラピス(AS)",
+     "アルマ(AS)",
+     "エヴァ",
+     "チルリル(ES)",
+     "シェンファ(AS)",
+     "エニ",
+     "ねここ(ES)",
+     "茨呪の艶女",
+     "碧光の鎌使い(AS)"
+   ],
+   "recommended_ids": [
+     "velette_as",
+     "victor",
+     "izuna",
+     "flammelapis_as",
+     "alma_as",
+     "eva",
+     "tilril_es",
+     "xianhua_as",
+     "eni",
+     "nekoko_es",
+     "shanie_ac",
+     "green_scythe_as"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
    },
-   {
-    "name_jp": "人魚の影",
-    "represents": "ミルシャ",
-    "hp": 120000000000,
-    "weak": [
-     "crystal"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "적 3체(歴史を紡ぐ輝矢=미스트레아 1,000억 / アルス・ノヴァ=메리나 1,500억 / 人魚の影=밀샤 1,200억). 미스트레아 라이프포인트 2. 메리나·밀샤는 HP 0 시 다운, 미스트레아 2회째 부활 때 함께 부활. 2회째 부활 시 보스측 전원 소생 + ルナティック + ZONE 파괴 + 보스측 디버프 해제. HP% 스토퍼 기재 없음.",
-  "mechanics": [
-   "약점: 미스트레아=돌·정, 메리나=돌, 밀샤=정. 3체 모두 翼持つ者の加護(받는 피해 대폭 경감)",
-   "エルの唄(최대 10): オウル・ナカル로 축적, 메리나·밀샤가 둘 다 살아 있으면 턴 종료마다 1 축적. 최대 축적 다음 턴 종료 시 전체 최대HP 30%×3 + 최대HP·MP 디버프(99턴, 2누적) → 메리나·밀샤 우선 격파",
-   "개시 시 AF 게이지 0. 메리나 AFディレイ(약 30%), 밀샤 トモスペトラ(단체 HP 80% 피해)·40% 경감 배리어(6회)",
-   "보스측 버프/디버프 해제가 잦음, 전속성·물리 내성 디버프, 독"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": true
-  },
-  "recommended": [
-   "ヴェレット(AS)",
-   "ヴィクト",
-   "イヅナ",
-   "フラムラピス(AS)",
-   "アルマ(AS)",
-   "エヴァ",
-   "チルリル(ES)",
-   "シェンファ(AS)",
-   "エニ",
-   "ねここ(ES)",
-   "茨呪の艶女",
-   "碧光の鎌使い(AS)"
-  ],
-  "recommended_ids": [
-   "velette_as",
-   "victor",
-   "izuna",
-   "flammelapis_as",
-   "alma_as",
-   "eva",
-   "tilril_es",
-   "xianhua_as",
-   "eni",
-   "nekoko_es",
-   "shanie_ac",
-   "green_scythe_as"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzitumistrea"
+   "src": "https://altema.jp/anaden/ketuzitumistrea",
+   "hp": 8400,
+   "source": "https://altema.jp/anaden/ketuzitumistrea"
  },
  {
-  "id": "kesshitsu_dewey",
-  "name_kr": "결실 듀이",
-  "name_jp": "結実デューイ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "dewey",
-  "required_jp": "デューイ",
-  "required_alt": [
-   "dewey_as"
-  ],
-  "weak": [
-   "blunt",
-   "water"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実デューイ(ヴェイパーグローブ)",
-    "represents": "デューイ",
-    "hp": 150000000000,
-    "weak": [
+   "id": "kesshitsu_dewey",
+   "name_kr": "결실 듀이",
+   "name_jp": "結実デューイ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "dewey",
+   "required_jp": "デューイ",
+   "required_alt": [
+     "dewey_as"
+   ],
+   "weak": [
      "blunt",
      "water"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 1,500억. 개시 시 ナノマシン覚醒(活性反応 10): 活性反応이 남아 있는 동안 HP 50% 아래로 내려가지 않고 매 턴 전회복. 라이프포인트 1, 부활 시 다시 覚醒 + ZONE 파괴 + 자기 디버프 해제 + 아군 버프 해제, レゾナンスバスター(전체 현재HP 49%)·ハイドロデトネイト(전체 최대HP 70%).",
-  "mechanics": [
-   "약점 타·수. 내성·무효 없음",
-   "活性反応: 턴 종료 시 그 턴에 준 21억 이상 단발 히트 수만큼 감소. AF를 쓴 턴의 히트는 카운트 안 됨(같은 턴 비AF 공격도 무효) → AF 없이 1타 21억 이상을 여러 번",
-   "추천: イド(チェインアビ로 반복 피해), ユーイン(턴당 최대 3회 행동)",
-   "スリープスプレッド: 전체 독·수면 / ヴェイパーキャノン: 완력·지성·속도 디버프 / 버프 해제 / 부활 후 ゾーンブレイク"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": true,
-   "guard": false,
-   "status_immune": false,
-   "break": false,
-   "burst": true,
-   "sustain": true,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "韜晦の討手",
-   "ハヴォック",
-   "イド",
-   "ユーイン"
-  ],
-  "recommended_ids": [
-   "tokai_no_ute",
-   "havoc",
-   "id",
-   "yuin"
-  ],
-  "pledges": {
-   "as_of": "2026-10-06~2026-10-13",
-   "heading": "10月6日～10月13日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "4人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 4,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 4
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
-     "jp_parts": [
-      "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
-      "10ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "elem": [
-      "fire"
-     ],
-     "weap": [
-      "bow",
-      "lance"
-     ],
-     "n": 3,
-     "turns": 10,
-     "conds": [
-      {
-       "kind": "comp",
-       "elem": [
-        "fire"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実デューイ(ヴェイパーグローブ)",
+       "represents": "デューイ",
+       "hp": 150000000000,
+       "weak": [
+         "blunt",
+         "water"
        ],
-       "weap": [
-        "bow",
-        "lance"
-       ],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 10
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzitudhui"
- },
- {
-  "id": "kesshitsu_gariyu",
-  "name_kr": "결실 가리유",
-  "name_jp": "結実ガリユ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "gariyu",
-  "required_jp": "ガリユ",
-  "required_alt": [
-   "m5_gariyu_as"
-  ],
-  "weak": [
-   "fire"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "焔角・ヴァシュタル",
-    "represents": "ガリユ",
-    "hp": 80000000000,
-    "weak": [
-     "fire"
-    ],
-    "resist": []
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 1,500억. 개시 시 ナノマシン覚醒(活性反応 10): 活性反応이 남아 있는 동안 HP 50% 아래로 내려가지 않고 매 턴 전회복. 라이프포인트 1, 부활 시 다시 覚醒 + ZONE 파괴 + 자기 디버프 해제 + 아군 버프 해제, レゾナンスバスター(전체 현재HP 49%)·ハイドロデトネイト(전체 최대HP 70%). [hp 3,000억 = 1,500억 × 2(라이프포인트 1, 活性反応 소진 전엔 HP 50% 아래로 안 내려감)]",
+   "mechanics": [
+     "약점 타·수. 내성·무효 없음",
+     "活性反応: 턴 종료 시 그 턴에 준 21억 이상 단발 히트 수만큼 감소. AF를 쓴 턴의 히트는 카운트 안 됨(같은 턴 비AF 공격도 무효) → AF 없이 1타 21억 이상을 여러 번",
+     "추천: イド(チェインアビ로 반복 피해), ユーイン(턴당 최대 3회 행동)",
+     "スリープスプレッド: 전체 독·수면 / ヴェイパーキャノン: 완력·지성·속도 디버프 / 버프 해제 / 부활 후 ゾーンブレイク"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": true,
+     "guard": false,
+     "status_immune": false,
+     "break": false,
+     "burst": true,
+     "sustain": true,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": false
    },
-   {
-    "name_jp": "焔竜ヴァシュタル",
-    "represents": "",
-    "hp": 0,
-    "weak": [],
-    "resist": [],
-    "note": "1회 부활 후 소환, 데이터 없음"
-   }
-  ],
-  "phases": "본체 HP 800억. 페이지 기준 특수 기믹·스토퍼 없음, 라이프포인트 2. 1회 부활 후 焔竜ヴァシュタル 소환 + 아군 화 공격 디버프(中 5턴), 2회 부활 후 焔竜과 합체해 タイラントブレイズ(전체 최대HP 99% 피해) 후 강화 패턴.",
-  "mechanics": [
-   "약점 화",
-   "개시 시 極・烈火陣(【ブレイズフィールド】) 전개, 매 턴 개시 시 ZONE 파괴 후 極・烈火陣 재전개",
-   "AFディレイ(20%) 빈번 → AF 파티 주의, 재행동 다단 딜러로 게이지 회복",
-   "炎獄/極・炎獄: 전체 화 마법 + 기절 / ヘルフレイム: 완력·지성 디버프 / キリングフレア: 최대HP 디버프(3누적) / 아군 버프 해제",
-   "도발·가드 탱커로 받아내며 깎는 운영 권장. 화 딜러: ユーイン·メリト·花咲の姫君(AS)"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": false,
-   "guard": true,
-   "status_immune": true,
-   "break": false,
-   "burst": false,
-   "sustain": true,
-   "zone_control": true,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "韜晦の討手",
-   "ユーイン",
-   "ミナルカ(AS)",
-   "メリト",
-   "花咲の姫君(AS)"
-  ],
-  "recommended_ids": [
-   "tokai_no_ute",
-   "yuin",
-   "minalca_as",
-   "melito",
-   "hanasaki_no_himegimi_as"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzitugariyu"
+   "recommended": [
+     "韜晦の討手",
+     "ハヴォック",
+     "イド",
+     "ユーイン"
+   ],
+   "recommended_ids": [
+     "tokai_no_ute",
+     "havoc",
+     "id",
+     "yuin"
+   ],
+   "pledges": {
+     "as_of": "2026-10-06~2026-10-13",
+     "heading": "10月6日～10月13日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "4人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 4,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 4
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
+         "jp_parts": [
+           "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
+           "10ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "elem": [
+           "fire"
+         ],
+         "weap": [
+           "bow",
+           "lance"
+         ],
+         "n": 3,
+         "turns": 10,
+         "conds": [
+           {
+             "kind": "comp",
+             "elem": [
+               "fire"
+             ],
+             "weap": [
+               "bow",
+               "lance"
+             ],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 10
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzitudhui",
+   "hp": 3000,
+   "source": "https://altema.jp/anaden/ketuzitudhui"
  },
  {
-  "id": "kesshitsu_iwera",
-  "name_kr": "결실 이벨라",
-  "name_jp": "結実イウェラ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "iwera",
-  "required_jp": "イウェラ",
-  "required_alt": [
-   "iwela_as"
-  ],
-  "weak": [
-   "water"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実イウェラ(アモル・ウィンクルム)",
-    "represents": "イウェラ",
-    "hp": 100000000000,
-    "weak": [
+   "id": "kesshitsu_gariyu",
+   "name_kr": "결실 가리유",
+   "name_jp": "結実ガリユ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "gariyu",
+   "required_jp": "ガリユ",
+   "required_alt": [
+     "m5_gariyu_as"
+   ],
+   "weak": [
+     "fire"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "焔角・ヴァシュタル",
+       "represents": "ガリユ",
+       "hp": 80000000000,
+       "weak": [
+         "fire"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "焔竜ヴァシュタル",
+       "represents": "",
+       "hp": 0,
+       "weak": [],
+       "resist": [],
+       "note": "1회 부활 후 소환, 데이터 없음"
+     }
+   ],
+   "phases": "본체 HP 800억. 페이지 기준 특수 기믹·스토퍼 없음, 라이프포인트 2. 1회 부활 후 焔竜ヴァシュタル 소환 + 아군 화 공격 디버프(中 5턴), 2회 부활 후 焔竜과 합체해 タイラントブレイズ(전체 최대HP 99% 피해) 후 강화 패턴. [hp 2,400억 = 800억 × 3(라이프포인트 2)]",
+   "mechanics": [
+     "약점 화",
+     "개시 시 極・烈火陣(【ブレイズフィールド】) 전개, 매 턴 개시 시 ZONE 파괴 후 極・烈火陣 재전개",
+     "AFディレイ(20%) 빈번 → AF 파티 주의, 재행동 다단 딜러로 게이지 회복",
+     "炎獄/極・炎獄: 전체 화 마법 + 기절 / ヘルフレイム: 완력·지성 디버프 / キリングフレア: 최대HP 디버프(3누적) / 아군 버프 해제",
+     "도발·가드 탱커로 받아내며 깎는 운영 권장. 화 딜러: ユーイン·メリト·花咲の姫君(AS)"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": false,
+     "guard": true,
+     "status_immune": true,
+     "break": false,
+     "burst": false,
+     "sustain": true,
+     "zone_control": true,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "韜晦の討手",
+     "ユーイン",
+     "ミナルカ(AS)",
+     "メリト",
+     "花咲の姫君(AS)"
+   ],
+   "recommended_ids": [
+     "tokai_no_ute",
+     "yuin",
+     "minalca_as",
+     "melito",
+     "hanasaki_no_himegimi_as"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzitugariyu",
+   "hp": 2400,
+   "source": "https://altema.jp/anaden/ketuzitugariyu"
+ },
+ {
+   "id": "kesshitsu_iwera",
+   "name_kr": "결실 이벨라",
+   "name_jp": "結実イウェラ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "iwera",
+   "required_jp": "イウェラ",
+   "required_alt": [
+     "iwela_as"
+   ],
+   "weak": [
      "water"
-    ],
-    "resist": []
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実イウェラ(アモル・ウィンクルム)",
+       "represents": "イウェラ",
+       "hp": 100000000000,
+       "weak": [
+         "water"
+       ],
+       "resist": []
+     },
+     {
+       "name_jp": "分身",
+       "represents": "",
+       "hp": 0,
+       "weak": [],
+       "resist": [],
+       "note": "これが定め로 소환, 데이터 없음"
+     }
+   ],
+   "phases": "본체 HP 1,000억 + 개시 시 분신 소환(これが定め). 라이프포인트 2. 1회 부활 시 분신 흡수·ZONE 해제·버프 해제 후 분신 재소환, 2회 부활 시 분신 흡수·ZONE 해제·버프 해제 후 アエテル・アモル·セムペル・テークム 등 강화 패턴. HP% 스토퍼 기재 없음. [hp 3,000억 = 본체 1,000억 × 3(라이프포인트 2), 분신 HP 미기재]",
+   "mechanics": [
+     "약점 수",
+     "アムレートゥム(본체)/プラーガ・ジェンマ(분신): 스택당 물리·마법 내성 1%·피해 경감 1%(최대 80). 턴 종료마다 15 축적, 아군(캐릭터·버디) 공격 행동 수만큼 감소 → 턴당 공격 횟수를 늘림",
+     "오라 マジック・フォール: 아군 중 최대 MP 1,500 이상이 있으면 적 전체 내구·정신 30% DOWN",
+     "개시 AF 게이지 고갈 + AFディレイ(20%) → 재행동·AF 게이지 회복(コロボ) 수단",
+     "セーヴァフローレム: 수 공격 + 전속성 내성 디버프(최대 6누적) / ヴェイディミーカム: 수·정 내성 디버프 / 날려버리기 / アクアランケア 고정 2,000×2"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": false,
+     "guard": false,
+     "status_immune": true,
+     "break": false,
+     "burst": true,
+     "sustain": false,
+     "zone_control": false,
+     "single_target": true,
+     "multi_target": false
    },
-   {
-    "name_jp": "分身",
-    "represents": "",
-    "hp": 0,
-    "weak": [],
-    "resist": [],
-    "note": "これが定め로 소환, 데이터 없음"
-   }
-  ],
-  "phases": "본체 HP 1,000억 + 개시 시 분신 소환(これが定め). 라이프포인트 2. 1회 부활 시 분신 흡수·ZONE 해제·버프 해제 후 분신 재소환, 2회 부활 시 분신 흡수·ZONE 해제·버프 해제 후 アエテル・アモル·セムペル・テークム 등 강화 패턴. HP% 스토퍼 기재 없음.",
-  "mechanics": [
-   "약점 수",
-   "アムレートゥム(본체)/プラーガ・ジェンマ(분신): 스택당 물리·마법 내성 1%·피해 경감 1%(최대 80). 턴 종료마다 15 축적, 아군(캐릭터·버디) 공격 행동 수만큼 감소 → 턴당 공격 횟수를 늘림",
-   "오라 マジック・フォール: 아군 중 최대 MP 1,500 이상이 있으면 적 전체 내구·정신 30% DOWN",
-   "개시 AF 게이지 고갈 + AFディレイ(20%) → 재행동·AF 게이지 회복(コロボ) 수단",
-   "セーヴァフローレム: 수 공격 + 전속성 내성 디버프(최대 6누적) / ヴェイディミーカム: 수·정 내성 디버프 / 날려버리기 / アクアランケア 고정 2,000×2"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": false,
-   "guard": false,
-   "status_immune": true,
-   "break": false,
-   "burst": true,
-   "sustain": false,
-   "zone_control": false,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "リナリア",
-   "シグレ(ES)",
-   "セスタ(AS)",
-   "月華の令嬢(AS)",
-   "ジルファニー(AS)",
-   "夢吟の詩人(AS)",
-   "ヴェルダンタ",
-   "ヴェレット(AS)",
-   "イヅナ",
-   "高踏の妖猫"
-  ],
-  "recommended_ids": [
-   "linaria",
-   "shigure_es",
-   "sesta_as",
-   "gekka_no_reijou_as",
-   "jilfany_as",
-   "dunarith_ac_as",
-   "verdanta",
-   "velette_as",
-   "izuna",
-   "nekoko_ac"
-  ],
-  "pledges": {
-   "as_of": "2026-09-29~2026-10-06",
-   "heading": "9月29日～10月6日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "5人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 5,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 5
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
-     "jp_parts": [
-      "女性キャラクター3人以上のパーティで勝利",
-      "7ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "gender": "female",
-     "elem": [],
-     "weap": [],
-     "n": 3,
-     "turns": 7,
-     "conds": [
-      {
-       "kind": "comp",
-       "gender": "female",
-       "elem": [],
-       "weap": [],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 7
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzituiwera"
+   "recommended": [
+     "リナリア",
+     "シグレ(ES)",
+     "セスタ(AS)",
+     "月華の令嬢(AS)",
+     "ジルファニー(AS)",
+     "夢吟の詩人(AS)",
+     "ヴェルダンタ",
+     "ヴェレット(AS)",
+     "イヅナ",
+     "高踏の妖猫"
+   ],
+   "recommended_ids": [
+     "linaria",
+     "shigure_es",
+     "sesta_as",
+     "gekka_no_reijou_as",
+     "jilfany_as",
+     "dunarith_ac_as",
+     "verdanta",
+     "velette_as",
+     "izuna",
+     "nekoko_ac"
+   ],
+   "pledges": {
+     "as_of": "2026-09-29~2026-10-06",
+     "heading": "9月29日～10月6日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "5人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "5人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 5,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 5
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "女性キャラクター3人以上のパーティで勝利 / 7ターン以内に勝利",
+         "jp_parts": [
+           "女性キャラクター3人以上のパーティで勝利",
+           "7ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "gender": "female",
+         "elem": [],
+         "weap": [],
+         "n": 3,
+         "turns": 7,
+         "conds": [
+           {
+             "kind": "comp",
+             "gender": "female",
+             "elem": [],
+             "weap": [],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 7
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzituiwera",
+   "hp": 3000,
+   "source": "https://altema.jp/anaden/ketuzituiwera"
  },
  {
-  "id": "kesshitsu_radica",
-  "name_kr": "결실 라디카",
-  "name_jp": "結実ラディカ",
-  "content": "顕現（結実せし武器との交わり）",
-  "level": 0,
-  "required": "radica",
-  "required_jp": "ラディカ",
-  "required_alt": [
-   "m3_radica_as"
-  ],
-  "weak": [
-   "fire"
-  ],
-  "resist": [],
-  "null": [],
-  "absorb": [],
-  "enemies": [
-   {
-    "name_jp": "結実ラディカ(オルゴナイトワンド)",
-    "represents": "ラディカ",
-    "hp": 80000000000,
-    "weak": [
+   "id": "kesshitsu_radica",
+   "name_kr": "결실 라디카",
+   "name_jp": "結実ラディカ",
+   "content": "顕現（結実せし武器との交わり）",
+   "level": 0,
+   "required": "radica",
+   "required_jp": "ラディカ",
+   "required_alt": [
+     "m3_radica_as"
+   ],
+   "weak": [
      "fire"
-    ],
-    "resist": []
-   }
-  ],
-  "phases": "단일 적 HP 800억. HP% 스토퍼 기재 없음, 라이프포인트 1. 부활 시 ZONE 파괴 + 極・幻魔陣 전개 + 보스 버프 + 자기 디버프 해제, 이후 トゥールドルミール(수면)·青の羅針(전체 화 마법×5 + 버프 해제) 패턴.",
-  "mechanics": [
-   "약점 화. 10/8(Ver3.17.10) 추가",
-   "アストラルカード: 매 턴 개시 시 드로우, 적·녹·청은 각각 다른 추가 효과, 금은 셋 다 발동 + AF 게이지 30% 감소",
-   "幸運のアミュレット: 축적당 받는 피해 10% 경감(부활 후 5%), 개시 10(부활 후 20). 턴 종료 시 전열 아군 최고 행운 100당 1 감소, 축적이 많을수록 금 카드 확률↑ → 전열 1명의 행운을 올려 빨리 깎기(ラディカ レゾンクルール로 행운 최대 +40%)",
-   "오라 運勢を占ってみる？: 아군 중 행운 400 이상이 있으면 파티 주는 피해 20% UP",
-   "위협은 고배율 완력·지성 디버프와 내성 디버프 → 디버프 해제/반전 또는 그라스타로 대비. 혼란(アポーズリュンヌ)·수면·독(1,500)"
-  ],
-  "needs": {
-   "barrier_pierce": false,
-   "cleanse": true,
-   "guard": false,
-   "status_immune": true,
-   "break": false,
-   "burst": false,
-   "sustain": true,
-   "zone_control": true,
-   "single_target": true,
-   "multi_target": false
-  },
-  "recommended": [
-   "韜晦の討手",
-   "花咲の姫君(AS)",
-   "ガリユ"
-  ],
-  "recommended_ids": [
-   "tokai_no_ute",
-   "hanasaki_no_himegimi_as",
-   "gariyu"
-  ],
-  "pledges": {
-   "as_of": "2026-10-06~2026-10-13",
-   "heading": "10月6日～10月13日の誓約内容",
-   "difficulty": "CHALLENGE",
-   "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
-   "list": [
-    {
-     "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
-     "jp_parts": [
-      "仲間が一度も戦闘不能にならない",
-      "20ターン以内に勝利"
-     ],
-     "kind": "nokill",
-     "turns": 20,
-     "conds": [
-      {
-       "kind": "nokill"
-      },
-      {
-       "kind": "turns",
-       "max": 20
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
-     "jp_parts": [
-      "4人以下のパーティで勝利",
-      "15ターン以内に勝利"
-     ],
-     "kind": "size",
-     "max": 4,
-     "turns": 15,
-     "conds": [
-      {
-       "kind": "size",
-       "max": 4
-      },
-      {
-       "kind": "turns",
-       "max": 15
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
-     "jp_parts": [
-      "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
-      "10ターン以内に勝利"
-     ],
-     "kind": "comp",
-     "elem": [
-      "fire"
-     ],
-     "weap": [
-      "bow",
-      "lance"
-     ],
-     "n": 3,
-     "turns": 10,
-     "conds": [
-      {
-       "kind": "comp",
-       "elem": [
-        "fire"
+   ],
+   "resist": [],
+   "null": [],
+   "absorb": [],
+   "enemies": [
+     {
+       "name_jp": "結実ラディカ(オルゴナイトワンド)",
+       "represents": "ラディカ",
+       "hp": 80000000000,
+       "weak": [
+         "fire"
        ],
-       "weap": [
-        "bow",
-        "lance"
-       ],
-       "n": 3
-      },
-      {
-       "kind": "turns",
-       "max": 10
-      }
-     ],
-     "reward": "顕現せし闘気×1,000"
-    },
-    {
-     "jp": "他の全ての誓約を同時に達成する",
-     "jp_parts": [
-      "他の全ての誓約を同時に達成する"
-     ],
-     "kind": "all",
-     "conds": [
-      {
-       "kind": "all"
-      }
-     ],
-     "reward": "顕現せし闘気×2,000"
-    }
-   ]
-  },
-  "src": "https://altema.jp/anaden/ketuzituradhika"
+       "resist": []
+     }
+   ],
+   "phases": "단일 적 HP 800억. HP% 스토퍼 기재 없음, 라이프포인트 1. 부활 시 ZONE 파괴 + 極・幻魔陣 전개 + 보스 버프 + 자기 디버프 해제, 이후 トゥールドルミール(수면)·青の羅針(전체 화 마법×5 + 버프 해제) 패턴. [hp 1,600억 = 800억 × 2(라이프포인트 1)]",
+   "mechanics": [
+     "약점 화. 10/8(Ver3.17.10) 추가",
+     "アストラルカード: 매 턴 개시 시 드로우, 적·녹·청은 각각 다른 추가 효과, 금은 셋 다 발동 + AF 게이지 30% 감소",
+     "幸運のアミュレット: 축적당 받는 피해 10% 경감(부활 후 5%), 개시 10(부활 후 20). 턴 종료 시 전열 아군 최고 행운 100당 1 감소, 축적이 많을수록 금 카드 확률↑ → 전열 1명의 행운을 올려 빨리 깎기(ラディカ レゾンクルール로 행운 최대 +40%)",
+     "오라 運勢を占ってみる？: 아군 중 행운 400 이상이 있으면 파티 주는 피해 20% UP",
+     "위협은 고배율 완력·지성 디버프와 내성 디버프 → 디버프 해제/반전 또는 그라스타로 대비. 혼란(アポーズリュンヌ)·수면·독(1,500)"
+   ],
+   "needs": {
+     "barrier_pierce": false,
+     "cleanse": true,
+     "guard": false,
+     "status_immune": true,
+     "break": false,
+     "burst": false,
+     "sustain": true,
+     "zone_control": true,
+     "single_target": true,
+     "multi_target": false
+   },
+   "recommended": [
+     "韜晦の討手",
+     "花咲の姫君(AS)",
+     "ガリユ"
+   ],
+   "recommended_ids": [
+     "tokai_no_ute",
+     "hanasaki_no_himegimi_as",
+     "gariyu"
+   ],
+   "pledges": {
+     "as_of": "2026-10-06~2026-10-13",
+     "heading": "10月6日～10月13日の誓約内容",
+     "difficulty": "CHALLENGE",
+     "rotate": "毎週火曜12:00更新。達成状況は全キャラの顕現バトルで共有、各誓約は週1回のみ達成(難易度チャレンジ)",
+     "list": [
+       {
+         "jp": "仲間が一度も戦闘不能にならない / 20ターン以内に勝利",
+         "jp_parts": [
+           "仲間が一度も戦闘不能にならない",
+           "20ターン以内に勝利"
+         ],
+         "kind": "nokill",
+         "turns": 20,
+         "conds": [
+           {
+             "kind": "nokill"
+           },
+           {
+             "kind": "turns",
+             "max": 20
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "4人以下のパーティで勝利 / 15ターン以内に勝利",
+         "jp_parts": [
+           "4人以下のパーティで勝利",
+           "15ターン以内に勝利"
+         ],
+         "kind": "size",
+         "max": 4,
+         "turns": 15,
+         "conds": [
+           {
+             "kind": "size",
+             "max": 4
+           },
+           {
+             "kind": "turns",
+             "max": 15
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利 / 10ターン以内に勝利",
+         "jp_parts": [
+           "属性「火」か武器種「弓」「槍」の仲間3人以上で勝利",
+           "10ターン以内に勝利"
+         ],
+         "kind": "comp",
+         "elem": [
+           "fire"
+         ],
+         "weap": [
+           "bow",
+           "lance"
+         ],
+         "n": 3,
+         "turns": 10,
+         "conds": [
+           {
+             "kind": "comp",
+             "elem": [
+               "fire"
+             ],
+             "weap": [
+               "bow",
+               "lance"
+             ],
+             "n": 3
+           },
+           {
+             "kind": "turns",
+             "max": 10
+           }
+         ],
+         "reward": "顕現せし闘気×1,000"
+       },
+       {
+         "jp": "他の全ての誓約を同時に達成する",
+         "jp_parts": [
+           "他の全ての誓約を同時に達成する"
+         ],
+         "kind": "all",
+         "conds": [
+           {
+             "kind": "all"
+           }
+         ],
+         "reward": "顕現せし闘気×2,000"
+       }
+     ]
+   },
+   "src": "https://altema.jp/anaden/ketuzituradhika",
+   "hp": 1600,
+   "source": "https://altema.jp/anaden/ketuzituradhika"
  }
 ]

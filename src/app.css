@@ -404,6 +404,9 @@ a.lnk{display:inline-flex; align-items:center}
 .budgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:6px; margin-top:8px}
 .budgrid label{display:flex; gap:6px; align-items:flex-start; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--surface)}
 .budgrid label input{margin-top:3px}
+.bgrows{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:6px}
+.bgrow{display:grid; grid-template-columns:88px minmax(0,1fr); gap:6px; align-items:center; font-size:13px}
+.bgrow select{min-width:0; width:100%}
 .budgrid .hint{display:block; font-size:11px}
 #budRow select{max-width:44%}
 /* 캐릭터 스탯 표 */
@@ -675,3 +678,9 @@ dialog.guide::backdrop{background:rgba(8,12,30,.62)}
 .kt{font-size:13px; margin:2px 0 4px}
 .kt .warn{color:var(--warn); font-weight:600; margin-left:4px}
 
+.bosssum .bsmods{display:grid; gap:6px; border-top:1px dashed var(--line); padding-top:8px}
+.bosssum .bsmh{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.bosssum .bsmh .btn[aria-pressed="true"]{background:linear-gradient(180deg, var(--btn-1), var(--btn-2)); border-color:var(--gold); color:#fff}
+.bosssum .bsml{display:grid; gap:4px}
+.bosssum .bsml .checkrow{font-size:12.5px}
+.bosssum .bsabs{font-size:12.5px; display:flex; gap:6px; align-items:center; flex-wrap:wrap}
