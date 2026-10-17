@@ -33,7 +33,11 @@ const DEF_STATE = ()=>({v:1, sample:true, owned:{}, custom:[], settings:{}, plan
 const FT_KR = {slash:'참격', blunt:'타격', pierce:'돌격', magic:'마법'};
 const FOCUS_LIST = ['fire','water','earth','wind','thunder','shade','crystal'].map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
 const focusLabel = f => !f ? '전체' : f.kind==='elem' ? (E.ELEM_KR[f.v]||f.v)+' 속성'+(f.conv?' (변환 포함)':'') : (FT_KR[f.v]||f.v);
-const focusIn = P => P.focus && P.focus.kind==='elem' && P.focusConv ? Object.assign({}, P.focus, {conv:true}) : P.focus; // 속성 지정: 기본은 원래 그 속성인 공격만, '변환 덱 포함'이면 남의 속성 변환으로 그 속성이 된 공격도
+// 속성 변환 캐릭터(네코코(ES)·네코코(AS)·에니 등 아군 전체 속성을 바꾸는 캐릭터) 포함 여부(사용자 2026-10-17 '결현현이나 보스 등에도 네코코 필터'):
+// plan.conv를 정하지 않았으면 속성 지정은 원래 그 속성만·그 밖은 포함, 한 번 고르면 모든 성향·탭에 같은 값. 끄면 속성 지정은 원래 속성 공격만 + 다른 속성 변환 담당 제외, 그 밖은 변환 담당을 후보에서 제외(noConv)
+const convOn = (P, f) => { f = f===undefined ? P.focus : f; return P.conv!=null ? !!P.conv : (!!P.focusConv || !(f && f.kind==='elem')); };
+const noConvOf = (P, f) => { f = f===undefined ? P.focus : f; return !(f && f.kind==='elem') && !convOn(P, f); };
+const focusIn = (P, f) => { f = f===undefined ? P.focus : f; return f && f.kind==='elem' && convOn(P, f) ? Object.assign({}, f, {conv:true}) : f; }; // 속성 지정: 기본은 원래 그 속성인 공격만, '변환 덱 포함'이면 남의 속성 변환으로 그 속성이 된 공격도
 const sameFocus = (a,b) => (!a&&!b) || (a&&b&&a.kind===b.kind&&a.v===b.v);
 function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1, ownedIds: ownedList()}); } // ownedIds: 다른 스타일 보드 완성 보너스(보유 = 완성으로 봄)
 function rebuildChars(){
@@ -740,7 +744,9 @@ function renderPlanControls(){
   $$('#countSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.n===(P.enemyCount||1)?'true':'false'));
   { const br=$('#backRow'); if(br){ br.hidden = P.mode==='kesshitsu'; const bn = P.backN!=null ? +P.backN : 2; $$('#backSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.b===bn?'true':'false')); } }
   $$('#diffSeg button').forEach(b=>b.setAttribute('aria-pressed', +b.dataset.lv===(P.maxDiff||4)?'true':'false'));
-  { const cvb = $('#focusConv'); if(cvb){ cvb.checked = !!P.focusConv; cvb.closest('label').hidden = !(P.focus && P.focus.kind==='elem'); } }
+  { const cvb = $('#focusConv'), el = P.focus && P.focus.kind==='elem'; if(cvb){ cvb.checked = convOn(P);
+      $('#convHint').textContent = el ? (cvb.checked ? '남의 속성 변환으로 그 속성이 된 공격도 셈 — 끄면 원래 그 속성인 공격만, 다른 속성 변환 담당은 뺌' : '끄면 원래 그 속성인 공격만 세고, 다른 속성의 변환 담당(네코코(ES) 등)은 뺌')
+        : '네코코(ES)·네코코(AS)·에니처럼 아군 전체 속성을 바꾸는 캐릭터 — 끄면 후보에서 뺌(꼭 쓸 캐릭터로 고르면 그대로)'; } }
   $('#focusSeg').innerHTML = [null].concat(FOCUS_LIST).map((f,k)=>`<button type="button" data-fi="${k-1}" aria-pressed="${sameFocus(f,P.focus)?'true':'false'}">${f&&f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(f?(f.kind==='elem'?E.ELEM_KR[f.v]:FT_KR[f.v]):'전체')}</button>`).join('');
   renderChips('#lockChips', P.locked, 'locked');
   renderChips('#exChips', P.excluded, 'excluded');
@@ -817,7 +823,7 @@ async function runPlan(){
   const pledge = kes ? pledgeInput(boss) : null;
   $('#runBtn').disabled=true; $('#prog').hidden=false; $('#prog i').style.width='0%';
   const t0=Date.now(), ptx=$('#progTxt'); ptx.textContent='계산 중…';
-  const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null,
+  const r = await calcOptimize('plan', {locked:P.locked, excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null, noConv:noConvOf(P),
       weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, pledge, buddy: buddyInput()},
     f=>{ if(my===runToken){ $('#prog i').style.width=Math.round(f*100)+'%'; ptx.textContent=`계산 중 ${Math.round(f*100)}% · ${Math.round((Date.now()-t0)/1000)}초${NW>1?` · 워커 ${NW}개`:''}`; } }, null, {shard:true, cache:true});
   if(my!==runToken || !r) return;
@@ -901,7 +907,7 @@ function renderResults(r, boss, enemy, mode){
   if(state.sample) h+=`<div class="notice"><b>처음이신가요?</b> 지금 결과는 예시 보유 목록(SS·S 티어 전원, 천명치 80·성도각성 가정)으로 짠 것입니다. 가진 캐릭터를 입력하면 그 기준으로 다시 짭니다. <button type="button" class="btn small primary" data-goto="roster">보유 캐릭터 입력하기</button></div>`;
   const enemyTxt = enemy ? Object.entries(enemy).map(([k,v])=>(E.ELEM_KR[k]||E.WT_KR[k])+' '+REL_KR[v]).join(', ') : '중립(약점·내성 없음)';
   const W=r.weights, wTxt = mode==='custom'&&W ? ` (공격성 ${Math.round(W.b*100)}% · 유지력 ${Math.round(W.s*100)}% · 안정성 ${Math.round(W.t*100)}%)` : '';
-  h+=`<div class="runmeta">${esc(MODE_KR[mode])}${esc(wTxt)}${r.pledge?' · 서약: <b>'+esc(pledgeText(r.pledge))+'</b>':''}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
+  h+=`<div class="runmeta">${esc(MODE_KR[mode])}${esc(wTxt)}${r.pledge?' · 서약: <b>'+esc(pledgeText(r.pledge))+'</b>':''}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''}${!(r.focus && r.focus.kind==='elem') && noConvOf(state.plan, r.focus||null) ? ' · <b>속성 변환 캐릭터 제외</b>' : ''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
   if(!r.results.length) h+=`<div class="empty">조건을 만족하는 조합이 없습니다. 난이도 상한을 올리거나 고정·제외 캐릭터를 줄여 보세요.</div>`;
   const all=r.results, mx=k=>Math.max(...all.map(y=>y.ev[k]));
   const ref = all.length ? {sbTurn:all[0].ev.sbTurn, af:mx('af'), sustain:mx('sustain'), surv:mx('surv'), burst:mx('burst'), dummyT:mx('dummyT'), opener:mx('opener')} : null;
@@ -1561,7 +1567,7 @@ async function runPerChar(){
   const enemy={}; let any=false; for(const [k,v] of Object.entries(P.enemy)) if(v){ enemy[k]=v; any=true; }
   const rec = boss ? prepped.filter(c=>(boss.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id) : [];
   $('#pcRun').disabled=true; $('#pcProg').hidden=false; $('#pcProg i').style.width='0%';
-  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null,
+  const r = await calcPerChar({excluded:P.excluded, backLocked:P.backLocked||[], mode:P.mode==='kesshitsu'||(P.mode==='boss'&&!boss)?'all':P.mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P)||null, noConv:noConvOf(P),
       weights: P.mode==='custom' ? Object.assign({}, P.weights) : null, buddy: buddyInput()},
     f=>{ if(my===pcToken) $('#pcProg i').style.width=Math.round(f*100)+'%'; });
   if(my!==pcToken || !r) return;
@@ -1603,14 +1609,14 @@ async function runFocusAll(){
   for(const k of [...RES.keys()]) if(k[0]==='f') RES.delete(k);
   grid.innerHTML = FOCUS_LIST.map((f,k)=>`<section class="fcard" id="fx-${k}"><div class="fhead"><h3>${f.kind==='elem'?`<span class="dot ${f.v}"></span>`:''}${esc(focusLabel(f))}</h3><span class="hint">대기 중…</span></div></section>`).join('');
   $('#fxRun').disabled=true; $('#fxProg').hidden=false; $('#fxProg i').style.width='0%';
-  $('#fxMeta').textContent = `${MODE_KR[P.mode]==='보스 맞춤'&&!boss?'최고점 딜':MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''}`;
+  $('#fxMeta').textContent = `${MODE_KR[P.mode]==='보스 맞춤'&&!boss?'최고점 딜':MODE_KR[P.mode]}${boss?' · '+boss.name_kr:''}${(P.maxDiff||4)<4?' · 난이도 Lv'+P.maxDiff+' 이하':''}${P.conv===true?' · 속성 변환 포함':P.conv===false?' · 속성 변환 캐릭터 제외':' · 속성은 원래 속성만'}`;
   // 11가지를 워커 여러 개(코어 수 - 1, 최대 4)로 나눠 동시에 계산
   const NW = Math.max(1, Math.min(4, ((navigator.hardwareConcurrency||2)-1), FOCUS_LIST.length));
   const fp = FOCUS_LIST.map(()=>0), upd = ()=>{ if(my===fxToken) $('#fxProg i').style.width=Math.round(fp.reduce((a,b)=>a+b,0)/FOCUS_LIST.length*100)+'%'; };
   const buddy = buddyInput(), weights = P.mode==='custom' ? Object.assign({}, P.weights) : null;
   let next = 0, stop = false;
   const lane = async slot => { while(!stop){ const k = next++; if(k>=FOCUS_LIST.length) return; const f=FOCUS_LIST[k];
-      const r = await calcOptimize('fx'+slot, {locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:f, maxPool:20, topN:3, buddy, weights},
+      const r = await calcOptimize('fx'+slot, {locked:[], excluded:P.excluded, backLocked:P.backLocked||[], mode, enemy:any?enemy:null, boss, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:focusIn(P, f), noConv:noConvOf(P, f), maxPool:20, topN:3, buddy, weights},
         v=>{ fp[k]=v; upd(); }, J);
       if(my!==fxToken || !r){ stop=true; return; }
       fp[k]=1; upd(); const el=$('#fx-'+k); if(el) el.outerHTML = fcardHtml(f, k, r, cond); } };
@@ -2187,7 +2193,7 @@ function bind(){
   $('#runBtn').addEventListener('click',runPlan);
   $('#burstN').addEventListener('change',e=>{ state.settings.burstTurns=Math.max(1,Math.min(10,+e.target.value||3)); save(); runPlan(); });
   $('#focusSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-fi]'); if(!b) return; const k=+b.dataset.fi; state.plan.focus = k<0?null:Object.assign({},FOCUS_LIST[k]); save(); renderPlanControls(); runPlan(); });
-  { const cvb = $('#focusConv'); if(cvb) cvb.addEventListener('change', ()=>{ state.plan.focusConv = cvb.checked; save(); runPlan(); }); }
+  { const cvb = $('#focusConv'); if(cvb) cvb.addEventListener('change', ()=>{ state.plan.conv = cvb.checked; delete state.plan.focusConv; save(); renderPlanControls(); runPlan(); }); }
   $('#fxRun').addEventListener('click', runFocusAll);
   document.addEventListener('click',e=>{ const b=e.target.closest('button[data-goalsave]'); if(b) saveGoalFromResult(b.dataset.goalsave); });
   document.addEventListener('click',e=>{

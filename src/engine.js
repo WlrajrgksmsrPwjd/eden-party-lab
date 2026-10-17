@@ -1906,7 +1906,7 @@ function buildCtx(input, ownedAll){
   const pool = (Array.isArray(input.shuttlePool) && input.shuttlePool.length ? input.shuttlePool : shuttlePoolOf((ownedAll||[]).filter(o=>o && o.pc).map(o=>o.pc)))
     .map(p=>Object.assign({}, p, {own: ownIds.has(p.id)})).filter(p=>(p.own || p.ns!==false) && !exS.has(p.id)) // 보유하지 않은 캐릭터는 기본 스타일(NS)만 — AS·ES·AC는 셔틀로 따로 키우기 어려움. 제외 목록은 셔틀로도 안 씀
     .sort((a,b)=>(b.own-a.own) || (a.id<b.id?-1:a.id>b.id?1:0));
-  return {pool, needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null,
+  return {pool, needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, noConv: !!input.noConv, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null,
     burstN: input.pledge && input.pledge.turns>0 ? Math.min(10, input.pledge.turns) : null};
 }
 /* ---------- AF 행동 수 (위키 기준) ----------
@@ -2838,7 +2838,10 @@ function charFocusMatch(c, f){
    cvTo: 이 캐릭터가 아군 전체를 F 속성으로 바꿀 수 있나(존 연동이면 그 속성 ZONE이 조합에 있어야 — teamZ로 확인) */
 const teamZoneEl = (team, el) => team.some(c=>c.zoneTypes && c.zoneTypes.opts.some(op=>op.kind==='elem' && op.types.includes(el)));
 function cvTo(c, F){ const e = c && c.echange; return !!(F && F.kind==='elem' && e && e.to==='all' && !e.sb && (e.el===F.v || e.el==='zone') && (!e.zone || e.zone===F.v)); }
-const cvForeign = (c, F) => !!(F && F.kind==='elem' && !F.conv && cvTo(c, F) && !charFocusMatch(c, F)); // 변환 미포함(사용자 2026-10-17 '네코코 미포함으로 했는데 포함됨'): 다른 속성의 아군 전체 변환 담당(네코코(ES) 등)은 원래 속성 덱에 넣지 않음
+const cvForeign = (c, F) => !!(F && F.kind==='elem' && !F.conv && cvTo(c, F) && !charFocusMatch(c, F));
+const cvAll = c => !!(c && c.echange && c.echange.to==='all' && !c.echange.sb); // 아군 전체 속성 변환 담당(네코코(ES)·네코코(AS)·에니·아르카디아 4명 조건 캐릭터)
+// 변환 필터(사용자 2026-10-17 '결현현이나 보스 등에도 네코코 필터'): 속성 지정이면 다른 속성 변환 담당만, 그 밖의 성향은 noConv(속성 변환 캐릭터 빼기)면 변환 담당 전부 후보에서 뺌
+const cvBlock = (c, ctx) => !!(ctx && ((ctx.noConv && cvAll(c)) || cvForeign(c, ctx.focus))); // 변환 미포함(사용자 2026-10-17 '네코코 미포함으로 했는데 포함됨'): 다른 속성의 아군 전체 변환 담당(네코코(ES) 등)은 원래 속성 덱에 넣지 않음
 function focusN(team, F){
   if(F && F.kind==='elem' && F.conv && team.some(c=>cvTo(c, F) && (!c.echange.req || reqMet(c.echange.req, team, c))) && teamZoneEl(team, F.v)) return team.length; // 변환 덱은 F.conv일 때만
   return team.filter(c=>charFocusMatch(c,F)).length;
@@ -2955,7 +2958,7 @@ function buildPool(owned, locked, opts){
   const pick = new Map();
   scored.filter(o=>lockedSet.has(o.pc.id)).forEach(o=>pick.set(o.pc.id,o));
   const F = ctx&&ctx.focus;
-  const free = scored.filter(o=>!lockedSet.has(o.pc.id) && !cvForeign(o.pc, F)); // 꼭 쓸 캐릭터로 고르면 변환 담당도 그대로
+  const free = scored.filter(o=>!lockedSet.has(o.pc.id) && !cvBlock(o.pc, ctx)); // 꼭 쓸 캐릭터로 고르면 변환 담당도 그대로
   const add = (key,n,src)=>{ (src||free).slice().sort((a,b)=>b.pot[key]-a.pot[key]).slice(0,n).forEach(o=>pick.set(o.pc.id,o)); };
   if(F){
     // 지정 속성·타입 공격자 + 그 속성·타입 존 담당 + 버퍼·생존 보강
@@ -3113,7 +3116,7 @@ async function optimize(input, onProgress){
     for(const ids of input.seeds){
       if(!Array.isArray(ids) || ids.length!==4) continue;
       const os = ids.map(id=>own.find(o=>o.pc.id===id)); if(os.some(o=>!o) || lockIds.some(id=>!ids.includes(id))) continue;
-      const team = os.map(o=>o.pc); if(dupBase(team) || (ctx.focus && (focusN(team, ctx.focus)<3 || team.some(c=>cvForeign(c, ctx.focus) && !lockIds.includes(c.id))))) continue; // 속성·타입 지정이면 그 덱만(변환 미포함이면 다른 속성 변환 담당이 낀 덱 제외)
+      const team = os.map(o=>o.pc); if(dupBase(team) || team.some(c=>cvBlock(c, ctx) && !lockIds.includes(c.id)) || (ctx.focus && focusN(team, ctx.focus)<3)) continue; // 속성·타입 지정이면 그 덱만(변환 미포함이면 다른 속성 변환 담당이 낀 덱 제외)
       const key = team.map(c=>c.id).sort().join();
       for(const o of os) if(!posOf.has(o.pc.id)){ posOf.set(o.pc.id,pool.length); pool.push(o); }
       let ti = seen.get(key);
@@ -3144,7 +3147,7 @@ async function optimize(input, onProgress){
     const scI = i=>scoreOf(raws[3*i],raws[3*i+1],raws[3*i+2]);
     const order = teams.map((_,i)=>i).sort((a,b)=>scI(b)-scI(a));
     const starts=[]; for(const i of order){ if(starts.length>=8) break; const ids=new Set(teams[i]); if(starts.some(s=>s.filter(x=>ids.has(x)).length>=3)) continue; starts.push(teams[i].slice()); }
-    const cand = own.filter(o=>!cvForeign(o.pc, ctx.focus)).map(o=>Object.assign({},o,{pot:soloPotential(o.pc,o.prog,enemy,S,cap,ctx)})).sort((a,b)=>(b.pot.dps+b.pot.sup*0.5)-(a.pot.dps+a.pot.sup*0.5)).slice(0,90);
+    const cand = own.filter(o=>!cvBlock(o.pc, ctx) || lockIds.includes(o.pc.id)).map(o=>Object.assign({},o,{pot:soloPotential(o.pc,o.prog,enemy,S,cap,ctx)})).sort((a,b)=>(b.pot.dps+b.pot.sup*0.5)-(a.pot.dps+a.pot.sup*0.5)).slice(0,90);
     for(const o of cand) if(!posOf.has(o.pc.id)){ posOf.set(o.pc.id,pool.length); pool.push(o); }
     const lockSet=new Set(lockIds);
     // 조합 nt의 teams 인덱스 (없으면 계산해 추가). 다른 단계 값(어림·×0.5)으로만 있으면 그 값 그대로(예전처럼 이동 후보로 거의 안 뽑힘)

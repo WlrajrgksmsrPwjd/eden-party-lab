@@ -74,6 +74,7 @@
           <label class="lbl" for="lockIn">꼭 쓸 캐릭터 <span class="hint" style="letter-spacing:0;font-weight:400">최대 3명 · 비워 두면 보유 전체에서</span></label>
           <div class="picker"><input type="text" id="lockIn" placeholder="보유 캐릭터 이름 검색" autocomplete="off"><div class="drop" id="lockDrop" hidden></div></div>
           <div class="chips" id="lockChips"></div>
+          <label class="checkrow convrow"><input type="checkbox" id="focusConv"> <span>속성 변환 캐릭터 포함 <span class="hint" id="convHint"></span></span></label>
         </div>
         <details class="adv" id="advFold">
           <summary>세부 조건 <span class="advn" id="advN"></span></summary>
@@ -82,7 +83,6 @@
             <div>
               <label class="lbl">속성·타입 지정 <span class="hint" style="letter-spacing:0;font-weight:400">고르면 그 속성·공격 타입 화력만 셉니다</span></label>
               <div class="seg focusseg" id="focusSeg"></div>
-              <label class="checkrow" hidden><input type="checkbox" id="focusConv"> <span>변환 덱 포함 <span class="hint">네코코(ES) 変幻自在처럼 남이 아군 전체 속성을 바꿔 주는 조합도 그 속성 덱으로</span></span></label>
             </div>
             <div id="enemyAdv">
               <div id="enemyBlock">
