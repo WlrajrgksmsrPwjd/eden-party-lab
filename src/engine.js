@@ -1203,7 +1203,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     const f = typeof v0==='number' ? (v0>0 ? Math.max(0, Math.min(1, (+v1||0)/v0)) : 1) : (v0 ? (v1 ? 1 : 0) : 1);
     if(f<1){ const m1 = condMult(sk, sk.mcond, situation, team, c, progs, idx, A, zone, enemy, el); if(m1>0) dmg *= condMult(sk, sk.mcond, situation, team, c, progs, idx, A, zone, enemy, el, f)/m1; } }
   // 스탯 비례 조건의 버프 몫이 자기 버프 행동에 묶인 경우(skill_cond need stat + buff_k, 2026-10-16 엘레노아: 정신 ×1.5는 祈誓の導き(self.singular_focus 출처)를 쓴 만큼만)
-  if(sk.mcond && sk.mcond.need && onK && sk.mcond.need.some(n=>n && n.buff_k)){ const nd = sk.mcond.need.map(n=>n && n.buff_k && onK[n.buff_k]!=null && onK[n.buff_k]<1 ? ({...n, ...{buff:(+n.buff||0)*Math.max(0, +onK[n.buff_k]||0)}}) : n);
+  if(sk.mcond && sk.mcond.need && onK && sk.mcond.need.some(n=>n && n.buff_k)){ const nd = sk.mcond.need.map(n=>n && n.buff_k && !n.live && onK[n.buff_k]!=null && onK[n.buff_k]<1 ? ({...n, ...{buff:(+n.buff||0)*Math.max(0, +onK[n.buff_k]||0)}}) : n);
     if(nd.some((n,i)=>n!==sk.mcond.need[i])){ const m1 = condMult(sk, sk.mcond, situation, team, c, progs, idx, A, zone, enemy, el); if(m1>0) dmg *= condMult(sk, ({...sk.mcond, ...{need:nd}}), situation, team, c, progs, idx, A, zone, enemy, el)/m1; } }
   // 자기 버프(self_buff)는 '자신이 받는 최대치'라 자기 파티 버프를 이미 포함한다 → 같은 항목은 자기 파티 버프를 또 더하지 않음(판정은 보정 전 값으로)
   const has = k => { const v=c.self[k], w=me[k]; return (typeof v==='number' ? v>0 : !!v) && (typeof w==='number' ? w>0 : !!w); }; // 출처 행동 전이라 꺼진 자기 버프면 자기 파티 버프를 받음
@@ -1349,6 +1349,12 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const D = pr.D || {str:230, int:230, spd:220, lck:156, mp:450, atk:457, mag:457};
   const fsObj = stat==='int' ? {i:flatP} : stat==='spd' ? {s:flatP} : {p:flatP};
   const diW = frac(sk.def_ignore), bh = dingHit(D, G5_OF(kind, stat), el!=='none', Math.max(-0.9, statB - sideDn), diW>=1 ? 1 : diW>0 ? defR + (1-defR)*diW : defR, fsObj); // 아군 스탯 DOWN 부작용은 버프에서 빼기
+  /* 버프 적용 스탯 비례 위력(skill_cond need stat + live, 2026-10-18): 그 순간 공격 스탯(기본·장비 + 고정값) × (1 + 스탯 버프)로 충족 비율 — 셴화 ホライゾン 640%+지성(상한 2000)·베네딕트 220%+3×힘(상한 999)·키쿄 속도(상한 600).
+     예전엔 기본 스탯 × (1+buff) 어림과 AF 비율(af_p) 고정이라 허수아비 AF에선 버프가 다 걸려도 30%만 셈 */
+  if(sk.mcond && sk.mcond.need && sk.mcond.need.some(n=>n && n.live && n.stat===stat)){
+    const SK = stat==='int' ? 'int' : stat==='spd' ? 'spd' : 'str', liveV = ((+D[SK]||0) + flatP) * (1 + Math.max(-0.9, statB - sideDn));
+    const nd = sk.mcond.need.map(n=>{ if(!(n && n.live && n.stat===stat)) return n; const x = Math.max(0, Math.min(1, liveV/Math.max(1, +n.full||500))); return {af_p:x, n_p:x}; });
+    const m1 = condMult(sk, sk.mcond, situation, team, c, progs, idx, A, zone, enemy, el); if(m1>0) dmg *= condMult(sk, ({...sk.mcond, ...{need:nd}}), situation, team, c, progs, idx, A, zone, enemy, el)/m1; }
   const lunaF = (1+0.7*Math.min(1,kessW)) * (1+0.5*Math.min(1,shinW)); // 루나틱 44행: 결사 ×1.7 → 심안 ×1.5
   dmg *= bh.n * (1+typeR+physR) * (1+budDmg) * lunaF * dmgUp;
 
@@ -2797,7 +2803,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   for(const zq of zc.slice(0, 4)){
     const zs2 = sameZ(res.normal.zones, zq), awC = zs2.some(q=>q.how!=='개전 자동' && q.how!=='SB 시' && q.how!=='1회 각성' && !q.once), awS = !awC && zs2.some(q=>q.how==='개전 자동');
     const teamD = Object.keys(P1.pick).length ? team.map((c,i)=> P1.pick[i]===undefined ? c : P1.pick[i] ? ({...c, ...{afSk:c.sbN, _sbN:true}}) : ({...c, ...{sbN:null}})) : team; // AF 스킬 고르기(위)를 허수아비에도
-    const o = {team:teamD, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw:sbAw0, sbFresh:sbFr, sbIdx, sbCores:res.sb.cores, light, shadow, zcs:(res.normal.zones||[]).map(zAF), quick:true};
+    const o = {team:teamD, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw:sbAw0, sbFresh:sbFr, sbIdx, sbCores:res.sb.cores, light, shadow, zcs:(res.normal.zones||[]).map(zAF), quick:true, deep:!(ctx && ctx.stFast)};
     const dd = dummySim(o); qz.push({dd, o});
     if(!bestD || dd.total > bestD.total*1.0005){ bestD = dd; bestO = o; }
   }
@@ -3000,13 +3006,23 @@ function dummySim(o){
   // 버프 행동 고르기: 전부 쓰는 것에서 시작해 캐릭터마다 앞에서 몇 개만 쓰는 쪽(0개 포함)이 더 높으면 바꿈(한 바퀴)
   // 버프·디버프에 쓸 수 있는 스킬 칸 → 앞에서부터 쓸 수 있는 행동 수(통상 공격 칸 행동 na는 칸을 안 씀)
   const slotF = team.map((c,j)=>{ const L = skillSlots(c, progs[j]); if(!B[j]) return L; let k=0; const nm = new Set(), fr = freeSk(c, progs[j]); for(const st of B[j].steps){ if(!st.na){ const n = skN(st.s) || ('#'+k); if(!nm.has(n) && !fr.has(n)){ if(nm.size>=L) break; nm.add(n); } } k++; } return k; }); // 같은 이름 행동은 칸 하나
-  let castN = team.map((c,j)=> B[j] ? Math.min(B[j].steps.length, slotF[j]) : 0);
-  let best = run(null, castN);
-  if(!o.quick) for(const j of prio){ const L = B[j] ? B[j].steps.length : 0; if(!L) continue;
-    const dps = (team[j].roles||[]).includes('dps'); // 딜러: 안 쓰기(셋 이상이면 하나만도), 서포터: 하나만(둘 이상일 때) — 중간 개수는 차이가 작고 계산이 길어짐
-    const opts = dps ? (L>=3 ? [0, 1, 2] : L>=2 ? [0, 1] : [0]) : (L>=3 ? [1, 2] : L>=2 ? [1] : []); // 2개까지(2026-10-16: 뇌 파티처럼 버프 행동이 많은 조합은 2개 쓰는 쪽이 가장 높은 경우가 많음), 딜러 행동 2개면 1개만도(2026-10-18)
-    if(B[j] && B[j].nFront && B[j].nFront < L){ if(!opts.includes(B[j].nFront)) opts.push(B[j].nFront); if(B[j].nFront+1 < L && !dps) opts.push(B[j].nFront+1); } // 존 전개·각성(속성 변환) 행동까지만 쓰는 계획
-    for(const k of opts){ if(k===castN[j] || k>slotF[j]) continue; const cn = castN.slice(); cn[j] = k; const r = run(null, cn); if(r.total > best.total*1.0005){ best = r; castN = cn; } } }
+  const isDps = j => (team[j].roles||[]).includes('dps');
+  /* 버프 행동 수(2026-10-18 다시): 행동 수 하나 차이로 AF가 SB 게이지 100%에 닿느냐가 갈려 값이 들쭉날쭉(셴화·야쿠모(AS)·애니 덱: 1·1·2·2 = 496억, 이웃 1·2·2·2 = 123억)
+     → 시작점 둘(전부 쓰기 / 딜러 0·서포터 1)에서 한 사람씩 바꾸기를 나아지지 않을 때까지(최대 2바퀴 — 90조합 시험에서 3바퀴와 같음), 서포터도 0개 후보(애니 0개가 522억) */
+  const optsOf = j => { const L = B[j] ? B[j].steps.length : 0; if(!L) return [];
+    const opts = L>=3 ? [0, 1, 2, L] : L>=2 ? [0, 1, 2] : [0, 1]; // 2개까지(2026-10-16: 뇌 파티처럼 버프 행동이 많은 조합은 2개 쓰는 쪽이 가장 높은 경우가 많음) + 전부
+    if(B[j].nFront && B[j].nFront < L){ if(!opts.includes(B[j].nFront)) opts.push(B[j].nFront); if(B[j].nFront+1 < L && !opts.includes(B[j].nFront+1)) opts.push(B[j].nFront+1); } // 존 전개·각성(속성 변환) 행동까지만 쓰는 계획
+    return [...new Set(opts.map(k=>Math.min(k, slotF[j])))]; };
+  const memo = new Map(), runM = cn => { const k = cn.join(); if(!memo.has(k)) memo.set(k, run(null, cn)); return memo.get(k); };
+  const descend = cn0 => { let cN = cn0, bst = runM(cN);
+    if(!o.quick) for(let pass=0, np=o.deep===false ? 1 : 2; pass<np; pass++){ let moved = false;
+      for(const j of prio) for(const k of optsOf(j)){ if(k===cN[j]) continue; const cn = cN.slice(); cn[j] = k; const r = runM(cn); if(r.total > bst.total*1.0005){ bst = r; cN = cn; moved = true; } }
+      if(!moved) break; }
+    return [bst, cN]; };
+  let [best, castN] = descend(team.map((c,j)=> B[j] ? Math.min(B[j].steps.length, slotF[j]) : 0));
+  if(!o.quick && o.deep!==false){ // 두 번째 시작점(2026-10-18, 탐색 어림 단계 stFast에선 한 바퀴·시작점 하나 — 오르기 탐색이 정밀 허수아비를 수천 번 부름, 마지막 상위 80개·화면은 둘 다): 딜러 0개·서포터 1개(존 전개 행동까지는 씀)에서 한 바퀴 — '전부 쓰기'에서 시작한 한 바퀴가 나쁜 곳에 멈추는 일(셴화·야쿠모(AS) 덱 −15%)
+    const s2 = team.map((c,j)=>{ const L = B[j] ? B[j].steps.length : 0; if(!L) return 0; let k = isDps(j) ? 0 : 1; if(B[j].nFront && B[j].nFront > k) k = B[j].nFront; return Math.min(k, L, slotF[j]); });
+    if(s2.some((v,j)=>v!==castN[j])){ const [b2, c2] = descend(s2); if(b2.total > best.total*1.0005){ best = b2; castN = c2; } } }
   // 주력이 아닌 스킬로 독·페인을 거는 캐릭터: 첫 공격 행동을 그 스킬에 쓰는 쪽과 안 쓰는 쪽 중 높은 것
   const base = infAt(all, team.map(()=>false));
   const cands = infT.map((t,j)=>t && ((t.wPo==='skill' && t.po>0 && base.poison<t.po) || (t.wPa==='skill' && t.pa>0 && base.pain<t.pa)) ? j : -1).filter(j=>j>=0)

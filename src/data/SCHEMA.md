@@ -197,7 +197,7 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 
 # 스킬 위력 조건 추가 (`skill_cond.json`)
 
-`top`: 최대 배율을 스킬 데이터 대신 이 값으로. 조건 `{"stat":"spr","full":500,"buff":0.5,"sum":"front"}`: 기본 스탯(천명치 반영)×(1+buff) ÷ full 비율(sum이 front면 전열 합).
+`top`: 최대 배율을 스킬 데이터 대신 이 값으로. 조건 `{"stat":"spr","full":500,"buff":0.5,"sum":"front"}`: 기본 스탯(천명치 반영)×(1+buff) ÷ full 비율(sum이 front면 전열 합). `"live":true`(2026-10-18)면 그 순간 공격 스탯(기본·장비 + 고정값 버프) × (1 + 그때 걸린 스탯 버프) ÷ full — 공격 스탯과 같은 stat일 때만(셴화 지성·베네딕트 힘·키쿄 속도), buff·af_p·buff_k는 안 씀.
 
 # 스텔라 보드 (`stellar.json`)
 
