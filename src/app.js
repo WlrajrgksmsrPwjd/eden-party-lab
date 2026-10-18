@@ -1010,7 +1010,7 @@ function renderResults(r, boss, enemy, mode){
       h+=`<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${d.focus.kind==='elem'?`<span class="dot ${d.focus.v}"></span> `:''}${esc(focusLabel(d.focus))}${zoneOfFocus(d.focus)?` <small class="dz">${esc(zoneOfFocus(d.focus))}</small>`:''}</span><span class="dm">${d.team.map(c=>esc(c.name)).join(', ')}</span><span class="num">${(d.rel*100).toFixed(0)}</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; });
     h+='</section>';
   }
-  if(all.length && !state.sample && !(all[0] && all[0].shared)) h+=`<section class="growbox" id="growBox"><h3>육성 추천</h3><p class="hint" style="margin:0">위 조합 멤버 중 한 단계만 올렸을 때(성도각성 · 천명치 다음 단계 · 현현 무기) 이 성향 점수가 가장 많이 오르는 것. 다른 조합으로 바뀌는 효과는 세지 않습니다.</p><button type="button" class="btn small" id="growRun">계산하기</button><div id="growList"></div></section>`;
+  if(all.length && !state.sample && !(all[0] && all[0].shared)) h+=`<section class="growbox" id="growBox"><h3>육성 추천</h3><p class="hint" style="margin:0">위 조합 멤버 중 한 단계만 올렸을 때(성도각성 · 천명치 다음 단계 · 현현 무기) 이 성향 점수가 가장 많이 오르는 것. 다른 조합으로 바뀌는 효과는 세지 않습니다.</p><button type="button" class="btn small" id="growRun">계산하기</button><div id="growList"></div><h3 style="margin-top:14px">획득 추천</h3><p class="hint" style="margin:0">안 가진 SS·S 캐릭터(천명치 80·성도각성 가정)를 위 1~3위 조합 멤버와 한 명씩 바꿔 넣어 봤을 때 가장 많이 오르는 캐릭터. 그 캐릭터 중심의 새 조합까지는 찾지 않습니다.</p><button type="button" class="btn small" id="getRun">계산하기</button><div id="getList"></div></section>`;
   out.innerHTML=h;
   GROW.all = all; GROW.r = r; GROW.mode = mode; GROW.tok++;
 }
@@ -1048,6 +1048,34 @@ async function growRun(){
   const pct = v=>'+'+(v*100).toFixed(1)+'%';
   box.innerHTML = L.length ? `<ol class="growlist">${L.map(v=>`<li><b>${esc(v.c.name)}</b> ${esc(v.label)}${v.note?` <span class="hint">(${esc(v.note)})</span>`:''} — ${v.gains.filter(q=>q.g>0.001).sort((a,b)=>a.rank-b.rank).map(q=>`${q.rank}위 조합 <b>${pct(q.g)}</b>`).join(' · ')}</li>`).join('')}</ol><p class="hint" style="margin:4px 0 0">한 번에 하나씩 올린 값이고, 조합 점수가 1위에 가까울수록 앞에 둡니다.</p>`
     : '<p class="hint">위 조합 멤버는 이 단계들로 점수가 거의 안 바뀝니다(이미 다 키웠거나 효과가 작음).</p>';
+  if(btn){ btn.disabled = false; btn.textContent = '다시 계산'; }
+}
+const growScore = (r, mode) => { const W = r.weights || {b:0.4, s:0.3, t:0.3}, nm = r.nmax || null;
+  const BR = ev => mode==='opener' ? +ev.opener||0 : mode==='burst' ? +ev.dummyT||0 : +ev.burst||0;
+  return ev => { if(!nm) return BR(ev); const tt = (+ev.surv||0)/(nm.t||1); let v = W.b*BR(ev)/(nm.b||1) + W.s*(+ev.sustain||0)/(nm.s||1) + W.t*tt; if(tt<0.25 && ['sustain','weak','opener','all','boss'].includes(mode)) v *= 0.85; return v; }; };
+/* 획득 추천(2026-10-18): 안 가진 SS·S(점수 순 30명, 천명치 80·성도각성 가정)를 1~3위 조합의 멤버 자리에 하나씩 넣어(꼭 쓸 캐릭터 자리·같은 캐릭터 다른 스타일 겹침 제외) 가장 오르는 값 */
+async function getRun(){
+  const box = $('#getList'), btn = $('#getRun'); if(!box || !GROW.all) return;
+  const tok = GROW.tok, r = GROW.r, mode = GROW.mode, S = settings(), sc = growScore(r, mode), P = state.plan, lock = new Set(P.locked||[]);
+  const f = r.focus || null, noCv = noConvOf(P, f);
+  const cvSkip = c => { const e = c.echange; if(!(e && e.to==='all' && !e.sb)) return false; if(f && f.kind==='elem') return !f.conv && !(c.elems||[c.elem]).includes(f.v); return noCv; };
+  const cands = [...byId.values()].filter(c=>!state.owned[c.id] && !c._custom && (c.tier==='SS'||c.tier==='S') && !(P.excluded||[]).includes(c.id) && !cvSkip(c)).sort((a,b)=>(+b.score||0)-(+a.score||0) || (a.id<b.id?-1:1)).slice(0, 30);
+  const top = GROW.all.slice(0, 3), s0 = top.map(x=>sc(x.ev)), best = Math.max(1e-12, ...s0);
+  if(btn){ btn.disabled = true; btn.textContent = '계산 중…'; }
+  const total = cands.length*top.reduce((a,x)=>a + x.team.length, 0); let n = 0; const out = [];
+  for(const c of cands){ const own = Object.assign(BASE_OWN(), {t:80, s:!!c.stellar}), pr = E.charProg(c, own, S); let bestV = 0, bestAt = null;
+    for(let k=0; k<top.length; k++){ const x = top[k];
+      for(let i=0; i<x.team.length; i++){ n++; if(tok!==GROW.tok) return; if(lock.has(x.team[i].id)) continue;
+        const t2 = x.team.slice(); t2[i] = c; if(E.dupBase(t2)) continue;
+        const p2 = x.progs.slice(); p2[i] = pr;
+        let g = -1; try{ const ev2 = E.evalTeam(t2, p2, (LAST_PLAN && LAST_PLAN.enemy) || null, S, cap, x.ctx || ctxOf({})); g = sc(ev2)/Math.max(1e-12, s0[k]) - 1; }catch(e){}
+        const v = g*(s0[k]/best); if(v > bestV){ bestV = v; bestAt = {rank:x.rank, out:x.team[i], g}; }
+        if(btn) btn.textContent = `계산 중 ${n}/${total}`; await yieldUI(); } }
+    if(bestAt) out.push({c, v:bestV, at:bestAt}); }
+  if(tok!==GROW.tok) return;
+  const L = out.filter(o=>o.v>0.005).sort((a,b)=>b.v-a.v).slice(0, 10), pct = v=>'+'+(v*100).toFixed(1)+'%';
+  box.innerHTML = L.length ? `<ol class="growlist">${L.map(o=>`<li><b>${esc(o.c.name)}</b> <span class="tier ${o.c.tier}">${esc(o.c.tier)}</span> — ${o.at.rank}위 조합의 ${esc(o.at.out.name)} 대신 <b>${pct(o.at.g)}</b></li>`).join('')}</ol><p class="hint" style="margin:4px 0 0">천명치 80·성도각성으로 가정한 값이고, 바꿔 넣은 조합 점수가 1위에 가까울수록 앞에 둡니다.</p>`
+    : '<p class="hint">위 조합에 한 명씩 넣어서는 점수가 오르는 캐릭터가 없습니다.</p>';
   if(btn){ btn.disabled = false; btn.textContent = '다시 계산'; }
 }
 const sameTeam=(a,b)=>a.length===b.length && a.every(c=>b.some(d=>d.id===c.id));
@@ -2511,7 +2539,7 @@ function bind(){
   $('#plCompBox').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const C=plOf().comp; const L = b.dataset.pce ? C.elem : C.weap, v=b.dataset.pce||b.dataset.pcw;
     const i=L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); C.on=true; plChanged(); });
   $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
-  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); });
+  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); if(e.target.closest('#getRun')) getRun(); });
   $('#planBossQ').addEventListener('input', ()=>renderPlanControls()); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
   $('#bossSum').addEventListener('click', e=>{ const mp = e.target.closest('[data-modp]'); if(mp){ const b = curBossOf(); if(!b) return; const pr = (b.modifier_presets||[]).find(p=>p.id===mp.dataset.modp); if(!pr) return;
       state.plan.mods = state.plan.mods || {}; if(Array.isArray(pr.on)) state.plan.mods[b.id] = pr.on.slice(); save(); renderPlanControls(); if(Array.isArray(pr.on)) runPlan(); return; } });
