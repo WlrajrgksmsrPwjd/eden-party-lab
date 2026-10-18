@@ -2516,7 +2516,9 @@ function battleSim(N, o){
         const R = hgTurn(o.hg.G, hs0, segs, M); hs1 = R.s; rec.hgS = hs1;
         if(Math.abs(R.x - 1) > 1e-9){ const xa = op==='af' ? R.xs[0] : 1, xn = op==='af' ? 1 : R.xs[0], xsb = dS>0 ? R.xs[1] : 1;
           d = d - dA - dS - nd + dA*xa + dS*xsb + nd*xn; rec.nd = nd*xn; if(rec.afD) rec.afD *= xa; if(rec.sbD) rec.sbD *= xsb; rec.hg = +R.x.toFixed(3); } }
-      if(o.cutW || o.turnX){ const m = (o.cutW ? o.cutW.reduce((q,w)=> t<=w.t ? Math.min(q, w.x) : q, 1) : 1)*(o.turnX && o.turnX[t-1]>0 ? o.turnX[t-1] : 1); if(m!==1){ d *= m; rec.nd *= m; if(rec.afD) rec.afD *= m; rec.cut = +m.toFixed(3); } } // 보스 개시 피해 경감·턴마다 바뀌는 보스 내성 단계(그 턴 피해 전부 ×x — 낮아진 뒤 AF를 쓰는 계획을 고르게)
+      if(o.cutW || o.turnX){ const m = (o.cutW ? o.cutW.reduce((q,w)=> t<=w.t ? Math.min(q, w.x) : q, 1) : 1)*(o.turnX && o.turnX[t-1]>0 ? o.turnX[t-1] : 1); if(m!==1){ d *= m; rec.nd *= m; if(rec.afD) rec.afD *= m; if(rec.sbD) rec.sbD *= m; rec.cut = +m.toFixed(3); } } // 보스 개시 피해 경감·턴마다 바뀌는 보스 내성 단계(그 턴 피해 전부 ×x — 낮아진 뒤 AF를 쓰는 계획을 고르게)
+      /* 서가 챌린지 점수(o.scoreCap, 2026-10-19 알테마 星詠みの書架: 'AF 중에는 10억 이상 줘도 999,999,999까지만 가산'): AF 안에서 준 피해(AF + AF 안 SB)는 한 번에 상한까지만 → 점수를 최대로 하는 계획 */
+      if(o.scoreCap>0 && op==='af'){ const inAF = (+rec.afD||0) + (rec.sb==='af' ? +rec.sbD||0 : 0); if(inAF > o.scoreCap){ rec.raw = d; d = d - inAF + o.scoreCap; rec.capped = true; } }
       rec.d = d; rec.g = g; rec.s = s; rec.g1 = g1;
       const nx = f(t+1, g1, s1, e1, aw1, ou1, hs1), v = d + nx.v;
       if(!best || v>best.v) best = {v, plan:[rec].concat(nx.plan)};
@@ -2608,7 +2610,7 @@ function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
     let tot = tA*keep/dA; const per = (ev.bsim.per||[]).map(v=>(v||0)*keep/dA);
     Object.keys(sc).forEach(t=>{ const f = dAll(+t)/dA, x = sc[t]; tot += tA*f*x; (ev.bsim.per||[]).forEach((v,i)=>{ per[i] = (per[i]||0) + (v||0)*f*x; }); });
     ph.forEach((p,k)=>{ if(!parts[k]) return; const dB = p.turns.reduce((a,r)=>a+Math.max(0,+r.d||0),0) || 1, fB = parts[k]/dB; tot += p.btot*fB; (p.per||[]).forEach((v,i)=>{ per[i] = (per[i]||0) + (v||0)*fB; }); });
-    ev.bsim = ({...ev.bsim, ...{turns, total: tot, per, zl: true}}); ev.burst = tot; }
+    ev.bsim = ({...ev.bsim, ...{turns, total: tot, per, zl: true}}); ev.burst = ev.score && tA>0 ? ev.score.total*tot/tA : tot; } // 서가 챌린지 점수는 같은 비율로
   // 지속 딜: 단계별 구간 비율(턴 기준은 긴 전투 HL턴, HP 기준은 HP 비율)
   const sA = +ev.sustain||0, st = []; let prev = 0; ph.forEach(p=>{ const p0 = Math.min(1, Math.max(prev, p.pos)); st.push(p0); prev = p0; });
   let sus = sA*(st[0]||0); ph.forEach((p,k)=>{ sus += p.sustain*Math.max(0, (k+1<ph.length ? st[k+1] : 1) - st[k]); });
@@ -3023,6 +3025,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       tot += w*bs.total; perOf(bs).forEach((v,i)=>{ perW[i] += w*v; }); });
     out.bsim.total0 = out.bsim.total; out.bsim.total = tot; out.bsim.per = perW;
     out.burstOld = out.burst; out.burst = out.bsim.total;
+    if(+S.afScoreCap>0){ const sc = battleSim(NB, ({...simIn, ...{scoreCap: +S.afScoreCap}})); out.score = {total: sc.total, turns: sc.turns, cap: +S.afScoreCap}; out.burst = sc.total; } // 서가 챌린지: 성향 점수의 '실전'은 점수(AF 상한) — 처치 턴은 실제 피해(bsim)
     out.opener = NB===1 ? out.bsim.total : battleSim(1, simIn).total;
   } else { out.bsim = {total:0, turns:[], N:NB, afStart:st, s0:simIn.s0}; }
   if(needDummy && ctx && ctx.dummyFast){ // 탐색 1단계: 허수아비를 빠르게 어림(버프 다 깔린 AF + AF 끝 콤보 SB), 상위 후보만 2단계에서 정밀 계산

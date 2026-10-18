@@ -1011,7 +1011,7 @@ const HOT = {opener:'o',burst:'b',sustain:'s',stability:'t',weak:'s',boss:'',kes
 /* 카드 첫 화면의 핵심 지표 3개: 그 성향 점수에 들어가는 값 위주 (2026-10-16, 처음 쓰는 사람용 간단 보기) */
 function keyMetrics(x, mode, ref){
   const ev=x.ev, N=settings().burstTurns||3;
-  const M = {real:[`실전 ${N}턴 총딜`, ev.burst, 'burst'], sus:['지속 딜 (턴당)', ev.sustain, 'sustain'], surv:['생존력', ev.surv, 'surv', true],
+  const M = {real:[ev.score ? `${N}턴 점수(AF 1회 9.99억까지)` : `실전 ${N}턴 총딜`, ev.burst, 'burst'], sus:['지속 딜 (턴당)', ev.sustain, 'sustain'], surv:['생존력', ev.surv, 'surv', true],
     dummy:['최고점 (허수아비)', ()=>ev.dummyT, 'dummyT'], af:['AF 1회', ev.af, 'af'], op:['1턴 총딜', ev.opener, 'opener']}; // 허수아비는 쓸 때만 계산
   const ord = {burst:['dummy','af','sus'], opener:['op','sus','surv'], sustain:['sus','real','surv'], stability:['surv','sus','real']}[mode] || ['real','sus','surv'];
   return `<div class="keys">${ord.map((k,j)=>{ const [lab,v0,rk,isS]=M[k], v = typeof v0==='function' ? v0() : v0; return metric(lab, +v||0, ref&&ref[rk] ? (+v||0)/ref[rk] : null, j===0, isS); }).join('')}</div>`;
@@ -1442,7 +1442,7 @@ async function copyReport(key, btn){
     `[에덴 편성 연구실 제보] ${new Date().toISOString().slice(0,10)} · 계산 버전 ${BUILD||'-'}`,
     `성향: ${MODE_KR[mode]||mode}${boss ? ' · 보스: '+(boss.name_kr||boss.id)+(mods ? ' (흉성·서약: '+mods+')' : '') : ''}${!boss && enT ? ' · 상대: '+enT : ''}${rec.focus ? ' · '+focusLabel(rec.focus) : ''}`,
     `조합${x.rank ? ' '+x.rank+'위' : ''}${x.rel!=null ? ' (점수 '+Math.round(x.rel*100)+')' : ''}: ${x.team.map(c=>c.name).join(' · ')} | 존: ${(ev.sb && ev.sb.zone && ev.sb.zone.level) ? ev.sb.zone.label : '없음'}`,
-    burstMode ? `최고점 ${fmtN(ev.dummyT||0)} · 생존 ${Math.round(ev.surv)}` : `실전 ${fmtN(ev.burst)} · 지속 ${fmtN(ev.sustain)} · 생존 ${Math.round(ev.surv)}${boss && x.kt && x.kt.t ? ' · 예상 처치 '+x.kt.t+'턴' : ''}`,
+    burstMode ? `최고점 ${fmtN(ev.dummyT||0)} · 생존 ${Math.round(ev.surv)}` : `${ev.score ? '점수' : '실전'} ${fmtN(ev.burst)} · 지속 ${fmtN(ev.sustain)} · 생존 ${Math.round(ev.surv)}${boss && x.kt && x.kt.t ? ' · 예상 처치 '+x.kt.t+'턴' : ''}`,
     `비중: ${x.team.map((c,i)=>c.name+' '+Math.round((per[i]>0?per[i]:0)/tot*100)+'%').join(' · ')}`,
     warns.length ? `경고: ${warns.join(' / ')}` : '',
     `보유: ${own}`,
@@ -1639,7 +1639,7 @@ function reviveTxt(team){
 function turnRecTxt(r, ev, team, mainI){
   const g = Math.round(+r.g||0), bz = r.bz && r.bz!==true ? ` <span class="hint">(보스 존 ${esc(r.bz)})</span>` : '';
   if(r.af){ const sb = r.sb==='af' ? ` → AF 안에서 <b>SB</b>${r.combo ? ` (콤보 ${Math.round(r.combo*100)}%)` : ''}` : '';
-    return `<b>${r.t}턴</b>: <b class="afk">AF 발동</b> (게이지 ${Math.round(+r.af||g)}%${r.afL>=2?' · 극 존':''})${sb} · ${fmtN(r.d)}${r.ctrAF?' · AF 뒤 요격':''}${hgT(r)}${bz}`; }
+    return `<b>${r.t}턴</b>: <b class="afk">AF 발동</b> (게이지 ${Math.round(+r.af||g)}%${r.afL>=2?' · 극 존':''})${sb} · ${fmtN(r.d)}${r.capped ? ` <span class="hint">(점수 상한 — 실제 ${fmtN(r.raw)})</span>` : ''}${r.ctrAF?' · AF 뒤 요격':''}${hgT(r)}${bz}`; }
   const sb = r.sb==='turn' ? `<b>SB</b> + ` : '', st = r.stack ? '게이지 축적 소비 · ' : '';
   const full = r.afFull>0 ? ` <span class="warn">AF 게이지가 꽉 차 피해 감소</span>` : '';
   return `<b>${r.t}턴</b>: ${st}${sb}평상 공격 (AF 게이지 ${g}%${g>=50 && !ev.afOff ? ' — 켤 수 있지만 모아 둠' : ''}) · ${fmtN(r.d)}${hgT(r)}${full}${bz}`;
@@ -1725,7 +1725,7 @@ function turnPlanHtml(x, boss){
   o2.push(`${dealers.map(nm).join(', ')||nm(mainN)}: 평상 공격 — ${esc((ev.normal.cores[mainN]&&ev.normal.cores[mainN].skill)||'')} 위주, 버프·디버프 남은 턴 확인`);
   T.push(['2턴', o2]);
   // AF·SB 시점(2026-10-18 사용자 '언제 어포 켜서 쳐야 하는지 명시'): 실전 N턴 계획(battleSim)의 턴별 행동 + 보스면 처치 계획(killTurnsM 기록)
-  const o3=[], TR = (ev.bsim && ev.bsim.turns) || [];
+  const o3=[], TR = (ev.score && ev.score.turns) || (ev.bsim && ev.bsim.turns) || []; // 서가 챌린지는 점수 계획(AF 상한)
   if(TR.length){ for(const r of TR) o3.push(turnRecTxt(r, ev, team, mainI)); }
   if(ev.hasSB){ const co=ev.sb.cores[mainI]; o3.push(`<span class="hint">SB: 버프·디버프·존(${esc(sbz&&sbz.level?sbz.label:'없음')})이 켜진 상태에서 — 주딜 ${nm(mainI)} ${esc(co&&co.usingSB?co.skill:'')}</span>`); }
   else o3.push('<span class="hint">성도각성 캐릭터가 없어 SB 없이 AF로 폭딜</span>');
@@ -2526,7 +2526,7 @@ function bossSumHtml(b){
   const hpIn = noHp && !(b.hp_model && +b.hp_model.bar>0) ? `<div class="bsneeds"><span class="bsl">HP 직접 입력</span><input type="number" min="0" step="0.01" data-myhp="1" value="${esc(myHp||'')}" placeholder="한 줄 HP(억)" style="width:120px" aria-label="보스 HP 직접 입력(억)"> <span class="hint">공략에 HP가 없어 처치 턴을 못 냅니다 — 알고 있으면 넣어 주세요${b.hp_model && +b.hp_model.bars>1 ? ` (× ${b.hp_model.bars}줄로 계산)` : ''}</span></div>` : '';
   return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억${b.hp_user?' (직접 입력)':b.hp_conf==='low'?' (추정)':''}</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
     <div class="bsrels">${rels || (b.affinity_none ? '<span class="hint">약점·내성 없음 (전 속성 보통으로 계산)</span>' : '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>')}${b.weak_rotating ? ' <span class="need">약점이 턴마다 바뀜</span>' : ''}</div>${b.affinity_note_kr ? `<p class="hint bsaff">${esc(String(b.affinity_note_kr).split(/(?<=[.다요음])\s+/).slice(0,2).join(' '))}</p>` : ''}${parts}
-    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpIn}${hpModelHtml(b)}${hitGimHtml(b)}${threatHtml(b)}${zoneBossHtml(b)}
+    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpIn}${hpModelHtml(b)}${scoreRuleHtml(b)}${hitGimHtml(b)}${threatHtml(b)}${zoneBossHtml(b)}
     ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}${modsHtml(b)}`;
 }
 /* 보스 HP 구조·위협(2026-10-18, 사용자 '부활·스택 기믹', '갑개룡은 아파서 탱커 필요'): 처치 턴 계산(engine killTurnsM)·탱커/회복 감점이 무엇을 보고 있는지 요약에 표시 */
@@ -2536,6 +2536,9 @@ function hpModelHtml(b){ const h = b.hp_model; if(!h || !(+h.bars>1 || h.reset |
   if((h.stopper||[]).length) bits.push(`HP ${h.stopper.join('%·')}% 스토퍼(그 턴 남은 피해는 버려짐)`);
   if(+h.kt_min>0) bits.push(`최소 ${h.kt_min}턴`); for(const q of (h.dmg_cut||[]).filter(q=>+q.turns>0)) bits.push(`${q.when==='revive'?'부활 뒤':'개전'} ${q.turns}턴 피해 ×${q.x}`);
   return `<div class="bsneeds"><span class="bsl">HP 구조</span><span class="hint">${esc(bits.join(' · '))}${h.note_kr?` — ${esc(String(h.note_kr).split(/(?<=[.다요])\s+/)[0])}`:''}</span></div>`; }
+/* 서가 챌린지 점수 규칙(2026-10-19, 사용자·알테마 星詠みの書架): 5턴 동안 준 피해 + 편성·행동 보너스, AF 중 준 피해는 한 번에 999,999,999까지만 */
+function scoreRuleHtml(b){ if(!(b && bossCat(b)==='shoka' && !/_stella$/.test(b.id))) return '';
+  return `<div class="bsneeds"><span class="bsl">점수</span><span class="hint">챌린지는 5턴 동안 준 피해 + 편성·행동 보너스. AF 중 준 피해는 한 번에 999,999,999(약 10억)까지만 들어가서 평상 턴 딜이 중요 — 순위의 '실전'은 이 점수로 계산(보너스는 미반영)</span></div>`; }
 /* 타수로 벗기는 기믹(2026-10-19, engine hgList): 스택·횟수 배리어·연격 경감 — 처치 턴·실전 N턴이 그 턴 타수로 계산한다는 것을 요약에 */
 function hitGimHtml(b){ const L = E.hgList ? E.hgList(b) : []; if(!L.length) return '';
   const on = g => g.on==='revive' ? '부활 뒤 ' : g.on==='revive2' ? '2회 부활 뒤 ' : +g.from>1 ? g.from+'턴째 ' : '';
@@ -2549,7 +2552,7 @@ function singLine(x){ const ev = x.ev, T = x.team; if(!T.some(c=>c.song)) return
     return `${esc(c.name)}: 가창 ${c.song.t>=99 ? '(전투 끝까지)' : c.song.t+'턴'} — 그동안 평상 턴·AF 행동 없음(SB는 가능)${c.song.main ? ', 공격은 가창 중 턴 종료' : ''} · <span class="hint">刻唄の力(AF 중 게이지 회복량 증가, 수치 미공개 — 10% 가정)</span>`; }).filter(Boolean);
   return bits.length ? `<div class="kt">${bits.join('<br>')}</div>` : ''; }
 /* 카드 한 줄 AF 시점(2026-10-18 사용자 '언제 어포 켜서 쳐야 하는지 명시'): 실전 N턴 계획의 AF·SB 턴 + 보스면 그 뒤 처치 계획의 AF 턴 */
-function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.bsim && ev.bsim.turns) || []; if(!T.length || (o && (o.mode==='burst' || o.mode==='opener'))) return '';
+function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.turns) || (ev && ev.bsim && ev.bsim.turns) || []; if(!T.length || (o && (o.mode==='burst' || o.mode==='opener'))) return '';
   if(ev.afOff) return `<div class="kt hint">AF: 이 상대에선 못 씀${ev.hasSB ? ' — SB는 게이지가 차는 턴에' : ''}</div>`;
   const af = T.filter(r=>r.af).map(r=>`<b>${r.t}턴</b>${Math.round(+r.af)<100 ? `(게이지 ${Math.round(+r.af)}%)` : ''}${r.sb==='af' ? '+SB' : ''}`), sbT = T.filter(r=>r.sb==='turn').map(r=>r.t+'턴');
   let late = ''; const kl = x.kt && Array.isArray(x.kt.log) ? x.kt.log : null;
@@ -2584,6 +2587,7 @@ function effBoss(b, sel){
   { const af = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).find(q=>q && q.when==='af_full' && +q.x>0 && +q.x<1); if(af) bzS = Object.assign({}, bzS, {afFull: +af.x}); } // AF 게이지가 꽉 차면 아군 주는 피해 ×x
   if(b && b.hp_model && b.hp_model.protect) bzS = Object.assign({}, bzS, {protect: b.hp_model.protect}); // 공격 행동 수로 내려가는 보스 내성 단계(마크바브) → 실전 N턴
   { const cw = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).filter(q=>q && /^start/.test(String(q.when||'start')) && q.x!=null && +q.x>=0 && +q.x<1 && +q.turns>0 && !(+q.hits>0)).map(q=>({t:+q.turns, x:+q.x})); if(cw.length) bzS = Object.assign({}, bzS, {cutWin: cw}); } // 개시 피해 경감 구간 → 실전 N턴 계획이 그 뒤에 AF (횟수 배리어는 아래 타수 기믹)
+  if(b && bossCat(b)==='shoka' && !/_stella$/.test(b.id)) bzS = Object.assign({}, bzS, {afScoreCap: 999999999}); // 서가 챌린지 점수: AF 중 준 피해는 한 번에 999,999,999까지만(알테마 星詠みの書架) — 스텔라 난이도 id는 처치형이라 제외
   { const hg = b && E.hgList ? E.hgList(b) : []; if(hg.length) bzS = Object.assign({}, bzS, {hitGim: hg}); } // 타수로 벗기는 기믹(스택·횟수 배리어·연격 경감, 2026-10-19) → 실전 N턴·처치 턴
   if(!b || !(b.modifiers||[]).length) return {boss:b, S:bzS, pledge:null};
   const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:bzS, pledge:null};
