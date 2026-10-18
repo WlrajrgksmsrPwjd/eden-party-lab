@@ -29,8 +29,21 @@ const STYLE_KR = {NS:'노멀',AS:'어나더',ES:'엑스트라',AC:'이시층'};
 /* 보스 콘텐츠 분류(2026-10-17 사용자 '보스러시·서가·외사·외사 히든 등으로 카테고리'): content 원문으로 */
 const BOSS_CATS = [['rush','보스러시'],['shoka','성영의 서가'],['gaishi','외사'],['gaishi_h','외사 히든'],['kaisei','회생(과거와의 결투)'],['kengen','현현'],['kesshitsu','결실 현현'],['ad','어나더 던전'],['etc','기타']];
 const bossCat = b => { const c = String(b.content||''); if(b.kesshitsu || /結実/.test(c)) return 'kesshitsu'; if(/ボスラッシュ|보스러시|ボス・ラッシュ/.test(c)) return 'rush'; if(/書架/.test(c)) return 'shoka';
-  if(/^外史/.test(c)) return /裏ボス|隠し|ヒドゥン|hidden/i.test(c) ? 'gaishi_h' : 'gaishi'; if(/^廻生/.test(c)) return 'kaisei'; if(/^顕現/.test(c)) return 'kengen'; if(/アナザーダンジョン|封域/.test(c)) return 'ad'; return 'etc'; };
+  if(/^外史|^外伝/.test(c)) return /裏ボス|隠し|ヒドゥン|hidden/i.test(c) ? 'gaishi_h' : 'gaishi'; /* 외전(螺旋の記憶) 숨은 보스도 외사 묶음으로(2026-10-18) */ if(/^廻生/.test(c)) return 'kaisei'; if(/^顕現/.test(c)) return 'kengen'; if(/アナザーダンジョン|封域/.test(c)) return 'ad'; return 'etc'; };
 const BOSS_CAT_KR = Object.fromEntries(BOSS_CATS);
+/* 보스 대분류·소분류(2026-10-18 사용자 '보스가 많아지니 대분류·소분류'): 대분류 = 서가·외사(외전 포함)·회생·현현·결실·어나더 던전…, 소분류 = 외사 탄·회생 시련·진현현·던전 묶음 */
+const BOSS_TOP = [['shoka','성영의 서가'],['gaishi','외사·외전'],['kaisei','회생(과거와의 결투)'],['kengen','현현'],['kesshitsu','결실 현현'],['ad','어나더 던전'],['rush','보스러시'],['etc','기타']];
+const bossTop = b => { const k = bossCat(b); return k==='gaishi_h' ? 'gaishi' : k; };
+const GAISHI_SUB = {1:'외사 1탄 「환령의 검과 기서의 등불」', 2:'외사 2탄 「환령의 검과 암명의 잔광」', 3:'외사 3탄 「환령의 검과 퇴색의 주먹」'};
+const KAISEI_SUB = (()=>{ const m = {}; return b => { const key = String(b.id).split('_')[1] || ''; const t = String(b.name_kr||'').match(/—\s*(.+?)\s+EX\d/); if(t) m[key] = t[1]; return m[key] || t && t[1] || '기타 시련'; }; })();
+const bossSub = b => { const c = String(b.content||''), k = bossTop(b);
+  if(k==='gaishi'){ const n = (c.match(/第(\d)弾/)||[])[1]; if(n) return GAISHI_SUB[n] || `외사 ${n}탄`; const g = (c.match(/外伝（([^）]+)）/)||[])[1]; return g ? `외전 「${g}」` : '기타'; }
+  if(k==='kaisei') return KAISEI_SUB(b);
+  if(k==='kengen') return /真・/.test(c) || /^shin_/.test(b.id) ? '진·현현' : '현현';
+  if(k==='ad') return /カイロス/.test(c) ? '시층 관측선 카이로스' : /封域/.test(c) ? '봉역' : '베리 하드';
+  return ''; };
+const SHOKA_TL = 5; // 성영의 서가 챌린지 턴 제한(사용자 2026-10-18: '서가 챌린지는 5턴 — 5턴 내 최대 딜과 안정 클리어로 구분')
+const bossTL = b => b ? (+b.turn_limit>0 ? +b.turn_limit : bossCat(b)==='shoka' ? SHOKA_TL : 0) : 0;
 const CONTENT_KR = c => (c||'').replace('星詠みの書架','성영의 서가').replace(/^廻生$/,'회생(과거와의 결투)').replace(/^顕現/,'현현').replace(/^外史/,'외사');
 const ENEMY_TYPES = ['fire','water','earth','wind','thunder','shade','crystal','slash','pierce','blunt','magic'];
 const REL_CYCLE = [null,'weak','resist','null','absorb'];
@@ -60,7 +73,7 @@ const convOn = (P, f) => { f = f===undefined ? P.focus : f; return P.conv!=null 
 const noConvOf = (P, f) => { f = f===undefined ? P.focus : f; return !(f && f.kind==='elem') && !convOn(P, f); };
 const focusIn = (P, f) => { f = f===undefined ? P.focus : f; return f && f.kind==='elem' && convOn(P, f) ? Object.assign({}, f, {conv:true}) : f; }; // 속성 지정: 기본은 원래 그 속성인 공격만, '변환 덱 포함'이면 남의 속성 변환으로 그 속성이 된 공격도
 const sameFocus = (a,b) => (!a&&!b) || (a&&b&&a.kind===b.kind&&a.v===b.v);
-function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1, ownedIds: ownedList()}, modSettings()); } // ownedIds: 다른 스타일 보드 완성 보너스(보유 = 완성으로 봄)
+function settings(){ return Object.assign({}, E.DEFAULT_SETTINGS, state.settings, {enemyCount: state.plan.enemyCount||1, ownedIds: ownedList()}, ['boss','kesshitsu'].includes(state.plan.mode) ? {burstTurns: bossTL(curBossOf(state.plan)) || E.DEFAULT_SETTINGS.burstTurns||3} : null, modSettings()); } // 보스·결현현은 실전 턴 수를 따로 정하지 않음(처치 턴은 보스 HP로 — 2026-10-18 사용자 지적) // ownedIds: 다른 스타일 보드 완성 보너스(보유 = 완성으로 봄)
 function rebuildChars(){
   chars = CHARS_BASE.concat(state.custom||[]);
   prepped = chars.map(E.prepChar);
@@ -163,6 +176,8 @@ function workerMain(){
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})),
     results2: r.results2 ? r.results2.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
+      reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})) : null,
+    results3: r.results3 ? r.results3.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})) : null,
     decks:(r.decks||[]).map(d=>({focus:d.focus, ids:d.team.map(c=>c.id), reserveIds:d.reserves.map(c=>c.id), fixedBackIds:[...(d.fixedBack||[])], score:d.score, rel:d.rel, norm:d.norm, miss:d.miss, recCount:d.recCount, v:vOf(d.ev)})),
     evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, nmax:r.nmax||null, focus:r.focus||null}; // nmax: 육성·획득 추천·연전이 결과와 같은 정규화로 점수(2026-10-18: 빠져 있어 실전 딜만으로 셈)
@@ -325,6 +340,14 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
     Object.defineProperty(d, 'ev', {configurable:true, enumerable:true, get(){ const v = E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, y.v ? Object.assign({}, cx2, {variant:y.v}) : cx2); Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); return v; },
       set(v){ Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); }});
     return d; }) : null;
+  // 턴 제한 최대 딜 목록(results3, 서가 챌린지 등): 펼쳐 볼 때 평가(ev 게터) — 결과 표시가 늦어지지 않게
+  const results3 = lr.results3 ? lr.results3.filter(y=>!y.ids.some(id=>!byId.has(id))).map(y=>{ const team=y.ids.map(id=>byId.get(id)), progs=y.ids.map(id=>progJ(J,id));
+    const d = {rank:y.rank, team, progs, bud:y.bud||null, bg:y.bg||null, reserves:y.reserveIds.filter(id=>byId.has(id)).map(id=>byId.get(id)), score:y.score, rel:y.rel, norm:y.norm, miss:y.miss||[], recCount:y.recCount, diff:E.teamDifficulty(team), fixedBack:new Set(y.fixedBackIds||[])};
+    const bdY2 = budOfY(y), cx2 = Object.assign({}, ctx, bdY2 ? {buddy:bdY2} : null);
+    Object.defineProperty(d, 'ctx', {value:cx2, writable:true, configurable:true, enumerable:false});
+    Object.defineProperty(d, 'ev', {configurable:true, enumerable:true, get(){ const v = E.evalTeam(team, progs, inp.enemy||null, J.S, J.cap, y.v ? Object.assign({}, cx2, {variant:y.v}) : cx2); Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); return v; },
+      set(v){ Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); }});
+    return d; }) : null;
   const decks = [];
   for(const y of lr.decks||[]){
     if(y.ids.some(id=>!byId.has(id))) continue;
@@ -336,7 +359,7 @@ async function calcOptimize(chan, inp, onProgress, J, opt){
       set(v){ Object.defineProperty(d, 'ev', {value:v, writable:true, configurable:true, enumerable:true}); }});
     decks.push(d);
   }
-  return Object.assign({}, lr, {results, results2, decks});
+  return Object.assign({}, lr, {results, results2, results3, decks});
 }
 async function calcPerChar(inp, onProgress){
   const J = jobSnap();
@@ -780,15 +803,21 @@ function renderPlanControls(){
   $('#modeDesc').textContent = MODE_DESC[P.mode]||'';
   { const blk=$('#enemyBlock'), dst=$(P.mode==='weak'?'#enemyMain':'#enemyAdv'); if(blk.parentNode!==dst) dst.appendChild(blk); }
   $('#bossRow').hidden = P.mode!=='boss';
-  { const nb=$('#burstN'); if(nb) nb.value = String(settings().burstTurns||3); $('#nturnRow').hidden = !['all','weak','boss','custom'].includes(P.mode); }
+  { const nb=$('#burstN'); if(nb) nb.value = String(settings().burstTurns||3); $('#nturnRow').hidden = !['all','weak','custom'].includes(P.mode); }
   $('#weightRow').hidden = P.mode!=='custom';
   $('#kesRow').hidden = P.mode!=='kesshitsu';
   const sel=$('#bossSel');
   { // 보스 검색(2026-10-17, 사용자 '보스도 검색할 수 있게'): 이름·일본어·콘텐츠로 거른 목록, 고른 보스는 늘 남김
-    const q = normBoss($('#planBossQ').value), L = BOSSES.filter(b=>!b.kesshitsu && (!q || b.id===P.bossId || bossHay(b).includes(q)));
-    const key = q+'|'+(P.bossId||'');
-    if(sel.dataset.k!==key){ sel.dataset.k = key; const grp = {}; for(const b of L){ (grp[bossCat(b)] = grp[bossCat(b)] || []).push(b); }
-      sel.innerHTML = `<option value="">${q ? `검색 결과 ${L.filter(b=>b.id!==P.bossId||bossHay(b).includes(q)).length}개…` : '보스 선택…'}</option>` + BOSS_CATS.filter(([k])=>grp[k]).map(([k,v])=>`<optgroup label="${esc(v)}">${grp[k].map(b=>`<option value="${esc(b.id)}">${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</option>`).join('')}</optgroup>`).join(''); }
+    const cs = $('#bossCatSel'), ss = $('#bossSubSel'), all0 = BOSSES.filter(b=>!b.kesshitsu), cK = P.bossCat||'', sK = P.bossSub||'';
+    if(cs && cs.dataset.k!==cK){ cs.dataset.k = cK; const cnt = {}; for(const b of all0){ const k = bossTop(b); cnt[k] = (cnt[k]||0)+1; }
+      cs.innerHTML = `<option value="">전체 분류 (${all0.length})</option>` + BOSS_TOP.filter(([k])=>cnt[k]).map(([k,v])=>`<option value="${k}">${esc(v)} (${cnt[k]})</option>`).join(''); cs.value = cK; }
+    const subs = cK ? [...new Set(all0.filter(b=>bossTop(b)===cK).map(bossSub).filter(Boolean))].sort((x,y)=>x.localeCompare(y, 'ko', {numeric:true})) : [];
+    if(ss){ ss.hidden = subs.length<2; const sk2 = cK+'|'+sK; if(ss.dataset.k!==sk2){ ss.dataset.k = sk2; ss.innerHTML = `<option value="">전체</option>` + subs.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join(''); ss.value = subs.includes(sK) ? sK : ''; } }
+    const q = normBoss($('#planBossQ').value), L = all0.filter(b=>b.id===P.bossId || ((!cK || bossTop(b)===cK) && (!sK || !subs.includes(sK) || bossSub(b)===sK) && (!q || bossHay(b).includes(q))));
+    const key = q+'|'+(P.bossId||'')+'|'+cK+'|'+sK;
+    if(sel.dataset.k!==key){ sel.dataset.k = key; const bySub = cK && subs.length>1, gOf = b => bySub ? (bossSub(b)||'기타') : bossTop(b), grp = {}; for(const b of L){ (grp[gOf(b)] = grp[gOf(b)] || []).push(b); }
+      const order = bySub ? subs.concat(['기타']).map(v=>[v,v]) : BOSS_TOP, hid = b => bossCat(b)==='gaishi_h' ? ' (히든)' : '';
+      sel.innerHTML = `<option value="">${q ? `검색 결과 ${L.filter(b=>b.id!==P.bossId||bossHay(b).includes(q)).length}개…` : '보스 선택…'}</option>` + order.filter(([k])=>grp[k]).map(([k,v])=>`<optgroup label="${esc(v)}">${grp[k].map(b=>`<option value="${esc(b.id)}">${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}${hid(b)}</option>`).join('')}</optgroup>`).join(''); }
   }
   sel.value = P.bossId||'';
   $('#enemyBlock').hidden = P.mode==='boss' || P.mode==='kesshitsu'; // 실제 상대가 있으면 약점·내성은 보스 정보로(따로 설정 안 함, 사용자 2026-10-17)
@@ -993,10 +1022,14 @@ function renderResults(r, boss, enemy, mode){
   const W=r.weights, wTxt = mode==='custom'&&W ? ` (공격성 ${Math.round(W.b*100)}% · 유지력 ${Math.round(W.s*100)}% · 안정성 ${Math.round(W.t*100)}%)` : '';
   h+=`<div class="runmeta">${esc(MODE_KR[mode])}${esc(wTxt)}${r.pledge?' · 서약: <b>'+esc(pledgeText(r.pledge))+'</b>':''}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''}${!(r.focus && r.focus.kind==='elem') && noConvOf(state.plan, r.focus||null) ? ' · <b>속성 변환 캐릭터 제외</b>' : ''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
   if(!r.results.length) h+=`<div class="empty">조건을 만족하는 조합이 없습니다. 난이도 상한을 올리거나 고정·제외 캐릭터를 줄여 보세요.</div>`;
-  const bv = (r.results2 && r.results2.length) ? ((state.ui && state.ui.bossView)==='stable' ? 'stable' : 'fast') : null;
-  if(bv) h+=`<div class="bossview"><div class="seg" id="bossViewSeg" role="group" aria-label="보스 추천 기준"><button type="button" data-bv="fast" aria-pressed="${bv==='fast'}">턴 단축</button><button type="button" data-bv="stable" aria-pressed="${bv==='stable'}">안정성</button></div>
-    <span class="hint">${bv==='fast' ? '빨리 깨는 조합(실전 딜·지속 딜 위주, 생존은 너무 낮을 때만 감점)' : '안 죽고 깨는 조합(생존 위주 + 깰 만큼의 딜)'}${boss && +boss.hp>0 ? ' · 예상 처치 턴은 보스 HP의 1.3배를 기준으로 넉넉하게' : boss ? ' · 이 보스는 HP 정보가 없어 예상 턴을 못 냅니다' : ''}</span></div>`;
-  const all = bv==='stable' ? r.results2 : r.results, mx=k=>Math.max(...all.map(y=>y.ev[k]));
+  // 보스 결과 보기(2026-10-18): 턴 단축·안정성, 턴 제한 보스(서가 챌린지 5턴)는 'N턴 최대 딜'·'안정 클리어' 두 가지(사용자 요청)
+  const tlim = boss && +boss.turn_limit>0 && r.results3 && r.results3.length ? +boss.turn_limit : 0, uv = state.ui && state.ui.bossView;
+  const bv = (r.results2 && r.results2.length) ? (tlim ? (uv==='stable' ? 'stable' : 'score') : (uv==='stable' ? 'stable' : 'fast')) : null;
+  const bvBtns = tlim ? [['score', `${tlim}턴 최대 딜`], ['stable', '안정 클리어']] : [['fast','턴 단축'], ['stable','안정성']];
+  const bvHint = bv==='score' ? `${tlim}턴 제한 안에서 넣는 총딜이 가장 큰 조합(버티기·필요 요소 감점만)` : bv==='fast' ? '빨리 깨는 조합(실전 딜·지속 딜 위주, 생존은 너무 낮을 때만 감점)' : '안 죽고 깨는 조합(생존 위주 + 깰 만큼의 딜)';
+  if(bv) h+=`<div class="bossview"><div class="seg" id="bossViewSeg" role="group" aria-label="보스 추천 기준">${bvBtns.map(([k,v])=>`<button type="button" data-bv="${k}" aria-pressed="${bv===k}">${esc(v)}</button>`).join('')}</div>
+    <span class="hint">${bvHint}${boss && (+boss.hp>0 || boss.hp_model) ? ' · 예상 처치 턴은 보스 HP 구조(목숨·전회복 등)와 여유분을 넣어 넉넉하게' : boss ? ' · 이 보스는 HP 정보가 없어 예상 턴을 못 냅니다' : ''}</span></div>`;
+  const all = bv==='stable' ? r.results2 : bv==='score' ? r.results3 : r.results, mx=k=>Math.max(...all.map(y=>y.ev[k]));
   if(boss) for(const x of all) if(x.kt===undefined) x.kt = E.killTurns(x.ev, boss);
   const ref = all.length ? {sbTurn:all[0].ev.sbTurn, af:mx('af'), sustain:mx('sustain'), surv:mx('surv'), burst:mx('burst'), dummyT: showDummy(mode) ? mx('dummyT') : 0, opener:mx('opener')} : null;
   const lockSet=new Set(P.locked);
@@ -2442,14 +2475,25 @@ function bossSumHtml(b){
   const strat = String(b.strategy_kr||'').split(/(?<=[.다요])\s+/)[0] || '';
   return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
     <div class="bsrels">${rels || (b.affinity_none ? '<span class="hint">약점·내성 없음 (전 속성 보통으로 계산)</span>' : '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>')}${b.weak_rotating ? ' <span class="need">약점이 턴마다 바뀜</span>' : ''}</div>${b.affinity_note_kr ? `<p class="hint bsaff">${esc(String(b.affinity_note_kr).split(/(?<=[.다요음])\s+/).slice(0,2).join(' '))}</p>` : ''}${parts}
-    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}
+    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpModelHtml(b)}${threatHtml(b)}
     ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}${modsHtml(b)}`;
 }
+/* 보스 HP 구조·위협(2026-10-18, 사용자 '부활·스택 기믹', '갑개룡은 아파서 탱커 필요'): 처치 턴 계산(engine killTurnsM)·탱커/회복 감점이 무엇을 보고 있는지 요약에 표시 */
+function hpModelHtml(b){ const h = b.hp_model; if(!h || !(+h.bars>1 || h.reset || +h.kt_min>0 || (h.dmg_cut||[]).length || (h.stopper||[]).length)) return '';
+  const bits = []; if(+h.bar>0) bits.push(`한 줄 ${Number(h.bar).toLocaleString()}억 × ${h.bars||1}번`); else if(+h.bars>1) bits.push(`${h.bars}번 깎아야 함`);
+  if(h.reset) bits.push('턴 종료마다 전회복(한 턴에 최대 한 줄만 진행)'); else if(h.carry===false && +h.bars>1) bits.push('넘친 피해는 다음 줄로 안 넘어감');
+  if((h.stopper||[]).length) bits.push(`HP ${h.stopper.join('%·')}% 스토퍼(그 턴 남은 피해는 버려짐)`);
+  if(+h.kt_min>0) bits.push(`최소 ${h.kt_min}턴`); for(const q of (h.dmg_cut||[]).filter(q=>+q.turns>0)) bits.push(`${q.when==='revive'?'부활 뒤':'개전'} ${q.turns}턴 피해 ×${q.x}`);
+  return `<div class="bsneeds"><span class="bsl">HP 구조</span><span class="hint">${esc(bits.join(' · '))}${h.note_kr?` — ${esc(String(h.note_kr).split(/(?<=[.다요])\s+/)[0])}`:''}</span></div>`; }
+function threatHtml(b){ const t = b.threat; if(!t || !(+t.lvl>=2)) return '';
+  const need = [t.tank?'탱커(도발·수호)':'', t.heal?'회복·배리어':''].filter(Boolean).join('·');
+  return `<div class="bsneeds"><span class="bsl">보스 공격</span><span class="need">${+t.lvl>=3?'매우 강함':'강함'}</span>${need?` <span class="hint">${esc(need)} 없으면 점수를 크게 깎아요</span>`:''}${t.note_kr?` <span class="hint">— ${esc(String(t.note_kr).split(/(?<=[.다요])\s+/)[0])}</span>`:''}</div>`; }
 /* 보스 흉성·서약(modifiers, 2026-10-17 사용자 '안키 디그마처럼 흉성 안 켜고·다 켜고·일부만 켜고 깨기'): 켠 것을 보스·설정에 반영
    absorb(흡수 속성 지정)·needs·피해 경감 턴(kt_extra)·최소 턴(kt_min), 설정: afBan(AF 게이지 이월 불가 → AF 없음)·buffTurnCap 1(턴 종료 버프 해제)·zoneBan(턴 종료 존 파괴)·zoneBanAll(존 금지), 편성 조건(comp)·전투불능 금지는 서약으로 */
 const curBossOf = P => { P = P || state.plan; return P.mode==='boss' ? BOSSES.find(x=>x.id===P.bossId) : P.mode==='kesshitsu' ? BOSSES.find(x=>x.id===P.kesId) : null; };
 const modsOn = (b, sel) => { const P = state.plan, on = sel ? (sel.on||[]) : ((P.mods && P.mods[b.id]) || []); return (b.modifiers||[]).filter(m=>on.includes(m.id)); }; // sel: 공유 링크의 흉성·서약 {on, abs}
 function effBoss(b, sel){
+  if(b && !(+b.turn_limit>0) && bossTL(b)) b = Object.assign({}, b, {turn_limit: bossTL(b)}); // 턴 제한(서가 챌린지) → 실전 N턴·'N턴 최대 딜' 목록
   if(!b || !(b.modifiers||[]).length) return {boss:b, S:null, pledge:null};
   const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:null, pledge:null};
   const P = state.plan, B2 = JSON.parse(JSON.stringify(b)), S2 = {}; let pl = null, extra = 0, kmin = 0;
@@ -2649,7 +2693,9 @@ function bind(){
     const i=L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); C.on=true; plChanged(); });
   $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
   $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); if(e.target.closest('#getRun')) getRun(); if(e.target.closest('#gauntRun')) gauntRun(); });
-  $('#planBossQ').addEventListener('input', ()=>renderPlanControls()); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
+  $('#planBossQ').addEventListener('input', ()=>renderPlanControls());
+  $('#bossCatSel').addEventListener('change', e=>{ state.plan.bossCat = e.target.value; state.plan.bossSub = ''; save(); renderPlanControls(); });
+  $('#bossSubSel').addEventListener('change', e=>{ state.plan.bossSub = e.target.value; save(); renderPlanControls(); }); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
   $('#bossSum').addEventListener('click', e=>{ const mp = e.target.closest('[data-modp]'); if(mp){ const b = curBossOf(); if(!b) return; const pr = (b.modifier_presets||[]).find(p=>p.id===mp.dataset.modp); if(!pr) return;
       state.plan.mods = state.plan.mods || {}; if(Array.isArray(pr.on)) state.plan.mods[b.id] = pr.on.slice(); save(); renderPlanControls(); if(Array.isArray(pr.on)) runPlan(); return; } });
   $('#bossSum').addEventListener('change', e=>{ const b = curBossOf(); if(!b) return; const P = state.plan;

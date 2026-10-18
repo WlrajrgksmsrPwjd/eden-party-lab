@@ -692,3 +692,4 @@ dialog.guide::backdrop{background:rgba(8,12,30,.62)}
 .bosssum .bsml .checkrow{font-size:12.5px}
 .bosssum .bsabs{font-size:12.5px; display:flex; gap:6px; align-items:center; flex-wrap:wrap}
 .galt{margin:2px 0 10px 10px;font-size:12px;line-height:1.5}
+.bosscats{display:flex;gap:6px;margin:0 0 6px}.bosscats select{flex:1;min-width:0}

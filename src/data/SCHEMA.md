@@ -235,6 +235,10 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - state `party_off`: 상태가 꺼지면 같이 꺼지는 파티 버프 — 다른 아군이 받는 몫도 상태 가동률만큼(예전엔 자기 공격에서만 꺼짐).
 - 보스 흉성 `fx.counter {fixed, per:'attack', skip:['af','sb']}` → 보스 `counter`: 평상 턴 공격 실행 수(ev.atkN) × fixed 피해, 턴당 6번 넘으면 점수 감점(회복 2등급 이상이면 절반)·경고.
 - 보스 `gauntlet` {n, absorb_prev, note_kr, src}: N연전(앱 '연전 편성'). 흉성 `trigger`(앞 전투를 이 조건으로 격파하면 다음 전투에 붙음, 앱 전용·계산 버전 제외): `{kt_le:10}`(10턴 안 격파 — 11턴 넘겨 이긴다고 보고 안내만), `{weak_hit:true}`(약점 공격 → 흡수, absorb_prev로), `{af_turn_hp:0.6}`(AF 턴 피해 ≥ 라이프 1개 HP × 0.6), `{reversal:true}`(버프·디버프 리버설 — 태그 *reversal*·SB/주력 문구), `{zone:'elem'|'nonelem'}`(그 종류 존 전개 — 평상·SB 존), `{atk_n:9}`(평상 턴 공격 실행 수 ≥ 9).
+- 보스 `hp_model` {bar 한 번에 깎아야 할 HP(억), bars 횟수(목숨·부활·전회복·페이즈 포함), reset 턴 종료 전회복(그 턴에 깎은 비율만 진행), step 진행 단위(예 0.2), carry 넘친 피해가 다음 줄로 넘어가는지, stopper [HP%], kt_min 최소 턴, dmg_cut [{turns, x, when start|revive}], note_kr} → engine killTurnsM(턴별 피해 = 실전 N턴 + 그 뒤 평상 턴·AF 주기, 피해 ÷ 1.15 여유). 없으면 예전처럼 hp × 1.3 ÷ 피해.
+- 보스 `threat` {lvl 1~3, tank 도발·수호 필요, heal 회복·배리어 필요, single, aoe, status, note_kr} → needPenalty(tank 없으면 lvl 3 ×0.6·그 밖 ×0.8, heal 부족 ×0.75/×0.88)·보스 성향 생존 가중치(lvl 3 +0.2, lvl 2 +0.08, 안정성 lvl 3 +0.1).
+- 보스 `punish` {only_wt, only_el, only_kind, x, label}: 이 조건 밖 공격은 보스를 강화(갑개룡 타격 외) → 그 비중 × x만큼 감점·경고.
+- 보스 `turn_limit`(앱은 성영의 서가에 5를 붙임 — 챌린지 5턴 제한): 실전 N턴 = 턴 제한, optimize가 results3('N턴 최대 딜': 실전 N턴 총딜 순 + 필요 요소·위협 감점)도 냄.
 
 ## buff_acts.json attack 행동 위력
 `k: "attack"` 행동에 `el`(속성/none) `wt`(slash/pierce/blunt/magic) `size` `mult` `hits`가 있으면 그 위력으로 계산(허수아비 AF 행동, 평상 턴 시뮬은 주력 대비 위력 비율, 최대 1). 없으면 특대 1배.

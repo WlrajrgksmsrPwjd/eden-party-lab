@@ -1012,6 +1012,8 @@ function stateUp(s, situation, A, c, idx){
     if(s.cycle){ const cd = +s.cd||0, per = d>0 ? d/(d+cd) : 1; return cl((Math.min(H,st) + Math.max(0,H-st)*per)/H); }
     return cl((st + u*d)/H); }
   if(A.realT>1 && s.real!=null) return s.real==='sb' ? ((situation==='sb' || A.postSB) ? 1 : 0) : cl(s.real); // 실전 3턴째 AF·SB 값을 직접 지정
+  if(A.lateAF && s.up==null && !s.res && (+s.dur>0 || +s.start>0)){ const t = A.realT, st = +s.start||0, d = +s.dur||0, u = +s.uses||0; // 긴 전투 뒤쪽 AF(2026-10-18): 개전·사용 구간이 끝났으면 꺼짐(수동이라 AF ON인 歴戦 등도)
+    return t<=st || (u>0 && d>0 && t<=st+u*d) ? 1 : s.cycle && d>0 ? cl(d/(d+(+s.cd||0))) : 0; }
   if(s.af==='sb') return (situation==='sb' || A.postSB) ? 1 : 0;
   let a = s.af==null ? 1 : cl(s.af);
   if(A.realT>1){ const t = A.realT, st = +s.start||0, d = +s.dur||0, u = +s.uses||0; // 실전 N턴의 AF: 개전·사용 구간에 그 턴이 들어가면 켜짐(가장 좋은 때 쓴다고 봄), 구간 정보가 없으면 평상 턴 가동률
@@ -2533,7 +2535,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const coresFor = (sit, z, useSim)=>{
     const upt = useSim && uptLow ? uptArr : sit!=='normal' && eqAny ? eqArr : null;
     if(!zdep){ const FX = (anyR||upt) ? buildBF(team,progs,sit,z,A,posSets,upt) : null; const cs = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,sit,cx,FX,z)); cs.FX = FX; cs.upt = upt; return cs; }
-    let key = (sit==='sb'?7:sit==='af'?13:3) + (upt?100:0) + (A.realT||0)*1000 + (sit==='normal' && A.stkT>0 ? Math.round(A.stkT*4)*10000 : 0); // 누적 예열 턴도 키에
+    let key = (sit==='sb'?7:sit==='af'?13:3) + (upt?100:0) + (A.realT||0)*1000 + (A.lateAF?500:0) + (sit==='normal' && A.stkT>0 ? Math.round(A.stkT*4)*10000 : 0); // 누적 예열 턴도 키에
     { // 아군 전체 글래(격진의 힘 <존>)·셔틀 P글래(각성의 힘)는 존에 따라 달라 존도 키에(2026-10-16: 존마다 같은 키라 다른 존의 계산을 재사용해 편성 순서에 따라 결과가 달라지던 문제)
       const zk = z && z.level>0 ? String(z.key||z.kind||'') : '', pl = !!(A.mule && A.mule.plan), invA = !!(A.aura && A.aura.inv && A.aura.inv._a && Object.values(A.aura.inv._a).some(v=>+v>0));
       const zid = pl ? zk+':'+(z?z.level:0) : (A.aura && zk && AURA_Z.has(zk) ? (invA ? zk : 'Z') : ''); // 아군 전체 글래 보유 표시가 없으면 격진의 힘은 '그 존에 있나'만 갈림
@@ -2680,6 +2682,14 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     const p3 = afPick(coresFor('af', nz, false)); runSit('sb', sv.zone || null); const sb3 = ({...res.sb, ...{zones: sv.zones}}); res.sb = sv; A.realT = 0; A.tm.S0 = 0;
     return {cores:p3.cs, afA:p3.afA, avg:p3.avg, afS:p3.afS, sb:sb3, pick:p3.pick}; })();
   let af = R3.afS.v;
+  /* 긴 전투의 AF(2026-10-18, 사용자 '빅트 고평가 — 단기전이라?'): 개전·한 번 쓰는 상태(歴戦 5턴·개전 3턴 등)는 지속 딜의 AF에서도 늘 켜져 있었음 →
+     긴 전투(S.susHorizon, 기본 15턴) 중 그 구간 안의 AF 비율(구간 끝 ÷ 15)만 켜진 AF, 나머지는 구간이 끝난 뒤 AF(A.lateAF)로 섞음 */
+  const HL = Math.max(6, +S.susHorizon||15), wEnds = [...new Set(team.flatMap(c=>(c.states||[]).filter(q=>q && q.up==null && !q.cycle && !q.res && (+q.dur>0 || +q.start>0)).map(q=>(+q.start||0) + (+q.uses||0)*(+q.dur||0))))].filter(w=>w>=1 && w<HL).sort((x,y)=>x-y).slice(0, 3);
+  let afLate = null; // 구간 끝이 여럿이면(빅트 歴戦 5턴·다른 멤버 10턴) 구간마다 AF를 따로: [0,w1] = 3턴째 AF, (w1,w2] = w1+1턴째 AF … → 긴 전투(HL턴) 평균
+  if(wEnds.length && S.afCycle!==false && !(ctx && ctx.stFast)){ const sv = res.sb; let acc = af*wEnds[0], prev = wEnds[0]; // 탐색 어림 단계(stFast)는 생략 — 정밀 단계에서
+    try{ for(let k=0; k<wEnds.length; k++){ A.realT = wEnds[k] + 1; A.tm.S0 = 2; A.lateAF = true; const v = afPick(coresFor('af', nz, false)).afS.v, until = k+1<wEnds.length ? wEnds[k+1] : HL; acc += v*(until - prev); prev = until; } }
+    finally { A.lateAF = false; A.realT = 0; A.tm.S0 = 0; res.sb = sv; }
+    afLate = {v: acc/HL, w: wEnds[0]/HL, h: HL, ends: wEnds}; }
   /* 버디 차지 스킬 존 각성(2026-10-18): 팀이 그 존(일반)을 깔 때만 — 차지가 모인 턴 시작에 써서 그 턴·다음 턴 극(SB 각성처럼 2턴), 차지 주기마다 다시.
      차지 = 턴당 1 + chg_plus 조건 + 장비 확률. 이미 늘 극(스킬·극 글래스터 각성)이면 없음. 허수아비·1턴째는 차지가 없어 그대로 */
   { const zf = A.bud && A.bud.zfx;
@@ -2748,6 +2758,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   // 지속 딜의 AF도 극 존이 계속 유지될 때만 극(2026-10-17): 개전 자동·1회 각성(네코코(ES) 颯 첫 사용 등)은 2턴 뒤 일반 존 — 평상 턴(susOf)과 같은 비율(일반 0.6·극 0.4)로 섞음. SB로 다시 각성(sbAw)하면 그대로
   if(afCyc && !dInj && nz && nz.level>=2 && !awConst && !sbAw){ const a1 = afRun(100, 1, 3).dmg; if(a1 < af){ const dA = (bzG && !bzG.up ? 1-Math.max(0.4, bzG.frac) : 0.6)*(a1 - af)/afTurns; out.sustain += dA; out.susAfL1 = a1; } }
   if(afCyc && !dInj && bzG && bzG.up){ const aB = afRun(100, 2, 3).dmg; if(aB > af){ out.sustain += bzG.frac*(aB - af)/afTurns; out.susAfB = aB; } } // 버디 각성 극 존 AF는 차지 주기 중 2턴 몫
+  if(afCyc && !dInj && afLate){ out.sustain += (afLate.v - af)/afTurns; out.afLate = afLate; } // 긴 전투 AF(구간 상태가 끝난 뒤 섞음)
   if(afCyc && dInj){ const aD = afRun(dInj.g0, 1, 3).dmg; out.sustain += (aD - af)/afTurns; out.afDrain = {first: dInj.first, per: dInj.per, g0: dInj.g0, k: dInj.k, af: aD}; } // 흉성 3: 차지로 채운 게이지(g0)에서 시작하는 AF
   if(afCyc){ if(simIn.teAF){ out.sustain += simIn.teAF.total/afTurns; out.teAF = simIn.teAF; } if(simIn.teN) out.sustain += simIn.teN/afTurns; } // AF 턴 종료 공격(AF 턴 전용 + 평상 턴 종료 공격)도 AF 주기마다
   // 지속 딜에 SB(2026-10-16, 사용자 확인: SB는 턴을 쓰지 않아 쓴 뒤에도 그 턴 행동을 그대로 함): SB 게이지가 차는 주기마다 한 번 더함.
@@ -3276,12 +3287,15 @@ function modeWeights(mode, boss, cw, pl){
     let w={b:0.55,s:0.4,t:0.05};
     if(n.burst) w.b+=0.1;
     if(n.sustain) w.s+=0.1;
+    const tl = boss && boss.threat ? +boss.threat.lvl||0 : 0; if(tl>=3) w.t+=0.2; else if(tl>=2) w.t+=0.08; // 보스 공격이 강하면(2026-10-18 사용자: 갑개룡처럼 아픈 보스는 탱커 필요) 생존도
     return w;
   }
+  if(mode==='boss_score') return {b:0.9, s:0, t:0.1}; // 턴 제한 안 최대 딜(서가 챌린지 5턴, 2026-10-18 사용자)
   if(mode==='boss_stable'){ // 보스 '안정성': 생존 위주 + 깰 수 있을 만큼의 딜
     const n = (boss&&boss.needs)||{};
     let w={b:0.2,s:0.25,t:0.55};
     if(n.sustain) w.t+=0.1;
+    if(boss && boss.threat && +boss.threat.lvl>=3) w.t+=0.1;
     return w;
   }
   return {b:0.5,s:0.5,t:0};
@@ -3290,13 +3304,46 @@ function modeWeights(mode, boss, cw, pl){
 /* 예상 처치 턴(2026-10-17 사용자: 보스는 턴 안에 못 깨는 경우도 있어 보유 덱 기준 예상 턴수를 넉넉하게): 보스 HP(억) × 1.3(기믹·방어 페이즈 여유)을
    실전 N턴 턴별 대미지 → 그 뒤는 지속 딜(턴당)로 채우는 턴. 부위별 통하는 공격(parts)이 있으면 그 효율만큼 대미지를 줄임 */
 function killTurns(ev, boss, margin){
-  if(!boss || !(+boss.hp>0) || !ev) return null;
+  if(!boss || !ev) return null;
+  const hm = boss.hp_model && (+boss.hp_model.bars>1 || boss.hp_model.reset || +boss.hp_model.kt_min>0 || (boss.hp_model.dmg_cut||[]).length || (boss.hp_model.stopper||[]).length) ? boss.hp_model : null;
+  if(hm) return killTurnsM(ev, boss, hm);
+  if(!(+boss.hp>0)) return null;
   const need = +boss.hp*1e8*(margin||1.3), pf = partsEff(ev, boss), turns = (ev.bsim && ev.bsim.turns) || [], sus = Math.max(0, +ev.sustain||0)*pf;
   const fin = x => ({t: Math.min(99, Math.max(+boss.kt_min||0, x.t + (+boss.kt_extra||0))), sure: x.sure}); // kt_extra·kt_min: 보스 흉성(피해 경감 턴·최소 턴)
   let cum = 0, t = 0; for(const r of turns){ t++; cum += Math.max(0, +r.d||0)*pf; if(cum >= need) return fin({t, sure:true}); }
   if(!(sus>0)) return {t:99, sure:false};
   const more = Math.ceil((need - cum)/sus); return fin({t: Math.min(99, t + more), sure: t + more <= 99});
 }
+/* 보스 HP 구조(2026-10-18, 사용자: '부활도 하고 갑개룡같이 풀피 다 까는 기준 40스택에서 5 감소 — 한 번 죽인다고 끝이 아님'): boss.hp_model
+   {bar 한 번에 깎아야 할 HP(억), bars 몇 번, reset 턴 종료 전회복(그 턴에 깎은 비율만 진행, step 단위), carry 넘친 피해가 다음 줄로 넘어가는지, kt_min, dmg_cut [{turns, x, when start|revive}]}.
+   턴별 피해 = 실전 N턴 기록 → 그 뒤는 평상 턴(지속 딜의 평상 몫) + AF 주기마다 AF(긴 전투 AF) — 평균 지속 딜로 펴면 AF 한 턴에 몰린 피해가 넘쳐 버려지는 걸 못 봄. 추정 오차 여유는 피해 ÷ 1.15 */
+function killTurnsM(ev, boss, hm){
+  const seq = Array.isArray(hm.bar_seq) && hm.bar_seq.length && hm.bar_seq.every(v=>+v>0) ? hm.bar_seq.map(v=>+v*1e8) : null; // 줄마다 크기가 다름(스토퍼마다 전회복: 25%·50%·75%·100%)
+  const pf = partsEff(ev, boss), mg = 1.15, barsF = seq ? seq.length : Math.max(1, +hm.bars||1), bars = Math.ceil(barsF - 1e-9), bar = seq ? seq[seq.length-1] : +hm.bar>0 ? +hm.bar*1e8 : (+boss.hp>0 ? +boss.hp*1e8/barsF : 0);
+  if(!(bar>0)) return null;
+  const barK = k => seq ? seq[Math.min(seq.length-1, k)] : bar;
+  const rec = (ev.bsim && ev.bsim.turns) || [], N = rec.length, per = Math.max(2, Math.round(+ev.afTurns||4)), afOn = !ev.afOff;
+  const nD = Math.max(0, (+ev.sustainNoAF||0) + (+ev.sustainSB||0)), /* 평상 턴 한 번(SB는 주기 평균) */ aD = afOn ? Math.max(0, ev.afDrain ? +ev.afDrain.af||0 : ev.afLate ? +ev.afLate.v||0 : +ev.af||0) : 0;
+  const lastAF = (()=>{ let k = 0; rec.forEach((r,i)=>{ if(r.af) k = i+1; }); return k; })();
+  const dOf = t => { if(t<=N) return Math.max(0, +rec[t-1].d||0); if(ev.afDrain){ const f0 = +ev.afDrain.first||0, p0 = +ev.afDrain.per||per; return t>=f0 && (t-f0)%p0===0 ? aD : nD; }
+    return aD>0 && (t - (lastAF||Math.min(N, 2))) % per === 0 ? aD : nD; };
+  const cuts = (hm.dmg_cut||[]).filter(q=>q && q.x!=null && +q.turns>0 && +q.x>=0 && (!q.when || q.when==='start' || q.when==='revive'));
+  // 스토퍼(2026-10-18 사용자: '반피 까면 더 안 내려가고 기믹 발동 — 한 번에 어포로 끝낼 수 있었으면 공략이 필요 없지'): 그 HP%에 닿으면 그 턴 남은 피해는 버려짐. 목숨이 여럿이면 마지막 줄에만(stopper_all이면 모든 줄)
+  const stops = seq ? [] : (hm.stopper||[]).map(Number).filter(v=>v>0 && v<100).sort((x,y)=>y-x); // bar_seq면 스토퍼가 이미 줄로 들어가 있음
+  let done = 0, t = 0, cutUntil = 0, hpF = Math.min(1, barsF - (bars - 1)); // 첫 줄이 덜 찬 줄(예: 3.5배 = 반 줄 + 3줄)일 수 있음
+  let rem = seq ? seq[0] : bar*hpF; const reset = !!hm.reset, step = +hm.step>0 ? +hm.step : 0, carry = hm.carry===true;
+  for(const q of cuts) if((q.when||'start')==='start') cutUntil = Math.max(cutUntil, +q.turns);
+  const cutX = () => cuts.reduce((m,q)=>Math.min(m, +q.x), 1);
+  const stopOn = k => stops.length && (hm.stopper_all || k===bars-1);
+  while(t < 99 && done < bars){ t++; let d = dOf(t)*pf/mg; if(t<=cutUntil) d *= cutX();
+    if(reset){ let p = Math.min(1, d/bar); if(step>0) p = Math.floor(p/step + 1e-9)*step; done += p; continue; } // 턴 종료 전회복: 그 턴에 깎은 만큼만(갑개룡 초생명력)
+    while(d>0 && done<bars){
+      if(stopOn(done)){ const sv = stops.map(v=>v/100*bar).find(v=>v < rem - 1e-6); if(sv!=null && d >= rem - sv){ rem = sv; d = 0; break; } } // 다음 스토퍼까지 깎고 그 턴 끝
+      if(d >= rem){ d -= rem; done++; rem = barK(done); const rv = cuts.find(q=>q.when==='revive'); if(rv) cutUntil = Math.max(cutUntil, t + (+rv.turns)); if(!carry) break; } else { rem -= d; d = 0; } } }
+  const kmin = Math.max(+hm.kt_min||0, +boss.kt_min||0), tt = Math.min(99, Math.max(kmin, t + (+boss.kt_extra||0)));
+  return {t: tt, sure: done>=bars && t<99, bars: barsF, done: Math.min(barsF, +done.toFixed(2))};
+}
+const S_afOK = ev => !(ev && ev.afOff);
 /* 보스 '턴 단축'(2026-10-18, 추천 덱 대조: 결실 라디카에서 1턴에 잡는 불 덱보다 2턴 걸리는 덱이 1위): 예상 처치 턴(HP 아는 보스만)을 점수에 — × 처치 턴^−0.6(1턴 1, 2턴 0.66, 4턴 0.44). 같은 턴이면 원래 점수 순 */
 const ktFactor = (ev, boss) => { const k = killTurns(ev, boss); return k && k.t>0 ? Math.pow(Math.max(1, k.t), -0.6) : 1; };
 function partsEff(ev, boss){
@@ -3321,10 +3368,15 @@ function weakFit(ev, enemy){
   return {f, share:sh, miss: sh<0.5 ? [`정한 약점(${WK})을 때리는 공격 ${Math.round(sh*100)}%`] : []};
 }
 function needPenalty(ev, boss){
-  if(!boss||(!boss.needs && !boss.parts)) return {f:1, miss:[]};
+  if(!boss||(!boss.needs && !boss.parts && !boss.threat && !boss.punish)) return {f:1, miss:[]};
   const n=boss.needs||{}, d=ev.survDet||{}; let f=1; const miss=[];
   /* 부위마다 통하는 공격이 다른 보스(parts, 2026-10-17 사용자 '키마이라 볼카처럼 여러 속성이 필요한 덱에 베기팟만 추천'): 사자 = 마법만·용 = 참격만·뱀 = 전부.
      모든 부위를 같이 쓰러뜨리는 데 걸리는 시간 = 부위마다 (부위 HP ÷ 그 부위에 통하는 공격 대미지) 중 가장 긴 것 → 화력 효율 f = min(통하는 공격 비중 ÷ 부위 HP 비중)(최대 1, 최소 0.05) */
+  /* 보스를 강화하는 공격(boss.punish {only_wt, only_el, only_kind, x, label}, 2026-10-18: 갑개룡 — 타격 외 공격을 맞으면 안그리·헤이트 스택으로 강해짐) → 그런 공격 비중 × x만큼 깎음 */
+  if(boss.punish){ const P = boss.punish, per = (ev.bsim && Array.isArray(ev.bsim.per) && ev.bsim.per.length) ? ev.bsim.per : ((ev.normal && ev.normal.per) || []), cs = (ev.normal && ev.normal.cores) || [], sb = (ev.sb && ev.sb.cores) || [];
+    const ok = co => (!P.only_wt || P.only_wt.includes(co.wt)) && (!P.only_el || P.only_el.includes(co.el)) && (!P.only_kind || co.kind===P.only_kind) && !(P.not_wt || []).includes(co.wt) && !(P.not_el || []).includes(co.el);
+    const tot = per.reduce((a,v)=>a+(v>0?v:0), 0); if(tot>0){ const bad = per.reduce((a,v,i)=>{ const co = cs[i] || sb[i]; return a + (co && v>0 && !ok(co) ? v : 0); }, 0)/tot;
+      if(bad>0.001){ f *= Math.max(0.2, 1 - (+P.x>0 ? +P.x : 0.6)*bad); if(bad>=0.15) miss.push(`${P.label||'보스를 강화하는 공격'} ${Math.round(bad*100)}%`); } } }
   if(Array.isArray(boss.parts) && boss.parts.length){
     const per = (ev.bsim && Array.isArray(ev.bsim.per) && ev.bsim.per.length) ? ev.bsim.per : ((ev.normal && ev.normal.per) || []);
     const cs = (ev.normal && ev.normal.cores) || [], sb = (ev.sb && ev.sb.cores) || [];
@@ -3336,7 +3388,11 @@ function needPenalty(ev, boss){
         const r = sh/((+q.hp>0 ? +q.hp : 1)/hpT); if(r<pf) pf = r;
         if(r<0.999) miss.push(`${q.label||q.need.join('·')} 공격 부족(${Math.round(sh*100)}%)`); }
       f *= Math.max(0.05, Math.min(1, pf)); } }
-  if(n.guard && !(d.guard>=2 || d.taunt>=2 || d.barrier>=3)){ f*=0.88; miss.push('수호·도발 부족'); }
+  /* 보스 위협(boss.threat {lvl, tank, heal}, 2026-10-18 사용자 '갑개룡도 엄청 아파서 탱커가 필요한데 추천덱엔 탱커가 없어'): 위협 3이면 탱커·회복 없이는 사실상 못 버팀 → 크게 깎음 */
+  const th = boss.threat || null, tl = th ? +th.lvl||0 : 0, tankOK = d.taunt>=2 || d.guard>=2;
+  if(th && th.tank && !tankOK){ f *= tl>=3 ? 0.6 : 0.8; miss.push(tl>=3 ? '탱커(도발·수호) 없음 — 보스 공격이 매우 강함' : '탱커(도발·수호) 없음'); }
+  else if(n.guard && !(d.guard>=2 || d.taunt>=2 || d.barrier>=3)){ f*=0.88; miss.push('수호·도발 부족'); }
+  if(th && th.heal && !(d.heal>=2 || (d.heal>=1 && d.barrier>=2))){ f *= tl>=3 ? 0.75 : 0.88; miss.push(tl>=3 ? '회복·배리어 부족 — 보스 공격이 매우 강함' : '회복 부족'); }
   if(n.cleanse && !(d.cleanse>=1 || d.status_immune>=2 || d.debuff_guard>=1)){ f*=0.9; miss.push('상태이상/디버프 해제 없음'); }
   if(n.status_immune && !(d.status_immune>=1 || d.cleanse>=2)){ f*=0.92; miss.push('상태이상 무효 없음'); }
   if(n.sustain && d.heal<2){ f*=0.9; miss.push('회복량 부족(장기전)'); }
@@ -3590,6 +3646,15 @@ async function optimize(input, onProgress){
     const ktA = i => { if(!(need>0)) return 0; const b0 = raws[4*i], su = raws[4*i+1]; return b0 >= need ? NBo : su>0 ? NBo + Math.ceil((need - b0)/su) : 99; };
     const kt0 = need>0 && chosen.length ? ktA(chosen[0].i) : 0, ktMax = kt0 ? Math.max(kt0*2, kt0+4) : Infinity;
     for(const [sc,i] of sS){ if(finalListS.length>=nTop) break; const ids = teams[i]; if(ktA(i) > ktMax) continue; if(finalListS.some(c=>{ const set=new Set(c.ids); return 4-ids.filter(x=>set.has(x)).length < minDiff; })) continue; finalListS.push({ids, sc, i}); } }
+  /* 턴 제한 최대 딜(boss.turn_limit, 2026-10-18 사용자 '서가 챌린지는 5턴 제한 — 5턴 내 최대 딜과 안정 클리어로 구분'): 실전 N턴(= 턴 제한) 총딜 순, 생존이 너무 낮으면 ×0.85, 필요 요소·위협 감점만(처치 턴 보정은 뺌) */
+  let finalList3 = null;
+  if(mode==='boss' && boss && +boss.turn_limit>0){ const s3 = [];
+    for(let i=0;i<teams.length;i++){ if(maxLv<4 && teamDifficulty(teams[i].map(k=>pool[k].pc)).lv>maxLv) continue; if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue;
+      const tt = raws[4*i+2]/mt; s3.push([raws[4*i]/mb*(tt<0.25 ? 0.85 : 1), i]); }
+    s3.sort((a,b)=>b[0]-a[0]); finalList3 = []; const cand3 = [];
+    for(const [sc,i] of s3){ if(cand3.length>=nTop*2) break; const ids = teams[i]; if(cand3.some(c=>{ const set=new Set(c.ids); return 4-ids.filter(x=>set.has(x)).length < minDiff; })) continue; cand3.push({ids, sc, i}); }
+    for(const c of cand3){ const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog); let f = 1; try{ f = needPenalty(evalTeam(team, progs, enemy, S, cap, ctx), boss).f; }catch(e){} c.sc *= f; }
+    cand3.sort((a,b)=>b.sc-a.sc); finalList3 = cand3.slice(0, nTop); }
   const topScore = finalList.length? finalList[0].sc : 1;
   function pickReserves(team, progs, ev){
     const inTeam=new Set(team.map(t=>t.id)), baseIn=new Set(team.map(t=>t.base||t.id));
@@ -3635,6 +3700,10 @@ async function optimize(input, onProgress){
   const results2 = finalListS ? finalListS.map((c,rank)=>{ const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog), bp=budPickFor(team, progs, modeWeights('boss_stable', boss)), ev=bp.ev, np=needPenalty(ev,boss), {reserves, fixedBack} = pickReserves(team, progs, ev);
     return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topS, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss, kt: killTurns(ev, boss), bud: bp.bud, bg: bp.gear,
       recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))}; }) : null;
+  const top3 = finalList3 && finalList3.length ? finalList3[0].sc : 1;
+  const results3 = finalList3 ? finalList3.map((c,rank)=>{ const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog), bp=budPickFor(team, progs, modeWeights('boss_score', boss)), ev=bp.ev, np=needPenalty(ev,boss), {reserves, fixedBack} = pickReserves(team, progs, ev);
+    return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/top3, norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss, kt: killTurns(ev, boss), bud: bp.bud, bg: bp.gear,
+      recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))}; }) : null;
   // 속성덱·타입덱: 각 속성·타입에서 점수가 가장 높은 조합
   const FOCL = ELEMS.map(v=>({kind:'elem',v})).concat(['slash','blunt','pierce','magic'].map(v=>({kind:'wt',v})));
   const decks = [];
@@ -3649,7 +3718,7 @@ async function optimize(input, onProgress){
     if(a.bi>=0) pushDeck(F, a.bi, a.bs);
     if(c.bi>=0 && c.bs > a.bs) pushDeck(({...F, ...{conv:true}}), c.bi, c.bs); });
   decks.sort((a,b)=>b.score-a.score);
-  return {results, results2, decks, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus, nmax:{b:mb, s:ms, t:mt}};
+  return {results, results2, results3, decks, evaluated:teams.length, poolSize:pool.length, pool:pool.map(o=>o.pc.id), weights:w, focus:ctx.focus, nmax:{b:mb, s:ms, t:mt}};
 }
 
 /* ---------- 캐릭터별 최적 조합 ---------- */
