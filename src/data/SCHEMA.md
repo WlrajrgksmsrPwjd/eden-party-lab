@@ -229,6 +229,10 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - state.json `from`: 그 턴부터 켜짐(평상 턴 평균은 up 그대로). up 없이 start·dur·uses면 누적 예열에서 턴마다 그 구간이면 켜짐.
 - skill_cond 소비형(stack 문자열에 '소비형'): 평상 턴 평균 = max(start, 2/turns)(한 방 주기 turns/2턴), 누적 예열에서 처음 가득 차기 전 턴((1−start)·turns/2 전)은 start만큼.
 - af_start.json `need.align`(천·명, 배열이면 어느 쪽이든 n명)·`_refill.<id>.start`(개전 축적)·`af:false`(AF 안 SB로는 안 채움). turn_end `sb_only`: SB를 쓴 턴의 종료 공격(실전 SB 턴·지속 딜 SB 주기마다).
+- `weak_dmg`(약점 시 대미지 UP): 딩 DB 32건 전부 효과량 1 = **100**(26행 약점 배율 +1, 심안의 약점 몫과 같은 크기). 여러 명이 걸어도 같은 상태라 가장 큰 것 하나. 심안(shinan)은 따로 +1.
+- once.json `when`(규칙 조건 — 편성·존)·`sb:true`(그 캐릭터가 SB를 쓸 수 있을 때만): 가리유 炎帝 タイラントブレイズ.
+- buff_acts 행동 `aw:'auto'`: 성도각성(스텔라 보드 어빌리티 획득)이면 개전 자동, 아니면 k(버프 행동, mp·dur) — 빙무의 가희 機略.
+- state `party_off`: 상태가 꺼지면 같이 꺼지는 파티 버프 — 다른 아군이 받는 몫도 상태 가동률만큼(예전엔 자기 공격에서만 꺼짐).
 - 보스 흉성 `fx.counter {fixed, per:'attack', skip:['af','sb']}` → 보스 `counter`: 평상 턴 공격 실행 수(ev.atkN) × fixed 피해, 턴당 6번 넘으면 점수 감점(회복 2등급 이상이면 절반)·경고.
 
 ## buff_acts.json attack 행동 위력

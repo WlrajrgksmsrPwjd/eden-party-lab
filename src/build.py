@@ -69,7 +69,7 @@ for c in chars:
 # AF 버프·디버프 행동(알테마 대조 299명): 버프 스킬 하나에 AF 행동 1번
 bac=json.load(open(P('data','buff_acts.json'),encoding='utf-8'))
 for c in chars:
-    if c['id'] in bac and not c['id'].startswith('_'): c['bact']=[{k:v for k,v in a.items() if k in ('s','k','g','h','mp','el','wt','size','mult','hits','afx','z','zk','lv','req','na','once','dur','acts')} for a in bac[c['id']]['acts']]
+    if c['id'] in bac and not c['id'].startswith('_'): c['bact']=[{k:v for k,v in a.items() if k in ('s','k','g','h','mp','el','wt','size','mult','hits','afx','z','zk','lv','req','na','once','dur','acts','aw')} for a in bac[c['id']]['acts']]
 for c in chars: # 추천 스킬 칸 표시용 한국어 이름(계산은 원문 s)
     for a in c.get('bact') or []:
         nm=re.split(r'[（(]', a.get('s') or '')[0].strip()
