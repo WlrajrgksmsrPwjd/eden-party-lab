@@ -693,3 +693,8 @@ dialog.guide::backdrop{background:rgba(8,12,30,.62)}
 .bosssum .bsabs{font-size:12.5px; display:flex; gap:6px; align-items:center; flex-wrap:wrap}
 .galt{margin:2px 0 10px 10px;font-size:12px;line-height:1.5}
 .bosscats{display:flex;gap:6px;margin:0 0 6px}.bosscats select{flex:1;min-width:0}
+
+/* aecheck에서 가져오기(2026-10-18) */
+.aesteps{margin:6px 0 8px 18px;padding:0;font-size:13px;line-height:1.6}
+.aesteps li{margin:0}
+#aeText{width:100%;min-height:64px;box-sizing:border-box}

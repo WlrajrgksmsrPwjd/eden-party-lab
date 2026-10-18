@@ -14,6 +14,7 @@ const BG_BY = new Map((BGEAR.items||[]).map(x=>[x.id, x]));
 const DECKS = (()=>{ try{ return JSON.parse((document.getElementById('db-decks')||{}).textContent||'[]')||[]; }catch(e){ return []; } })();
 const META = (()=>{ try{ return JSON.parse((document.getElementById('db-meta')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
 // 이름이 가려진 캐릭터(이시층 등)의 진명 {id: {t 한국어, j 일본어, k 이시층 1}} — 보유 탭 '진명 공개'를 켜면 표시 이름을 진명으로(2026-10-17, 사용자 요청)
+const AECHECK = (()=>{ try{ return JSON.parse((document.getElementById('db-aecheck')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })(); // aecheck.com 저장 데이터 불러오기 대응표
 const ISHI = (()=>{ try{ return JSON.parse((document.getElementById('db-ishi')||{}).textContent||'{}')||{}; }catch(e){ return {}; } })();
 const trueOn = () => !!(state && state.ui && state.ui.trueName);
 const trueNameOf = (p, e) => { const s = (p.raw && p.raw.style) || 'NS'; return e.k ? e.t+'(이시층'+(s==='AS'||s==='ES' ? '·'+s : '')+')' : e.t; };
@@ -172,7 +173,7 @@ function workerMain(){
   /* 이 함수는 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
   const E = self.AEOpt;
   let byId = new Map(), SP = null;
-  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, azBy: ev.azBy || null} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
+  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})),
@@ -1328,7 +1329,7 @@ function cardHtml(x, key, o){
       <div class="setup" data-for="${key}" hidden></div>
       <div class="order hint">왼쪽부터 이 순서로 전방에 · 이름을 누르면 추천 세팅${shared?'':` · 후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}`).join(', '):'—'}`}</div>
       ${keyMetrics(x, o.mode, ref)}
-      ${x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(${x.kt.bars ? `HP ${x.kt.bars}줄 — 목숨·전회복·스토퍼를 넣어` : '보스 HP 1.3배 기준'}, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}</div>` : ''}
+      ${x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(${x.kt.bars ? `HP ${x.kt.bars}줄 — 목숨·전회복·스토퍼를 넣어` : '보스 HP 1.3배 기준'}, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}</div>` : ''}${zlLine(ev)}${afTimingLine(x, o)}${singLine(x)}
       ${warns.length?`<div class="warns">${wHtml(wShow)}${wMore>0?`<span class="warn more">외 ${wMore}개 (자세히 보기)</span>`:''}</div>`:''}
       <details class="why"><summary>자세히 보기 · 턴별 화력${showDummy(o.mode)?' · 최고점':''}</summary>
         <div class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span>${sbz&&sbz.how&&sbz.level?` · 존 ${esc(sbz.how)}`:''}</div>
@@ -1634,6 +1635,31 @@ function reviveTxt(team){
     return `${esc(c.name)}(${esc(top.s ? top.s.replace(/[（(【].*$/,'').trim() : '')}${top.s?' — ':''}${top.k==='prevent'?'쓰러지기 전 방지':'부활'}${RV_W[top.w]?' · '+RV_W[top.w]:''})`;
   }).join(', ');
 }
+/* 실전 N턴 계획 한 턴(engine battleSim 기록 rec: af 시작 게이지, sb 'af'|'turn', g 턴 시작 AF 게이지, s SB 게이지, afL 존 등급, bz 바뀐 보스 존, afFull 꽉 찬 게이지 감점 몫) */
+function turnRecTxt(r, ev, team, mainI){
+  const g = Math.round(+r.g||0), bz = r.bz && r.bz!==true ? ` <span class="hint">(보스 존 ${esc(r.bz)})</span>` : '';
+  if(r.af){ const sb = r.sb==='af' ? ` → AF 안에서 <b>SB</b>${r.combo ? ` (콤보 ${Math.round(r.combo*100)}%)` : ''}` : '';
+    return `<b>${r.t}턴</b>: <b class="afk">AF 발동</b> (게이지 ${Math.round(+r.af||g)}%${r.afL>=2?' · 극 존':''})${sb} · ${fmtN(r.d)}${r.ctrAF?' · AF 뒤 요격':''}${bz}`; }
+  const sb = r.sb==='turn' ? `<b>SB</b> + ` : '', st = r.stack ? '게이지 축적 소비 · ' : '';
+  const full = r.afFull>0 ? ` <span class="warn">AF 게이지가 꽉 차 피해 감소</span>` : '';
+  return `<b>${r.t}턴</b>: ${st}${sb}평상 공격 (AF 게이지 ${g}%${g>=50 && !ev.afOff ? ' — 켤 수 있지만 모아 둠' : ''}) · ${fmtN(r.d)}${full}${bz}`;
+}
+/* 처치 계획(engine killTurnsM log): 실전 N턴 뒤 AF 주기·아껴 둔 AF·스토퍼·목숨 처치·존 단계를 묶어서 */
+function killPlanTxt(kt, N){
+  const out = [], L = kt.log; let run = null;
+  const flush = () => { if(run){ out.push(`${run.a===run.b ? run.a+'턴' : run.a+'~'+run.b+'턴'}: 평상 공격${run.hold?' <span class="hint">(AF는 모아 둠 — 평상 턴으로 이 구간을 끊을 수 있음)</span>':''}`); run = null; } };
+  const evTxt = e => e.k==='stop' ? `HP ${e.hp}% 스토퍼` : e.k==='kill' ? (e.last ? '<b>처치</b>' : `목숨 ${e.n} 깸 → 부활`) : e.k==='phase' ? `보스 존·상성 바뀜${e.z?' → '+esc(e.z):''}` : '';
+  for(const l of L){ const evs = l.ev.filter(e=>e.k!=='phase'), ph = l.ev.find(e=>e.k==='phase');
+    if(ph){ flush(); out.push(`<span class="hint">${l.t}턴부터 ${evTxt(ph)}</span>`); }
+    if(!l.af && !evs.length && !l.sb){ if(run && run.b===l.t-1) { run.b = l.t; run.hold = run.hold || !!l.hold; } else { flush(); run = {a:l.t, b:l.t, hold: !!l.hold}; } continue; }
+    flush();
+    const what = l.af ? `<b class="afk">AF</b>${l.sb==='af'?' + SB':''}` : l.sb==='turn' ? 'SB + 평상 공격' : '평상 공격';
+    out.push(`<b>${l.t}턴</b>: ${what}${l.t<=N?' <span class="hint">(위 계획)</span>':''}${evs.length ? ' → '+evs.map(evTxt).join(', ') : ''}${l.cut ? ` <span class="hint">(보스 피해 경감 ×${l.cut})</span>` : ''}`);
+    if(out.length>=14){ out.push('<span class="hint">…</span>'); run = null; break; } }
+  flush();
+  if(!kt.sure) out.push('<span class="warn">99턴 안에 못 깰 수 있음</span>');
+  return out;
+}
 function turnPlanHtml(x, boss){
   const team=x.team, ev=x.ev, ex=x.ex, sbz=ev.sb.zone, nz=ev.normal.zone;
   const sum=a=>a.reduce((q,v)=>q+v,0)||1;
@@ -1672,6 +1698,7 @@ function turnPlanHtml(x, boss){
   });
   team.forEach((c,i)=>{ const d=debuffSummary(c); if(d.length && !(shSB[i]>=0.35)) o1.push(`${nm(i)}: 디버프 — ${esc(d.slice(0,4).join(', '))}`); });
   team.forEach((c,i)=>{ const ts=(c.raw.tags||[]).join(' ')+' '+(c.cxWhy||[]).join(' ');
+    if(c.song){ const off = ev.songOff && ev.songOff[i]; if(off) o1.push(`${nm(i)}: 가창은 쓰지 않음(본인 공격·다른 버프 우선)`); else if(!(c.song.uni && ev.sim && ev.sim.songUp && ev.sim.songUp[i]===0)) o1.push(`${nm(i)}: 가창 시작 → ${c.song.t>=99 ? '전투 끝까지' : c.song.t+'턴 동안'} 행동 불가(AF 포함, SB는 가능)${c.song.t<99 ? ', 끝나면 다시 가창' : ''}`); return; }
     if(/prayer|기도/.test(ts)) o1.push(`${nm(i)}: 기도 시작(유지)`); else if(/song|가창|노래/.test(ts)) o1.push(`${nm(i)}: 가창 시작(3턴마다 갱신)`); });
   dealers.forEach(i=>{ const c=team[i]; if(/축적|누적|스택|모드|상태/.test((c.cxWhy||[]).join(' '))) o1.push(`${nm(i)}: 축적·상태 준비 <span class="hint">${esc((c.raw.req_ko||c.raw.req||'').slice(0,60))}</span>`); });
   { const tl = ev.tl;
@@ -1696,14 +1723,14 @@ function turnPlanHtml(x, boss){
   if(shortB.length) o2.push(`${shortB.map(nm).join(', ')}: 짧은 버프(VC·초회·개막 한정)는 SB 턴 직전에 맞춰 쓰기`);
   o2.push(`${dealers.map(nm).join(', ')||nm(mainN)}: 평상 공격 — ${esc((ev.normal.cores[mainN]&&ev.normal.cores[mainN].skill)||'')} 위주, 버프·디버프 남은 턴 확인`);
   T.push(['2턴', o2]);
-  // 폭딜 턴
-  const o3=[];
-  if(ev.hasSB){
-    const co=ev.sb.cores[mainI];
-    o3.push(`버프·디버프·존(${esc(sbz&&sbz.level?sbz.label:'없음')})이 모두 켜진 턴에 <b>스텔라 버스트</b> — 주딜 ${nm(mainI)} ${esc(co&&co.usingSB?co.skill:'')}`);
-  } else o3.push('성도각성 캐릭터가 없어 SB 없이 AF로 폭딜');
-  o3.push(`이어서 <b>AF</b>: 평균 콤보 ${(ev.avgCombo*100).toFixed(0)}% 기준, 타수 많은 공격으로 콤보를 쌓고 ${nm(mainI)}로 마무리`);
-  T.push(['3턴~ · 폭딜', o3]);
+  // AF·SB 시점(2026-10-18 사용자 '언제 어포 켜서 쳐야 하는지 명시'): 실전 N턴 계획(battleSim)의 턴별 행동 + 보스면 처치 계획(killTurnsM 기록)
+  const o3=[], TR = (ev.bsim && ev.bsim.turns) || [];
+  if(TR.length){ for(const r of TR) o3.push(turnRecTxt(r, ev, team, mainI)); }
+  if(ev.hasSB){ const co=ev.sb.cores[mainI]; o3.push(`<span class="hint">SB: 버프·디버프·존(${esc(sbz&&sbz.level?sbz.label:'없음')})이 켜진 상태에서 — 주딜 ${nm(mainI)} ${esc(co&&co.usingSB?co.skill:'')}</span>`); }
+  else o3.push('<span class="hint">성도각성 캐릭터가 없어 SB 없이 AF로 폭딜</span>');
+  if(!ev.afOff) o3.push(`<span class="hint">AF 안: 평균 콤보 ${(ev.avgCombo*100).toFixed(0)}% 기준, 타수 많은 공격으로 콤보를 쌓고 ${nm(mainI)}로 마무리 · AF는 게이지 50% 이상이면 켤 수 있고 켠 턴은 AF가 끝나면 바로 턴 종료(평상 행동 없음)</span>`);
+  T.push([`AF·SB 시점 (실전 ${TR.length||'N'}턴 계획)`, o3]);
+  if(boss && x.kt && Array.isArray(x.kt.log) && x.kt.log.length){ const kl = killPlanTxt(x.kt, TR.length); if(kl.length) T.push([`처치 계획 (어림 · ${x.kt.t>=99?'99턴 이상':x.kt.t+'턴'})`, kl]); }
   // 유지·생존
   const o4=[];
   for(const k of ['heal','barrier','dmg_cut','cleanse','status_immune','knockback_immune','guard','taunt']){ const w=whoSup(team,k,k==='knockback_immune'||k==='status_immune'||k==='guard'?1:2); if(w.length) o4.push(`${SUP_KR[k]}: ${w.join(', ')}`); }
@@ -2314,7 +2341,25 @@ function suggestName(q){
   }
   return best && bd<=Math.max(1, Math.ceil(k.length/2)) ? best.name : null;
 }
+/* aecheck.com(AE Check) 저장 데이터 JSON(설정 → 데이터 복사)을 붙여 넣으면(2026-10-18 사용자 '여기 입력한 사람도 많아서 연동'): 값 = 단계×10000 + aecheck 캐릭터 번호.
+   보유(inven)·현현(manifest 1 현현·2 진현현)·전용 글래스터(grasta)·성도각성(staralign 0~3) → 이 앱 보유 상태. 천명치는 aecheck에 없어 '새로 보유로 체크할 때 천명치' */
+function aecheckImport(d, msgEl, resetEl){
+  const msg = msgEl || $('#quickMsg'), rst = resetEl || $('#quickReset'), M = (AECHECK && AECHECK.map) || {}, nIn = (d.inven||[]).length;
+  if(!Object.keys(M).length){ msg.innerHTML = `aecheck 저장 데이터를 읽었어요(보유 ${nIn}명). 다만 aecheck 캐릭터 번호 ↔ 캐릭터 대응표가 아직 없어 불러올 수 없어요 — 대응표가 채워지면 같은 방법으로 바로 불러와요.`; return; }
+  const step = (arr, n) => { const x = (arr||[]).find(v=>+v%10000===n); return x ? Math.floor(+x/10000) : 0; };
+  const saMin = +AECHECK.sa_min>0 ? +AECHECK.sa_min : 1, GM = AECHECK.grasta || {};
+  if(rst && rst.checked) state.owned = {}; else leaveSample();
+  let added = 0, upd = 0; const miss = [];
+  for(const v of (d.inven||[])){ const n = +v%10000, id = M[n] || M[String(n)]; const c = id && byId.get(id); if(!c){ miss.push(n); continue; }
+    const m = Math.min(2, step(d.manifest, n)), gs = step(d.grasta, n), sa = step(d.staralign, n), g = GM[gs] || GM[String(gs)] || null;
+    const o = state.owned[id];
+    if(!o){ state.owned[id] = newOwn(id, {m, g: g || undefined, s: c.stellar ? sa >= saMin : undefined}); added++; continue; }
+    let ch = false; if((+o.m||0)!==m){ o.m = m; ch = true; } if(g && (o.g||'none')!==g){ o.g = g; ch = true; } if(c.stellar && !!o.s!==(sa>=saMin)){ o.s = sa>=saMin; ch = true; } if(ch) upd++; }
+  touchRoster(); renderRoster(); renderTap(); if(rst) rst.checked = false;
+  msg.innerHTML = `<b>aecheck에서 ${nIn - miss.length}명 불러옴</b>${added||upd ? ` (새로 ${added}명 · 상태 바뀜 ${upd}명)` : ''} <span class="hint">천명치는 aecheck에 없어 새로 넣은 캐릭터는 ${newT()}</span>${miss.length ? `, 대응표에 없는 번호 ${miss.length}개(${miss.slice(0,8).join(', ')}${miss.length>8?'…':''})` : ''}`;
+}
 function quickCheck(){
+  { const raw = String($('#quickText').value||'').trim(); if(raw[0]==='{'){ try{ const d = JSON.parse(raw); if(d && Array.isArray(d.inven)){ aecheckImport(d); return; } }catch(e){} } }
   const toks=String($('#quickText').value||'').split(/[\n\r,;\t，、；]+/).map(t=>t.trim()).filter(Boolean);
   const msg=$('#quickMsg');
   if(!toks.length){ msg.textContent='이름을 줄바꿈이나 쉼표로 나눠 넣어 주세요.'; return; }
@@ -2490,9 +2535,33 @@ function hpModelHtml(b){ const h = b.hp_model; if(!h || !(+h.bars>1 || h.reset |
   if((h.stopper||[]).length) bits.push(`HP ${h.stopper.join('%·')}% 스토퍼(그 턴 남은 피해는 버려짐)`);
   if(+h.kt_min>0) bits.push(`최소 ${h.kt_min}턴`); for(const q of (h.dmg_cut||[]).filter(q=>+q.turns>0)) bits.push(`${q.when==='revive'?'부활 뒤':'개전'} ${q.turns}턴 피해 ×${q.x}`);
   return `<div class="bsneeds"><span class="bsl">HP 구조</span><span class="hint">${esc(bits.join(' · '))}${h.note_kr?` — ${esc(String(h.note_kr).split(/(?<=[.다요])\s+/)[0])}`:''}</span></div>`; }
-function zoneBossHtml(b){ const z = b.zone_boss, zb = b.zone_bonus; if(!z && !zb) return '';
-  const zl = z ? `${+z.lv>=2?'극·':''}${E.ZONE_KR ? (E.ZONE_KR[z.key]||z.key) : z.key}` : '';
-  return `<div class="bsneeds"><span class="bsl">보스 존</span>${z?`<span class="need">${esc(zl)}${z.every?' (매 턴)':''}</span> <span class="hint">${esc(z.note||'')} — 아군 존은 이보다 등급이 높아야 덮어써요${z.every?', 평상 턴은 이 존으로 계산':''}</span>`:''}${zb?` <span class="hint">${esc(zb.label||'')}</span>`:''}</div>`; }
+/* 가창 캐릭터(2026-10-18 사용자 확인: 가창 중엔 평상 턴·AF 행동 불가, SB는 가능 → 刻唄の力 글래스터): 가창하는지·안 하는지 */
+function singLine(x){ const ev = x.ev, T = x.team; if(!T.some(c=>c.song)) return '';
+  const bits = T.map((c,i)=>{ if(!c.song) return null; const off = ev.songOff && ev.songOff[i], up = ev.sim && ev.sim.songUp ? ev.sim.songUp[i] : null;
+    if(off) return `${esc(c.name)}: 가창 안 함 <span class="hint">(가창 중엔 행동을 못 해, 본인 공격·다른 버프가 더 나음)</span>`;
+    if(c.song.uni && up===0) return null;
+    return `${esc(c.name)}: 가창 ${c.song.t>=99 ? '(전투 끝까지)' : c.song.t+'턴'} — 그동안 평상 턴·AF 행동 없음(SB는 가능)${c.song.main ? ', 공격은 가창 중 턴 종료' : ''} · <span class="hint">刻唄の力(AF 중 게이지 회복량 증가, 수치 미공개 — 10% 가정)</span>`; }).filter(Boolean);
+  return bits.length ? `<div class="kt">${bits.join('<br>')}</div>` : ''; }
+/* 카드 한 줄 AF 시점(2026-10-18 사용자 '언제 어포 켜서 쳐야 하는지 명시'): 실전 N턴 계획의 AF·SB 턴 + 보스면 그 뒤 처치 계획의 AF 턴 */
+function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.bsim && ev.bsim.turns) || []; if(!T.length || (o && (o.mode==='burst' || o.mode==='opener'))) return '';
+  if(ev.afOff) return `<div class="kt hint">AF: 이 상대에선 못 씀${ev.hasSB ? ' — SB는 게이지가 차는 턴에' : ''}</div>`;
+  const af = T.filter(r=>r.af).map(r=>`<b>${r.t}턴</b>${Math.round(+r.af)<100 ? `(게이지 ${Math.round(+r.af)}%)` : ''}${r.sb==='af' ? '+SB' : ''}`), sbT = T.filter(r=>r.sb==='turn').map(r=>r.t+'턴');
+  let late = ''; const kl = x.kt && Array.isArray(x.kt.log) ? x.kt.log : null;
+  if(kl){ const N = T.length, A = kl.filter(l=>l.t>N && l.af).map(l=>l.t), H = kl.some(l=>l.t>N && l.hold); if(A.length) late = ` → 그 뒤 ${A.slice(0,4).join('·')}${A.length>4?'…':''}턴${H?' (스토퍼·목숨 직전엔 아껴 둠)':''}`; }
+  const full = T.some(r=>r.afFull>0) ? ' <span class="warn">게이지가 꽉 차면 피해 감소 — 100% 전에</span>' : (x.S||settings()).afFull ? ' <span class="hint">(게이지가 꽉 차면 피해 감소 — 100% 전에 켬)</span>' : '';
+  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${full}</div>`; }
+/* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
+function zlLine(ev){ const L = ev && Array.isArray(ev.zLate) ? ev.zLate.filter(p=>!p.auto || p.from) : []; if(!L.length) return '';
+  const z0 = ev.normal && ev.normal.zone ? ev.normal.zone.label : '존 없음';
+  const bits = L.map(p=> p.swap ? `${esc(zlWhen(p))} <b>${esc(p.swBy||'')} 내성↔약점 교환</b> · 지속 ${fmtN(p.sustain)}` : `${esc(zlWhen(p) + (p.delay ? ' 2턴 뒤' : ''))} <b>${esc(p.zone||'존 없음')}</b>${p.aff ? ' (상성 바뀜)' : ''} · 지속 ${fmtN(p.sustain)}`);
+  const onlySw = L.every(p=>p.swap);
+  return `<div class="kt hint">${onlySw ? '상성 변화' : '보스 존 변화'}: 처음 ${esc(z0)} → ${bits.join(' → ')}</div>`; }
+const zoneLbl = q => `${+q.lv>=2?'극·':''}${E.ZONE_KR ? (E.ZONE_KR[q.key]||q.key) : q.key}`;
+const zlWhen = q => +q.from>1 ? `${q.from}턴째부터` : q.after!=null ? (q.hp!=null ? `${+q.after>0 ? q.after+'회 부활 뒤 ' : ''}HP ${q.hp}%부터` : `${q.after}회 부활부터`) : '';
+function zoneBossHtml(b){ const z = b.zone_boss, zb = b.zone_bonus, zL = Array.isArray(b.zone_late) ? b.zone_late : []; if(!z && !zb && !zL.length) return '';
+  const lateH = zL.map(q=>`<span class="need">${esc(zlWhen(q))} ${esc(q.key ? zoneLbl(q) : '존 그대로')}</span>${q.note?` <span class="hint">${esc(q.note)}</span>`:''}`).join(' ');
+  const kyoku = (z && +z.lv>=2 && !z.every) || zL.some(q=>+q.lv>=2 && !q.every);
+  return `<div class="bsneeds"><span class="bsl">보스 존</span>${z?`<span class="need">${esc(zoneLbl(z))}${z.every?' (매 턴)':''}</span> <span class="hint">${esc(z.note||'')} — 아군 존은 이보다 등급이 높아야 덮어써요${z.every?', 평상 턴은 이 존으로 계산':''}</span> `:''}${lateH}${kyoku?` <span class="hint">보스 극 존은 2턴 뒤 일반 존 → 그 뒤엔 아군 극 존으로 덮어쓸 수 있다고 계산</span>`:''}${zb?` <span class="hint">${esc(zb.label||'')}</span>`:''}</div>`; }
 function threatHtml(b){ const t = b.threat; if(!t || !(+t.lvl>=2)) return '';
   const need = [t.tank?'탱커(도발·수호)':'', t.heal?'회복·배리어':''].filter(Boolean).join('·');
   return `<div class="bsneeds"><span class="bsl">보스 공격</span><span class="need">${+t.lvl>=3?'매우 강함':'강함'}</span>${need?` <span class="hint">${esc(need)} 없으면 점수를 크게 깎아요</span>`:''}${t.note_kr?` <span class="hint">— ${esc(String(t.note_kr).split(/(?<=[.다요])\s+/)[0])}</span>`:''}</div>`; }
@@ -2503,7 +2572,12 @@ const modsOn = (b, sel) => { const P = state.plan, on = sel ? (sel.on||[]) : ((P
 function effBoss(b, sel){
   if(b && !(+b.turn_limit>0) && bossTL(b)) b = Object.assign({}, b, {turn_limit: bossTL(b)}); // 턴 제한(서가 챌린지) → 실전 N턴·'N턴 최대 딜' 목록
   { const uh = b && state.plan && state.plan.bossHp && +state.plan.bossHp[b.id]; if(uh>0 && !(+b.hp>0) && !(b.hp_model && +b.hp_model.bar>0)) b = Object.assign({}, b, {hp: uh*Math.max(1, Math.ceil(+(b.hp_model && b.hp_model.bars)||1)), hp_user: true}); } // HP를 못 찾은 보스: 사용자가 넣은 한 줄 HP(억)(hp_model.bars가 있으면 × 줄 수로)
-  const bzS = b && b.zone_boss ? {bossZone: b.zone_boss} : null; // 보스가 까는 존(엔진 runSit S.bossZone)
+  let bzS = b && b.zone_boss ? {bossZone: b.zone_boss} : null; // 보스가 까는 존(엔진 runSit S.bossZone)
+  if(b && Array.isArray(b.zone_late) && b.zone_late.length){ const hm = b.hp_model||{}, bars = Math.max(1, Math.ceil(+hm.bars||1)), bar = +hm.bar>0 ? +hm.bar : (+b.hp>0 ? +b.hp/bars : 0); // 전투 중에 바뀌는 보스 존·상성(엔진 evalTeam S.bossZoneLate)
+    bzS = Object.assign({}, bzS, {bossZoneLate: b.zone_late.map(q=>Object.assign({}, q, {bar, bars, note: undefined}))}); }
+  { const af = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).find(q=>q && q.when==='af_full' && +q.x>0 && +q.x<1); if(af) bzS = Object.assign({}, bzS, {afFull: +af.x}); } // AF 게이지가 꽉 차면 아군 주는 피해 ×x
+  if(b && b.hp_model && b.hp_model.protect) bzS = Object.assign({}, bzS, {protect: b.hp_model.protect}); // 공격 행동 수로 내려가는 보스 내성 단계(마크바브) → 실전 N턴
+  { const cw = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).filter(q=>q && /^start/.test(String(q.when||'start')) && q.x!=null && +q.x>=0 && +q.x<1 && +q.turns>0).map(q=>({t:+q.turns, x:+q.x})); if(cw.length) bzS = Object.assign({}, bzS, {cutWin: cw}); } // 개시 피해 경감 구간 → 실전 N턴 계획이 그 뒤에 AF
   if(!b || !(b.modifiers||[]).length) return {boss:b, S:bzS, pledge:null};
   const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:bzS, pledge:null};
   const P = state.plan, B2 = JSON.parse(JSON.stringify(b)), S2 = Object.assign({}, bzS); let pl = null, extra = 0, kmin = 0;
@@ -2803,6 +2877,9 @@ function bind(){
   $('#ioOpen').addEventListener('click',()=>$('#ioFile').click());
   $('#ioFile').addEventListener('change',openFile);
   $('#quickGo').addEventListener('click',quickCheck);
+  { const go = $('#aeGo'); if(go) go.addEventListener('click', ()=>{ const raw = String($('#aeText').value||'').trim(), msg = $('#aeMsg'); let d = null; try{ d = JSON.parse(raw); }catch(e){}
+      if(!d || !Array.isArray(d.inven)){ msg.innerHTML = raw ? 'aecheck에서 복사한 내용이 아닌 것 같아요. aecheck 설정(톱니바퀴)의 <b>복사</b> 버튼으로 복사한 걸 그대로 붙여 넣어 주세요.' : '먼저 aecheck에서 복사한 내용을 붙여 넣어 주세요.'; return; }
+      aecheckImport(d, msg, $('#aeReset')); }); } // aecheck에서 가져오기(2026-10-18)
   { const nt = $('#newT'); if(nt){ nt.value = String(newT()); if(nt.value==='') { nt.value = '80'; } nt.addEventListener('change', ()=>{ state.ui = Object.assign({}, state.ui, {newT: +nt.value}); save(); }); } }
   { const tf = $('#tapFold'); if(tf){ let barOk = false; tf.addEventListener('toggle', ()=>{ if(!tf.open) return; if(!barOk){ renderTapBar(); barOk = true; } renderTap(); });
       let tq = 0; $('#tapQ').addEventListener('input', e=>{ TAPF.q = e.target.value; clearTimeout(tq); tq = setTimeout(renderTap, 120); });

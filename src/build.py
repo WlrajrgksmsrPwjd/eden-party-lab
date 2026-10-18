@@ -82,6 +82,12 @@ lun=json.load(open(P('data','lunatic.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in lun.get('teishin',{}): c['teishin']=True
 # 부활·전투불능 방지 등급(알테마 대조): 생존 점수와 덱 설명에 씀
+asw=json.load(open(P('data','aff_swap.json'),encoding='utf-8')) # 적 내성↔약점 교환(墨染の軍師·셴화(AS))
+for c in chars:
+    if c['id'] in asw and not c['id'].startswith('_'): c['aff_swap']={k:v for k,v in asw[c['id']].items() if k in ('t','from','skill')}
+sng=json.load(open(P('data','song.json'),encoding='utf-8')) # 가창 스킬(가창 중 행동 불가, 2026-10-18 사용자 확인)
+for c in chars:
+    if c['id'] in sng and not c['id'].startswith('_'): c['song']=sng[c['id']]
 rvv=json.load(open(P('data','revive.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in rvv and not c['id'].startswith('_'): c['revive']={'g':rvv[c['id']]['g'],'fx':[{k:v for k,v in e.items() if k in ('k','t','w','s')} for e in rvv[c['id']]['fx']]}
@@ -189,6 +195,7 @@ for c in chars:
 _miss=[k for k in _ish if not any(re.sub(r'\((AS|ES|AC)\)$','',c['name_jp'])==k for c in chars)]
 if _miss: raise SystemExit('ishisou.json: 데이터에 없는 이름 %s'%_miss)
 out+='<script type="application/json" id="db-ishi">'+js(_tn)+'</script>\n'
+out+='<script type="application/json" id="db-aecheck">'+js(json.load(open(P('data','aecheck_map.json'),encoding='utf-8')))+'</script>\n' # aecheck 저장 데이터 불러오기 대응표(계산과 무관)
 # 보편 추천 덱(커뮤니티): 없는 캐릭터 id가 있으면 빌드를 멈춘다
 mdk=json.load(open(P('data','meta_decks.json'),encoding='utf-8'))['decks']
 _ids={c['id'] for c in chars}

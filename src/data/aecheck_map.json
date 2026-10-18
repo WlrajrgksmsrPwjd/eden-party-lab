@@ -1,0 +1,7 @@
+{
+  "_doc": "aecheck.com(AE Check, BeaverHouse/aecheck-front — MIT) 저장 데이터 JSON 불러오기용 캐릭터 번호 대응표. aecheck JSON의 inven·manifest·grasta·staralign 값은 단계×10000 + aecheck 캐릭터 번호(char0001부터 차례로 붙인 내부 번호, character_code = c+게임 ID). 번호 ↔ 캐릭터는 aecheck 서버 DB(API character·translation)에만 있어 아직 비어 있음 — 사용자가 aecheck API 응답을 주거나 제작자에게 받으면 map을 채움. map: {aecheck 번호: 이 앱 캐릭터 id}. sa_min: 성도각성 켜짐으로 볼 staralign 단계(0~3 중, 미정 — 기본 1). grasta: aecheck 전용 글래스터 단계 → 이 앱 g 값(1·2가 진·극인지 미확인).",
+  "src": "https://github.com/BeaverHouse/aecheck-front (src/store/useCheckStore.ts, src/components/atoms/SettingsModal.tsx)",
+  "sa_min": 1,
+  "grasta": {"1": "shin", "2": "goku"},
+  "map": {}
+}

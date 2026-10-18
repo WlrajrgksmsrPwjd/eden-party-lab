@@ -240,6 +240,8 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - 보스 `punish` {only_wt, only_el, only_kind, x, label}: 이 조건 밖 공격은 보스를 강화(갑개룡 타격 외) → 그 비중 × x만큼 감점·경고.
 - 보스 `turn_limit`(앱은 성영의 서가에 5를 붙임 — 챌린지 5턴 제한): 실전 N턴 = 턴 제한, optimize가 results3('N턴 최대 딜': 실전 N턴 총딜 순 + 필요 요소·위협 감점)도 냄.
 - 보스 `zone_boss` {key, lv 1|2, every, note}: 보스가 까는 존(앱 effBoss → S.bossZone) → runSit 존 후보: 아군 존은 보스 존보다 등급이 높을 때만, every(매 턴 다시 깔기)면 평상 턴은 보스 존 고정. `zone_bonus` {keys, lv, x, label}: 그 존이면 점수 × (1 + (x−1)/2)(x<1이면 손해 — 마크바브).
+- 보스 `zone_late` [{key, lv, every, from 턴 | after 깬 줄(목숨) 수 + hp 그 줄 HP%, aff {weak, resist, null, absorb}(그 단계 상성, 적은 종류만 바꿈), note}]: 전투 중에 바뀌는 보스 존·상성(앱 effBoss → S.bossZoneLate, bar·bars를 붙임) → engine evalTeam이 단계마다 한 번 더 계산(ev.zLate): 실전 N턴은 바뀌는 턴부터 그 단계 턴 기록, 지속 딜은 긴 전투 15턴·HP 비율로 섞음, killTurnsM은 단계마다 평상 턴·AF 주기. 보스 극 존(every 아님)은 2턴 뒤 일반 존 단계를 자동으로 붙임(그 뒤엔 아군 극 존이 덮어씀 — 처음부터 까는 zone_boss 극도). 탐색 어림 단계는 처음 상태만.
+- 보스 `hp_model.dmg_cut` `when: 'af_full'` {x}: AF 게이지가 꽉 차 있으면 아군 주는 피해 × x(앱 → S.afFull, battleSim이 게이지 100%에 닿은 뒤 몫의 평상 턴·SB에 곱함 → 100% 전에 AF를 쓰는 계획).
 
 ## buff_acts.json attack 행동 위력
 `k: "attack"` 행동에 `el`(속성/none) `wt`(slash/pierce/blunt/magic) `size` `mult` `hits`가 있으면 그 위력으로 계산(허수아비 AF 행동, 평상 턴 시뮬은 주력 대비 위력 비율, 최대 1). 없으면 특대 1배.
