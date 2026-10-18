@@ -165,7 +165,7 @@ function workerMain(){
     results2: r.results2 ? r.results2.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})) : null,
     decks:(r.decks||[]).map(d=>({focus:d.focus, ids:d.team.map(c=>c.id), reserveIds:d.reserves.map(c=>c.id), fixedBackIds:[...(d.fixedBack||[])], score:d.score, rel:d.rel, norm:d.norm, miss:d.miss, recCount:d.recCount, v:vOf(d.ev)})),
-    evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, focus:r.focus||null};
+    evaluated:r.evaluated, poolSize:r.poolSize, pool:r.pool, weights:r.weights, nmax:r.nmax||null, focus:r.focus||null}; // nmax: 육성·획득 추천·연전이 결과와 같은 정규화로 점수(2026-10-18: 빠져 있어 실전 딜만으로 셈)
   const litePc = r => r.error ? {error:r.error} : {
     list: r.list.map(x=>x.none ? {id:x.pc.id, none:true} : {id:x.pc.id, teamIds:x.team.map(c=>c.id), score:x.score, rel:x.rel, filler:!!x.filler}),
     evaluated:r.evaluated, poolSize:r.poolSize};
@@ -207,6 +207,7 @@ function makeWorker(){
     return w;
   }catch(e){ WK.ok=false; return null; }
 }
+function cancelChan(pre){ SHARD_TOK[pre] = (SHARD_TOK[pre]||0)+1; for(const k of Object.keys(WK.chans)) if(k===pre || k.indexOf(pre+'#')===0){ const c = WK.chans[k]; if(c) dropChan(k, c, CANCELED); } } // 그 채널(나눠 계산 #k 포함)의 워커를 끝냄
 function dropChan(chan, c, result){
   clearTimeout(c.timer);
   try{ c.w.terminate(); }catch(e){}
@@ -655,7 +656,7 @@ function budPick(){
   if(!own.length) return {main:null, auto:true};
   // 자동(2026-10-17 사용자 '보통 모케를 쓰는데 테트라로 고정'): 편성 계산은 결과마다 후보 버디를 바꿔 계산해 고름(buddyAutoInput),
   // 그 밖(캐릭터별·속성별·세팅 화면)은 성향에 맞는 대표 버디(안정성이면 생존, 그 밖은 화력 효과 값이 큰 버디)
-  const main = B.main==='none' ? null : B.main==='auto' ? ((E.budCands(own.map(k=>budOf(k)), P.mode==='stability', P.mode==='burst')[0]||{}).id || own[0]) : (own.includes(B.main) ? B.main : null);
+  const main = B.main==='none' ? null : B.main==='auto' ? ((E.budCands(own.map(k=>budOf(k)), P.mode==='stability', P.mode==='burst', !!(modSettings()||{}).afDrain)[0]||{}).id || own[0]) : (own.includes(B.main) ? B.main : null);
   return {main, auto: B.main==='auto'}; // 서브 버디는 오라가 발동하지 않아 계산에서 뺌(사용자 확인 2026-10-16)
 }
 function buddyInput(){ const b=budPick(); if(!b.main) return null; return {main: budOf(b.main), sub:null}; }
@@ -1013,7 +1014,7 @@ function renderResults(r, boss, enemy, mode){
   if(boss && boss.gauntlet && all.length && bv!=='stable') h+=`<section class="growbox" id="gauntBox"><h3>${boss.gauntlet.n}연전 편성 (덱 ${boss.gauntlet.n}개)</h3><p class="hint" style="margin:0">${esc(boss.gauntlet.note_kr||'')} 1전은 위 1위 조합, 다음 전투는 앞 전투 멤버를 빼고 앞 전투가 붙이는 흉성(약점 친 속성 흡수·존 파괴 등)을 넣어 다시 계산합니다.</p><button type="button" class="btn small" id="gauntRun">${boss.gauntlet.n}연전 계산하기</button><div id="gauntList"></div></section>`;
   if(all.length && !state.sample && !(all[0] && all[0].shared)) h+=`<section class="growbox" id="growBox"><h3>육성 추천</h3><p class="hint" style="margin:0">위 조합 멤버 중 한 단계만 올렸을 때(성도각성 · 천명치 다음 단계 · 현현 무기) 이 성향 점수가 가장 많이 오르는 것. 다른 조합으로 바뀌는 효과는 세지 않습니다.</p><button type="button" class="btn small" id="growRun">계산하기</button><div id="growList"></div><h3 style="margin-top:14px">획득 추천</h3><p class="hint" style="margin:0">안 가진 SS·S 캐릭터(천명치 80·성도각성 가정)를 위 1~3위 조합 멤버와 한 명씩 바꿔 넣어 봤을 때 가장 많이 오르는 캐릭터. 그 캐릭터 중심의 새 조합까지는 찾지 않습니다.</p><button type="button" class="btn small" id="getRun">계산하기</button><div id="getList"></div></section>`;
   out.innerHTML=h;
-  GROW.all = all; GROW.r = r; GROW.mode = mode; GROW.tok++;
+  GROW.all = all; GROW.r = r; GROW.mode = mode; GROW.tok++; cancelChan('gaunt'); // 결과를 새로 그리면 하던 연전 계산(워커)은 버림
 }
 const DECKCTX={};
 /* N연전 편성(2026-10-18, 사용자 '안키 디그마 3연전이라 덱 3개'): boss.gauntlet {n, absorb_prev} — 1전 = 지금 결과 1위, k전 = 앞 전투들 멤버 제외 +
@@ -1023,7 +1024,7 @@ const DECKCTX={};
 const OMEN_SH = {kyousei1:'피해 경감', kyousei2:'흡수', kyousei3:'AF 이월 불가', kyousei4:'매 턴 버프 해제', kyousei5:'속성 존 파괴', kyousei6:'속성 외 존 파괴', kyousei7:'반격 2,000'};
 async function gauntRun(){
   const box = $('#gauntList'), btn = $('#gauntRun'); if(!box || !GROW.all || !LAST_PLAN) return;
-  const L0 = LAST_PLAN, boss0 = L0.boss, G = boss0 && boss0.gauntlet; if(!G) return;
+  const L0 = LAST_PLAN, bossP = L0.boss, boss0 = (bossP && BOSSES.find(b=>b.id===bossP.id)) || bossP, G = boss0 && boss0.gauntlet; if(!G) return; // boss0 = 흉성 없는 원래 보스(편성 탭에서 켠 흉성이 2전부터 새지 않게), bossP = 1전(지금 결과)의 보스
   const tok = GROW.tok, P = state.plan, n = Math.max(2, Math.min(5, +G.n||3));
   const usedEls = x => { const ev = x.ev, per = (ev.bsim && ev.bsim.per) || ev.normal.per || [], tot = per.reduce((a,v)=>a+(v||0),0)||1, S2 = new Set();
     x.team.forEach((c,i)=>{ if((per[i]||0)/tot < 0.01) return; for(const co of [ev.normal.cores && ev.normal.cores[i], ev.sb.cores && ev.sb.cores[i]]) if(co && co.el && co.el!=='none' && co.dmg!==0) S2.add(co.el); });
@@ -1032,12 +1033,15 @@ async function gauntRun(){
     if(nt>0) x.team.forEach((c,i)=>{ if(ch && (ch.per[i]||0)/nt >= 0.01) for(const e of (c.chain||[])) if(e.atk && e.atk.element && e.atk.element!=='none') S2.add(e.atk.element);
       if(ct && (ct.per[i]||0)/nt >= 0.01 && ct.els && ct.els[i] && ct.els[i]!=='none') S2.add(ct.els[i]); });
     return [...S2]; };
-  const scF = growScore(GROW.r, 'boss'), lsc = x => Math.log(Math.max(1e-9, scF(x.ev)));
+  const scF = growScore(GROW.r, 'boss', {boss: boss0}), lsc = x => Math.log(Math.max(1e-9, scF(x.ev, x.team)));
   // 흉성 판정: 리버설(태그·SB/주력 문구 — 가진 캐릭터면 쓴다고 봄), 존(평상·SB 존 종류), 한 턴 공격 수(평상 턴 ev.atkN), AF 턴 피해(실전 N턴의 AF 턴 ÷ 라이프 1개 HP)
   const MODS = (boss0.modifiers||[]).filter(m=>m.kind!=='pledge' && m.trigger), hp1 = +boss0.hp>0 ? +boss0.hp/(+boss0.lives||1)*1e8 : 0;
   const isRev = c => { const t = (c.raw && c.raw.tags) || []; return t.some(q=>/revers/.test(q)) || /リバーサル|리버설/.test(JSON.stringify([c.raw && c.raw.sb, c.raw && c.raw.main, c.raw && c.raw.sb_normal])); };
   const zKinds = ev => { const Z = new Set(); for(const z of [ev.normal && ev.normal.zone, ev.sb && ev.sb.zone]) if(z && z.level>0 && z.kind && z.kind!=='none') Z.add(z.kind==='elem' ? 'elem' : 'nonelem'); return Z; };
-  const omenOf = x => { if(!x || !x.ev || !MODS.length) return []; const ev = x.ev, zk = zKinds(ev), afMax = Math.max(0, ...(((ev.bsim && ev.bsim.turns) || []).filter(r=>r.af).map(r=>+r.d||0)));
+  const omenOf = x => { if(!x || !x.ev || !MODS.length) return []; const ev = x.ev, zk = zKinds(ev), kt = x.kt || E.killTurns(ev, boss0);
+    // AF 턴 피해: 실전 N턴의 AF 턴 + 그 뒤에 오는 AF(처치까지 걸리는 턴이 AF 주기보다 길면 — 흉성 3이면 차지로 채운 AF)
+    const afLate = !ev.afOff && kt && kt.t >= (ev.afDrain ? ev.afDrain.first : (+ev.afTurns||99)) ? (ev.afDrain ? +ev.afDrain.af||0 : +ev.af||0) : 0;
+    const afMax = Math.max(afLate, ...(((ev.bsim && ev.bsim.turns) || []).filter(r=>r.af).map(r=>+r.d||0)));
     return MODS.filter(m=>{ const g = m.trigger;
       if(g.reversal) return x.team.some(isRev);
       if(g.zone) return zk.has(g.zone);
@@ -1049,6 +1053,7 @@ async function gauntRun(){
   const omBoss = (abs, om) => { const EB = effBoss(boss0, {on: om||[]}), B = EB.boss;
     return {B: Object.assign({}, B, {weak:(B.weak||[]).filter(e=>!abs.includes(e)), resist:(B.resist||[]).filter(e=>!abs.includes(e)), absorb:[...new Set((B.absorb||[]).concat(abs))]}), S: Object.assign({}, SB0, EB.S||{})}; };
   if(btn){ btn.disabled = true; btn.textContent = '속성덱 조합 찾는 중…'; }
+  try{
   /* ① 이미 계산한 조합(1~5위 + 속성·타입덱)으로 멤버가 안 겹치고, 다음 전투가 앞 전투 속성을 안 쓰는 N개를 고름(점수 로그 합 최대 — 한 전투만 약해지는 계획을 피함).
      흡수 속성을 안 쓰는 조합은 흡수 보스에서도 점수가 같음. 속성덱 점수는 지정 속성 화력만 센 값이라 지정 없이 다시 평가.
      흉성이 붙으면 점수가 바뀌니 흉성 없이 고른 상위 8개 계획을 흉성 넣어 다시 평가(조합·흉성마다 한 번) */
@@ -1071,13 +1076,13 @@ async function gauntRun(){
     for(let k=1; k<n; k++){ const pv = {team:D.chosen[k-1].y.team, ev:evs[k-1]}, om = omenOf(pv), abs = G.absorb_prev ? usedEls(pv) : [];
       const v = await evOm(D.chosen[k], abs, om); tot += v.l; evs.push(v.ev); oms.push(om); abss.push(abs); if(!v.ev) break; }
     if(evs.every(Boolean) && (!bestD || tot > bestD.tot)) bestD = {tot, chosen:D.chosen, evs, oms, abss}; }
-  const picks = [{x: GROW.all[0], boss: boss0, enemy: L0.enemy, abs: [], om: []}];
+  const picks = [{x: GROW.all[0], boss: bossP, enemy: L0.enemy, abs: [], om: []}];
   const excl = new Set((P.excluded||[]).concat(GROW.all[0].team.map(c=>c.id)));
   for(let k=1; k<n; k++){ if(tok!==GROW.tok) return;
     const prev = picks[k-1], abs = G.absorb_prev ? usedEls(prev.x) : [], om = omenOf(prev.x), ob = omBoss(abs, om), Bk = ob.B;
     const enemy = bossToEnemy(Bk), rec = prepped.filter(c=>(Bk.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id);
     const J = jobSnap(); J.S = ob.S; const t0 = Date.now();
-    const r = await calcOptimize('gaunt'+k, {locked:[], excluded:[...excl], backLocked:P.backLocked||[], mode:'boss', enemy, boss:Bk, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:null, noConv:noConvOf(P, null),
+    const r = await calcOptimize('gaunt', {locked:[], excluded:[...excl], backLocked:P.backLocked||[], mode:'boss', enemy, boss:Bk, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:null, noConv:noConvOf(P, null),
         weights:null, pledge:null, buddy: buddyAutoInput() ? null : buddyInput(), buddyAuto: buddyAutoInput()},
       f=>{ if(btn && tok===GROW.tok) btn.textContent = `${k+1}/${n}전 계산 중 ${Math.round(f*100)}% · ${Math.round((Date.now()-t0)/1000)}초`; }, J, {shard:true, cache:true});
     if(tok!==GROW.tok || !r) return;
@@ -1096,13 +1101,15 @@ async function gauntRun(){
   const k1 = MODS.find(m=>m.trigger.kt_le);
   box.innerHTML = picks.map((pk,k)=>{ if(!pk.x) return `<div class="deckrow" style="cursor:default"><span class="dk">${k+1}전</span><span class="dm">${esc(pk.err||'')}${pk.abs.length?` · 흡수 ${esc(elTx(pk.abs))}`:''}${pk.om && pk.om.length?` · 흉성 ${esc(omTx(pk.om))}`:''}</span><span></span></div>`;
       const key = 'g'+k; pk.x.rank = k+1; if(pk.x.kt===undefined) pk.x.kt = E.killTurns(pk.x.ev, pk.boss);
-      RES.set(key, {x:pk.x, focus:null, mode:'boss', bossId:boss0.id, label:(k+1)+'전'}); DECKCTX[key] = {boss:pk.boss, enemy:pk.enemy, focus:null, ref, hot:'', lockSet:new Set(), mode:'boss'};
+      RES.set(key, {x:pk.x, focus:null, mode:'boss', bossId:boss0.id, label:(k+1)+'전'}); DECKCTX[key] = {boss:pk.boss, enemy:pk.enemy, focus:null, ref, hot:'', lockSet:new Set(), mode:'boss', noShare:true}; // 링크·제보 복사는 편성 탭 보스 기준이라 연전 카드엔 안 둠
       const kt = pk.x.kt && pk.x.kt.t ? ` · 예상 ${pk.x.kt.t}턴${pk.x.kt.sure===false?'+':''}` : '';
       const nx = picks[k+1], nxOm = nx ? (nx.om || []) : [], stall = nx && k1 && pk.x.kt && pk.x.kt.t <= +k1.trigger.kt_le;
       const tail = nx ? (nxOm.length || stall ? ` · 이기면 다음 전투에 ${esc(omTx(nxOm) || '')}${nxOm.length && stall ? '·' : ''}${stall ? `제1(11턴 넘겨 이기면 피함)` : ''}` : '') : '';
       return `<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${k+1}전</span><span class="dm">${pk.x.team.map(c=>esc(c.name)).join(', ')}<br><small class="hint">공격 속성 ${esc(elTx(usedEls(pk.x)))}${pk.abs.length?` · 이 전투 흡수 ${esc(elTx(pk.abs))}`:''}${pk.om && pk.om.length?` · 이 전투 흉성 ${esc(omTx(pk.om))}`:''}${kt}${tail}</small></span><span class="num">▾</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; }).join('')
-    + `<p class="hint" style="margin:6px 0 0">(${how}) 줄을 누르면 그 전투의 조합 카드가 열립니다. 앞 전투를 이긴 방식으로 붙는 흉성을 다음 전투 계산에 넣었어요 — 제2(약점 친 속성 흡수)·제3(AF 턴에 HP 60% 이상 → AF 없음으로 계산)·제4(리버설 → 버프 1턴)·제5·6(존 전개 → 그 종류 존 없음)·제7(한 턴 공격 9회 이상 → 반격). 리버설은 가진 캐릭터면 쓴다고 봤고, 제1(10턴 안에 이기면 다음 전투 피해 경감)은 11턴 넘겨 이긴다고 보고 뺐습니다. 바로 앞 전투 것만 넣었고(누적인지는 자료가 없음), 같은 캐릭터의 다른 스타일(AS·ES)은 다른 전투에 쓸 수 있다고 봤습니다.</p>`;
-  if(btn){ btn.disabled = false; btn.textContent = '다시 계산'; }
+    + (modsOn(boss0).length ? `<p class="hint" style="margin:6px 0 0">편성 탭에서 흉성(${esc(modsOn(boss0).map(m=>m.kr).join('·'))})을 켠 상태라 1전도 그 흉성으로 계산한 1위예요. 서브퀘스트 1전은 흉성이 없으니 흉성을 끄고 계산하는 게 맞아요.</p>` : '')
+    + `<p class="hint" style="margin:6px 0 0">(${how}) 줄을 누르면 그 전투의 조합 카드가 열립니다. 앞 전투를 이긴 방식으로 붙는 흉성을 다음 전투 계산에 넣었어요 — 제2(약점 친 속성 흡수)·제3(AF 턴에 HP 60% 이상 → AF 게이지 매 턴 소비: 건스(AS) 같은 버디 차지로 그 턴에 채울 때만 AF)·제4(리버설 → 버프 1턴)·제5·6(존 전개 → 그 종류 존 없음)·제7(한 턴 공격 9회 이상 → 반격). 리버설은 가진 캐릭터면 쓴다고 봤고, 제1(10턴 안에 이기면 다음 전투 피해 경감)은 11턴 넘겨 이긴다고 보고 뺐습니다. 바로 앞 전투 것만 넣었고(누적인지는 자료가 없음), 같은 캐릭터의 다른 스타일(AS·ES)은 다른 전투에 쓸 수 있다고 봤습니다.</p>`;
+  } catch(e){ console.warn('[연전 편성]', e); box.innerHTML = '<p class="hint">연전 계산 중 오류가 났습니다. 다시 눌러 주세요.</p>'; }
+  finally { if(btn && tok===GROW.tok){ btn.disabled = false; btn.textContent = '다시 계산'; } }
 }
 /* 육성 추천(2026-10-18): 지금 결과 상위 조합의 멤버마다 다음 한 단계(성도각성·천명치 다음 문턱·현현 무기)를 올려 다시 계산해 성향 점수 증가율로 줄 세움.
    점수 = 결과와 같은 가중치·정규화(r.weights·r.nmax)로 실전/최고점·지속·생존을 섞은 값, 조합 점수(1위 대비)를 곱해 순위 */
@@ -1117,18 +1124,18 @@ function growCands(c){
 }
 async function growRun(){
   const box = $('#growList'), btn = $('#growRun'); if(!box || !GROW.all) return;
-  const tok = GROW.tok, r = GROW.r, mode = GROW.mode, W = r.weights || {b:0.4, s:0.3, t:0.3}, nm = r.nmax || null, S = settings();
-  const BR = ev => mode==='opener' ? +ev.opener||0 : mode==='burst' ? +ev.dummyT||0 : +ev.burst||0;
-  const sc = ev => { if(!nm) return BR(ev); const tt = (+ev.surv||0)/(nm.t||1); let v = W.b*BR(ev)/(nm.b||1) + W.s*(+ev.sustain||0)/(nm.s||1) + W.t*tt; if(tt<0.25 && ['sustain','weak','opener','all','boss'].includes(mode)) v *= 0.85; return v; };
-  const top = GROW.all.slice(0, 5), s0 = top.map(x=>sc(x.ev)), best = Math.max(1e-12, ...s0);
+  const tok = GROW.tok, r = GROW.r, mode = GROW.mode, S = settings(), sc = growScore(r, mode, growOpt()), en = (LAST_PLAN && LAST_PLAN.enemy) || null;
   if(btn){ btn.disabled = true; btn.textContent = '계산 중…'; }
+  try{
+  // 기준값도 지금 설정으로 다시 계산(결과를 낸 뒤 설정·흉성을 바꿨으면 x.ev와 설정이 달라 증가율이 어긋남)
+  const top = GROW.all.slice(0, 5), s0 = []; for(const x of top){ let v = sc(x.ev, x.team); try{ v = sc(E.evalTeam(x.team, x.progs, en, S, cap, x.ctx || ctxOf({})), x.team); }catch(e){} s0.push(v); await yieldUI(); if(tok!==GROW.tok) return; }
+  const best = Math.max(1e-12, ...s0);
   const res = new Map(); // 캐릭터·항목 → {c, label, note, gains:[{rank, g}]}
   let n = 0, total = top.reduce((a,x)=>a + x.team.reduce((b,c)=>b + growCands(c).length, 0), 0);
   for(let k=0; k<top.length; k++){ const x = top[k];
     for(let i=0; i<x.team.length; i++){ const c = x.team[i]; if(!state.owned[c.id]) continue;
       for(const cd of growCands(c)){ if(tok!==GROW.tok) return;
-        const p2 = x.progs.slice(); p2[i] = E.charProg(c, cd.own, S);
-        let g = 0; try{ const ev2 = E.evalTeam(x.team, p2, (LAST_PLAN && LAST_PLAN.enemy) || null, S, cap, x.ctx || ctxOf({})); g = sc(ev2)/Math.max(1e-12, s0[k]) - 1; }catch(e){}
+        let g = 0; try{ const p2 = x.progs.slice(); p2[i] = E.charProg(c, cd.own, S); const ev2 = E.evalTeam(x.team, p2, en, S, cap, x.ctx || ctxOf({})); g = sc(ev2, x.team)/Math.max(1e-12, s0[k]) - 1; }catch(e){}
         const key = c.id+'|'+cd.label; if(!res.has(key)) res.set(key, {c, label:cd.label, note:cd.note||'', gains:[]});
         res.get(key).gains.push({rank:x.rank, g, w: s0[k]/best});
         n++; if(btn) btn.textContent = `계산 중 ${n}/${total}`; await yieldUI(); } } }
@@ -1137,27 +1144,36 @@ async function growRun(){
   const pct = v=>'+'+(v*100).toFixed(1)+'%';
   box.innerHTML = L.length ? `<ol class="growlist">${L.map(v=>`<li><b>${esc(v.c.name)}</b> ${esc(v.label)}${v.note?` <span class="hint">(${esc(v.note)})</span>`:''} — ${v.gains.filter(q=>q.g>0.001).sort((a,b)=>a.rank-b.rank).map(q=>`${q.rank}위 조합 <b>${pct(q.g)}</b>`).join(' · ')}</li>`).join('')}</ol><p class="hint" style="margin:4px 0 0">한 번에 하나씩 올린 값이고, 조합 점수가 1위에 가까울수록 앞에 둡니다.</p>`
     : '<p class="hint">위 조합 멤버는 이 단계들로 점수가 거의 안 바뀝니다(이미 다 키웠거나 효과가 작음).</p>';
-  if(btn){ btn.disabled = false; btn.textContent = '다시 계산'; }
+  } finally { if(btn && tok===GROW.tok){ btn.disabled = false; btn.textContent = '다시 계산'; } }
 }
-const growScore = (r, mode) => { const W = r.weights || {b:0.4, s:0.3, t:0.3}, nm = r.nmax || null;
-  const BR = ev => mode==='opener' ? +ev.opener||0 : mode==='burst' ? +ev.dummyT||0 : +ev.burst||0;
-  return ev => { if(!nm) return BR(ev); const tt = (+ev.surv||0)/(nm.t||1); let v = W.b*BR(ev)/(nm.b||1) + W.s*(+ev.sustain||0)/(nm.s||1) + W.t*tt; if(tt<0.25 && ['sustain','weak','opener','all','boss'].includes(mode)) v *= 0.85; return v; }; };
+/* 육성·획득 추천·연전 점수(2026-10-18 점검): 결과와 같은 가중치·정규화(r.weights·r.nmax — 예전 캐시에 nmax가 없으면 1위의 norm으로 되살림) + 엔진과 같은 보정
+   (보스·결현현 = 필요 요소·추천 캐릭터·처치 턴^−0.6, 약점 맞춤 = weakFit). o = {boss, enemy}. 반환 함수는 (ev, team) */
+const growScore = (r, mode, o) => { o = o || {}; const md = mode==='kesshitsu' ? 'boss' : mode, W = r.weights || {b:0.4, s:0.3, t:0.3};
+  const BR = ev => md==='opener' ? +ev.opener||0 : md==='burst' ? +ev.dummyT||0 : +ev.burst||0;
+  const x0 = (r.results||[])[0], q = x0 && x0.norm, nm = r.nmax || (q && x0.ev && q.b>0 && q.s>0 && q.t>0 ? {b: BR(x0.ev)/q.b, s: (+x0.ev.sustain||0)/q.s, t: (+x0.ev.surv||0)/q.t} : null);
+  const boss = o.boss || null, enemy = o.enemy || null, rec = new Set((boss && boss.recommended) || []);
+  const pen = (ev, team) => { if(md==='boss' && boss){ const kt = E.killTurns(ev, boss); return E.needPenalty(ev, boss).f*(1 + 0.06*(team||[]).filter(c=>c.raw && rec.has(c.raw.name_jp)).length)*(kt && kt.t>0 ? Math.pow(Math.max(1, kt.t), -0.6) : 1); }
+    return md==='weak' && enemy ? E.weakFit(ev, enemy).f : 1; };
+  return (ev, team) => { let v; if(!nm) v = BR(ev); else { const tt = (+ev.surv||0)/(nm.t||1); v = W.b*BR(ev)/(nm.b||1) + W.s*(+ev.sustain||0)/(nm.s||1) + W.t*tt; if(tt<0.25 && ['sustain','weak','opener','all','boss'].includes(md)) v *= 0.85; } return v*pen(ev, team); }; };
+const growOpt = () => ({boss: LAST_PLAN && LAST_PLAN.boss || null, enemy: LAST_PLAN && LAST_PLAN.enemy || null});
 /* 획득 추천(2026-10-18): 안 가진 SS·S(점수 순 30명, 천명치 80·성도각성 가정)를 1~3위 조합의 멤버 자리에 하나씩 넣어(꼭 쓸 캐릭터 자리·같은 캐릭터 다른 스타일 겹침 제외) 가장 오르는 값 */
 async function getRun(){
   const box = $('#getList'), btn = $('#getRun'); if(!box || !GROW.all) return;
-  const tok = GROW.tok, r = GROW.r, mode = GROW.mode, S = settings(), sc = growScore(r, mode), P = state.plan, lock = new Set(P.locked||[]);
+  const tok = GROW.tok, r = GROW.r, mode = GROW.mode, S = settings(), sc = growScore(r, mode, growOpt()), P = state.plan, lock = new Set(P.locked||[]), en = (LAST_PLAN && LAST_PLAN.enemy) || null;
   const f = r.focus || null, noCv = noConvOf(P, f);
   const cvSkip = c => { const e = c.echange; if(!(e && e.to==='all' && !e.sb)) return false; if(f && f.kind==='elem') return !f.conv && !(c.elems||[c.elem]).includes(f.v); return noCv; };
   const cands = [...byId.values()].filter(c=>!state.owned[c.id] && !c._custom && (c.tier==='SS'||c.tier==='S') && !(P.excluded||[]).includes(c.id) && !cvSkip(c)).sort((a,b)=>(+b.score||0)-(+a.score||0) || (a.id<b.id?-1:1)).slice(0, 30);
-  const top = GROW.all.slice(0, 3), s0 = top.map(x=>sc(x.ev)), best = Math.max(1e-12, ...s0);
   if(btn){ btn.disabled = true; btn.textContent = '계산 중…'; }
+  try{
+  const top = GROW.all.slice(0, 3), s0 = []; for(const x of top){ let v = sc(x.ev, x.team); try{ v = sc(E.evalTeam(x.team, x.progs, en, S, cap, x.ctx || ctxOf({})), x.team); }catch(e){} s0.push(v); await yieldUI(); if(tok!==GROW.tok) return; }
+  const best = Math.max(1e-12, ...s0);
   const total = cands.length*top.reduce((a,x)=>a + x.team.length, 0); let n = 0; const out = [];
-  for(const c of cands){ const own = Object.assign(BASE_OWN(), {t:80, s:!!c.stellar}), pr = E.charProg(c, own, S); let bestV = 0, bestAt = null;
+  for(const c of cands){ const own = Object.assign(BASE_OWN(), {t:80, s:!!c.stellar}); let pr = null; try{ pr = E.charProg(c, own, S); }catch(e){ continue; } let bestV = 0, bestAt = null;
     for(let k=0; k<top.length; k++){ const x = top[k];
       for(let i=0; i<x.team.length; i++){ n++; if(tok!==GROW.tok) return; if(lock.has(x.team[i].id)) continue;
         const t2 = x.team.slice(); t2[i] = c; if(E.dupBase(t2)) continue;
         const p2 = x.progs.slice(); p2[i] = pr;
-        let g = -1; try{ const ev2 = E.evalTeam(t2, p2, (LAST_PLAN && LAST_PLAN.enemy) || null, S, cap, x.ctx || ctxOf({})); g = sc(ev2)/Math.max(1e-12, s0[k]) - 1; }catch(e){}
+        let g = -1; try{ const ev2 = E.evalTeam(t2, p2, en, S, cap, x.ctx || ctxOf({})); g = sc(ev2, t2)/Math.max(1e-12, s0[k]) - 1; }catch(e){}
         const v = g*(s0[k]/best); if(v > bestV){ bestV = v; bestAt = {rank:x.rank, out:x.team[i], g}; }
         if(btn) btn.textContent = `계산 중 ${n}/${total}`; await yieldUI(); } }
     if(bestAt) out.push({c, v:bestV, at:bestAt}); }
@@ -1165,7 +1181,7 @@ async function getRun(){
   const L = out.filter(o=>o.v>0.005).sort((a,b)=>b.v-a.v).slice(0, 10), pct = v=>'+'+(v*100).toFixed(1)+'%';
   box.innerHTML = L.length ? `<ol class="growlist">${L.map(o=>`<li><b>${esc(o.c.name)}</b> <span class="tier ${o.c.tier}">${esc(o.c.tier)}</span> — ${o.at.rank}위 조합의 ${esc(o.at.out.name)} 대신 <b>${pct(o.at.g)}</b></li>`).join('')}</ol><p class="hint" style="margin:4px 0 0">천명치 80·성도각성으로 가정한 값이고, 바꿔 넣은 조합 점수가 1위에 가까울수록 앞에 둡니다.</p>`
     : '<p class="hint">위 조합에 한 명씩 넣어서는 점수가 오르는 캐릭터가 없습니다.</p>';
-  if(btn){ btn.disabled = false; btn.textContent = '다시 계산'; }
+  } finally { if(btn && tok===GROW.tok){ btn.disabled = false; btn.textContent = '다시 계산'; } }
 }
 const sameTeam=(a,b)=>a.length===b.length && a.every(c=>b.some(d=>d.id===c.id));
 function toggleDeck(btn){
@@ -1184,7 +1200,8 @@ function budLine(x, o, key){
   const own=ownBud(); if(!own.length) return '';
   const cur=buddyInput(); const cm = x.bud || (cur&&cur.main?cur.main.id:null);
   const gTx = (x.bg ? (x.bg==='none' ? ' · 장비 없음' : ` · 장비 <b>${esc(bgName(x.bg))}</b>`) : '')
-    + (x.ev && x.ev.budZ ? ` · 차지 스킬로 <b>${esc(x.ev.budZ.label)}</b> (${x.ev.budZ.first}턴째부터 ${x.ev.budZ.per}턴마다 2턴)` : ''); // 버디 존 각성(2026-10-18)
+    + (x.ev && x.ev.budZ ? ` · 차지 스킬로 <b>${esc(x.ev.budZ.label)}</b> (${x.ev.budZ.first}턴째부터 ${x.ev.budZ.per}턴마다 2턴)` : '') // 버디 존 각성(2026-10-18)
+    + (x.ev && x.ev.afDrain ? ` · AF 게이지가 매 턴 사라져 차지 스킬 ${x.ev.afDrain.k}번으로 <b>AF ${x.ev.afDrain.g0}%</b> (${x.ev.afDrain.first}턴째부터 ${x.ev.afDrain.per}턴마다)` : ''); // 흉성 3
   if(x.bud) return `<div class="hint">버디: 메인 <b>${esc(budName(x.bud))}</b>${gTx} <span class="hint">(자동 — 이 조합에서 점수가 가장 높은 버디${x.bg && bgSet(x.bud)==='auto' ? '·장비' : ''})</span></div>`;
   if(x._budBest===undefined && own.length>1){ BUDQ.q.push({x, o, cm, own, tok:BUDQ.tok}); if(!BUDQ.run) setTimeout(runBudQ, 60); }
   return `<div class="hint">버디: 메인 ${esc(budName(cm)||'없음')}${gTx}<span class="budtip" data-budk="${esc(key||'')}">${budTipHtml(x._budBest)}</span></div>`;
@@ -1242,7 +1259,7 @@ function timelineHtml(x, o){
     ${cell('1턴', tl.t1, `보장 ${fmtN(tl.t1g)} ~ 속도 맞춤 ${fmtN(tl.t1u)}<br>${esc(pTxt)}`, o.hot==='o')}
     ${cell('2턴', tl.t2, '버프 깔린 평타 턴')}
     ${cell('SB 턴', ev.sbTurn, ev.hasSB?'게이지 차면':'성도 없음')}
-    ${cell('AF 1회', ev.af, `${ev.afA&&ev.afA.auto?`행동 ${ev.afA.n.join('·')}회 · 약 ${ev.afA.dur.toFixed(0)}초 · `:''}콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
+    ${cell('AF 1회', ev.af, `${ev.afA&&ev.afA.auto?`행동 ${ev.afA.n.join('·')}회 · 약 ${ev.afA.dur.toFixed(0)}초 · `:''}콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afOff ? ' · 지금 조건(흉성 등)에선 AF를 못 씀' : ev.afDrain ? ` · 차지 스킬로 ${ev.afDrain.first}턴째부터 ${ev.afDrain.per}턴마다 (게이지 ${ev.afDrain.g0}%에서)` : ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
   </div>${dummyHtml(x, o)}${bsimHtml(ev)}`;
 }
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
@@ -1265,7 +1282,7 @@ function cardHtml(x, key, o){
         <span class="diff lv${x.diff.lv}" title="운용 난이도 점수 ${x.diff.v.toFixed(1)}">Lv${x.diff.lv} ${esc(x.diff.kr)}</span>
         <span class="zonebadge" title="스텔라 버스트 턴 기준 존">${esc(sbz&&sbz.level?sbz.label:'존 없음')}${sbz&&sbz.byName&&sbz.level?` <span class="hint">· ${esc(sbz.byName)}</span>`:''}</span>
         ${shared?'':`<div class="scorebar"><span>${esc(MODE_KR[o.mode]||'종합')} ${(x.rel*100).toFixed(0)}</span><div class="bar"><i style="width:${(x.rel*100).toFixed(0)}%"></i></div></div>`}
-        <span class="cbtns"><button type="button" class="btn small" data-goalsave="${key}">${shared?'내 목표로 저장':'목표로 저장'}</button>${shared?'':`<button type="button" class="btn small" data-share="${key}">링크 복사</button><button type="button" class="btn small" data-report="${key}" title="결과가 이상할 때: 보유·조건·조합·수치를 한 번에 복사해 디스코드 등에 붙여 넣기">제보용 복사</button>`}</span>
+        <span class="cbtns"><button type="button" class="btn small" data-goalsave="${key}">${shared?'내 목표로 저장':'목표로 저장'}</button>${shared || (o && o.noShare)?'':`<button type="button" class="btn small" data-share="${key}">링크 복사</button><button type="button" class="btn small" data-report="${key}" title="결과가 이상할 때: 보유·조건·조합·수치를 한 번에 복사해 디스코드 등에 붙여 넣기">제보용 복사</button>`}</span>
       </div>
       ${o.basis?`<div class="basis">${o.basis}</div>`:''}
       <div class="members">${order.map(i=>memHtml(x,i,key,o.focus,o.lockSet)).join('')}</div>
@@ -1426,7 +1443,7 @@ function renderShare(){
     return;
   }
   const S = Object.assign({}, settings(), {enemyCount: boss&&boss.needs&&boss.needs.multi_target&&!boss.needs.single_target?3:1});
-  for(const k of ['afBan','buffTurnCap','zoneBan','zoneBanAll']) delete S[k]; Object.assign(S, EBs.S||{}); // 내 편성 탭 흉성 설정이 아니라 링크의 것
+  for(const k of ['afBan','afDrain','buffTurnCap','zoneBan','zoneBanAll'].concat(Object.keys(modSettings()||{}))) delete S[k]; Object.assign(S, EBs.S||{}); // 내 편성 탭 흉성 설정이 아니라 링크의 것
   const enemy = boss ? bossToEnemy(boss) : null;
   const real = !state.sample;
   const mine = team.map(c=>!!(real && state.owned[c.id]));
@@ -2438,7 +2455,7 @@ function effBoss(b, sel){
       for(const el of els){ B2.weak = (B2.weak||[]).filter(x=>x!==el); B2.resist = (B2.resist||[]).filter(x=>x!==el); B2.absorb = [...new Set([...(B2.absorb||[]), el])]; } }
     if(+f.dmg_cut>=0.5 && +f.dmg_cut_turns>0) extra += +f.dmg_cut_turns*(+b.lives||1);
     if(+f.min_turns>0) kmin = Math.max(kmin, +f.min_turns);
-    if(f.af_drain || ban.includes('af_carry') || ban.includes('af')) S2.afBan = true;
+    if(ban.includes('af')) S2.afBan = true; else if(f.af_drain || ban.includes('af_carry')) S2.afDrain = true; // 흉성 3(게이지 매 턴 소비): 버디 차지로 그 턴에 채우면 AF(엔진 afDrainInj)
     if(f.buff_clear || ban.includes('buff_carry')) S2.buffTurnCap = 1;
     if(f.zone_break) S2.zoneBan = [...new Set([...(S2.zoneBan||[]), f.zone_kind==='elem' ? 'elem' : 'nonelem'])];
     if(ban.includes('zone')) S2.zoneBanAll = true;
