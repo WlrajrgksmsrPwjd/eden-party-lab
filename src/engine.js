@@ -595,7 +595,7 @@ function prepChar(c){
     // 부활·전투불능 방지 등급(data/revive.json g, 0~3). 조사 밖이면 예전 true/false → 1/0
     sup: ({...sp, ...{revive: c.revive && c.revive.g!=null ? +c.revive.g : (sp.revive ? 1 : 0), reviveFx: (c.revive && c.revive.fx) || null}}),
     supTo: c.support_to || null, supSrc: c.support_src || null, play: c.play_kr || '',
-    selfStk: c.self_stk || null, turnEnd: Array.isArray(c.turn_end) && c.turn_end.length ? c.turn_end : null,
+    selfStk: c.self_stk || null, stk: prepStk(c.stacks, c.af_t), turnEnd: Array.isArray(c.turn_end) && c.turn_end.length ? c.turn_end : null,
     states: Array.isArray(c.states) && c.states.length ? c.states : null, alts: Array.isArray(c.alts) && c.alts.length ? c.alts : null,
     once: Array.isArray(c.once) ? (c.once.filter(e=>e && e.atk && !e.buddy).length ? c.once.filter(e=>e && e.atk && !e.buddy) : null) : null, // 전투 중 1회·첫 사용 강공격(once.json)
     styleB: Array.isArray(c.style_bonus) && c.style_bonus.length ? c.style_bonus : null,
@@ -926,6 +926,31 @@ function afTV(v, situation, A, sbOK, rv, sbu){
   if(situation!=='normal' && rv!=null && A && A.realT>1){ const y = rv==='sb' || rv==='sb1' ? (sbOK && (situation==='sb' || A.postSB) ? 1 : 0) : cl(rv), w = Math.min(1, (A.realT-1)/2); x = x + (y-x)*w; }
   return x;
 }
+/* 누적 효과 예열(2026-10-18, 사용자 확인: '누적치면 그만큼 턴 소모를 하거나 예열 시간이 필요'): 데이터 값은 최대 누적(1회분 × (N+1)/2).
+   평상 턴 t(A.stkT)에는 그때까지 쌓인 수 k로 (k+1)/(N+1)(k=0이면 0, 정수 사이는 직선). 쌓이는 방법(data/stacks.json how):
+   main 주력 쓸 때마다 · attack/buff 그 행동(턴을 씀, 기본 턴당 0.5번) · turn_start/turn_end 턴 시작·끝 자동 · sb SB 때 · hit/chain/counter/ally/auto 사건(rate 턴당).
+   gate 'sb' = SB를 한 번 쓴 뒤부터(첫 SB를 2턴째 끝으로 봄). share = 그 키 값 중 누적 몫. AF·SB는 af_timing이 따로(여기선 평상 턴만) */
+const STK_RATE = {main:1, attack:0.7, buff:0.5, sb:0.3, turn_start:1, turn_end:1, hit:1, chain:1, counter:1, ally:1, auto:1}, STK_SB_T = 2;
+const stkR = (e, mr) => e.rate!=null ? Math.max(0, +e.rate) : e.how==='main' && mr!=null ? mr : (STK_RATE[e.how]!=null ? STK_RATE[e.how] : 1); // mr: 평상 턴에 주력을 쓰는 비율(simTeam act)
+function stkK(e, T, mr){ const per = e.per>0 ? +e.per : 1, r = stkR(e, mr);
+  const off = e.how==='turn_start' ? 0 : e.how==='turn_end' ? 1 : 0.5, t = (e.gate==='sb' ? T - STK_SB_T : T) - (e.t0>1 ? e.t0-1 : 0); // t0: 그 턴부터 쌓임
+  const ax = e.also && STK_RATE[e.also]!=null ? per*STK_RATE[e.also]*Math.max(0, T-(e.also==='turn_start' ? 0 : e.also==='turn_end' ? 1 : 0.5)) : 0; // also: 다른 방법으로도 쌓임(라디카: 2턴째부터 턴 시작 + 버프 행동)
+  return (+e.k0||0) + per*r*Math.max(0, t-off) + ax; }
+function stkFrac(n, k, lin){ n = Math.max(1, +n||1); if(k<=0) return 0; if(k>=n) return 1; if(lin) return k/n; /* lin: 누적 수에 비례(10×누적 등) */ if(k<1) return k*2/(n+1); const a = Math.floor(k), fa = (a+1)/(n+1), fb = Math.min(1, (a+2)/(n+1)); return fa + (fb-fa)*(k-a); }
+function stkFac(L, T, mr){ if(!L) return 1; let x = 1; for(const e of L){ const sh = e.share!=null ? Math.max(0, Math.min(1, +e.share)) : 1; x -= sh*(1 - stkFrac(e.n, stkK(e, T, mr), e.lin)); } return Math.max(0, x); }
+function stkSat(L, mr){ let m = 0; for(const e of L){ const per = e.per>0 ? +e.per : 1, r = stkR(e, mr) + (e.also && STK_RATE[e.also]!=null ? STK_RATE[e.also] : 0); if(!(r>0)) { m = Math.max(m, 99); continue; }
+  const off = e.how==='turn_start' ? 0 : e.how==='turn_end' ? 1 : 0.5; m = Math.max(m, Math.max(0, ((+e.n||1) - (+e.k0||0))/(per*r)) + off + (e.gate==='sb' ? STK_SB_T : 0) + (e.t0>1 ? e.t0-1 : 0)); } return m; }
+// 캐릭터 데이터 c.stacks → {party:{키:[항목]}, self, deb, all:[항목]} (covered = 다른 데이터가 진행을 계산 중이면 뺌, af_timing 'sb'인 SB 누적은 sbUpN이 이미 다룸)
+function prepStk(L, at){ if(!Array.isArray(L) || !L.length) return null; const o = {party:{}, self:{}, deb:{}, all:[]};
+  for(const e of L){ if(!e || e.covered || !Array.isArray(e.g) || !(+e.n>=2)) continue;
+    if((+e.k0||0) >= (+e.n||1)) continue;
+    for(const g of e.g){ const [s, k] = String(g).split('.'); const sec = s==='party' ? 'party' : s==='self' ? 'self' : s==='debuff' || s==='deb' ? 'deb' : null; if(!sec || !k) continue;
+      const atv = at && at[sec==='deb' ? 'deb' : sec] ? at[sec==='deb' ? 'deb' : sec][k] : null; if(e.how==='sb' && (atv==='sb' || atv==='sb1')) continue;
+      (o[sec][k] = o[sec][k] || []).push(e); if(!o.all.includes(e)) o.all.push(e); } }
+  return o.all.length ? o : null; }
+const stkScale = (o, ks, fOf) => { let r = null; for(const k of ks){ const x = o[k]; if(x==null || x===false || x===0) continue; const f = fOf(k); if(f>=1) continue; r = r || ({...o});
+  if(typeof x==='number') r[k] = x*f; else if(typeof x==='object' && !Array.isArray(x)){ if('sb' in x || 'req' in x || 'zone' in x || 'zlv' in x) { if(f<0.5) r[k] = false; } else { const y = {}; for(const q in x) y[q] = typeof x[q]==='number' ? x[q]*f : x[q]; r[k] = y; } }
+  else if(f<0.5) r[k] = typeof x==='string' ? '' : false; } return r || o; };
 const AFT_M = new WeakMap(); // af_timing 자기 몫(파티+자기) 합친 표를 캐릭터마다 한 번만(2026-10-17 계산 속도)
 function afTMerge(at){ let m = AFT_M.get(at); if(!m){ m = {t: {...at.party||{}, ...at.self||{}}, rt: at.real ? {...at.real.party||{}, ...at.real.self||{}} : null}; AFT_M.set(at, m); } return m; }
 function afAdj(o, t, situation, A, sbOK, rt, sbu){
@@ -1100,7 +1125,10 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const sbG = situation==='af' && !A.postSB ? (j,k)=> team[j].bact && team[j].bact.sbOnly.has(k) && !(FX && FX[j] && FX[j].sm) ? 0 : 1 : ()=>1;
   const sbU = j => situation==='normal' && A.sbUpN && !(team[idx] && team[idx]._chain) ? (A.sbUpN[j]||0) : 0; // 평상 턴: SB 뒤 남는 효과 비율(체인 어빌리티 공격은 0)
   const chX = c && c._chain && situation==='normal' && A.sbUpN ? (j,k)=> team[j].bact && team[j].bact.sbOnly.has(k) ? 0 : 1 : ()=>1; // 체인 어빌리티 공격은 SB 뒤 효과를 안 받음
-  let row=null; const F = (j,k)=>{ const t=team[j].afT, k0 = k.indexOf(':')<0 ? k : kBase(k), a = (t && t.party ? afTV(t.party[k0], situation, A, progs[j]&&progs[j].sbOK, t.real && t.real.party ? t.real.party[k0] : null, sbU(j)) : 1)*sbG(j, k0)*chX(j, k0); if(!row) return a; const v=rowV(row, idx, k); return (v==null?1:v)*a; };
+  const stkT = situation==='normal' && A.stkT>0 ? A.stkT : 0; // 누적 효과 예열: 평상 턴 t에 쌓인 만큼(prepStk)
+  const stkMR = j => A.stkMR ? A.stkMR[j] : null;
+  const stkP = stkT ? (j,k0)=>{ const s = team[j].stk, L = s && s.party[k0]; return L ? stkFac(L, stkT, stkMR(j)) : 1; } : ()=>1;
+  let row=null; const F = (j,k)=>{ const t=team[j].afT, k0 = k.indexOf(':')<0 ? k : kBase(k), a = (t && t.party ? afTV(t.party[k0], situation, A, progs[j]&&progs[j].sbOK, t.real && t.real.party ? t.real.party[k0] : null, sbU(j)) : 1)*sbG(j, k0)*chX(j, k0)*stkP(j, k0); if(!row) return a; const v=rowV(row, idx, k); return (v==null?1:v)*a; };
   let sk = c.main, usingSB=false;
   // 그 존이어야 연속 실행되는 주력(zone_need, 2026-10-16: 세스타 二刀神狼은 極・風王陣 중 神狼이 쌓여야 — 다른 존 편성에선 餓狼断 단독인데 5실행으로 AF 게이지를 채우던 문제)
   if(sk && sk.zone_need && !(zoneMatch(sk.zone_need.zone, zone) && (!sk.zone_need.zlv || (zone && zone.level>=sk.zone_need.zlv))))
@@ -1138,6 +1166,8 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let me = c.afT ? (m0 => afAdj(c.self, m0.t, situation, A, sbOKi, m0.rt, sbU(idx)))(afTMerge(c.afT)) : c.self; // 자기 파티 버프 보정은 자기 몫에도
   if(c.selfStk){ me = ({...me}); for(const k in c.selfStk){ if(me[k]==null) continue; const e0 = Math.max(0, Math.min(1, +c.selfStk[k].e||0)), f = e0 + (1-e0)*condP(({...c.selfStk[k]}), situation, team, c, A, zone, enemy, el, progs); // 축적 수에 비례하는 자기 버프(闘魂 완력 등), e = 조건 밖에서 남는 비율(招雷陣·杖 2명이면 2배인 자기 버프는 e 0.5)
     if(typeof me[k]==='number') me[k] *= f; else if(typeof me[k]==='boolean' || typeof me[k]==='object') me[k] = f>=0.5 ? me[k] : false; } }
+  if(stkT && c.stk){ const sS = c.stk.self, sP = c.stk.party, ks = [...new Set(Object.keys(sS).concat(Object.keys(sP)))]; // 자기 버프는 자기 파티 버프 몫을 포함
+    if(ks.length) me = stkScale(me, ks, k => stkFac([...new Set((sS[k]||[]).concat(sP[k]||[]))], stkT, stkMR(idx))); }
   // 자기 버프 출처 행동(buff_acts의 self.X, 2026-10-16): 허수아비 AF는 그 행동을 쓴 뒤부터(마스크), 평상 턴은 버프 행동 유지율, SB 전용은 SB 때·뒤만
   let onK = null; // 자기 버프 키별 켜진 비율(상태 키 self_on·unison용)
   if(c.bact && c.bact.selfKeys.length){ const f0 = FX && FX[idx], src = c.bact.selfSrc; let me2 = null; onK = {};
@@ -1267,7 +1297,8 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const tv=[], phv=[], mgv=[], dfv=[]; let sideDn = 0, sideRes = 0;
   const nTg = sk.target==='st' ? 1 : Math.max(1, S.enemyCount||1);
   for(let j=0;j<team.length;j++){
-    const m=team[j], d = m.afT && m.afT.deb ? afAdj(m.deb, m.afT.deb, situation, A, !!(progs[j]&&progs[j].sbOK), m.afT.real && m.afT.real.deb, sbU(j)) : m.deb; if(!d) continue;
+    const m=team[j]; let d = m.afT && m.afT.deb ? afAdj(m.deb, m.afT.deb, situation, A, !!(progs[j]&&progs[j].sbOK), m.afT.real && m.afT.real.deb, sbU(j)) : m.deb; if(!d) continue;
+    if(stkT && m.stk){ const sD = m.stk.deb, ks = Object.keys(sD); if(ks.length) d = stkScale(d, ks, k => stkFac(sD[k], stkT, stkMR(j))); }
     const fr = FX&&FX[j] ? FX[j] : null, st = m.rules && m.rules.debSt && nTg>1 ? m.rules.debSt : null, fe = d.elem_res ? folEls(team, j, A) : null;
     const erV = el==='none' || !d.elem_res ? 0 : fe ? folV(d.elem_res, fe, el) : d.elem_res[el]; // 내성 다운 속성이 변환 대상 아군을 따라감(이벨라(AS))
     const sbD = situation==='af' && !A.postSB && m.bact && m.bact.sbOnly.size && !(FX && FX[j] && FX[j].sm);
@@ -2113,6 +2144,7 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
   const anyR = team.some(c=>c.rules), posSets = ev.posSets || null;
   const cx = ({...ctx, ...{flux:ev.flux}});
   const actT1 = team.map(c=>!c.buffAct); // 1턴에 공격하는 캐릭터
+  const stk0 = A.stkT, stkOn = S.stkRamp!==false && team.some(c=>c.stk); if(stkOn) A.stkT = 1; // 누적 효과 예열: 1턴째는 1턴만큼 쌓인 값, 2턴은 2턴만큼
   const sumCores = (cores, z, mask)=>cores.reduce((v,co,i)=>v + (mask&&!mask[i] ? 0 : applyZoneCap(co, z, S, cap, null)*fw(co)), 0);
   // 보장: 스킬 버프·디버프 제거
   const strip = team.map(c=> c.buffHow==='passive'||c.buffHow==='auto' ? ({...c, ...{deb:{}}}) : ({...c, ...{party:{scope:'none'}, deb:{}, rules:null}}));
@@ -2126,7 +2158,9 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
   let u = sumCores(coresN, nz, actT1);
   for(const z of z1){ const FXz = anyR ? buildBF(team,progs,'normal',z,A,posSets,null) : null;
     const cz = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FXz,z)); u = Math.max(u, sumCores(cz, z, actT1)); }
-  const t2 = sumCores(coresN, nz, null);
+  let t2 = sumCores(coresN, nz, null);
+  if(stkOn){ A.stkT = 2; t2 = sumCores(team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FXn,nz)), nz, null); }
+  A.stkT = stk0;
   // 속도 순서 확률: (버프를 주는 캐릭터 → 공격하는 캐릭터) 쌍 중 버퍼가 빠른 비율
   const spd = progs.map(p=>p&&p.spd ? p.spd : 0); // 장비 포함 속도(빌드 코드) 또는 기본 스탯
   const givers = team.map((c,i)=>i).filter(i=>!(team[i].buffHow==='passive'||team[i].buffHow==='auto') && (team[i].party&&team[i].party.scope!=='none' || Object.keys(team[i].deb||{}).length));
@@ -2337,7 +2371,7 @@ function battleSim(N, o){
         if(o.hasSB && s1>=100) useSB(true, r.fin); }
       if(op==='stack'){ g1-=R.cost; e1=1; rec.stack=true; }
       if(op!=='af' && o.hasSB && !rec.sb && s1>=100) useSB(false);
-      const nd = op==='af' ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1); d += nd; rec.nd = nd; rec.L = L();
+      const nd = op==='af' ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1)*(o.rmp ? o.rmp(t) : 1); d += nd; // 누적 효과 예열(rmp) rec.nd = nd; rec.L = L();
       if(op!=='af'){ s1 = Math.min(100, s1 + o.sbAct*o.front); g1 = Math.min(100, g1 + o.afGain); } else s1 = Math.min(100, s1); aw1 = Math.max(0, aw1-1);
       rec.d = d; rec.g = g; rec.s = s;
       const nx = f(t+1, g1, s1, e1, aw1, ou1), v = d + nx.v;
@@ -2419,6 +2453,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const uptLow = simUse && (sim.upt.some(u=>u<1) || sim.kupAny);
   let uptArr = simUse ? sim.upt.map((u,j)=> sim.kup[j] ? {mf: sim.kup[j]} : u) : null;
   A.eqOff = sim && sim.eqOff.some(Boolean) ? sim.eqOff : null;
+  A.stkMR = simUse ? sim.act.map(x=>Math.max(0.2, Math.min(1, +x||0))) : null; // 누적 예열: 주력으로 쌓는 누적은 주력을 쓰는 턴 비율만큼
   const eqArr = sim ? sim.eqOff.map(o=>o ? {mf:o} : 1) : null, eqAny = !!(eqArr && eqArr.some(x=>x!==1)); // AF·SB에서 장착 못 한 버프 끄기
   A.ctrU = team.some(c=>c.counter && c.counter.skill) ? team.map((c,j)=>{ const k = sim && sim.kup && sim.kup[j]; return k && k.ctr!=null ? k.ctr : 1; }) : null; // 요격 스킬 유지율(평상 턴)
   A.teU = team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.act)) ? team.map((c,j)=>{ const k = sim && sim.kup && sim.kup[j]; if(!k) return null; const o = {}; for(const x in k) if(x.indexOf('te')===0 && /^te\d+$/.test(x)) o[x] = k[x]; return o; }) : null; // 턴 종료 공격을 거는 스킬 유지율
@@ -2426,7 +2461,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const coresFor = (sit, z, useSim)=>{
     const upt = useSim && uptLow ? uptArr : sit!=='normal' && eqAny ? eqArr : null;
     if(!zdep){ const FX = (anyR||upt) ? buildBF(team,progs,sit,z,A,posSets,upt) : null; const cs = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,sit,cx,FX,z)); cs.FX = FX; cs.upt = upt; return cs; }
-    let key = (sit==='sb'?7:sit==='af'?13:3) + (upt?100:0) + (A.realT||0)*1000;
+    let key = (sit==='sb'?7:sit==='af'?13:3) + (upt?100:0) + (A.realT||0)*1000 + (sit==='normal' && A.stkT>0 ? Math.round(A.stkT*4)*10000 : 0); // 누적 예열 턴도 키에
     { // 아군 전체 글래(격진의 힘 <존>)·셔틀 P글래(각성의 힘)는 존에 따라 달라 존도 키에(2026-10-16: 존마다 같은 키라 다른 존의 계산을 재사용해 편성 순서에 따라 결과가 달라지던 문제)
       const zk = z && z.level>0 ? String(z.key||z.kind||'') : '', pl = !!(A.mule && A.mule.plan), invA = !!(A.aura && A.aura.inv && A.aura.inv._a && Object.values(A.aura.inv._a).some(v=>+v>0));
       const zid = pl ? zk+':'+(z?z.level:0) : (A.aura && zk && AURA_Z.has(zk) ? (invA ? zk : 'Z') : ''); // 아군 전체 글래 보유 표시가 없으면 격진의 힘은 '그 존에 있나'만 갈림
@@ -2635,6 +2670,23 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       simIn.normal = res.normal.total; simIn.normal1 = nz2 && nz2.level>=2 ? sumZ(zdep ? coresFor('normal', nz2L1, simUse) : res.normal.cores, nz2L1, null, wN).v + ex2 : simIn.normal;
       out.sustain += (sus2 - out.sustainNoAF)*susNW; out.sustainNoAF = sus2; out.normal = res.normal; out.sbUpN = u; } }
   if(res.normal.afPost && res.normal.afPost.total>0){ simIn.ctrAF = res.normal.afPost.total; out.ctrAF = res.normal.afPost; if(S.afCycle!==false) out.sustain += simIn.ctrAF/afTurns; } // AF 턴 뒤 요격·체인도 AF 주기마다
+  /* 누적 효과 예열(2026-10-18): 평상 턴 t의 값 = 다 쌓인 값 × r(t) — r(1·2·3)은 그 턴 누적 수로 다시 계산, 그 뒤는 다 쌓이는 턴(stkSat)까지 직선으로 1.
+     실전 N턴의 평상 턴·1턴째에 곱하고, 지속 딜의 평상 턴은 전투 H턴(A.tm.H) 평균 */
+  const stkL = S.stkRamp!==false && team.some(c=>c.stk) ? [].concat(...team.map(c=>c.stk ? c.stk.all : [])) : null;
+  let rmp = null;
+  if(stkL && stkL.length){ const zR = res.normal.zone, cs0 = zdep ? coresFor('normal', zR, simUse) : res.normal.cores, base = sumZ(cs0, zR, null, wN).v, Ts = Math.min(40, Math.max(0, ...team.map((c,j)=>c.stk ? stkSat(c.stk.all, A.stkMR ? A.stkMR[j] : null) : 0)));
+    if(base>0 && Ts>0.5){ const rr = {};
+      // 다시 계산할 공격자: 파티 버프·디버프 누적이 있으면 전원, 자기 버프 누적만이면 그 캐릭터만(버프 규칙 FX는 누적과 무관해 그대로)
+      const allA = team.some(c=>c.stk && (Object.keys(c.stk.party).length || Object.keys(c.stk.deb).length)), redo = team.map(c=>allA || !!c.stk);
+      for(const T of [1,2,3]){ if(T>Ts+0.5){ rr[T] = 1; continue; } A.stkT = T;
+        const cs = team.map((c,i)=> redo[i] ? attackerCore(team,i,progs,A,enemy,S,'normal',cx,cs0.FX||null,zdep ? zR : null) : cs0[i]); // 존 무관 조합은 공용 코어처럼 존 없이
+        rr[T] = Math.max(0, Math.min(1, sumZ(cs, zR, null, wN).v/base)); }
+      A.stkT = 0;
+      const R = t => t<=3 ? rr[Math.max(1, Math.min(3, Math.round(t)))] : Ts<=3 ? 1 : rr[3] + (1-rr[3])*Math.min(1, (t-3)/(Ts-3));
+      const H = Math.max(1, (A.tm && A.tm.H) || 6); let su = 0; for(let t=1;t<=H;t++) su += R(t); const rS = su/H;
+      rmp = {r: [1,2,3,4,5,6].map(R), sus: rS, sat: Ts};
+      if(rS<1){ out.sustain += out.sustainNoAF*susNW*(rS-1); out.sustainNoAF *= rS; }
+      if(!out.tl) simIn.t1 *= R(1); simIn.rmp = R; out.stkRamp = rmp; } } // 턴 화력 줄(turnTimeline)이 있으면 1턴째는 이미 1턴만큼
   const NB = Math.max(1, Math.min(10, (ctx && ctx.burstN) || +S.burstTurns || 3));
   // 조합 탐색 중에는 그 모드 점수에 쓰는 것만 계산(최고점 = 허수아비, 나머지 = N턴 시뮬). 화면용 재계산(ctx.mode 없음)은 둘 다
   const md = ctx && ctx.mode, needBsim = md!=='burst', needDummy = !md || md==='burst';

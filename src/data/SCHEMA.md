@@ -218,6 +218,9 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 ## self_stk.json
 자기 스택 → 자기 버프. 키 = 캐릭터 id, 값 = `{self_buff 키: skill_cond stack 조건 형식(stack·turns·start·af_grows·af_p)}`. 그 self_buff 최대치에 축적 채움 비율(condP)을 곱함(숫자는 곱, true/조건은 0.5 이상이면 켬).
 
+## stacks.json (누적 효과 예열, 2026-10-18)
+키 = 캐릭터 id, 값 = `[{g, n, k0, how, per, rate, gate, share, lin, t0, also}]`. `g` 엔진 키(`party.X`·`self.X`·`debuff.X`, 하위 칸 없이), `n` 최고 누적, `k0` 개전 누적, `how` 쌓이는 때(`main` 주력 쓸 때마다 · `attack` 그 공격 행동(기본 턴당 0.7번) · `buff` 그 버프 행동(0.5번) · `turn_start`/`turn_end` 턴 시작·끝 자동 · `sb` SB 때 · `hit`/`chain`/`counter`/`ally`/`auto` 사건, 기본 턴당 1번), `per` 한 번에 쌓이는 수, `rate` 평상 턴 1턴당 횟수, `gate:"sb"` SB를 쓴 뒤부터(첫 SB를 2턴째 끝으로 봄), `share` 그 키 값 중 누적 몫(나머지는 그대로), `lin` 누적 수에 비례(k/N), `t0` 그 턴부터 쌓임, `also` 다른 how로도 쌓임. 데이터 값은 최대 누적(1회분 × (N+1)/2). 엔진: 평상 턴 t에 쌓인 수 k = k0 + per×rate×(t − 0.5)(턴 시작 t, 턴 종료 t−1)로 (k+1)/(N+1)(k=0 → 0, 정수 사이 직선) — 실전 N턴의 평상 턴(1~3턴째 다시 계산, 그 뒤는 다 쌓이는 턴까지 직선)·턴 화력 줄·지속 딜(전투 H턴 평균). AF·SB는 af_timing.json이 따로.
+
 ## buff_acts.json attack 행동 위력
 `k: "attack"` 행동에 `el`(속성/none) `wt`(slash/pierce/blunt/magic) `size` `mult` `hits`가 있으면 그 위력으로 계산(허수아비 AF 행동, 평상 턴 시뮬은 주력 대비 위력 비율, 최대 1). 없으면 특대 1배.
 

@@ -1059,7 +1059,8 @@ function bsimHtml(ev){
   const b=ev.bsim; if(!b || !b.turns || !b.turns.length) return '';
   const st=b.afStart||{g:50,why:[]};
   const turn = r=>`<li><b>${r.t}턴</b> <span class="hint">AF ${Math.round(r.g)}% · SB ${ev.hasSB?Math.round(r.s)+'%':'—'}</span> ${r.af?`<span class="tag">AF${r.af<100?` ${r.af}%`:''} · 턴 종료</span> `:''}${r.sb==='af'?`<span class="tag">AF 끝에 SB ×${r.combo.toFixed(1)}</span> `:r.sb==='turn'?'<span class="tag">SB</span> ':''}<span class="num">${fmtN(r.d)}</span></li>`;
-  return `<div class="bsim"><div class="hint">실전 참고: 개전부터 ${b.N}턴 총 <b class="num">${fmtN(b.total)}</b> · 시작 AF ${st.g}%${st.why&&st.why.length?` (${esc(st.why.join(', '))})`:''} · 시작 SB ${ev.hasSB?Math.round(b.s0)+'%':'성도 없음'}</div><ol>${b.turns.map(turn).join('')}</ol></div>`;
+  const rp=ev.stkRamp, rpTxt = rp && rp.r && rp.r[0]<0.97 ? `<div class="hint">누적 효과 예열: 평상 턴 대미지가 1턴 ${Math.round(rp.r[0]*100)}% · 2턴 ${Math.round(rp.r[1]*100)}% · 3턴 ${Math.round(rp.r[2]*100)}%${rp.sat>3.5 && rp.r[2]<0.95?` (약 ${Math.ceil(rp.sat)}턴에 다 쌓임)`:''} — 다 쌓인 값 기준</div>` : '';
+  return `<div class="bsim">${rpTxt}<div class="hint">실전 참고: 개전부터 ${b.N}턴 총 <b class="num">${fmtN(b.total)}</b> · 시작 AF ${st.g}%${st.why&&st.why.length?` (${esc(st.why.join(', '))})`:''} · 시작 SB ${ev.hasSB?Math.round(b.s0)+'%':'성도 없음'}</div><ol>${b.turns.map(turn).join('')}</ol></div>`;
 }
 /* 최고점 = 허수아비 어포딜 한 줄: AF 행동 딜 + AF 끝 SB(콤보 배율) */
 const showDummy = mode => mode==='burst'; // 허수아비(최고점) 값은 최고점 성향에서만 — 보스·결현현 등 실전·종합에선 의미 없음(사용자 2026-10-17)
