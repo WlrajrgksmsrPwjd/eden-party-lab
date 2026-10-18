@@ -2480,7 +2480,7 @@ function bossSumHtml(b){
   const hpIn = noHp && !(b.hp_model && +b.hp_model.bar>0) ? `<div class="bsneeds"><span class="bsl">HP 직접 입력</span><input type="number" min="0" step="0.01" data-myhp="1" value="${esc(myHp||'')}" placeholder="한 줄 HP(억)" style="width:120px" aria-label="보스 HP 직접 입력(억)"> <span class="hint">공략에 HP가 없어 처치 턴을 못 냅니다 — 알고 있으면 넣어 주세요${b.hp_model && +b.hp_model.bars>1 ? ` (× ${b.hp_model.bars}줄로 계산)` : ''}</span></div>` : '';
   return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억${b.hp_user?' (직접 입력)':b.hp_conf==='low'?' (추정)':''}</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
     <div class="bsrels">${rels || (b.affinity_none ? '<span class="hint">약점·내성 없음 (전 속성 보통으로 계산)</span>' : '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>')}${b.weak_rotating ? ' <span class="need">약점이 턴마다 바뀜</span>' : ''}</div>${b.affinity_note_kr ? `<p class="hint bsaff">${esc(String(b.affinity_note_kr).split(/(?<=[.다요음])\s+/).slice(0,2).join(' '))}</p>` : ''}${parts}
-    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpIn}${hpModelHtml(b)}${threatHtml(b)}
+    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpIn}${hpModelHtml(b)}${threatHtml(b)}${zoneBossHtml(b)}
     ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}${modsHtml(b)}`;
 }
 /* 보스 HP 구조·위협(2026-10-18, 사용자 '부활·스택 기믹', '갑개룡은 아파서 탱커 필요'): 처치 턴 계산(engine killTurnsM)·탱커/회복 감점이 무엇을 보고 있는지 요약에 표시 */
@@ -2490,6 +2490,9 @@ function hpModelHtml(b){ const h = b.hp_model; if(!h || !(+h.bars>1 || h.reset |
   if((h.stopper||[]).length) bits.push(`HP ${h.stopper.join('%·')}% 스토퍼(그 턴 남은 피해는 버려짐)`);
   if(+h.kt_min>0) bits.push(`최소 ${h.kt_min}턴`); for(const q of (h.dmg_cut||[]).filter(q=>+q.turns>0)) bits.push(`${q.when==='revive'?'부활 뒤':'개전'} ${q.turns}턴 피해 ×${q.x}`);
   return `<div class="bsneeds"><span class="bsl">HP 구조</span><span class="hint">${esc(bits.join(' · '))}${h.note_kr?` — ${esc(String(h.note_kr).split(/(?<=[.다요])\s+/)[0])}`:''}</span></div>`; }
+function zoneBossHtml(b){ const z = b.zone_boss, zb = b.zone_bonus; if(!z && !zb) return '';
+  const zl = z ? `${+z.lv>=2?'극·':''}${E.ZONE_KR ? (E.ZONE_KR[z.key]||z.key) : z.key}` : '';
+  return `<div class="bsneeds"><span class="bsl">보스 존</span>${z?`<span class="need">${esc(zl)}${z.every?' (매 턴)':''}</span> <span class="hint">${esc(z.note||'')} — 아군 존은 이보다 등급이 높아야 덮어써요${z.every?', 평상 턴은 이 존으로 계산':''}</span>`:''}${zb?` <span class="hint">${esc(zb.label||'')}</span>`:''}</div>`; }
 function threatHtml(b){ const t = b.threat; if(!t || !(+t.lvl>=2)) return '';
   const need = [t.tank?'탱커(도발·수호)':'', t.heal?'회복·배리어':''].filter(Boolean).join('·');
   return `<div class="bsneeds"><span class="bsl">보스 공격</span><span class="need">${+t.lvl>=3?'매우 강함':'강함'}</span>${need?` <span class="hint">${esc(need)} 없으면 점수를 크게 깎아요</span>`:''}${t.note_kr?` <span class="hint">— ${esc(String(t.note_kr).split(/(?<=[.다요])\s+/)[0])}</span>`:''}</div>`; }
@@ -2500,9 +2503,10 @@ const modsOn = (b, sel) => { const P = state.plan, on = sel ? (sel.on||[]) : ((P
 function effBoss(b, sel){
   if(b && !(+b.turn_limit>0) && bossTL(b)) b = Object.assign({}, b, {turn_limit: bossTL(b)}); // 턴 제한(서가 챌린지) → 실전 N턴·'N턴 최대 딜' 목록
   { const uh = b && state.plan && state.plan.bossHp && +state.plan.bossHp[b.id]; if(uh>0 && !(+b.hp>0) && !(b.hp_model && +b.hp_model.bar>0)) b = Object.assign({}, b, {hp: uh*Math.max(1, Math.ceil(+(b.hp_model && b.hp_model.bars)||1)), hp_user: true}); } // HP를 못 찾은 보스: 사용자가 넣은 한 줄 HP(억)(hp_model.bars가 있으면 × 줄 수로)
-  if(!b || !(b.modifiers||[]).length) return {boss:b, S:null, pledge:null};
-  const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:null, pledge:null};
-  const P = state.plan, B2 = JSON.parse(JSON.stringify(b)), S2 = {}; let pl = null, extra = 0, kmin = 0;
+  const bzS = b && b.zone_boss ? {bossZone: b.zone_boss} : null; // 보스가 까는 존(엔진 runSit S.bossZone)
+  if(!b || !(b.modifiers||[]).length) return {boss:b, S:bzS, pledge:null};
+  const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:bzS, pledge:null};
+  const P = state.plan, B2 = JSON.parse(JSON.stringify(b)), S2 = Object.assign({}, bzS); let pl = null, extra = 0, kmin = 0;
   for(const m of ms){ const f = m.fx||{}, ban = f.ban||[];
     if(f.absorb_pick || (Array.isArray(f.absorb) && f.absorb.length)){ const els = (Array.isArray(f.absorb) && f.absorb.length ? f.absorb : []).concat(sel ? (sel.abs ? [sel.abs] : []) : ((P.modAbs && P.modAbs[b.id]) ? [P.modAbs[b.id]] : []));
       for(const el of els){ B2.weak = (B2.weak||[]).filter(x=>x!==el); B2.resist = (B2.resist||[]).filter(x=>x!==el); B2.absorb = [...new Set([...(B2.absorb||[]), el])]; } }

@@ -2562,6 +2562,10 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     const s2 = (sit==='sb'&&!hasSB)?'normal':sit;
     const useSim = sit==='normal' && simUse, w = sit==='normal' ? wN : null;
     let zs = zOnly ? [zOnly] : zoneForce(zoneCandidates(team, progs, sit), A.azPick);
+    /* 보스가 까는 존(S.bossZone {key, lv, every}, 2026-10-18 보스 기믹 조사: 진·현현 유인 매 턴 굉타진, 결실 가리유 매 턴 극·열화진, 개시 월광진·쌍격진 등):
+       깔린 존은 더 높은 등급만 덮어씀 → 아군 존은 보스 존보다 등급이 높을 때만 후보, 매 턴 다시 까는 보스(every)는 평상 턴엔 보스 존 고정 */
+    if(S.bossZone && !zOnly){ const bq = S.bossZone, zo = zoneOpt(bq.key); if(zo){ const lv = Math.max(1, Math.min(2, +bq.lv||1)), bzz = ({...zo, ...{level:lv, by:null, how:'보스 전개', label:(lv>=2?'극·':'')+(ZONE_KR[bq.key]||bq.key), unmet:[], brk:false}});
+      zs = bq.every && sit==='normal' ? [bzz] : zs.filter(z=>z && z.level>lv).concat([bzz]); } }
     if(S.zoneBanAll && !zOnly){ zs = [{kind:'none', types:[], level:0, by:null, label:'존 없음'}]; } // 보스 서약 등: 아군 ZONE 전개 금지
     else if(sit==='normal' && !zOnly && Array.isArray(S.zoneBan) && S.zoneBan.length){ const ban = z => z && z.level>0 && ((z.kind==='elem' && S.zoneBan.includes('elem')) || (z.kind!=='elem' && S.zoneBan.includes('nonelem')));
       const z2 = zs.filter(z=>!ban(z)); zs = z2.length ? z2 : [{kind:'none', types:[], level:0, by:null, label:'존 없음'}]; } // 보스 흉성 등: 턴 종료에 존 파괴 → 평상 턴엔 그 종류 존 없음
@@ -3373,7 +3377,7 @@ function weakFit(ev, enemy){
   return {f, share:sh, miss: sh<0.5 ? [`정한 약점(${WK})을 때리는 공격 ${Math.round(sh*100)}%`] : []};
 }
 function needPenalty(ev, boss){
-  if(!boss||(!boss.needs && !boss.parts && !boss.threat && !boss.punish)) return {f:1, miss:[]};
+  if(!boss||(!boss.needs && !boss.parts && !boss.threat && !boss.punish && !boss.zone_bonus)) return {f:1, miss:[]};
   const n=boss.needs||{}, d=ev.survDet||{}; let f=1; const miss=[];
   /* 부위마다 통하는 공격이 다른 보스(parts, 2026-10-17 사용자 '키마이라 볼카처럼 여러 속성이 필요한 덱에 베기팟만 추천'): 사자 = 마법만·용 = 참격만·뱀 = 전부.
      모든 부위를 같이 쓰러뜨리는 데 걸리는 시간 = 부위마다 (부위 HP ÷ 그 부위에 통하는 공격 대미지) 중 가장 긴 것 → 화력 효율 f = min(통하는 공격 비중 ÷ 부위 HP 비중)(최대 1, 최소 0.05) */
@@ -3382,6 +3386,8 @@ function needPenalty(ev, boss){
     const ok = co => (!P.only_wt || P.only_wt.includes(co.wt)) && (!P.only_el || P.only_el.includes(co.el)) && (!P.only_kind || co.kind===P.only_kind) && !(P.not_wt || []).includes(co.wt) && !(P.not_el || []).includes(co.el);
     const tot = per.reduce((a,v)=>a+(v>0?v:0), 0); if(tot>0){ const bad = per.reduce((a,v,i)=>{ const co = cs[i] || sb[i]; return a + (co && v>0 && !ok(co) ? v : 0); }, 0)/tot;
       if(bad>0.001){ f *= Math.max(0.2, 1 - (+P.x>0 ? +P.x : 0.6)*bad); if(bad>=0.15) miss.push(`${P.label||'보스를 강화하는 공격'} ${Math.round(bad*100)}%`); } } }
+  /* 존 오라(boss.zone_bonus {keys, lv, x, label}, 2026-10-18: 결실 클로드 극·순돌진·결실 펠미나 풍왕진이면 아군 주는 피해 +50%) → 맞는 존을 쓰면 점수 × (1 + (x−1)/2) */
+  if(boss.zone_bonus){ const zb = boss.zone_bonus, z = ev.normal && ev.normal.zone; if(z && z.level>=(+zb.lv||1) && (zb.keys||[]).some(k=>k===z.key || (z.types||[]).includes(k))) f *= Math.max(0.3, 1 + ((+zb.x||1) - 1)/2); } // x<1이면 그 존을 쓰면 손해(마크바브: 극·굉타진/환마진이면 보스 피해 UP)
   if(Array.isArray(boss.parts) && boss.parts.length){
     const per = (ev.bsim && Array.isArray(ev.bsim.per) && ev.bsim.per.length) ? ev.bsim.per : ((ev.normal && ev.normal.per) || []);
     const cs = (ev.normal && ev.normal.cores) || [], sb = (ev.sb && ev.sb.cores) || [];
