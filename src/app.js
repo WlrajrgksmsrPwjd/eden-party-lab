@@ -2476,9 +2476,11 @@ function bossSumHtml(b){
   const parts = (b.parts||[]).length ? `<div class="bsparts"><b>부위마다 통하는 공격</b> ${b.parts.map(q=>`<span class="need">${esc(q.label)}${q.need?'':' · 전부'}</span>`).join('')} <span class="hint">— 모든 부위에 통하는 딜러를 섞어야 점수가 오릅니다</span></div>` : '';
   const mech = (b.mechanics||[]).slice(0, 3).map(m=>`<li>${esc(m)}</li>`).join('');
   const strat = String(b.strategy_kr||'').split(/(?<=[.다요])\s+/)[0] || '';
-  return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
+  const noHp = !(+b.hp>0) || b.hp_user, myHp = state.plan && state.plan.bossHp ? state.plan.bossHp[b.id] : '';
+  const hpIn = noHp && !(b.hp_model && +b.hp_model.bar>0) ? `<div class="bsneeds"><span class="bsl">HP 직접 입력</span><input type="number" min="0" step="0.01" data-myhp="1" value="${esc(myHp||'')}" placeholder="한 줄 HP(억)" style="width:120px" aria-label="보스 HP 직접 입력(억)"> <span class="hint">공략에 HP가 없어 처치 턴을 못 냅니다 — 알고 있으면 넣어 주세요${b.hp_model && +b.hp_model.bars>1 ? ` (× ${b.hp_model.bars}줄로 계산)` : ''}</span></div>` : '';
+  return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억${b.hp_user?' (직접 입력)':b.hp_conf==='low'?' (추정)':''}</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
     <div class="bsrels">${rels || (b.affinity_none ? '<span class="hint">약점·내성 없음 (전 속성 보통으로 계산)</span>' : '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>')}${b.weak_rotating ? ' <span class="need">약점이 턴마다 바뀜</span>' : ''}</div>${b.affinity_note_kr ? `<p class="hint bsaff">${esc(String(b.affinity_note_kr).split(/(?<=[.다요음])\s+/).slice(0,2).join(' '))}</p>` : ''}${parts}
-    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpModelHtml(b)}${threatHtml(b)}
+    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpIn}${hpModelHtml(b)}${threatHtml(b)}
     ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}${modsHtml(b)}`;
 }
 /* 보스 HP 구조·위협(2026-10-18, 사용자 '부활·스택 기믹', '갑개룡은 아파서 탱커 필요'): 처치 턴 계산(engine killTurnsM)·탱커/회복 감점이 무엇을 보고 있는지 요약에 표시 */
@@ -2497,6 +2499,7 @@ const curBossOf = P => { P = P || state.plan; return P.mode==='boss' ? BOSSES.fi
 const modsOn = (b, sel) => { const P = state.plan, on = sel ? (sel.on||[]) : ((P.mods && P.mods[b.id]) || []); return (b.modifiers||[]).filter(m=>on.includes(m.id)); }; // sel: 공유 링크의 흉성·서약 {on, abs}
 function effBoss(b, sel){
   if(b && !(+b.turn_limit>0) && bossTL(b)) b = Object.assign({}, b, {turn_limit: bossTL(b)}); // 턴 제한(서가 챌린지) → 실전 N턴·'N턴 최대 딜' 목록
+  { const uh = b && state.plan && state.plan.bossHp && +state.plan.bossHp[b.id]; if(uh>0 && !(+b.hp>0) && !(b.hp_model && +b.hp_model.bar>0)) b = Object.assign({}, b, {hp: uh*Math.max(1, Math.ceil(+(b.hp_model && b.hp_model.bars)||1)), hp_user: true}); } // HP를 못 찾은 보스: 사용자가 넣은 한 줄 HP(억)(hp_model.bars가 있으면 × 줄 수로)
   if(!b || !(b.modifiers||[]).length) return {boss:b, S:null, pledge:null};
   const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:null, pledge:null};
   const P = state.plan, B2 = JSON.parse(JSON.stringify(b)), S2 = {}; let pl = null, extra = 0, kmin = 0;
@@ -2704,6 +2707,7 @@ function bind(){
   $('#bossSum').addEventListener('change', e=>{ const b = curBossOf(); if(!b) return; const P = state.plan;
     if(e.target.dataset.mod){ P.mods = P.mods || {}; const L = new Set(P.mods[b.id]||[]); if(e.target.checked) L.add(e.target.dataset.mod); else L.delete(e.target.dataset.mod); P.mods[b.id] = [...L]; }
     else if(e.target.dataset.modabs){ P.modAbs = P.modAbs || {}; P.modAbs[b.id] = e.target.value; }
+    else if(e.target.dataset.myhp!=null){ P.bossHp = P.bossHp || {}; const v = +e.target.value; if(v>0) P.bossHp[b.id] = Math.min(1e6, v); else delete P.bossHp[b.id]; } // HP 직접 입력(2026-10-18)
     else return;
     save(); renderPlanControls(); runPlan(); });
   $('#bossSum').addEventListener('click', e=>{ const b = e.target.closest('[data-bossinfo]'); if(!b) return; curBoss = b.dataset.bossinfo; showTab('boss'); renderBossList(); renderBossDetail(); window.scrollTo(0,0); });
