@@ -221,6 +221,16 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 ## stacks.json (누적 효과 예열, 2026-10-18)
 키 = 캐릭터 id, 값 = `[{g, n, k0, how, per, rate, gate, share, lin, t0, also}]`. `g` 엔진 키(`party.X`·`self.X`·`debuff.X`, 하위 칸 없이), `n` 최고 누적, `k0` 개전 누적, `how` 쌓이는 때(`main` 주력 쓸 때마다 · `attack` 그 공격 행동(기본 턴당 0.7번) · `buff` 그 버프 행동(0.5번) · `turn_start`/`turn_end` 턴 시작·끝 자동 · `sb` SB 때 · `hit`/`chain`/`counter`/`ally`/`auto` 사건, 기본 턴당 1번), `per` 한 번에 쌓이는 수, `rate` 평상 턴 1턴당 횟수, `gate:"sb"` SB를 쓴 뒤부터(첫 SB를 2턴째 끝으로 봄), `share` 그 키 값 중 누적 몫(나머지는 그대로), `lin` 누적 수에 비례(k/N), `t0` 그 턴부터 쌓임, `also` 다른 how로도 쌓임. 데이터 값은 최대 누적(1회분 × (N+1)/2). 엔진: 평상 턴 t에 쌓인 수 k = k0 + per×rate×(t − 0.5)(턴 시작 t, 턴 종료 t−1)로 (k+1)/(N+1)(k=0 → 0, 정수 사이 직선) — 실전 N턴의 평상 턴(1~3턴째 다시 계산, 그 뒤는 다 쌓이는 턴까지 직선)·턴 화력 줄·지속 딜(전투 H턴 평균). AF·SB는 af_timing.json이 따로.
 
+## 2026-10-18 추가 칸
+- `party_buff.link_brk`(숫자, 보통 3): 연계를 받은 아군이 공격할 때마다 그 공격 타입 웨폰 브레이크 N축적(짭코코 猫染め御免ニャ). 받는 사람은 연계 위치 규칙(buff_rules link pos)으로 정해지고, 이득 = N ÷ 그 타입 한 바퀴 타수 × 연계 켜진 비율.
+- 버디(buddy_fx main·main2)·버디 장비(buddy_gear fx.main·main2)의 `brk`(once·속성·무기 타입, `req` 편성 조건): 버디 오토 스킬이 매 턴 거는 브레이크 — 평상 턴은 매 턴, AF는 앞 턴에 건 축적만(1턴째 AF엔 없음, AF 한 번에 1번).
+- 버디 장비 `fx.inflict {poison, pain}`: 평상 턴·2턴째 이후 AF의 독·페인 가동률에 더함(허수아비·1턴째 AF엔 없음).
+- buff_rules `when.stack.fill`에 `s0`(개전 채움 비율)·`flat`(턴마다 같은 값): 누적 예열에서 t턴째 = s0 + 2(n−s0)·t/(H+1)(평균 n, n<s0면 줄어듦).
+- state.json `from`: 그 턴부터 켜짐(평상 턴 평균은 up 그대로). up 없이 start·dur·uses면 누적 예열에서 턴마다 그 구간이면 켜짐.
+- skill_cond 소비형(stack 문자열에 '소비형'): 평상 턴 평균 = max(start, 2/turns)(한 방 주기 turns/2턴), 누적 예열에서 처음 가득 차기 전 턴((1−start)·turns/2 전)은 start만큼.
+- af_start.json `need.align`(천·명, 배열이면 어느 쪽이든 n명)·`_refill.<id>.start`(개전 축적)·`af:false`(AF 안 SB로는 안 채움). turn_end `sb_only`: SB를 쓴 턴의 종료 공격(실전 SB 턴·지속 딜 SB 주기마다).
+- 보스 흉성 `fx.counter {fixed, per:'attack', skip:['af','sb']}` → 보스 `counter`: 평상 턴 공격 실행 수(ev.atkN) × fixed 피해, 턴당 6번 넘으면 점수 감점(회복 2등급 이상이면 절반)·경고.
+
 ## buff_acts.json attack 행동 위력
 `k: "attack"` 행동에 `el`(속성/none) `wt`(slash/pierce/blunt/magic) `size` `mult` `hits`가 있으면 그 위력으로 계산(허수아비 AF 행동, 평상 턴 시뮬은 주력 대비 위력 비율, 최대 1). 없으면 특대 1배.
 

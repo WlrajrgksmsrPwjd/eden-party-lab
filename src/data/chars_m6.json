@@ -504,7 +504,7 @@
   "tier": "",
   "score": 66,
   "roles": ["dps"],
-  "main": {"skill": "トリプルバースト", "target": "st", "kind": "phys", "stat": "pwr", "element": "none", "weapon_type": "pierce", "mult": 0.857, "size": "xl", "hits": 3, "repeat": 1, "crit_sure": true, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "탄환 1 소비로 확정 크리티컬. 1MORE: 약점 공격 시 스킬 2회 실행"},
+  "main": {"skill": "トリプルバースト", "target": "st", "kind": "phys", "stat": "pwr", "element": "none", "weapon_type": "pierce", "mult": 0.857, "size": "xl", "hits": 3, "repeat": 1, "crit_sure": 0.67, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "탄환 1 소비로 확정 크리티컬. 1MORE: 약점 공격 시 스킬 2회 실행", "n_over": {"crit_sure": 0.5}},
   "sb": null,
   "self_buff": {"pwr": 30, "int": 30, "spd": 0, "elem_atk": 0, "weapon_atk": 0, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "none", "restrict": "", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": false, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},

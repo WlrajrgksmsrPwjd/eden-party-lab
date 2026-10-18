@@ -668,10 +668,10 @@ function bgX(k, it){ // 그 장비를 +10으로 낄 때 오토 스킬 버프·�
   return (1 + bgBonus(s0 + eq*s0/4431 + fl)/100)/lv; }
 const bgObj = (k, id) => { const it = id && BG_BY.get(id); return it ? {id, kr: it.kr, x: Math.round(bgX(k, it)*1000)/1000, fx: it.fx||null} : null; };
 // 버디 장비 후보: 추천 목록 순서, 계산에 차이가 나는 것만(배율·장비 효과)
-const bgUseful = (k, it) => it && (bgX(k, it)>1.005 || (it.fx && (it.fx.main || it.fx.chg || (it.fx.by_form && it.fx.by_form[k]) || it.fx.sup)));
+const bgUseful = (k, it) => it && (bgX(k, it)>1.005 || (it.fx && (it.fx.main || it.fx.main2 || it.fx.inflict || it.fx.chg || (it.fx.by_form && it.fx.by_form[k]) || it.fx.sup))); // main2 = 조건부 오토 효과(플라즈마 쿼츠 웨폰 브레이크), inflict = 독·페인
 const bgCands = k => ((BGEAR.recommend||{})[k]||[]).map(id=>BG_BY.get(id)).filter(it=>bgUseful(k, it));
 const bgList = k => { if(!((BGEAR.recommend||{})[k]||[]).length && k==='choco') return []; const rec = new Set((BGEAR.recommend||{})[k]||[]);
-  const fxOK = it => it.fx && (it.fx.main || it.fx.chg || it.fx.sup); // 추천 밖은 계산에 들어가는 장비 효과가 있는 것만(스탯만 오르는 장비는 목록이 길어져 뺌)
+  const fxOK = it => it.fx && (it.fx.main || it.fx.main2 || it.fx.inflict || it.fx.chg || it.fx.sup); // 추천 밖은 계산에 들어가는 장비 효과가 있는 것만(스탯만 오르는 장비는 목록이 길어져 뺌)
   return [...bgCands(k), ...(BGEAR.items||[]).filter(it=>!rec.has(it.id) && /^버디 장비$/.test(it.slot||'') && fxOK(it) && bgUseful(k, it))]; };
 const bgSet = k => ((state.budGear||{})[k]) || 'auto';
 function budOf(k, gid){ // 엔진에 넘길 버디: 장비 설정(자동 = 추천 후보를 결과마다 바꿔 계산)
@@ -2288,6 +2288,7 @@ function effBoss(b, sel){
     if(f.zone_break) S2.zoneBan = [...new Set([...(S2.zoneBan||[]), f.zone_kind==='elem' ? 'elem' : 'nonelem'])];
     if(ban.includes('zone')) S2.zoneBanAll = true;
     if(f.needs) B2.needs = Object.assign({}, B2.needs||{}, f.needs);
+    if(f.counter && +f.counter.fixed>0) B2.counter = Object.assign({}, f.counter); // 보스 반격(흉성 7: 공격 행동마다 아군 1명 고정 피해, AF·SB 턴 제외)
     if(f.comp) pl = Object.assign(pl || {nokill:false, size:6, turns:0}, {comp:{on:true, elem:f.comp.elem||[], weap:f.comp.weap||[], n:+f.comp.n||2}});
     if(ban.includes('ko')) pl = Object.assign(pl || {size:6, turns:0, comp:{on:false, elem:[], weap:[], n:3}}, {nokill:true}); }
   if(extra) B2.kt_extra = extra; if(kmin) B2.kt_min = kmin;
