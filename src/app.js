@@ -1010,9 +1010,46 @@ function renderResults(r, boss, enemy, mode){
       h+=`<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${d.focus.kind==='elem'?`<span class="dot ${d.focus.v}"></span> `:''}${esc(focusLabel(d.focus))}${zoneOfFocus(d.focus)?` <small class="dz">${esc(zoneOfFocus(d.focus))}</small>`:''}</span><span class="dm">${d.team.map(c=>esc(c.name)).join(', ')}</span><span class="num">${(d.rel*100).toFixed(0)}</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; });
     h+='</section>';
   }
+  if(all.length && !state.sample && !(all[0] && all[0].shared)) h+=`<section class="growbox" id="growBox"><h3>육성 추천</h3><p class="hint" style="margin:0">위 조합 멤버 중 한 단계만 올렸을 때(성도각성 · 천명치 다음 단계 · 현현 무기) 이 성향 점수가 가장 많이 오르는 것. 다른 조합으로 바뀌는 효과는 세지 않습니다.</p><button type="button" class="btn small" id="growRun">계산하기</button><div id="growList"></div></section>`;
   out.innerHTML=h;
+  GROW.all = all; GROW.r = r; GROW.mode = mode; GROW.tok++;
 }
 const DECKCTX={};
+/* 육성 추천(2026-10-18): 지금 결과 상위 조합의 멤버마다 다음 한 단계(성도각성·천명치 다음 문턱·현현 무기)를 올려 다시 계산해 성향 점수 증가율로 줄 세움.
+   점수 = 결과와 같은 가중치·정규화(r.weights·r.nmax)로 실전/최고점·지속·생존을 섞은 값, 조합 점수(1위 대비)를 곱해 순위 */
+const GROW = {all:null, r:null, mode:null, tok:0};
+function growCands(c){
+  const cu = Object.assign(BASE_OWN(), state.owned[c.id]||{}), t = +cu.t||0, L = [];
+  if(c.stellar && !cu.s) L.push({label: t<15 ? '성도각성 + 천명치 15' : '성도각성', patch:{s:true, t:Math.max(t,15)}});
+  const TH = c.stellar ? [15,30,50,80,120,200,255] : [50,80,120,200,255], nx = TH.find(v=>v>t);
+  if(nx!=null){ const cr = thresholdsCrossed(c, t, nx); L.push({label:`천명치 ${t} → ${nx}`, note: cr.join(' · '), patch:{t:nx}}); }
+  if(c.manifestMax>0 && (+cu.m||0) < c.manifestMax){ const m2 = (+cu.m||0)+1; L.push({label:`${M_KR[m2]} 무기`, patch:{m:m2}}); }
+  return L.map(x=>Object.assign(x, {own: Object.assign({}, cu, x.patch)}));
+}
+async function growRun(){
+  const box = $('#growList'), btn = $('#growRun'); if(!box || !GROW.all) return;
+  const tok = GROW.tok, r = GROW.r, mode = GROW.mode, W = r.weights || {b:0.4, s:0.3, t:0.3}, nm = r.nmax || null, S = settings();
+  const BR = ev => mode==='opener' ? +ev.opener||0 : mode==='burst' ? +ev.dummyT||0 : +ev.burst||0;
+  const sc = ev => { if(!nm) return BR(ev); const tt = (+ev.surv||0)/(nm.t||1); let v = W.b*BR(ev)/(nm.b||1) + W.s*(+ev.sustain||0)/(nm.s||1) + W.t*tt; if(tt<0.25 && ['sustain','weak','opener','all','boss'].includes(mode)) v *= 0.85; return v; };
+  const top = GROW.all.slice(0, 5), s0 = top.map(x=>sc(x.ev)), best = Math.max(1e-12, ...s0);
+  if(btn){ btn.disabled = true; btn.textContent = '계산 중…'; }
+  const res = new Map(); // 캐릭터·항목 → {c, label, note, gains:[{rank, g}]}
+  let n = 0, total = top.reduce((a,x)=>a + x.team.reduce((b,c)=>b + growCands(c).length, 0), 0);
+  for(let k=0; k<top.length; k++){ const x = top[k];
+    for(let i=0; i<x.team.length; i++){ const c = x.team[i]; if(!state.owned[c.id]) continue;
+      for(const cd of growCands(c)){ if(tok!==GROW.tok) return;
+        const p2 = x.progs.slice(); p2[i] = E.charProg(c, cd.own, S);
+        let g = 0; try{ const ev2 = E.evalTeam(x.team, p2, (LAST_PLAN && LAST_PLAN.enemy) || null, S, cap, x.ctx || ctxOf({})); g = sc(ev2)/Math.max(1e-12, s0[k]) - 1; }catch(e){}
+        const key = c.id+'|'+cd.label; if(!res.has(key)) res.set(key, {c, label:cd.label, note:cd.note||'', gains:[]});
+        res.get(key).gains.push({rank:x.rank, g, w: s0[k]/best});
+        n++; if(btn) btn.textContent = `계산 중 ${n}/${total}`; await yieldUI(); } } }
+  if(tok!==GROW.tok) return;
+  const L = [...res.values()].map(v=>Object.assign(v, {v: Math.max(...v.gains.map(q=>q.g*q.w))})).filter(v=>v.v>0.001).sort((a,b)=>b.v-a.v).slice(0, 10);
+  const pct = v=>'+'+(v*100).toFixed(1)+'%';
+  box.innerHTML = L.length ? `<ol class="growlist">${L.map(v=>`<li><b>${esc(v.c.name)}</b> ${esc(v.label)}${v.note?` <span class="hint">(${esc(v.note)})</span>`:''} — ${v.gains.filter(q=>q.g>0.001).sort((a,b)=>a.rank-b.rank).map(q=>`${q.rank}위 조합 <b>${pct(q.g)}</b>`).join(' · ')}</li>`).join('')}</ol><p class="hint" style="margin:4px 0 0">한 번에 하나씩 올린 값이고, 조합 점수가 1위에 가까울수록 앞에 둡니다.</p>`
+    : '<p class="hint">위 조합 멤버는 이 단계들로 점수가 거의 안 바뀝니다(이미 다 키웠거나 효과가 작음).</p>';
+  if(btn){ btn.disabled = false; btn.textContent = '다시 계산'; }
+}
 const sameTeam=(a,b)=>a.length===b.length && a.every(c=>b.some(d=>d.id===c.id));
 function toggleDeck(btn){
   const key=btn.dataset.deck, box=$('#dc-'+key), rec=RES.get(key); if(!box||!rec) return;
@@ -2474,7 +2511,7 @@ function bind(){
   $('#plCompBox').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const C=plOf().comp; const L = b.dataset.pce ? C.elem : C.weap, v=b.dataset.pce||b.dataset.pcw;
     const i=L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); C.on=true; plChanged(); });
   $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
-  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); });
+  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); });
   $('#planBossQ').addEventListener('input', ()=>renderPlanControls()); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
   $('#bossSum').addEventListener('click', e=>{ const mp = e.target.closest('[data-modp]'); if(mp){ const b = curBossOf(); if(!b) return; const pr = (b.modifier_presets||[]).find(p=>p.id===mp.dataset.modp); if(!pr) return;
       state.plan.mods = state.plan.mods || {}; if(Array.isArray(pr.on)) state.plan.mods[b.id] = pr.on.slice(); save(); renderPlanControls(); if(Array.isArray(pr.on)) runPlan(); return; } });

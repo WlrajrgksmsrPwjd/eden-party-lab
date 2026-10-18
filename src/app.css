@@ -391,6 +391,11 @@ a.lnk{display:inline-flex; align-items:center}
 .deckrow .dk{font-weight:700}
 .deckrow .dm{overflow-wrap:anywhere}
 .deckcard{margin-top:6px}
+.growbox{margin-top:18px}
+.growbox h3{font-size:14px; margin:0 0 4px}
+.growbox .btn{margin-top:6px}
+.growlist{margin:8px 0 0; padding-left:22px; font-size:13px; line-height:1.6}
+.growlist li{overflow-wrap:anywhere}
 
 /* 턴별 화력 */
 .tline{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px; margin-top:10px}
