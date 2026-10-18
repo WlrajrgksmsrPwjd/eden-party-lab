@@ -34,7 +34,10 @@ for c in chars:
     if c.get('support_src'): c['support_src']={k:(ko(v) if has_jp(v) else v) for k,v in c['support_src'].items() if isinstance(v,str)}
 rules=json.load(open(P('data','buff_rules.json'),encoding='utf-8'))
 for c in chars:
-    if c['id'] in rules: c['party_rules']=rules[c['id']]
+    if c['id'] in rules:
+        c['party_rules']=rules[c['id']]
+        for _r in c['party_rules']: # 규칙 메모는 카드 경고 '버프 조건 미충족 — …'에 보임 → 한국어 표시(2026-10-18)
+            if isinstance(_r,dict) and has_jp(_r.get('note')): _r['note_ko']=ko(_r['note'])
 # 디버프 조건 규칙(지속·단일 대상 등), 체인 어빌리티
 drules=json.load(open(P('data','debuff_rules.json'),encoding='utf-8'))
 chain=json.load(open(P('data','chain.json'),encoding='utf-8'))
@@ -159,7 +162,7 @@ for c in chars:
 import hashlib
 _bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); _bfx.pop('_doc',None)
 # 화면 표시용 필드(한국어 이름·설명)는 계산에 안 쓰므로 계산 버전에서 뺀다(2026-10-17 점검: 글자만 고쳐도 저장된 결과·예시 결과가 버려지던 문제)
-_DISP={'sko','skill_disp','name_disp','cond_ko','req_ko','note_kr','play_kr','name_kr','alias_kr','skill_official','pers_ko'}
+_DISP={'note_ko','sko','skill_disp','name_disp','cond_ko','req_ko','note_kr','play_kr','name_kr','alias_kr','skill_official','pers_ko'}
 def _calc_view(o):
     if isinstance(o,dict):
         d={k:_calc_view(v) for k,v in o.items() if k not in _DISP}

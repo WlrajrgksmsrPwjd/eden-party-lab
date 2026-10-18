@@ -940,7 +940,7 @@ function teamWarns(x, boss, enemy, ex){
   for(const n of ex.notes){
     if(n.lvl==='ok') continue;
     const short = n.text.length>46 ? n.text.slice(0,46)+'…' : n.text;
-    warns.push({t:`${n.name}: ${n.lvl==='off'?'버프 조건 미충족':'버프 일부만 적용'} — ${short}`, full:n.text});
+    warns.push({t:`${n.name}: ${n.lvl==='off'?'버프 조건 미충족':'버프 일부만 적용'}${short ? ' — '+short : ''}`, full:n.text||''});
   }
   if(ex.posTotal && ex.posOk<ex.posTotal) warns.push({t:`위치 버프 ${ex.posTotal}개 중 ${ex.posOk}개만 동시에 성립`});
   const seen=new Set(); return warns.filter(w=>{ if(seen.has(w.t)) return false; seen.add(w.t); return true; });

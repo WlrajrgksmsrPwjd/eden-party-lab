@@ -326,7 +326,7 @@ function compileRules(c){
     const w=r.when||{}, to=r.deb ? {} : (r.to||{});
     if(w.zone||w.zlv) zdep=true;
     if(w.sb||w.af||w.t!=null||w.stack||w.cnt) sdep=true;
-    list.push({fs:[...fs], to, w, x:r.x!=null?r.x:1, e:r.e!=null?r.e:0, en:r.en!=null?r.en:null, me:!!r.me, pos:to.pos||null, side:to.side||null, deb:!!r.deb, sbAll:!!r.sb_all});
+    list.push({fs:[...fs], to, w, x:r.x!=null?r.x:1, e:r.e!=null?r.e:0, en:r.en!=null?r.en:null, me:!!r.me, pos:to.pos||null, side:to.side||null, deb:!!r.deb, sbAll:!!r.sb_all, note:(r.note_ko||r.note) ? String(r.note_ko||r.note).split(' — ')[0] : ''});
   }
   return {list, zel, zdep, sdep, hasPos:list.some(r=>r.pos), debSt};
 }
@@ -3121,7 +3121,7 @@ function explainTeam(team, progs, ev, S, ctx){
     const R=c.rules; if(!R || !R.list.length) return;
     const p=c.party||{};
     const hasVal = r=>[...r.fs].some(k=>{ const kk=k.split(':')[0]; const v = kk.indexOf('d_')===0 ? (c.deb||{})[kk.slice(2)] : p[kk]; return typeof v==='number'?v>0 : v&&typeof v==='object' ? Object.values(v).some(x=>x>0) : !!v; });
-    const dv=new Map(dealers.map(i=>[i,1])); const tgt=new Set();
+    const dv=new Map(dealers.map(i=>[i,1])); const tgt=new Set(), badN = [];
     R.list.forEach((r,ri)=>{
       if(!hasVal(r) || r.x===0) return;
       const a = ruleAct(r,j,team,progs,sit,sbz,A);
@@ -3133,11 +3133,12 @@ function explainTeam(team, progs, ev, S, ctx){
         if(r.me && i===j) v=r.x;
         else { let t=0; if(a>0){ t = r.pos ? (ps&&ps.has(i)?1:0) : 1; if(t && !r.pos && !toFilterOK(r.to, team[i])) t=0; if(t && r.to.p!=null) t*=r.to.p; } v=r.e+a*t*(r.x-r.e); }
         dv.set(i, Math.min(dv.get(i), v/Math.max(r.x,1e-9)));
+        if(v/Math.max(r.x,1e-9) < 0.95 && r.note && !badN.includes(r.note)) badN.push(r.note);
       }
     });
     const vals=[...dv.values()];
     const lo=vals.length?Math.min(...vals):1, hi=vals.length?Math.max(...vals):1;
-    const txt = (c.raw.party_buff||{}).restrict || (p.scope==='adjacent'?'양옆 아군만':'');
+    const txt = (c.raw.party_buff||{}).restrict || (p.scope==='adjacent'?'양옆 아군만':'') || badN.join(' / '); // 2026-10-18: 제한 문구가 없으면 덜 받는 규칙의 메모(note 앞부분) — 예전엔 '버프 조건 미충족 —' 뒤가 비었음
     notes.push({j, name:c.name, text:txt, lvl: lo>=0.95?'ok':hi<0.3?'off':'part', to:[...tgt].map(i=>team[i].name), toIdx:[...tgt]});
   });
   // 추천 배치: 위치 지정 버프가 가장 많이 성립하는 좌→우 순서. 같으면 버퍼·서포터를 왼쪽, 딜 비중 큰 딜러를 오른쪽
@@ -3296,14 +3297,14 @@ function partsEff(ev, boss){
   return Math.max(0.05, Math.min(1, pf));
 }
 /* 약점 맞춤 성향(2026-10-18, 사용자 커뮤니티 피드백 '불 약점만 정했는데 휘정진·다른 속성 덱이 1위'): 정한 약점을 실제로 때리는 덱을 우선.
-   실전 N턴 캐릭터별 대미지에서 정한 약점(속성·공격 타입, 변환 뒤 속성 기준 — 약점 부여로 만든 약점은 안 셈)을 때리는 몫 → f = 0.35 + 0.65 × min(1, 몫 ÷ 0.75)(정한 약점을 하나도 안 때리면 ×0.35) */
+   실전 N턴 캐릭터별 대미지에서 정한 약점(속성·공격 타입, 변환 뒤 속성 기준 — 약점 부여로 만든 약점은 안 셈)을 때리는 몫 → f = 0.15 + 0.85 × min(1, 몫 ÷ 0.8)^1.5(하나도 안 때리면 ×0.15, 47% ×0.53, 80% 이상 ×1) */
 function weakFit(ev, enemy){
   const W = enemy ? Object.keys(enemy).filter(k=>enemy[k]==='weak') : []; if(!W.length) return {f:1, miss:[], share:null};
   const per = (ev.bsim && Array.isArray(ev.bsim.per) && ev.bsim.per.length) ? ev.bsim.per : ((ev.normal && ev.normal.per) || []);
   const cs = (ev.normal && ev.normal.cores) || [], sb = (ev.sb && ev.sb.cores) || [];
   const tot = per.reduce((a,v)=>a+(v>0?v:0), 0); if(!(tot>0)) return {f:1, miss:[], share:null};
   const sh = per.reduce((a,v,i)=>{ const co = cs[i] || sb[i]; if(!co || !(v>0)) return a; return a + (W.includes(co.el) || W.includes(co.wt) ? v : 0); }, 0)/tot;
-  const f = 0.35 + 0.65*Math.min(1, sh/0.75), WK = W.map(k=>ELEM_KR[k] || WT_KR[k] || k).join('·');
+  const f = 0.15 + 0.85*Math.pow(Math.min(1, sh/0.8), 1.5), WK = W.map(k=>ELEM_KR[k] || WT_KR[k] || k).join('·'); // 2026-10-18 강화: 물 약점에 물 47% 휘정진 덱·마 약점에 마 0% 덱이 2위에 남던 것(예전 0.35 + 0.65 × min(1, 몫 ÷ 0.75))
   return {f, share:sh, miss: sh<0.5 ? [`정한 약점(${WK})을 때리는 공격 ${Math.round(sh*100)}%`] : []};
 }
 function needPenalty(ev, boss){
