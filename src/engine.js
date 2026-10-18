@@ -1286,6 +1286,15 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
       if(p.eagle_eyes) eaW = Math.max(eaW, F(j,'eagle_eyes'));
     }
   }
+  let BUD = null; if(A.bud){ BUD = []; for(const b of A.bud.parts){ if((b.zone && !(zone && zone.level>0 && zoneMatch(b.zone, zone))) || (b.st && sk.target!=='st')) continue; const f = b.p*budF(b, situation, A, zone, team); if(f>0) BUD.push(f===b.p ? b : ({...b, p:f})); } }
+  // 버디의 고정값·최대 MP·상태(2026-10-18): 튜시아 星の瞬き(힘·지능·속도 고정값), 건스(AS) フォルティゾ(招雷陣 중 최대 MP +30%), 모케 차지 2(틸릴(ES) 짝: 아군 心眼), 건스 アクティーナ(雷 캐릭터 帯電)
+  if(BUD) for(const b of BUD){ const p=b.party; if(!p) continue; const f=b.p;
+    if(b.to && b.to.elem && !(c.elems||[c.elem]).includes(b.to.elem)) continue; // 대상 속성 캐릭터만
+    if(p[FK]) flatP += (+p[FK]||0)*f;
+    if(p.mp_up) mpv.push(pct(p.mp_up)*f);
+    if(p.shinan) shinW = Math.max(shinW, Math.min(1, f));
+    if(p.kesshi) kessW = Math.max(kessW, Math.min(1, f));
+    if(p.charge) chW = Math.max(chW, Math.min(1, f)); }
   const mpB = dimin(mpv, 1); // 최대 MP %: 19행 감쇠 합, 최대 +100%
   const mpBase = (pr.D ? pr.D.mp : 450) + (+me.mp_flat||0);
   const mpF = focusOf(kind, mpBase*(1+mpB));
@@ -1298,8 +1307,8 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   { let ma = pct(me.mp_atk); for(let j=0;j<team.length;j++){ const p=team[j].party; if(!p || p.scope==='none' || !p.mp_atk) continue; row = FX&&FX[j] ? FX[j] : null; ma = Math.max(ma, pct(p.mp_atk)*F(j,'mp_atk')); }
     mpAtkSk = ma; if(ma > MPATK_GEAR) dmgUp *= (1+ma)/(1+MPATK_GEAR); }
   let budDmg = 0;
-  let BUD = null; if(A.bud){ BUD = []; for(const b of A.bud.parts){ if((b.zone && !(zone && zone.level>0 && zoneMatch(b.zone, zone))) || (b.st && sk.target!=='st')) continue; const f = b.p*budF(b, situation, A, zone, team); if(f>0) BUD.push(f===b.p ? b : ({...b, p:f})); } }
   if(BUD) for(const b of BUD){ const p=b.party; if(!p) continue; const f=b.p;
+    if(b.to && b.to.elem && !(c.elems||[c.elem]).includes(b.to.elem)) continue;
     if(p[stat]) sv.push(pct(p[stat])*f);
     if(p.all_elem_atk && el!=='none') ev.push(pct(p.all_elem_atk)*f);
     if(p.weapon_atk && p.weapon_atk[c.weapon]) wv.push(pct(p.weapon_atk[c.weapon])*f);
@@ -2250,7 +2259,7 @@ function budAgg(bd, team, enemy, A){
     const sc = kind==='auto' && x2 ? gx : 1, party = budScale(x.party||null, sc), deb = budScale(x.deb||null, sc);
     if(!party && !deb) return;
     const p = x.p!=null && x.when!=='weak' ? +x.p : whenP(x.when);
-    parts.push({party, deb, p, zone:x.when==='zone'?x.zone:null, st:!!x.st, kind, stk: +x.stk||+(kind==='auto' && b.main && b.main.stk)||1, at: x.at || (kind==='chg' && b.sb && b.sb.at) || null, act: +x.act||0, noaf: !!x.noaf, postAF: x.when==='post_af', ch});
+    parts.push({party, deb, p, zone:x.when==='zone'?x.zone:null, st:!!x.st, to:x.to||null, kind, stk: +x.stk||+(kind==='auto' && b.main && b.main.stk)||1, at: x.at || (kind==='chg' && b.sb && b.sb.at) || null, act: +x.act||0, noaf: !!x.noaf, postAF: x.when==='post_af', ch});
     if(deb) enemyDown = Math.max(enemyDown, pct(Math.max(deb.pwr||0, deb.int||0))*p); };
   add(b.main, 'auto', true); add(b.main2, 'auto', true); add(b.aura, 'aura'); add(b.sb, 'chg'); add(b.sb2, 'chg');
   for(const k in (b.sup||{})) sup[k]=b.sup[k];
