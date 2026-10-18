@@ -16,22 +16,30 @@ for c in chars:
         if c.get(k) and ko_names.get(k): c[k]['skill_ko']=ko_names[k]
 import sys; sys.path.insert(0, here)
 from ko import ko, has_jp
+# 공식 한국어 스킬 이름(딩 DB, data/skill_ko.json): 표시용 글자에서 일본어 스킬 이름을 먼저 바꾸고 나머지는 ko(2026-10-18 사용자 '일본어·알아볼 수 없는 스킬명 가다듬기')
+SKO=json.load(open(P('data','skill_ko.json'),encoding='utf-8')); SKO.pop('_doc',None)
+SKO_L={cid:sorted(m.items(), key=lambda kv:-len(kv[0])) for cid,m in SKO.items()}
+def kos(t, cid):
+    if not isinstance(t,str) or not has_jp(t): return t
+    for jp,kr in SKO_L.get(cid,()):
+        if jp in t: t=t.replace(jp, kr)
+    return ko(t)
 # 화면 표시용 한국어: 계산용 조건 원문은 두고 *_ko 필드를 덧붙인다
 for c in chars:
     for k in ('main','sb'):
         sk=c.get(k)
         if not sk: continue
         if sk.get('skill_ko'): sk['skill_jp']=sk['skill']; sk['skill']=sk.pop('skill_ko'); sk['skill_official']=True
-        elif has_jp(sk.get('skill')): sk['skill_jp']=sk['skill']; sk['skill']=ko(sk['skill'])
-        if has_jp(sk.get('condition')): sk['cond_ko']=ko(sk['condition'])
-    if has_jp(c.get('req')): c['req_ko']=ko(c['req'])
-    if c.get('zone') and has_jp(c['zone'].get('condition')): c['zone']['cond_ko']=ko(c['zone']['condition'])
+        elif has_jp(sk.get('skill')): sk['skill_jp']=sk['skill']; sk['skill']=kos(sk['skill'], c['id'])
+        if has_jp(sk.get('condition')): sk['cond_ko']=kos(sk['condition'], c['id'])
+    if has_jp(c.get('req')): c['req_ko']=kos(c['req'], c['id'])
+    if c.get('zone') and has_jp(c['zone'].get('condition')): c['zone']['cond_ko']=kos(c['zone']['condition'], c['id'])
     pb=c.get('party_buff') or {}
     if has_jp(pb.get('restrict')): pb['restrict']=ko(pb['restrict'])
     if c.get('ex') and c['ex'].get('personality'): c['ex']['pers_ko']=[ko(x) for x in c['ex']['personality']]
     for k in ('note_kr','name_kr','play_kr'):
-        if has_jp(c.get(k)): c[k]=ko(c[k])
-    if c.get('support_src'): c['support_src']={k:(ko(v) if has_jp(v) else v) for k,v in c['support_src'].items() if isinstance(v,str)}
+        if has_jp(c.get(k)): c[k]=kos(c[k], c['id'])
+    if c.get('support_src'): c['support_src']={k:(kos(v, c['id']) if has_jp(v) else v) for k,v in c['support_src'].items() if isinstance(v,str)}
 rules=json.load(open(P('data','buff_rules.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in rules:
@@ -76,7 +84,7 @@ for c in chars:
 for c in chars: # 추천 스킬 칸 표시용 한국어 이름(계산은 원문 s)
     for a in c.get('bact') or []:
         nm=re.split(r'[（(]', a.get('s') or '')[0].strip()
-        if has_jp(nm): a['sko']=ko(nm)
+        if has_jp(nm): a['sko']=kos(nm, c['id'])
 # 루나틱<솔선(挺身)>: 내구→힘·정신→지성 고정값(딩 14·15행)
 lun=json.load(open(P('data','lunatic.json'),encoding='utf-8'))
 for c in chars:
@@ -156,19 +164,22 @@ for c in chars:
     for k in ('sb_normal','af_skill'): # 캐릭터 DB 표시용(2026-10-17): 이름·조건 한국어는 덧붙이는 필드에만
         sk=c.get(k)
         if not sk: continue
-        if has_jp(sk.get('skill')): sk['skill_disp']=ko(sk['skill'])
-        if has_jp(sk.get('condition')): sk['cond_ko']=ko(sk['condition'])
+        if has_jp(sk.get('skill')): sk['skill_disp']=kos(sk['skill'], c['id'])
+        if has_jp(sk.get('condition')): sk['cond_ko']=kos(sk['condition'], c['id'])
     for k in ('chain','turn_end'):
         for e in (c.get(k) or []):
-            if isinstance(e,dict) and has_jp(e.get('name')): e['name_disp']=ko(e['name'])
+            if isinstance(e,dict) and has_jp(e.get('name')): e['name_disp']=kos(e['name'], c['id'])
     for k in ('counter','echange'):
         e=c.get(k)
-        if isinstance(e,dict) and has_jp(e.get('skill')): e['skill_disp']=ko(e['skill'])
+        if isinstance(e,dict) and has_jp(e.get('skill')): e['skill_disp']=kos(e['skill'], c['id'])
+    if isinstance(c.get('main'),dict) and isinstance(c['main'].get('alt'),dict) and has_jp(c['main']['alt'].get('skill')): c['main']['alt']['skill_disp']=kos(c['main']['alt']['skill'], c['id'])
+    for a in (c.get('alts') or []): # 주력 후보(계산은 skill 원문) — 표시용 이름
+        if isinstance(a,dict) and has_jp(a.get('skill')): a['skill_disp']=kos(a['skill'], c['id'])
 # 계산 버전: 엔진·데이터가 같으면 같은 결과 → 앱이 저장해 둔 편성 결과를 다시 쓸지 정하는 기준(2026-10-16)
 import hashlib
 _bfx=json.load(open(P('data','buddy_fx.json'),encoding='utf-8')); _bfx.pop('_doc',None)
 # 화면 표시용 필드(한국어 이름·설명)는 계산에 안 쓰므로 계산 버전에서 뺀다(2026-10-17 점검: 글자만 고쳐도 저장된 결과·예시 결과가 버려지던 문제)
-_DISP={'note_ko','sko','skill_disp','name_disp','cond_ko','req_ko','note_kr','play_kr','name_kr','alias_kr','skill_official','pers_ko'}
+_DISP={'note_ko','sko','skill_disp','name_disp','cond_ko','req_ko','note_kr','play_kr','name_kr','alias_kr','skill_official','pers_ko','restrict','support_src'} # 표시용(restrict·support_src도 화면 글자뿐 — 2026-10-18 한자 보강 때 계산 버전이 바뀌던 문제)
 def _calc_view(o):
     if isinstance(o,dict):
         d={k:_calc_view(v) for k,v in o.items() if k not in _DISP}

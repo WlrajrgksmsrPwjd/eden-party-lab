@@ -62,14 +62,14 @@ GLOSS = {
     'ボルテックス': '볼텍스', 'インパクト': '임팩트', 'ブレイズ': '블레이즈', 'アサルト': '어설트', 'スパーク': '스파크',
     'ファントム': '팬텀', 'ナイト': '나이트', 'ドリーム': '드림', 'エンジェル': '엔젤', 'デビル': '데빌', 'ゴッド': '갓', 'ハンド': '핸드',
     'マキシマム': '맥시멈', 'グランド': '그랜드', 'ディフェンス': '디펜스', 'オフェンス': '오펜스', 'ライフ': '라이프', 'ポイント': '포인트',
-    'オーバー': '오버', 'ドーピング': '도핑', 'アーマー': '아머', 'リフレクト': '리플렉트', 'フィールド': '필드', 'ハンター': '헌터',
+    'オーバー': '오버', 'スーパー': '슈퍼', 'アルティメット': '얼티밋', 'ハイパー': '하이퍼', 'マジック': '매직', 'ダーク': '다크', 'ブラッド': '블러드', 'アシッド': '애시드', 'スマッシュ': '스매시', 'ラピッド': '래피드', 'ジャスティス': '저스티스', 'ミステリー': '미스터리', 'ラッシュ': '러시', 'クロック': '클록', 'ドーピング': '도핑', 'アーマー': '아머', 'リフレクト': '리플렉트', 'フィールド': '필드', 'ハンター': '헌터',
     # 단독 글자 (무기·속성·공격종). 한 글자 단독 토큰일 때만
 }
 SINGLE = {'剣': '검', '刀': '도', '斧': '도끼', '槍': '창', '弓': '활', '拳': '권갑', '杖': '지팡이', '槌': '망치',
           '火': '불', '水': '물', '地': '땅', '風': '바람', '雷': '번개', '陰': '그림자', '晶': '결정', '冥': '명', '天': '천',
           '斬': '참', '突': '돌', '打': '타', '魔': '마', '極': '극', '絶': '절', '全': '전', '非': '비', '超': '초',
           '大': '대', '中': '중', '小': '소', '破': '파', '急': '급', '奇': '홀수', '偶': '짝수', '珠': '구슬', '陽': '양'}
-PUNCT = {'・': '·', '（': '(', '）': ')', '：': ':', '、': ', ', '。': '. ', '！': '!', '？': '?', '～': '~', '＝': '=',
+PUNCT = {'〆': '', '・': '·', '（': '(', '）': ')', '：': ':', '、': ', ', '。': '. ', '！': '!', '？': '?', '～': '~', '＝': '=',
          '「': '‘', '」': '’', '『': '‘', '』': '’', '〈': '<', '〉': '>', '＜': '<', '＞': '>', '　': ' ', '＋': '+', '％': '%'}
 
 # 가나 → 한글 (일본어 외래어 표기에 가깝게, 게임식으로 어두 카·타 유지)
@@ -92,7 +92,9 @@ def _jong(syl, j):  # 받침 붙이기 (j: 4=ㄴ, 19=ㅅ)
     return chr(0xAC00 + o + j)
 RA = set('ラリルレロ')
 VOW = set('アイウエオァィゥェォ')
-U_FORM = {'ク':'크','グ':'그','ブ':'브','プ':'프','フ':'프','ト':'트','ド':'드'}
+U_FORM = {'ク':'크','グ':'그','ブ':'브','プ':'프','フ':'프','ト':'트','ド':'드','ヴ':'브'}
+CONS_X = set('ンッーァィゥェォャュョヽヾ')  # 자음으로 시작하지 않는 단위
+def _cons(u): return bool(u) and u[0] not in VOW and u[0] not in CONS_X
 def kana2hangul(s):
     s = _hira2kata(s)
     units = []; i = 0
@@ -106,23 +108,50 @@ def kana2hangul(s):
             if u in ('ー',): continue
             return u
         return None
+    def jong(j):  # 앞 글자에 받침(가능하면)
+        if out and out[-1] and _jong(out[-1][-1], j): out[-1] = out[-1][:-1] + _jong(out[-1][-1], j); return True
+        return False
+    drop = False
     for k, u in enumerate(units):
+        if drop: drop = False; continue
+        n = nxt(k); end = n is None; long = k+1 < len(units) and units[k+1] == 'ー'  # 장음이 붙은 글자는 모음으로 끝남(디스토션·슈트·루나)
         if u == 'ン':
-            if out and _jong(out[-1][-1], 4): out[-1] = out[-1][:-1] + _jong(out[-1][-1], 4)
-            else: out.append('ㄴ')
+            if n and n[0] in 'クグカガキギケゲコゴ':  # 링크·레이징·탱크: ㅇ받침
+                if jong(21):
+                    if n[0] == 'グ' and (nxt(k+1) is None or _cons(nxt(k+1))): drop = True  # 레이징(グ 생략)
+                    continue
+            if not jong(4): out.append('ㄴ')
             continue
         if u == 'ッ':
-            if out and _jong(out[-1][-1], 19): out[-1] = out[-1][:-1] + _jong(out[-1][-1], 19)
-            continue
+            if n is None: continue
+            h = n[0]
+            if h in 'ドグズジブヂヅシチ' or n in ('シュ', 'シャ', 'ショ', 'チャ', 'チュ', 'チョ'): continue  # 애시드·스매시·매치: 받침 없이
+            nn = nxt(k+1)
+            if h == 'ク' and n == 'ク':  # 트릭·블랙·록온: ㄱ받침, ク는 생략(뒤가 작은 모음이면 남김)
+                if jong(1) and not (nn and nn[0] in 'ァィゥェォャュョ'): drop = True
+                continue
+            if h == 'プ' and n == 'プ':
+                if jong(17) and (nn is None or _cons(nn)): drop = True
+                continue
+            if h == 'ト' and n == 'ト':  # 코멧·바렛: ㅅ받침, 뒤가 끝·자음이면 ト 생략
+                if jong(19) and (nn is None or _cons(nn)): drop = True
+                continue
+            jong(19); continue
         if u in ('ー', 'ヽ', 'ヾ'): continue
-        n = nxt(k)
-        end = n is None
-        if u in U_FORM and (end or n[0] in RA or (u in 'トド' and n[0] in 'スズ')):
-            # 영어 계열 외래어의 자음군·어말 자음 (블라, 크리, 링크, 스트)
+        if u in ('ショ', 'ジョ') and n == 'ン':  # 미션·비전
+            out.append('셔' if u == 'ショ' else '저'); continue
+        if u == 'シュ' and not long and (end or _cons(n)):  # 스매시·브러시
+            out.append('시'); continue
+        if u == 'ク' and not long and n and _cons(n) and n[0] not in RA:  # 베네딕션·악스: ㄱ받침(못 붙이면 크 — 상크투스)
+            if not jong(1): out.append('크')
+            continue
+        if u in U_FORM and not long and (end or n[0] in RA or (u in 'トド' and n[0] in 'スズ') or (u in 'トドグブプヴ' and _cons(n))):
+            # 영어 계열 외래어의 자음군·어말 자음 (블라, 크리, 링크, 스트, 아보이드노트·피리그마)
             out.append(U_FORM[u]); continue
-        if u in ('ム', 'ル') and (end or (n[0] not in VOW and n[0] not in 'ャュョン')):
+        if u in ('ス', 'ズ') and long: out.append('수' if u == 'ス' else '주'); continue  # 슈퍼노바·수퍼(スー)
+        if u in ('ム', 'ル') and not long and out and (end or (n[0] not in VOW and n[0] not in 'ャュョン')):  # 어두 ル·ム은 루·무(루미나스)
             j = 16 if u == 'ム' else 8
-            if out and _jong(out[-1][-1], j): out[-1] = out[-1][:-1] + _jong(out[-1][-1], j); continue
+            if jong(j): continue
             out.append('므' if u == 'ム' else '르'); continue
         out.append(KANA.get(u, u))
     return ''.join(out)
@@ -147,6 +176,8 @@ def _dueum(syl, initial, prev):
 def kanji2hangul(run):
     out = []
     for k, ch in enumerate(run):
+        if ch == '々' and out: out.append(out[-1]); continue  # 々 = 앞 글자 반복(機々雷々 → 기기뢰뢰)
+        if ch == '〆': continue
         r = HANJA.get(ch, ch)
         r = _dueum(r, k == 0, out[-1] if out else '')
         out.append(r)
@@ -178,10 +209,12 @@ def _conv_token(t):
         segs.append(('g', GLOSS[m.group(0)])); pos = m.end()
     if pos < len(t): segs.append(('r', t[pos:]))
     out = []
-    for kind, txt in segs:
+    for q, (kind, txt) in enumerate(segs):
         if kind == 'r':
+            tail = ''
+            if txt.endswith('の') and q+1 < len(segs) and len(txt) > 1: txt, tail = txt[:-1], '의 '  # '削命の' + 呪い(글로스) → 삭명의 저주
             pieces = txt.split('・')
-            txt = '·'.join(_conv_raw(x) if x else '' for x in pieces)
+            txt = '·'.join(_conv_raw(x) if x else '' for x in pieces) + tail
         if out and txt and not out[-1].endswith(('·', ' ')) and not txt.startswith(('·', ' ')) and not txt.startswith(('의 ', '와 ')):
             out.append(' ')
         out.append(txt)
