@@ -1010,11 +1010,47 @@ function renderResults(r, boss, enemy, mode){
       h+=`<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${d.focus.kind==='elem'?`<span class="dot ${d.focus.v}"></span> `:''}${esc(focusLabel(d.focus))}${zoneOfFocus(d.focus)?` <small class="dz">${esc(zoneOfFocus(d.focus))}</small>`:''}</span><span class="dm">${d.team.map(c=>esc(c.name)).join(', ')}</span><span class="num">${(d.rel*100).toFixed(0)}</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; });
     h+='</section>';
   }
+  if(boss && boss.gauntlet && all.length && bv!=='stable') h+=`<section class="growbox" id="gauntBox"><h3>${boss.gauntlet.n}연전 편성 (덱 ${boss.gauntlet.n}개)</h3><p class="hint" style="margin:0">${esc(boss.gauntlet.note_kr||'')} 1전은 위 1위 조합, 다음 전투는 앞 전투 멤버를 빼고 앞 전투가 약점으로 친 속성을 흡수로 바꿔 다시 계산합니다(앞에서부터 차례로 고르는 방식).</p><button type="button" class="btn small" id="gauntRun">${boss.gauntlet.n}연전 계산하기</button><div id="gauntList"></div></section>`;
   if(all.length && !state.sample && !(all[0] && all[0].shared)) h+=`<section class="growbox" id="growBox"><h3>육성 추천</h3><p class="hint" style="margin:0">위 조합 멤버 중 한 단계만 올렸을 때(성도각성 · 천명치 다음 단계 · 현현 무기) 이 성향 점수가 가장 많이 오르는 것. 다른 조합으로 바뀌는 효과는 세지 않습니다.</p><button type="button" class="btn small" id="growRun">계산하기</button><div id="growList"></div><h3 style="margin-top:14px">획득 추천</h3><p class="hint" style="margin:0">안 가진 SS·S 캐릭터(천명치 80·성도각성 가정)를 위 1~3위 조합 멤버와 한 명씩 바꿔 넣어 봤을 때 가장 많이 오르는 캐릭터. 그 캐릭터 중심의 새 조합까지는 찾지 않습니다.</p><button type="button" class="btn small" id="getRun">계산하기</button><div id="getList"></div></section>`;
   out.innerHTML=h;
   GROW.all = all; GROW.r = r; GROW.mode = mode; GROW.tok++;
 }
 const DECKCTX={};
+/* N연전 편성(2026-10-18, 사용자 '안키 디그마 3연전이라 덱 3개'): boss.gauntlet {n, absorb_prev} — 1전 = 지금 결과 1위, k전 = 앞 전투들 멤버 제외 +
+   앞 전투(바로 앞)가 약점으로 친 속성(공격 비중 1% 넘는 멤버의 공격 속성, 변환 뒤)을 흡수로 바꾼 보스로 다시 편성 계산. 앞에서부터 고르는 탐욕 방식 */
+async function gauntRun(){
+  const box = $('#gauntList'), btn = $('#gauntRun'); if(!box || !GROW.all || !LAST_PLAN) return;
+  const L0 = LAST_PLAN, boss0 = L0.boss, G = boss0 && boss0.gauntlet; if(!G) return;
+  const tok = GROW.tok, P = state.plan, n = Math.max(2, Math.min(5, +G.n||3));
+  const usedEls = x => { const ev = x.ev, per = (ev.bsim && ev.bsim.per) || ev.normal.per || [], tot = per.reduce((a,v)=>a+(v||0),0)||1, S2 = new Set();
+    x.team.forEach((c,i)=>{ if((per[i]||0)/tot < 0.01) return; for(const co of [ev.normal.cores && ev.normal.cores[i], ev.sb.cores && ev.sb.cores[i]]) if(co && co.el && co.el!=='none' && co.dmg!==0) S2.add(co.el); });
+    return [...S2]; };
+  const picks = [{x: GROW.all[0], boss: boss0, enemy: L0.enemy, abs: []}];
+  const excl = new Set((P.excluded||[]).concat(GROW.all[0].team.map(c=>c.id)));
+  if(btn){ btn.disabled = true; }
+  for(let k=1; k<n; k++){ if(tok!==GROW.tok) return;
+    const prev = picks[k-1], abs = G.absorb_prev ? usedEls(prev.x) : [];
+    const Bk = Object.assign({}, boss0, {weak:(boss0.weak||[]).filter(e=>!abs.includes(e)), resist:(boss0.resist||[]).filter(e=>!abs.includes(e)), absorb:[...new Set((boss0.absorb||[]).concat(abs))]});
+    const enemy = bossToEnemy(Bk), rec = prepped.filter(c=>(Bk.recommended||[]).includes(c.raw.name_jp)).map(c=>c.id);
+    const t0 = Date.now();
+    const r = await calcOptimize('gaunt'+k, {locked:[], excluded:[...excl], backLocked:P.backLocked||[], mode:'boss', enemy, boss:Bk, recommendedIds:rec, maxDiff:P.maxDiff||4, focus:null, noConv:noConvOf(P, null),
+        weights:null, pledge:null, buddy: buddyAutoInput() ? null : buddyInput(), buddyAuto: buddyAutoInput()},
+      f=>{ if(btn && tok===GROW.tok) btn.textContent = `${k+1}/${n}전 계산 중 ${Math.round(f*100)}% · ${Math.round((Date.now()-t0)/1000)}초`; }, null, {shard:true, cache:true});
+    if(tok!==GROW.tok || !r) return;
+    if(r.error || !r.results || !r.results.length){ picks.push({x:null, boss:Bk, enemy, abs, err: r.error || '남은 캐릭터로 짤 수 있는 조합이 없습니다'}); break; }
+    const x = r.results[0]; x.kt = E.killTurns(x.ev, Bk); picks.push({x, boss:Bk, enemy, abs, r});
+    x.team.forEach(c=>excl.add(c.id)); }
+  if(tok!==GROW.tok) return;
+  const elTx = L => L.length ? L.map(e=>E.ELEM_KR[e]||e).join('·') : '없음';
+  const ref = {sbTurn:picks[0].x.ev.sbTurn, af:picks[0].x.ev.af, sustain:picks[0].x.ev.sustain, surv:picks[0].x.ev.surv, burst:picks[0].x.ev.burst, opener:picks[0].x.ev.opener};
+  box.innerHTML = picks.map((pk,k)=>{ if(!pk.x) return `<div class="deckrow" style="cursor:default"><span class="dk">${k+1}전</span><span class="dm">${esc(pk.err||'')}${pk.abs.length?` · 흡수 ${esc(elTx(pk.abs))}`:''}</span><span></span></div>`;
+      const key = 'g'+k; pk.x.rank = k+1; if(pk.x.kt===undefined) pk.x.kt = E.killTurns(pk.x.ev, pk.boss);
+      RES.set(key, {x:pk.x, focus:null, mode:'boss', bossId:boss0.id, label:(k+1)+'전'}); DECKCTX[key] = {boss:pk.boss, enemy:pk.enemy, focus:null, ref, hot:'', lockSet:new Set(), mode:'boss'};
+      const kt = pk.x.kt && pk.x.kt.t ? ` · 예상 ${pk.x.kt.t}턴${pk.x.kt.sure===false?'+':''}` : '';
+      return `<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${k+1}전</span><span class="dm">${pk.x.team.map(c=>esc(c.name)).join(', ')}<br><small class="hint">공격 속성 ${esc(elTx(usedEls(pk.x)))}${pk.abs.length?` · 이 전투 흡수 ${esc(elTx(pk.abs))}`:''}${kt}</small></span><span class="num">▾</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; }).join('')
+    + `<p class="hint" style="margin:6px 0 0">줄을 누르면 그 전투의 조합 카드가 열립니다. 앞 전투를 다른 조합으로 이기면 다음 전투의 흡수 속성도 바뀝니다. 같은 캐릭터의 다른 스타일(AS·ES)은 다른 전투에 쓸 수 있다고 봤습니다.</p>`;
+  if(btn){ btn.disabled = false; btn.textContent = '다시 계산'; }
+}
 /* 육성 추천(2026-10-18): 지금 결과 상위 조합의 멤버마다 다음 한 단계(성도각성·천명치 다음 문턱·현현 무기)를 올려 다시 계산해 성향 점수 증가율로 줄 세움.
    점수 = 결과와 같은 가중치·정규화(r.weights·r.nmax)로 실전/최고점·지속·생존을 섞은 값, 조합 점수(1위 대비)를 곱해 순위 */
 const GROW = {all:null, r:null, mode:null, tok:0};
@@ -1084,7 +1120,7 @@ function toggleDeck(btn){
   const open=btn.getAttribute('aria-expanded')==='true';
   btn.setAttribute('aria-expanded', open?'false':'true');
   if(open){ box.hidden=true; return; }
-  if(!box.innerHTML){ const o=DECKCTX[key]; box.innerHTML=cardHtml(rec.x, key, o).replace('<div class="rank">'+rec.x.rank+'<small>위</small></div>', `<div class="rank" style="font-size:15px">${esc(focusLabel(rec.x.focus))}</div>`); }
+  if(!box.innerHTML){ const o=DECKCTX[key]; box.innerHTML=cardHtml(rec.x, key, o).replace('<div class="rank">'+rec.x.rank+'<small>위</small></div>', `<div class="rank" style="font-size:15px">${esc(rec.label || focusLabel(rec.x.focus))}</div>`); }
   box.hidden=false;
 }
 /* 버디 줄: 지금 계산한 버디 + 화력 위주 추천 메인 */
@@ -2539,7 +2575,7 @@ function bind(){
   $('#plCompBox').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const C=plOf().comp; const L = b.dataset.pce ? C.elem : C.weap, v=b.dataset.pce||b.dataset.pcw;
     const i=L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); C.on=true; plChanged(); });
   $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
-  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); if(e.target.closest('#getRun')) getRun(); });
+  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); if(e.target.closest('#getRun')) getRun(); if(e.target.closest('#gauntRun')) gauntRun(); });
   $('#planBossQ').addEventListener('input', ()=>renderPlanControls()); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
   $('#bossSum').addEventListener('click', e=>{ const mp = e.target.closest('[data-modp]'); if(mp){ const b = curBossOf(); if(!b) return; const pr = (b.modifier_presets||[]).find(p=>p.id===mp.dataset.modp); if(!pr) return;
       state.plan.mods = state.plan.mods || {}; if(Array.isArray(pr.on)) state.plan.mods[b.id] = pr.on.slice(); save(); renderPlanControls(); if(Array.isArray(pr.on)) runPlan(); return; } });
