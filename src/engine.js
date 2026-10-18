@@ -2766,7 +2766,12 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   if(S.sbCycle!==false && sbIdx.length){ const sa = simIn.sbAct, afActs = R3.afA.n.reduce((x,y)=>x+y,0), gN = sa*team.length*susNW, gA = afCyc ? sa*afActs/afTurns : 0, gT = gN + gA;
     const sbTurns = Math.max(1, 100/Math.max(1, gT)), fr = gT>0 ? gA/gT : 0, fin = afRun(100, bzG && bzG.up ? 1 : 2, 3).fin, k = fr*fin + (1-fr); // 버디 각성 극 AF는 차지 주기 중 일부라 SB 주기 콤보엔 안 씀(2026-10-18 점검)
     const Hs = (A.tm && A.tm.H) || 6; // 전투 중 1회 SB(once_t)는 주기마다가 아니라 전투(H턴)에 한 번
-    const sp = team.map((c,i)=> sbIdx.includes(i) ? Math.max(0, (sb3.per[i]||0) - (sb3.chain ? sb3.chain.per[i]||0 : 0))*k/(c.sb && +c.sb.once_t>0 ? Math.max(sbTurns, Hs) : sbTurns) : 0), sv = sp.reduce((x,y)=>x+y,0);
+    // 긴 전투 SB(2026-10-18, 빅트 歴戦 SB 71.4 → 꺼지면 39.4): AF처럼 개전·한 번 쓰는 상태 구간 끝마다 그 뒤 SB를 계산해 시간 가중(탐색 어림 단계는 생략)
+    let sbP = sb3.per; if(afLate && afLate.ends && afLate.ends.length && !(ctx && ctx.stFast)){ const sv0 = res.sb, E0 = afLate.ends, acc = sb3.per.map(v=>(v||0)*E0[0]); let prev = E0[0];
+      try{ for(let q=0; q<E0.length; q++){ A.realT = E0[q] + 1; A.tm.S0 = 2; A.lateAF = true; runSit('sb', sv0.zone || null); const until = q+1<E0.length ? E0[q+1] : afLate.h; res.sb.per.forEach((v,i)=>{ acc[i] += (v||0)*(until - prev); }); prev = until; } }
+      finally { A.lateAF = false; A.realT = 0; A.tm.S0 = 0; res.sb = sv0; }
+      sbP = acc.map(v=>v/afLate.h); out.sbLate = true; }
+    const sp = team.map((c,i)=> sbIdx.includes(i) ? Math.max(0, (sbP[i]||0) - (sb3.chain ? sb3.chain.per[i]||0 : 0))*k/(c.sb && +c.sb.once_t>0 ? Math.max(sbTurns, Hs) : sbTurns) : 0), sv = sp.reduce((x,y)=>x+y,0);
     out.sustain += sv; out.sustainSB = sv; out.sbPerSus = sp; out.sbTurns = sbTurns;
     if(simIn.teSB){ out.sustain += simIn.teSB.total/sbTurns; out.teSB = simIn.teSB; } // SB 턴 종료 공격도 SB 주기마다
     // SB 뒤 효과(SB로만 거는 버프·디버프, af_timing 'sb')는 평상 턴에도 남음(사용자 확인 2026-10-16, 체인 어빌리티 공격만 빼고):
@@ -3643,8 +3648,12 @@ async function optimize(input, onProgress){
     sS.sort((a,b)=>b[0]-a[0]); finalListS = [];
     // 안정성이라도 깨는 데 너무 오래 걸리면 뺌(보스 HP를 알 때): 어림 처치 턴 = N턴 총딜 뒤 지속 딜로, 턴 단축 1위의 2배·+4턴 중 큰 쪽까지
     const NBo = Math.max(1, Math.min(10, (ctx && ctx.burstN) || +S.burstTurns || 3)), need = +((boss && boss.hp) || 0)*1e8*1.3;
-    const ktA = i => { if(!(need>0)) return 0; const b0 = raws[4*i], su = raws[4*i+1]; return b0 >= need ? NBo : su>0 ? NBo + Math.ceil((need - b0)/su) : 99; };
-    const kt0 = need>0 && chosen.length ? ktA(chosen[0].i) : 0, ktMax = kt0 ? Math.max(kt0*2, kt0+4) : Infinity;
+    const hmA = boss && boss.hp_model, hmB = hmA ? (Array.isArray(hmA.bar_seq) && hmA.bar_seq.length ? hmA.bar_seq.reduce((a,v)=>a+(+v||0), 0) : (+hmA.bar>0 ? +hmA.bar*Math.max(1, +hmA.bars||1) : 0)) : 0, hmMin = hmA ? +hmA.kt_min||0 : 0;
+    // HP 구조가 있는 보스(2026-10-18): 전회복·스토퍼는 어림으로 못 셈 → 총량 ÷ 턴당 평균 딜과 최소 턴 중 큰 쪽(같은 기준으로 비교만)
+    const ktA = i => { const b0 = raws[4*i], su = raws[4*i+1];
+      if(hmB>0){ const tot = hmB*1e8*1.15, per = Math.max(su, b0/NBo); return Math.max(hmMin, per>0 ? Math.ceil(tot/per) : 99); }
+      if(!(need>0)) return 0; return b0 >= need ? NBo : su>0 ? NBo + Math.ceil((need - b0)/su) : 99; };
+    const kt0 = (need>0 || hmB>0) && chosen.length ? ktA(chosen[0].i) : 0, ktMax = kt0 ? Math.max(kt0*2, kt0+4) : Infinity;
     for(const [sc,i] of sS){ if(finalListS.length>=nTop) break; const ids = teams[i]; if(ktA(i) > ktMax) continue; if(finalListS.some(c=>{ const set=new Set(c.ids); return 4-ids.filter(x=>set.has(x)).length < minDiff; })) continue; finalListS.push({ids, sc, i}); } }
   /* 턴 제한 최대 딜(boss.turn_limit, 2026-10-18 사용자 '서가 챌린지는 5턴 제한 — 5턴 내 최대 딜과 안정 클리어로 구분'): 실전 N턴(= 턴 제한) 총딜 순, 생존이 너무 낮으면 ×0.85, 필요 요소·위협 감점만(처치 턴 보정은 뺌) */
   let finalList3 = null;

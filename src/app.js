@@ -42,6 +42,7 @@ const bossSub = b => { const c = String(b.content||''), k = bossTop(b);
   if(k==='kengen') return /真・/.test(c) || /^shin_/.test(b.id) ? '진·현현' : '현현';
   if(k==='ad') return /カイロス/.test(c) ? '시층 관측선 카이로스' : /封域/.test(c) ? '봉역' : '베리 하드';
   return ''; };
+const BOSS_CAT_KR2 = b => [Object.fromEntries(BOSS_TOP)[bossTop(b)], bossSub(b)].filter(Boolean).join(' · ') + (bossCat(b)==='gaishi_h' ? ' (히든)' : '');
 const SHOKA_TL = 5; // 성영의 서가 챌린지 턴 제한(사용자 2026-10-18: '서가 챌린지는 5턴 — 5턴 내 최대 딜과 안정 클리어로 구분')
 const bossTL = b => b ? (+b.turn_limit>0 ? +b.turn_limit : bossCat(b)==='shoka' ? SHOKA_TL : 0) : 0;
 const CONTENT_KR = c => (c||'').replace('星詠みの書架','성영의 서가').replace(/^廻生$/,'회생(과거와의 결투)').replace(/^顕現/,'현현').replace(/^外史/,'외사');
@@ -2440,10 +2441,10 @@ function renderCustomList(){
 /* ---------- 보스 탭 ---------- */
 let curBoss = null;
 function renderBossList(){
-  { const sel = $('#bossFilter'); if(sel && sel.options.length<=1){ const cnt = {}; for(const b of BOSSES){ const k = bossCat(b); cnt[k] = (cnt[k]||0)+1; } sel.innerHTML = '<option value="">모든 콘텐츠</option>' + BOSS_CATS.filter(([k])=>cnt[k]).map(([k,v])=>`<option value="${k}">${esc(v)} (${cnt[k]})</option>`).join(''); } }
-  const f=$('#bossFilter').value, q=normBoss($('#bossQ').value);
-  const list=BOSSES.filter(b=>(!f||bossCat(b)===f) && (!q || bossHay(b).includes(q)));
-  $('#bossList').innerHTML=list.map(b=>`<button type="button" class="bossitem" data-boss="${esc(b.id)}" aria-current="${curBoss===b.id}"><div class="bn">${esc(b.name_kr)}</div><div class="bc">${esc(CONTENT_KR(b.content))} · 약점 ${b.weak.length?b.weak.map(t=>E.ELEM_KR[t]||E.WT_KR[t]).join('·'):'없음'}</div></button>`).join('') || '<div class="hint">일치하는 보스가 없습니다.</div>';
+  { const sel = $('#bossFilter'); if(sel && sel.options.length<=1){ const cnt = {}; for(const b of BOSSES){ const k = bossTop(b); cnt[k] = (cnt[k]||0)+1; } sel.innerHTML = '<option value="">모든 콘텐츠</option>' + BOSS_TOP.filter(([k])=>cnt[k]).map(([k,v])=>`<option value="${k}">${esc(v)} (${cnt[k]})</option>`).join(''); } }
+  const f=$('#bossFilter').value, q=normBoss($('#bossQ').value), ord = Object.fromEntries(BOSS_TOP.map(([k],i)=>[k,i]));
+  const list=BOSSES.filter(b=>(!f||bossTop(b)===f) && (!q || bossHay(b).includes(q))).sort((a,b)=>(ord[bossTop(a)]-ord[bossTop(b)]) || bossSub(a).localeCompare(bossSub(b), 'ko', {numeric:true})); // 대분류 → 소분류 순(2026-10-18)
+  $('#bossList').innerHTML=list.map(b=>`<button type="button" class="bossitem" data-boss="${esc(b.id)}" aria-current="${curBoss===b.id}"><div class="bn">${esc(b.name_kr)}</div><div class="bc">${esc(BOSS_CAT_KR2(b))} · 약점 ${b.weak.length?b.weak.map(t=>E.ELEM_KR[t]||E.WT_KR[t]).join('·'):'없음'}</div></button>`).join('') || '<div class="hint">일치하는 보스가 없습니다.</div>';
   if(!curBoss && list.length){ curBoss=list[0].id; renderBossList(); return; }
   renderBossDetail();
 }
@@ -2464,7 +2465,7 @@ function renderBossDetail(){
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button type="button" class="btn primary" id="bossGo">이 보스로 편성 추천</button>${b.source?`<a href="${esc(b.source)}" target="_blank" rel="noopener" class="hint">출처: altema</a>`:''}</div>`;
 }
 const normBoss = t => String(t||'').normalize('NFKC').toLowerCase().replace(/[\s·・()（）\-]/g,'');
-const bossHay = b => normBoss([b.name_kr, b.name_jp, b.id, CONTENT_KR(b.content), b.content, BOSS_CAT_KR[bossCat(b)]].join(' '));
+const bossHay = b => normBoss([b.name_kr, b.name_jp, b.id, CONTENT_KR(b.content), b.content, BOSS_CAT_KR[bossCat(b)], BOSS_CAT_KR2(b)].join(' ')); // 소분류(외사 3탄·회생 시련 이름 등)로도 검색
 /* 보스 핵심 요약(편성 탭, 사용자 '보스는 있는 내용만 보내 주고 핵심 요약'): 약점·내성, HP, 부위별 통하는 공격, 필요 요소, 기믹 3개, 공략 한 줄 */
 function bossSumHtml(b){
   const chips = (lab, arr, cls) => (arr||[]).length ? `<span class="bsl">${lab}</span>${arr.map(t=>`<span class="rel ${cls}">${esc(E.ELEM_KR[t]||E.WT_KR[t]||t)}</span>`).join('')}` : '';
