@@ -2429,7 +2429,7 @@ function battleSim(N, o){
         if(o.hasSB && s1>=100) useSB(true, r.fin); }
       if(op==='stack'){ g1-=R.cost; e1=1; rec.stack=true; }
       if(op!=='af' && o.hasSB && !rec.sb && s1>=100) useSB(false);
-      const nd = op==='af' ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1)*(o.rmp ? o.rmp(t) : 1); d += nd; // 누적 효과 예열(rmp) rec.nd = nd; rec.L = L();
+      const nd = op==='af' ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1)*(o.rmp ? o.rmp(t) : 1); d += nd; rec.nd = nd; rec.L = L(); // 누적 효과 예열(rmp). 2026-10-18 버그: 이 두 줄이 주석 안에 들어가 실전 딜 비중(bsim.per)에서 평상 턴이 빠졌었음
       if(op!=='af'){ s1 = Math.min(100, s1 + o.sbAct*o.front); g1 = Math.min(100, g1 + o.afGain); } else s1 = Math.min(100, s1); aw1 = Math.max(0, aw1-1);
       rec.d = d; rec.g = g; rec.s = s;
       const nx = f(t+1, g1, s1, e1, aw1, ou1), v = d + nx.v;

@@ -167,7 +167,12 @@ def _calc_view(o):
         return d
     if isinstance(o,list): return [_calc_view(x) for x in o]
     return o
-calc_ver=hashlib.sha1((js(_calc_view(chars))+js(bosses)+js(_bfx)+rd('engine.js')+rd(os.path.join('data','meta_decks.json'))).encode('utf-8')).hexdigest()[:12] # 추천 덱도 탐색 시작점(seeds)이라 포함
+# 보스 흉성 trigger(연전 편성에서 앞 전투가 붙이는 흉성 판정, 앱 전용 — 엔진 계산과 무관)는 계산 버전에서 뺌(2026-10-18)
+def _boss_view(o):
+    if isinstance(o,dict): return {k:_boss_view(v) for k,v in o.items() if k!='trigger'}
+    if isinstance(o,list): return [_boss_view(x) for x in o]
+    return o
+calc_ver=hashlib.sha1((js(_calc_view(chars))+js(_boss_view(bosses))+js(_bfx)+rd('engine.js')+rd(os.path.join('data','meta_decks.json'))).encode('utf-8')).hexdigest()[:12] # 추천 덱도 탐색 시작점(seeds)이라 포함
 head=head.replace('<title>','<meta name="eden-calc" content="'+calc_ver+'">\n<title>',1)
 out=head+rd('app.css')+'\n</style></head><body>\n'+rd('body.html')
 out+='<script type="application/json" id="db-chars">'+js(chars)+'</script>\n'

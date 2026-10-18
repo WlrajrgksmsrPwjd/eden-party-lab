@@ -234,6 +234,7 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - buff_acts 행동 `aw:'auto'`: 성도각성(스텔라 보드 어빌리티 획득)이면 개전 자동, 아니면 k(버프 행동, mp·dur) — 빙무의 가희 機略.
 - state `party_off`: 상태가 꺼지면 같이 꺼지는 파티 버프 — 다른 아군이 받는 몫도 상태 가동률만큼(예전엔 자기 공격에서만 꺼짐).
 - 보스 흉성 `fx.counter {fixed, per:'attack', skip:['af','sb']}` → 보스 `counter`: 평상 턴 공격 실행 수(ev.atkN) × fixed 피해, 턴당 6번 넘으면 점수 감점(회복 2등급 이상이면 절반)·경고.
+- 보스 `gauntlet` {n, absorb_prev, note_kr, src}: N연전(앱 '연전 편성'). 흉성 `trigger`(앞 전투를 이 조건으로 격파하면 다음 전투에 붙음, 앱 전용·계산 버전 제외): `{kt_le:10}`(10턴 안 격파 — 11턴 넘겨 이긴다고 보고 안내만), `{weak_hit:true}`(약점 공격 → 흡수, absorb_prev로), `{af_turn_hp:0.6}`(AF 턴 피해 ≥ 라이프 1개 HP × 0.6), `{reversal:true}`(버프·디버프 리버설 — 태그 *reversal*·SB/주력 문구), `{zone:'elem'|'nonelem'}`(그 종류 존 전개 — 평상·SB 존), `{atk_n:9}`(평상 턴 공격 실행 수 ≥ 9).
 
 ## buff_acts.json attack 행동 위력
 `k: "attack"` 행동에 `el`(속성/none) `wt`(slash/pierce/blunt/magic) `size` `mult` `hits`가 있으면 그 위력으로 계산(허수아비 AF 행동, 평상 턴 시뮬은 주력 대비 위력 비율, 최대 1). 없으면 특대 1배.
