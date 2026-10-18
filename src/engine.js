@@ -3004,7 +3004,7 @@ function dummySim(o){
   let best = run(null, castN);
   if(!o.quick) for(const j of prio){ const L = B[j] ? B[j].steps.length : 0; if(!L) continue;
     const dps = (team[j].roles||[]).includes('dps'); // 딜러: 안 쓰기(셋 이상이면 하나만도), 서포터: 하나만(둘 이상일 때) — 중간 개수는 차이가 작고 계산이 길어짐
-    const opts = dps ? (L>=3 ? [0, 1, 2] : [0]) : (L>=3 ? [1, 2] : L>=2 ? [1] : []); // 2개까지(2026-10-16: 뇌 파티처럼 버프 행동이 많은 조합은 2개 쓰는 쪽이 가장 높은 경우가 많음)
+    const opts = dps ? (L>=3 ? [0, 1, 2] : L>=2 ? [0, 1] : [0]) : (L>=3 ? [1, 2] : L>=2 ? [1] : []); // 2개까지(2026-10-16: 뇌 파티처럼 버프 행동이 많은 조합은 2개 쓰는 쪽이 가장 높은 경우가 많음), 딜러 행동 2개면 1개만도(2026-10-18)
     if(B[j] && B[j].nFront && B[j].nFront < L){ if(!opts.includes(B[j].nFront)) opts.push(B[j].nFront); if(B[j].nFront+1 < L && !dps) opts.push(B[j].nFront+1); } // 존 전개·각성(속성 변환) 행동까지만 쓰는 계획
     for(const k of opts){ if(k===castN[j] || k>slotF[j]) continue; const cn = castN.slice(); cn[j] = k; const r = run(null, cn); if(r.total > best.total*1.0005){ best = r; castN = cn; } } }
   // 주력이 아닌 스킬로 독·페인을 거는 캐릭터: 첫 공격 행동을 그 스킬에 쓰는 쪽과 안 쓰는 쪽 중 높은 것
