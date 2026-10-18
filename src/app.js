@@ -987,6 +987,8 @@ function dmgShares(ev, mode){
   else { per = ev.sb.per; lab = 'SB 턴 비중'; }
   const t = sum(per)||1; return {s: per.map(v=>(v||0)/t), lab};
 }
+// 역할 표시: 도발·수호가 있으면 '탱커'를 앞에(2026-10-18 — 보스 공격이 강한 보스에서 탱커가 들어갔는지 바로 보이게)
+const rolesOf = c => { const r = (c.roles||[]).slice(), tk = (c.sup && (c.sup.taunt>=2 || c.sup.guard>=2)) || r.includes('tank'); return tk ? ['tank'].concat(r.filter(x=>x!=='tank')) : r; };
 function memHtml(x, i, key, focus, lockSet){
   const c=x.team[i], ev=x.ev, cs=ev.sb.cores[i], ds=dmgShares(ev, (RES.get(key)||{}).mode || state.plan.mode), share=ds.s[i];
   const gq = cs&&cs.gq;
@@ -995,7 +997,7 @@ function memHtml(x, i, key, focus, lockSet){
   const notMine = x.shared && x.real && !x.mine[i];
   return `<div class="mem${lockSet&&lockSet.has(c.id)?' locked':''}" role="button" tabindex="0" aria-expanded="false" data-sk="${key}" data-i="${i}" title="눌러서 추천 세팅 보기">
     <div class="nm">${esc(c.name)}${notMine?' <span class="badge warn">미보유</span>':''}</div>
-    <div class="meta">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${(c.roles||[]).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
+    <div class="meta">${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||c.weapon)} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier)}</span> ${rolesOf(c).slice(0,2).map(r=>esc(ROLE_KR[r]||r)).join('·')}</div>
     <div class="sk">${cs?(cs.usingSB?'SB ':'')+esc(cs.skill||''):''}${cs&&cs.rel?` · <b>${esc(REL_KR[cs.rel])}</b>`:''}${ev.sbOff&&ev.sbOff[i]?' <span class="badge" title="성도 스킬도 스킬 칸 1개라, 빼고 그 칸에 버프·공격 스킬을 하나 더 다는 편이 이 조합에선 나음(이 캐릭터는 SB 안 씀)">성도 스킬 안 씀</span>':''}${ev.uni&&ev.uni[i]===true?' <span class="badge" title="전열의 다른 가창 캐릭터가 歌唱 중일 때 エルの唄가 エルの唄・ユニゾン으로 바뀜 → 재공격·AF 콤보 증가량 2배·스킬 위력 1.3배·아군 크리 대미지 50%">유니즌</span>':ev.uni&&ev.uni[i]===false?' <span class="badge" title="다른 가창 캐릭터보다 먼저 혼자 歌唱(아군 주는 대미지 50%·AF 콤보 +3%p)하는 편이 이 조합에선 나음 → 재공격 없음">혼자 가창</span>':''}</div>
     ${skL ? `<div class="sk" title="주력·성도 스킬 말고 스킬 칸에 다는 버프·공격 스킬 (${es.tot}칸 중 ${es.n}칸)">+ ${skL}</div>` : ''}
     ${gq && glText(gq) && glText(gq)!=='글래 없음' ? `<div class="sk">글래 ${esc(glText(gq))}${gq.painOK||!(gq.pa||gq.po)?'':' (독·페 미부여)'}</div>` : ''}
@@ -1326,7 +1328,7 @@ function cardHtml(x, key, o){
       <div class="setup" data-for="${key}" hidden></div>
       <div class="order hint">왼쪽부터 이 순서로 전방에 · 이름을 누르면 추천 세팅${shared?'':` · 후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}`).join(', '):'—'}`}</div>
       ${keyMetrics(x, o.mode, ref)}
-      ${x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(보스 HP 1.3배 기준, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}</div>` : ''}
+      ${x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(${x.kt.bars ? `HP ${x.kt.bars}줄 — 목숨·전회복·스토퍼를 넣어` : '보스 HP 1.3배 기준'}, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}</div>` : ''}
       ${warns.length?`<div class="warns">${wHtml(wShow)}${wMore>0?`<span class="warn more">외 ${wMore}개 (자세히 보기)</span>`:''}</div>`:''}
       <details class="why"><summary>자세히 보기 · 턴별 화력${showDummy(o.mode)?' · 최고점':''}</summary>
         <div class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span>${sbz&&sbz.how&&sbz.level?` · 존 ${esc(sbz.how)}`:''}</div>
