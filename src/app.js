@@ -1329,7 +1329,7 @@ function cardHtml(x, key, o){
       <div class="setup" data-for="${key}" hidden></div>
       <div class="order hint">왼쪽부터 이 순서로 전방에 · 이름을 누르면 추천 세팅${shared?'':` · 후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}`).join(', '):'—'}`}</div>
       ${keyMetrics(x, o.mode, ref)}
-      ${x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(${x.kt.bars ? `HP ${x.kt.bars}줄 — 목숨·전회복·스토퍼를 넣어` : '보스 HP 1.3배 기준'}, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}</div>` : ''}${zlLine(ev)}${afTimingLine(x, o)}${singLine(x)}
+      ${x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(${x.kt.bars ? `HP ${x.kt.bars}줄 — 목숨·전회복·스토퍼를 넣어` : '보스 HP 1.3배 기준'}, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}${+x.kt.hg>0 && +x.kt.hg<0.8 ? ` <span class="warn">타수 기믹으로 피해 ×${x.kt.hg} — 다단·행동 수 부족</span>` : ''}</div>` : ''}${zlLine(ev)}${afTimingLine(x, o)}${singLine(x)}
       ${warns.length?`<div class="warns">${wHtml(wShow)}${wMore>0?`<span class="warn more">외 ${wMore}개 (자세히 보기)</span>`:''}</div>`:''}
       <details class="why"><summary>자세히 보기 · 턴별 화력${showDummy(o.mode)?' · 최고점':''}</summary>
         <div class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span>${sbz&&sbz.how&&sbz.level?` · 존 ${esc(sbz.how)}`:''}</div>
@@ -1639,11 +1639,12 @@ function reviveTxt(team){
 function turnRecTxt(r, ev, team, mainI){
   const g = Math.round(+r.g||0), bz = r.bz && r.bz!==true ? ` <span class="hint">(보스 존 ${esc(r.bz)})</span>` : '';
   if(r.af){ const sb = r.sb==='af' ? ` → AF 안에서 <b>SB</b>${r.combo ? ` (콤보 ${Math.round(r.combo*100)}%)` : ''}` : '';
-    return `<b>${r.t}턴</b>: <b class="afk">AF 발동</b> (게이지 ${Math.round(+r.af||g)}%${r.afL>=2?' · 극 존':''})${sb} · ${fmtN(r.d)}${r.ctrAF?' · AF 뒤 요격':''}${bz}`; }
+    return `<b>${r.t}턴</b>: <b class="afk">AF 발동</b> (게이지 ${Math.round(+r.af||g)}%${r.afL>=2?' · 극 존':''})${sb} · ${fmtN(r.d)}${r.ctrAF?' · AF 뒤 요격':''}${hgT(r)}${bz}`; }
   const sb = r.sb==='turn' ? `<b>SB</b> + ` : '', st = r.stack ? '게이지 축적 소비 · ' : '';
   const full = r.afFull>0 ? ` <span class="warn">AF 게이지가 꽉 차 피해 감소</span>` : '';
-  return `<b>${r.t}턴</b>: ${st}${sb}평상 공격 (AF 게이지 ${g}%${g>=50 && !ev.afOff ? ' — 켤 수 있지만 모아 둠' : ''}) · ${fmtN(r.d)}${full}${bz}`;
+  return `<b>${r.t}턴</b>: ${st}${sb}평상 공격 (AF 게이지 ${g}%${g>=50 && !ev.afOff ? ' — 켤 수 있지만 모아 둠' : ''}) · ${fmtN(r.d)}${hgT(r)}${full}${bz}`;
 }
+const hgT = r => +r.hg>0 && +r.hg<0.995 ? ` <span class="hint">(타수 기믹 ×${r.hg})</span>` : '';
 /* 처치 계획(engine killTurnsM log): 실전 N턴 뒤 AF 주기·아껴 둔 AF·스토퍼·목숨 처치·존 단계를 묶어서 */
 function killPlanTxt(kt, N){
   const out = [], L = kt.log; let run = null;
@@ -1651,10 +1652,10 @@ function killPlanTxt(kt, N){
   const evTxt = e => e.k==='stop' ? `HP ${e.hp}% 스토퍼` : e.k==='kill' ? (e.last ? '<b>처치</b>' : `목숨 ${e.n} 깸 → 부활`) : e.k==='phase' ? `보스 존·상성 바뀜${e.z?' → '+esc(e.z):''}` : '';
   for(const l of L){ const evs = l.ev.filter(e=>e.k!=='phase'), ph = l.ev.find(e=>e.k==='phase');
     if(ph){ flush(); out.push(`<span class="hint">${l.t}턴부터 ${evTxt(ph)}</span>`); }
-    if(!l.af && !evs.length && !l.sb){ if(run && run.b===l.t-1) { run.b = l.t; run.hold = run.hold || !!l.hold; } else { flush(); run = {a:l.t, b:l.t, hold: !!l.hold}; } continue; }
+    if(!l.af && !evs.length && !l.sb && !(+l.hg<0.9)){ if(run && run.b===l.t-1) { run.b = l.t; run.hold = run.hold || !!l.hold; } else { flush(); run = {a:l.t, b:l.t, hold: !!l.hold}; } continue; }
     flush();
     const what = l.af ? `<b class="afk">AF</b>${l.sb==='af'?' + SB':''}` : l.sb==='turn' ? 'SB + 평상 공격' : '평상 공격';
-    out.push(`<b>${l.t}턴</b>: ${what}${l.t<=N?' <span class="hint">(위 계획)</span>':''}${evs.length ? ' → '+evs.map(evTxt).join(', ') : ''}${l.cut ? ` <span class="hint">(보스 피해 경감 ×${l.cut})</span>` : ''}`);
+    out.push(`<b>${l.t}턴</b>: ${what}${l.t<=N?' <span class="hint">(위 계획)</span>':''}${evs.length ? ' → '+evs.map(evTxt).join(', ') : ''}${l.cut ? ` <span class="hint">(보스 피해 경감 ×${l.cut})</span>` : ''}${hgT(l)}`);
     if(out.length>=14){ out.push('<span class="hint">…</span>'); run = null; break; } }
   flush();
   if(!kt.sure) out.push('<span class="warn">99턴 안에 못 깰 수 있음</span>');
@@ -2525,7 +2526,7 @@ function bossSumHtml(b){
   const hpIn = noHp && !(b.hp_model && +b.hp_model.bar>0) ? `<div class="bsneeds"><span class="bsl">HP 직접 입력</span><input type="number" min="0" step="0.01" data-myhp="1" value="${esc(myHp||'')}" placeholder="한 줄 HP(억)" style="width:120px" aria-label="보스 HP 직접 입력(억)"> <span class="hint">공략에 HP가 없어 처치 턴을 못 냅니다 — 알고 있으면 넣어 주세요${b.hp_model && +b.hp_model.bars>1 ? ` (× ${b.hp_model.bars}줄로 계산)` : ''}</span></div>` : '';
   return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억${b.hp_user?' (직접 입력)':b.hp_conf==='low'?' (추정)':''}</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
     <div class="bsrels">${rels || (b.affinity_none ? '<span class="hint">약점·내성 없음 (전 속성 보통으로 계산)</span>' : '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>')}${b.weak_rotating ? ' <span class="need">약점이 턴마다 바뀜</span>' : ''}</div>${b.affinity_note_kr ? `<p class="hint bsaff">${esc(String(b.affinity_note_kr).split(/(?<=[.다요음])\s+/).slice(0,2).join(' '))}</p>` : ''}${parts}
-    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpIn}${hpModelHtml(b)}${threatHtml(b)}${zoneBossHtml(b)}
+    ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}${hpIn}${hpModelHtml(b)}${hitGimHtml(b)}${threatHtml(b)}${zoneBossHtml(b)}
     ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}${modsHtml(b)}`;
 }
 /* 보스 HP 구조·위협(2026-10-18, 사용자 '부활·스택 기믹', '갑개룡은 아파서 탱커 필요'): 처치 턴 계산(engine killTurnsM)·탱커/회복 감점이 무엇을 보고 있는지 요약에 표시 */
@@ -2535,6 +2536,11 @@ function hpModelHtml(b){ const h = b.hp_model; if(!h || !(+h.bars>1 || h.reset |
   if((h.stopper||[]).length) bits.push(`HP ${h.stopper.join('%·')}% 스토퍼(그 턴 남은 피해는 버려짐)`);
   if(+h.kt_min>0) bits.push(`최소 ${h.kt_min}턴`); for(const q of (h.dmg_cut||[]).filter(q=>+q.turns>0)) bits.push(`${q.when==='revive'?'부활 뒤':'개전'} ${q.turns}턴 피해 ×${q.x}`);
   return `<div class="bsneeds"><span class="bsl">HP 구조</span><span class="hint">${esc(bits.join(' · '))}${h.note_kr?` — ${esc(String(h.note_kr).split(/(?<=[.다요])\s+/)[0])}`:''}</span></div>`; }
+/* 타수로 벗기는 기믹(2026-10-19, engine hgList): 스택·횟수 배리어·연격 경감 — 처치 턴·실전 N턴이 그 턴 타수로 계산한다는 것을 요약에 */
+function hitGimHtml(b){ const L = E.hgList ? E.hgList(b) : []; if(!L.length) return '';
+  const on = g => g.on==='revive' ? '부활 뒤 ' : g.on==='revive2' ? '2회 부활 뒤 ' : +g.from>1 ? g.from+'턴째 ' : '';
+  const t = g => g.cut ? `${on(g)}경감 배리어 ${g.s0}회(피해 ×${g.x}${+g.turns>0?`, 최대 ${g.turns}턴`:''})` : (g.label || (g.k==='multihit' ? `연격 경감 ${Math.round(g.step*100)}%씩` : g.k==='barrier' ? `배리어 ${g.s0}회` : `스택 ${g.s0}`));
+  return `<div class="bsneeds"><span class="bsl">타수 기믹</span>${L.map(g=>`<span class="need">${esc(t(g))}</span>`).join(' ')} <span class="hint">— 그 턴 타수(행동 수)로 벗기며 계산 → 다단·재공격이 많은 조합이 유리</span></div>`; }
 /* 가창 캐릭터(2026-10-18 사용자 확인: 가창 중엔 평상 턴·AF 행동 불가, SB는 가능 → 刻唄の力 글래스터): 가창하는지·안 하는지 */
 function singLine(x){ const ev = x.ev, T = x.team; if(!T.some(c=>c.song)) return '';
   const bits = T.map((c,i)=>{ if(!c.song) return null; const off = ev.songOff && ev.songOff[i], up = ev.sim && ev.sim.songUp ? ev.sim.songUp[i] : null;
@@ -2577,7 +2583,8 @@ function effBoss(b, sel){
     bzS = Object.assign({}, bzS, {bossZoneLate: b.zone_late.map(q=>Object.assign({}, q, {bar, bars, note: undefined}))}); }
   { const af = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).find(q=>q && q.when==='af_full' && +q.x>0 && +q.x<1); if(af) bzS = Object.assign({}, bzS, {afFull: +af.x}); } // AF 게이지가 꽉 차면 아군 주는 피해 ×x
   if(b && b.hp_model && b.hp_model.protect) bzS = Object.assign({}, bzS, {protect: b.hp_model.protect}); // 공격 행동 수로 내려가는 보스 내성 단계(마크바브) → 실전 N턴
-  { const cw = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).filter(q=>q && /^start/.test(String(q.when||'start')) && q.x!=null && +q.x>=0 && +q.x<1 && +q.turns>0).map(q=>({t:+q.turns, x:+q.x})); if(cw.length) bzS = Object.assign({}, bzS, {cutWin: cw}); } // 개시 피해 경감 구간 → 실전 N턴 계획이 그 뒤에 AF
+  { const cw = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).filter(q=>q && /^start/.test(String(q.when||'start')) && q.x!=null && +q.x>=0 && +q.x<1 && +q.turns>0 && !(+q.hits>0)).map(q=>({t:+q.turns, x:+q.x})); if(cw.length) bzS = Object.assign({}, bzS, {cutWin: cw}); } // 개시 피해 경감 구간 → 실전 N턴 계획이 그 뒤에 AF (횟수 배리어는 아래 타수 기믹)
+  { const hg = b && E.hgList ? E.hgList(b) : []; if(hg.length) bzS = Object.assign({}, bzS, {hitGim: hg}); } // 타수로 벗기는 기믹(스택·횟수 배리어·연격 경감, 2026-10-19) → 실전 N턴·처치 턴
   if(!b || !(b.modifiers||[]).length) return {boss:b, S:bzS, pledge:null};
   const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:bzS, pledge:null};
   const P = state.plan, B2 = JSON.parse(JSON.stringify(b)), S2 = Object.assign({}, bzS); let pl = null, extra = 0, kmin = 0;
