@@ -48,7 +48,10 @@
     ],
     "strategy_kr": "전속성이 등배로 들어가므로 속성보다 '연격 횟수'가 핵심이다. 다단히트 캐릭터를 여럿 넣어 50스택의 障壁을 빠르게 벗기고, 내성이 떨어진 2턴 창에 화력을 집중한다. 스토퍼(75/50/10%) 직후 終焉の息吹가 오므로 그 전에 HP를 풀로 채우고, 스토퍼 후 단체 고정 피해 2연타에 대비한다. 지성 디버프·수속성 내성 DOWN을 계속 유지하는 운영이 유저 공략에서 안정적이라고 보고된다. 봉인 대책(2페이즈 羈絆の陰爪)도 준비한다.",
     "source": "https://altema.jp/anaden/meiryuou",
-    "hp": 0.21
+    "hp": 0.21,
+    "affinity_note_kr": "스텔라·챌린지 모두 약점·내성·무효·흡수 없음. 대신 冥竜王の障壁: 개시 50 축적(최대 50), 축적에 따라 물리·전속성 내성 UP, 피격 1히트당 1 소모 → 0이 되면 2턴간 물리·전속성 내성 DOWN 후 50으로 복구(연격 필수). 환경 효과로 적이 받는 대미지 50% DOWN.",
+    "affinity_none": true,
+    "affinity_src": "https://altema.jp/anaden/meiryuou"
   },
   {
     "id": "flamelord_stella",
@@ -92,7 +95,10 @@
     ],
     "strategy_kr": "스텔라는 화속성 파티가 정답이다. 화속성 다단히트로 ブレイズウォール 스택을 깎을 수 있고, 적이 깔아주는 極・烈火陣을 그대로 이용할 수 있다. 화 이외의 피해(독 포함)를 주면 상태이상 면역이 걸리므로 순수 화속성으로 통일한다. 1턴째 속도 디버프(대)가 치명적이라 디버프 내성 장비나 해제를 준비한다. 1회째 부활에서 버프가 전부 날아가므로 AF 게이지를 아껴 두었다가 2회째 부활(炎帝) 직후 AF로 한 번에 밀어붙인다.",
     "source": "https://altema.jp/anaden/flameload",
-    "hp": 120
+    "hp": 120,
+    "affinity_note_kr": "id가 가리키는 스텔라(HP 40억)는 약점·내성·무효·흡수 없음, 화속성 파티 권장(ブレイズウォール은 화속성 공격 행동마다 1 소모, 오라 爆熱の免疫: 화 이외 대미지에 상태이상 내성 UP). 물덱이 쓰이는 건 챌린지(스코어전, HP 88,719,344): 풍·지 무효, 화 흡수, 業火の鎧 전속성 내성 UP(대, 영속), 오라 灼熱の免疫(마법 대미지에 발동), 70%·50% 스토퍼 전회복 — 알테마 챌린지 편성은 극 수천진 + 약점 간파(水)로 물 약점을 부여하는 물 파티. 베리하드(HP 10,233,191): 풍·지 내성, 화 흡수, 물 파티 권장. 스코어전을 계산하려면 variants.challenge 값을 쓰는 별도 항목이 필요.",
+    "affinity_none": true,
+    "affinity_src": "https://altema.jp/anaden/flameload"
   },
   {
     "id": "daath",
@@ -262,7 +268,10 @@
           }
         }
       }
-    ]
+    ],
+    "affinity_note_kr": "챌린지·베리하드 모두 약점·내성·무효·흡수 없음(스텔라 표는 페이지에 없음). 단 개시 시 月光陣【月影】: 물리 내성 100% UP + 마법 내성 100% UP → 내성 디버프·화력 버프를 겹치거나 존 교체로 돌파. 오라 神厭: 독·페인 대미지를 받으면 아군 전체 주는 대미지 90% DOWN.",
+    "affinity_none": true,
+    "affinity_src": "https://altema.jp/anaden/tukuyominosyo"
   },
   {
     "id": "phantom_tilda",
@@ -467,7 +476,10 @@
     ],
     "strategy_kr": "양손을 때리면 반격(HP 30% 드레인 / MP 999)이 오므로 단체 공격으로 본체만 노리는 것이 기본이다. 전체 공격을 쓰려면 도발 탱커에게 반격을 몰아주고 MP 회복 수단을 둔다. 개시 완·지 디버프(대, 4턴)를 해제하거나 버프로 덮고, 기절이 잦으니 기절 내성/상태이상 무효를 준비한다. 공격은 대부분 비율 피해라 최대HP를 과하게 올릴 필요는 없고 회복으로 관리한다. 50% 스토퍼 전후로 AF를 배분한다.",
     "source": "https://altema.jp/anaden/motherfatenosyo",
-    "hp": 0.62
+    "hp": 0.62,
+    "affinity_note_kr": "스텔라 표 하나에 본체·오른손·왼손을 묶어 약점·내성·무효·흡수 모두 없음. 속성 변화 기믹 없음. 양손은 개시 시 물마 요격(턴당 1회) — 손을 치지 말 것.",
+    "affinity_none": true,
+    "affinity_src": "https://altema.jp/anaden/motherfatenosyo"
   },
   {
     "id": "eternal_ruler",
@@ -842,7 +854,10 @@
     ],
     "strategy_kr": "약점이 없고 촉수 구간에서 화·수·풍·지에 내성이 생기므로 晶·음·뇌 속성 파티가 가장 안정적이다. 混沌陣 아래서는 AF 게이지가 거의 안 차므로 AF 한 번에 의존하기보다 스킬 딜과 SB 위주로 설계한다. 5번째 행동의 최대HP 99% 필살기 뒤에 완·지·속 디버프가 붙으니 수호/배리어로 받고 즉시 회복·디버프 해제를 한다. 스토퍼(85/50/25%)마다 混沌陣이 다시 깔리므로 자기 존을 쓰려면 재전개 수단이 필요하다(단 ベリーハード 서약은 ZONE 금지).",
     "source": "https://altema.jp/anaden/kontonnosyo",
-    "hp": 3.52
+    "hp": 3.52,
+    "affinity_note_kr": "기본(챌린지·베리하드 표) 약점·내성·무효·흡수 없음. 베리하드 특징: HP 85%~50%와 25% 이하(촉수 출현 구간)에서 화·수·지·풍 내성 추가 → 처음부터 晶·음·뇌로 가는 걸 권장. 混沌陣은 네 속성(화·수·지·풍) 주는 대미지 UP이지만 AF 게이지 상승량 대폭 DOWN. 챌린지 표엔 특징 칸이 없어 촉수 내성이 챌린지에도 있는지는 미기재(본편 83장 페이지도 촉수는 화·수·풍·지 내성).",
+    "affinity_none": true,
+    "affinity_src": "https://altema.jp/anaden/kontonnosyo"
   },
   {
     "id": "kaisei_reichou_ex5_sophie",
@@ -851,7 +866,12 @@
     "content": "廻生",
     "level": 0,
     "weak": [],
-    "resist": [],
+    "resist": [
+      "slash",
+      "pierce",
+      "blunt",
+      "magic"
+    ],
     "null": [],
     "absorb": [],
     "phases": "5웨이브 연전(EPS-209 Murphy → ESP-014 Le Blanc → EPS-245 Quadoxin → EPS-227 Patel → ソフィ). 최종: ソフィ는 약점·내성 없음, エイドス 약점 수·지·음 / 흡수 화·풍·뇌·晶, ヒュレー 약점 화·풍·뇌·晶 / 흡수 수·지·음, 양쪽 모두 참·타·돌·마법 내성. ソフィ HP 0 시 Logos 스택, Eternal로 1회 완전 부활. Pathos 5 스택(에이도스/휠레 스킬 게이지 파괴)으로 전투 종료.",
@@ -934,7 +954,9 @@
     ],
     "hp": 2670,
     "hp_src": "https://anothereden.game-info.wiki/d/%ce%ee%c4%b9%a4%ce%cc%bf%cb%a1EX5",
-    "hp_conf": "low"
+    "hp_conf": "low",
+    "affinity_note_kr": "최종 웨이브: 소피는 약점·내성 없음. 에이도스 = 약점 수·지·음 / 흡수 화·풍·뇌·晶 / 내성 참·타·돌·마법, 휠레 = 약점 화·풍·뇌·晶 / 흡수 수·지·음 / 내성 참·타·돌·마법(서로 거울). 모든 적에 오라 造られし悪意 전속성 내성 UP(대, 영속). top-level resist는 HP 비중이 큰 에이도스·휠레 기준(소피는 내성 없음) — 속성 약점·흡수는 parts_affinity 참고. 앞 웨이브: Murphy 전속성 내성·약점 없음, Le Blanc 매 턴 약점 변화(50% 초과 지·화, 이하 뇌·음·晶 중) 약점 외 전부 내성, Quadoxin 참·돌 약점(그 턴 가장 많이 맞은 무기 타입 내성 버프), Patel 마법 내성(마법 피격 시 마법 내성 90% UP).",
+    "affinity_src": "https://altema.jp/anaden/reichounomeihouex5"
   },
   {
     "id": "kaisei_reichou_ex4_kokui",
@@ -1111,10 +1133,30 @@
       "전 웨이브 완력/지성 디버프 필요(力の呪·知の呪 그라스타)",
       "미션: 4인 이하·15턴 이내"
     ],
-    "needs": {"barrier_pierce": false, "cleanse": false, "guard": false, "status_immune": true, "break": false, "burst": true, "sustain": false, "zone_control": true, "single_target": true, "multi_target": true},
-    "recommended": ["マリエル", "ミュルス(AS)", "ガリユ", "ロゼッタ(AS)", "ライザ"],
+    "needs": {
+      "barrier_pierce": false,
+      "cleanse": false,
+      "guard": false,
+      "status_immune": true,
+      "break": false,
+      "burst": true,
+      "sustain": false,
+      "zone_control": true,
+      "single_target": true,
+      "multi_target": true
+    },
+    "recommended": [
+      "マリエル",
+      "ミュルス(AS)",
+      "ガリユ",
+      "ロゼッタ(AS)",
+      "ライザ"
+    ],
     "strategy_kr": "4웨이브까지 AF를 아껴두었다가 최종 웨이브 개시에 ギルドナ를 먼저 떨어뜨리는 운영이 정석이다(선제 烈火陣 전개로 아군 존이 덮이므로). 이후 オーガベイン은 青ゲージ 카운트가 끝나기 전에 HP를 깎아 저지하거나 50% 스토퍼로 행동을 끊고, AF 봉인이 걸리기 전에 AF를 사용한다. 보스별로 완력/지성 디버프를 맞춰 넣고(ベイン=완력, ギルドナ=지성), 기절 대책을 준비한다. 공식 예시는 마법 존 4인(マリエル·ミュルス(AS)·ガリユ·ロゼッタ(AS)) 구성으로 행동 순서를 マリエル≥ロゼッタ>ガリユ>ミュルス로 맞춘다.",
-    "source": "https://altema.jp/anaden/extreme7"
+    "source": "https://altema.jp/anaden/extreme7",
+    "affinity_note_kr": "최종 웨이브 オーガベイン·魔獣王ギルドナ 둘 다 약점·내성 없음(표에 무효·흡수 칸 없음). オーガベイン은 HP 50% 이하에서 매 턴 개시 시 누적 물리 내성 버프. 앞 웨이브: W1 魔獣ヴァレス·魔獣王 마법 약점 / W2 合成ドローン 화 약점, ヘレナ 풍 약점·지 내성 / W3 パルシファル王 풍 약점·지 내성, ファントム連結体 매 턴 약점 지→수→화→풍 순환(약점 외 속성 전부 내성).",
+    "affinity_none": true,
+    "affinity_src": "https://altema.jp/anaden/extreme7"
   },
   {
     "id": "kaisei_gouen_ex4_salamander",
@@ -1304,10 +1346,42 @@
       "W1 속도 빠름 → 속도 250~260 권장",
       "미션: 10턴 이내·4인 이하"
     ],
-    "needs": {"barrier_pierce": false, "cleanse": true, "guard": false, "status_immune": true, "break": false, "burst": true, "sustain": true, "zone_control": false, "single_target": false, "multi_target": true},
-    "recommended": ["ピチカ", "シュゼット", "ツキハ(ES)", "ガラムバレル", "イーファ(AS)", "ラディアス(AS)", "赤套の炎使い", "シュゼット(ES)", "ソイラ(AS)", "クロード(ES)", "ミストレア(AS)", "アィシャ", "チヨ", "フラムラピス", "キッド", "オルレイア", "アザミ(AS)"],
+    "needs": {
+      "barrier_pierce": false,
+      "cleanse": true,
+      "guard": false,
+      "status_immune": true,
+      "break": false,
+      "burst": true,
+      "sustain": true,
+      "zone_control": false,
+      "single_target": false,
+      "multi_target": true
+    },
+    "recommended": [
+      "ピチカ",
+      "シュゼット",
+      "ツキハ(ES)",
+      "ガラムバレル",
+      "イーファ(AS)",
+      "ラディアス(AS)",
+      "赤套の炎使い",
+      "シュゼット(ES)",
+      "ソイラ(AS)",
+      "クロード(ES)",
+      "ミストレア(AS)",
+      "アィシャ",
+      "チヨ",
+      "フラムラピス",
+      "キッド",
+      "オルレイア",
+      "アザミ(AS)"
+    ],
     "strategy_kr": "マザー는 비트가 살아 있는 동안 무적이므로 전체 공격으로 비트를 먼저 떨어뜨리고(2턴 후 부활), 그 사이 본체를 깎는다. 수면(揺監歌)·봉인(籠の中)이 전체로 들어오므로 수면 내성 배지를 상태이상 회복 캐릭터에게 우선 장비하고 2턴 연속 봉인에 대비한다. 2웨이브 マユの見た夢의 30% 스토퍼(최대HP 75% 피해+완·지 디버프)는 디버프 내성 그라스타로 받고 HP를 채워둔다. 전체적으로 속도 250 이상을 확보해 1웨이브를 선제하고, 돌격 존(ピチカ+シュゼット+ツキハ(ES)+ガラムバレル)이나 1턴 킬형 구성(イーファ(AS)+シュゼット(ES)) 등으로 10턴 이내를 노린다.",
-    "source": "https://altema.jp/anaden/dennouex4"
+    "source": "https://altema.jp/anaden/dennouex4",
+    "affinity_note_kr": "최종 웨이브 マザー·レフトビット·ライトビット는 약점·내성 칸이 모두 '-'(없음, 무효·흡수 칸 자체가 없음). ライトビット クオンタム・ガード가 적 전체에 전속성 내성 버프(양·턴 미기재). 앞 웨이브: アニムス 수 약점, 絶対零度の防衛機制 풍 약점, ジンバルド 풍 약점, マユの見た夢 약점 없음.",
+    "affinity_none": true,
+    "affinity_src": "https://altema.jp/anaden/dennouex4"
   },
   {
     "id": "kaisei_kyoufuu_ex4_sylph",

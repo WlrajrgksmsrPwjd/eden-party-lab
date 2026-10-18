@@ -3126,6 +3126,8 @@ function killTurns(ev, boss, margin){
   if(!(sus>0)) return {t:99, sure:false};
   const more = Math.ceil((need - cum)/sus); return fin({t: Math.min(99, t + more), sure: t + more <= 99});
 }
+/* 보스 '턴 단축'(2026-10-18, 추천 덱 대조: 결실 라디카에서 1턴에 잡는 불 덱보다 2턴 걸리는 덱이 1위): 예상 처치 턴(HP 아는 보스만)을 점수에 — × 처치 턴^−0.6(1턴 1, 2턴 0.66, 4턴 0.44). 같은 턴이면 원래 점수 순 */
+const ktFactor = (ev, boss) => { const k = killTurns(ev, boss); return k && k.t>0 ? Math.pow(Math.max(1, k.t), -0.6) : 1; };
 function partsEff(ev, boss){
   if(!boss || !Array.isArray(boss.parts) || !boss.parts.length) return 1;
   const per = (ev.bsim && Array.isArray(ev.bsim.per) && ev.bsim.per.length) ? ev.bsim.per : ((ev.normal && ev.normal.per) || []);
@@ -3222,7 +3224,7 @@ async function optimize(input, onProgress){
     if(pi!=null) return [preV[4*pi], preV[4*pi+1], preV[4*pi+2], preV[4*pi+3]];
     const tm = idxs.map(i=>pool[i]), ev = evalTeam(tm.map(o=>o.pc), tm.map(o=>o.prog), enemy, S, cap, ctx);
     // 4번째 값 = 보스 보정(필요 요소·부위별 공격·추천 캐릭터, 2026-10-17): 탐색 중에 바로 곱함 — 예전엔 마지막에 상위 400개를 다시 계산해 보스 모드가 오래 걸렸음
-    const pen = mode==='boss' ? needPenalty(ev, boss).f*(1+0.06*tm.filter(o=>recSet.has(o.pc.id)).length) : mode==='weak' ? weakFit(ev, enemy).f : 1;
+    const pen = mode==='boss' ? needPenalty(ev, boss).f*(1+0.06*tm.filter(o=>recSet.has(o.pc.id)).length)*ktFactor(ev, boss) : mode==='weak' ? weakFit(ev, enemy).f : 1;
     const r = [BR(ev), ev.sustain, ev.surv, pen];
     if(shard){ newK.push(ck); newV.push(r[0], r[1], r[2], r[3]); }
     return r;
@@ -3431,7 +3433,7 @@ async function optimize(input, onProgress){
     return {reserves, fixedBack};
   }
   const budPickFor = (team, progs, wq) => { // 결과 조합마다 버디 후보를 바꿔 계산해 그 성향 점수가 가장 높은 것
-    const scoreEv = ev => { const t = ev.surv/mt; let v = (wq.b*BR(ev)/mb + wq.s*ev.sustain/ms + wq.t*t); if((mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all'||mode==='boss') && t<0.25 && wq.t<0.5) v *= 0.85; return v*(mode==='boss' ? needPenalty(ev, boss).f : mode==='weak' ? weakFit(ev, enemy).f : 1); };
+    const scoreEv = ev => { const t = ev.surv/mt; let v = (wq.b*BR(ev)/mb + wq.s*ev.sustain/ms + wq.t*t); if((mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all'||mode==='boss') && t<0.25 && wq.t<0.5) v *= 0.85; return v*(mode==='boss' ? needPenalty(ev, boss).f*ktFactor(ev, boss) : mode==='weak' ? weakFit(ev, enemy).f : 1); };
     const evB = b => evalTeam(team,progs,enemy,S,cap, b ? ({...ctx, ...{buddy:{main:b, sub:null}}}) : ctx);
     let best = null;
     if(!budC || budC.length<2){ const b0 = budC && budC[0] ? budC[0] : (ctx.buddy && ctx.buddy.main) || null, ev = evB(b0); best = {ev, v: scoreEv(ev), b: b0}; }
@@ -3501,7 +3503,7 @@ async function perCharBest(input, onProgress){
     const key = mem.map(o=>o.pc.id).sort().join()+'|'+flg(), pi = preI.get(key);
     if(pi!=null) return [preV[4*pi], preV[4*pi+1], preV[4*pi+2], preV[4*pi+3]];
     const team = mem.map(o=>o.pc), ev = evalTeam(team, mem.map(o=>o.prog), enemy, S, cap, ctx);
-    const pen = mode==='boss' ? needPenalty(ev,boss).f * (1+0.06*team.filter(c=>recSet.has(c.id)).length) : mode==='weak' ? weakFit(ev, enemy).f : 1;
+    const pen = mode==='boss' ? needPenalty(ev,boss).f * (1+0.06*team.filter(c=>recSet.has(c.id)).length) * ktFactor(ev, boss) : mode==='weak' ? weakFit(ev, enemy).f : 1;
     const r = [BRv(ev), ev.sustain, ev.surv, pen];
     if(shard){ newK.push(key); newV.push(r[0], r[1], r[2], r[3]); }
     return r;

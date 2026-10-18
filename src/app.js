@@ -1109,7 +1109,7 @@ function cardHtml(x, key, o){
         <span class="diff lv${x.diff.lv}" title="운용 난이도 점수 ${x.diff.v.toFixed(1)}">Lv${x.diff.lv} ${esc(x.diff.kr)}</span>
         <span class="zonebadge" title="스텔라 버스트 턴 기준 존">${esc(sbz&&sbz.level?sbz.label:'존 없음')}${sbz&&sbz.byName&&sbz.level?` <span class="hint">· ${esc(sbz.byName)}</span>`:''}</span>
         ${shared?'':`<div class="scorebar"><span>${esc(MODE_KR[o.mode]||'종합')} ${(x.rel*100).toFixed(0)}</span><div class="bar"><i style="width:${(x.rel*100).toFixed(0)}%"></i></div></div>`}
-        <span class="cbtns"><button type="button" class="btn small" data-goalsave="${key}">${shared?'내 목표로 저장':'목표로 저장'}</button>${shared?'':`<button type="button" class="btn small" data-share="${key}">링크 복사</button>`}</span>
+        <span class="cbtns"><button type="button" class="btn small" data-goalsave="${key}">${shared?'내 목표로 저장':'목표로 저장'}</button>${shared?'':`<button type="button" class="btn small" data-share="${key}">링크 복사</button><button type="button" class="btn small" data-report="${key}" title="결과가 이상할 때: 보유·조건·조합·수치를 한 번에 복사해 디스코드 등에 붙여 넣기">제보용 복사</button>`}</span>
       </div>
       ${o.basis?`<div class="basis">${o.basis}</div>`:''}
       <div class="members">${order.map(i=>memHtml(x,i,key,o.focus,o.lockSet)).join('')}</div>
@@ -1194,12 +1194,14 @@ function parseShare(hash){
   let mode=q.get('m')||'all'; if(!MODE_KR[mode]) mode='all';
   const fp=(q.get('f')||'').split(':');
   const f=FOCUS_LIST.find(x=>x.kind===fp[0]&&x.v===fp[1]);
-  return {ids, mode, bossId:q.get('b')||'', focus:f?Object.assign({},f, f.kind==='elem'&&fp[2]==='c'?{conv:true}:{}):null}; // ':c' = 변환 덱 포함
+  const xm = q.get('x'); // 흉성·서약(점으로 구분)
+  return {ids, mode, bossId:q.get('b')||'', mods: xm ? {on: xm.split('.').filter(Boolean), abs: q.get('xa')||''} : null, focus:f?Object.assign({},f, f.kind==='elem'&&fp[2]==='c'?{conv:true}:{}):null}; // ':c' = 변환 덱 포함
 }
 function shareUrl(rec){
   const base = location.origin && location.origin!=='null' ? location.origin+location.pathname : location.href.split('#')[0];
   let u = base+'#share='+rec.x.team.map(c=>encodeURIComponent(c.id)).join(',')+'&m='+encodeURIComponent(rec.mode||'all');
-  if(rec.mode==='boss' && rec.bossId) u+='&b='+encodeURIComponent(rec.bossId);
+  if(rec.mode==='boss' && rec.bossId){ u+='&b='+encodeURIComponent(rec.bossId); const bb = BOSSES.find(q=>q.id===rec.bossId), on = bb ? modsOn(bb).map(m=>m.id) : []; // 켠 흉성·서약도(2026-10-18)
+    if(on.length){ u+='&x='+on.map(encodeURIComponent).join('.'); const ab = (state.plan.modAbs||{})[rec.bossId]; if(ab) u+='&xa='+encodeURIComponent(ab); } }
   if(rec.focus) u+='&f='+rec.focus.kind+':'+rec.focus.v+(rec.focus.conv?':c':'');
   return u;
 }
@@ -1212,6 +1214,32 @@ function copyShare(key, btn){
     else fallback();
   }catch(e){ fallback(); }
 }
+/* 제보용 복사(2026-10-18, 커뮤니티 피드백을 그대로 재현하려고): 계산 버전·성향·상대(보스·흉성·약점)·조합·핵심 수치·캐릭터별 비중·경고 + 보유 링크·조합 링크를 글 하나로 */
+async function copyReport(key, btn){
+  const rec = RES.get(key); if(!rec) return; const x = rec.x, ev = x.ev, P = state.plan, mode = rec.mode || P.mode;
+  const base = location.origin && location.origin!=='null' ? location.origin+location.pathname : location.href.split('#')[0];
+  const boss = rec.bossId ? BOSSES.find(b=>b.id===rec.bossId) : null, en = enemyNow(P), enT = Object.entries(en||{}).filter(([,v])=>v).map(([k,v])=>(E.ELEM_KR[k]||E.WT_KR[k]||k)+' '+REL_KR[v]).join(', ');
+  const mods = boss ? modsOn(boss).map(m=>m.kr).join('·') : '';
+  const burstMode = mode==='burst' || mode==='opener';
+  const per = burstMode ? ((ev.dummy && ev.dummy.per) || []) : ((ev.bsim && ev.bsim.per) || (ev.normal && ev.normal.per) || []), tot = per.reduce((a,v)=>a+(v>0?v:0), 0) || 1;
+  const warns = (()=>{ try{ return teamWarns(x, boss, Object.keys(en||{}).length ? en : null, explainTeamSafe(x)).map(w=>w.t).filter(Boolean).slice(0,5); }catch(e){ return (x.miss||[]).map(w=>typeof w==='string'?w:w.t); } })();
+  let own = '예시 보유(SS·S 전원)';
+  if(!state.sample){ const n = Object.keys(state.owned).filter(id=>byId.has(id) && !byId.get(id)._custom).length; try{ own = `${n}명 ${base}#own=${await packStr(ownPack())}`; }catch(e){ own = n+'명'; } }
+  const L = [
+    `[에덴 편성 연구실 제보] ${new Date().toISOString().slice(0,10)} · 계산 버전 ${BUILD||'-'}`,
+    `성향: ${MODE_KR[mode]||mode}${boss ? ' · 보스: '+(boss.name_kr||boss.id)+(mods ? ' (흉성·서약: '+mods+')' : '') : ''}${!boss && enT ? ' · 상대: '+enT : ''}${rec.focus ? ' · '+focusLabel(rec.focus) : ''}`,
+    `조합${x.rank ? ' '+x.rank+'위' : ''}${x.rel!=null ? ' (점수 '+Math.round(x.rel*100)+')' : ''}: ${x.team.map(c=>c.name).join(' · ')} | 존: ${(ev.sb && ev.sb.zone && ev.sb.zone.level) ? ev.sb.zone.label : '없음'}`,
+    burstMode ? `최고점 ${fmtN(ev.dummyT||0)} · 생존 ${Math.round(ev.surv)}` : `실전 ${fmtN(ev.burst)} · 지속 ${fmtN(ev.sustain)} · 생존 ${Math.round(ev.surv)}${boss && x.kt && x.kt.t ? ' · 예상 처치 '+x.kt.t+'턴' : ''}`,
+    `비중: ${x.team.map((c,i)=>c.name+' '+Math.round((per[i]>0?per[i]:0)/tot*100)+'%').join(' · ')}`,
+    warns.length ? `경고: ${warns.join(' / ')}` : '',
+    `보유: ${own}`,
+    `조합 링크: ${shareUrl(rec)}`,
+    `이상한 점: `].filter(Boolean);
+  const text = L.join('\n');
+  try{ await navigator.clipboard.writeText(text); flash('제보용 글을 복사했어요. 이상한 점을 덧붙여 보내 주세요'); }
+  catch(e){ showLinkBox(btn, text); }
+}
+const explainTeamSafe = x => { try{ return x.ex || E.explainTeam(x.team, x.progs, x.ev, x.S||settings(), {}); }catch(e){ return {notes:[]}; } };
 function showLinkBox(btn, url){
   const row=btn.closest('.frow'), host = row ? row.querySelector('.fmain') : btn.closest('.card'); if(!host) return;
   let box=[...host.children].find(el=>el.classList.contains('sharelink'));
@@ -1220,8 +1248,9 @@ function showLinkBox(btn, url){
     const anchor = row ? host.querySelector('.fmeta') : host.querySelector('.card-head');
     anchor.insertAdjacentElement('afterend', box);
   }
-  box.innerHTML=`<input type="text" readonly value="${esc(url)}" aria-label="공유 링크"><button type="button" class="btn small" data-linkclose="1">닫기</button><span class="hint">자동 복사가 막혀 있습니다. 링크를 선택해 복사하세요.</span>`;
-  const inp=box.querySelector('input'); inp.focus(); inp.select();
+  const ml = url.includes('\n'); // 여러 줄(제보용 글)은 글상자로
+  box.innerHTML=`${ml ? `<textarea readonly rows="7" aria-label="제보용 글">${esc(url)}</textarea>` : `<input type="text" readonly value="${esc(url)}" aria-label="공유 링크">`}<button type="button" class="btn small" data-linkclose="1">닫기</button><span class="hint">자동 복사가 막혀 있습니다. 선택해 복사하세요.</span>`;
+  const inp=box.querySelector('input, textarea'); inp.focus(); inp.select();
   let ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
   if(ok){ flash('링크를 복사했습니다'); box.querySelector('.hint').textContent='복사했습니다.'; }
 }
@@ -1230,9 +1259,9 @@ function renderShare(){
   RES.delete('s0'); shareDirty=false;
   if(!SHARE){ box.hidden=true; box.innerHTML=''; return; }
   const sh=SHARE;
-  const boss = sh.mode==='boss' ? BOSSES.find(b=>b.id===sh.bossId)||null : null;
-  const mode = sh.mode==='boss'&&!boss ? 'all' : sh.mode;
-  const cond = [MODE_KR[mode]].concat(boss?[boss.name_kr]:[], sh.focus?[focusLabel(sh.focus)+' 화력만']:[]).join(' · ');
+  const boss0 = sh.mode==='boss' ? BOSSES.find(b=>b.id===sh.bossId)||null : null, EBs = boss0 && sh.mods ? effBoss(boss0, sh.mods) : {boss:boss0, S:null}, boss = EBs.boss;
+  const mode = sh.mode==='boss'&&!boss ? 'all' : sh.mode, modT = boss0 && sh.mods ? modsOn(boss0, sh.mods).map(m=>m.kr).join('·') : '';
+  const cond = [MODE_KR[mode]].concat(boss?[boss.name_kr]:[], modT?['흉성·서약 '+modT]:[], sh.focus?[focusLabel(sh.focus)+' 화력만']:[]).join(' · ');
   const head = `<div class="sharehead"><b>${esc(sh.label||'공유받은 조합')}</b><span class="hint">${esc(cond)}</span><button type="button" class="btn small" data-shareclose="1">닫기</button></div>`;
   const team = sh.ids.map(id=>byId.get(id));
   box.hidden=false;
@@ -1241,6 +1270,7 @@ function renderShare(){
     return;
   }
   const S = Object.assign({}, settings(), {enemyCount: boss&&boss.needs&&boss.needs.multi_target&&!boss.needs.single_target?3:1});
+  for(const k of ['afBan','buffTurnCap','zoneBan','zoneBanAll']) delete S[k]; Object.assign(S, EBs.S||{}); // 내 편성 탭 흉성 설정이 아니라 링크의 것
   const enemy = boss ? bossToEnemy(boss) : null;
   const real = !state.sample;
   const mine = team.map(c=>!!(real && state.owned[c.id]));
@@ -2235,20 +2265,20 @@ function bossSumHtml(b){
   const mech = (b.mechanics||[]).slice(0, 3).map(m=>`<li>${esc(m)}</li>`).join('');
   const strat = String(b.strategy_kr||'').split(/(?<=[.다요])\s+/)[0] || '';
   return `<div class="bshead"><b>${esc(String(b.name_kr).replace(/\s*\(미확인\)/,''))}</b>${b.hp?` <span class="hint">HP 약 ${esc(Number(b.hp).toLocaleString())}억</span>`:''} <button type="button" class="lnk" data-bossinfo="${esc(b.id)}">공략 전체 보기</button></div>
-    <div class="bsrels">${rels || '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>'}</div>${parts}
+    <div class="bsrels">${rels || (b.affinity_none ? '<span class="hint">약점·내성 없음 (전 속성 보통으로 계산)</span>' : '<span class="hint">약점·내성 정보 없음 (전 속성 보통으로 계산)</span>')}${b.weak_rotating ? ' <span class="need">약점이 턴마다 바뀜</span>' : ''}</div>${b.affinity_note_kr ? `<p class="hint bsaff">${esc(String(b.affinity_note_kr).split(/(?<=[.다요음])\s+/).slice(0,2).join(' '))}</p>` : ''}${parts}
     ${needs?`<div class="bsneeds"><span class="bsl">필요</span>${needs}</div>`:''}
     ${mech?`<ul class="bsmech">${mech}</ul>`:''}${strat?`<p class="hint bsstrat">${esc(strat)}</p>`:''}${modsHtml(b)}`;
 }
 /* 보스 흉성·서약(modifiers, 2026-10-17 사용자 '안키 디그마처럼 흉성 안 켜고·다 켜고·일부만 켜고 깨기'): 켠 것을 보스·설정에 반영
    absorb(흡수 속성 지정)·needs·피해 경감 턴(kt_extra)·최소 턴(kt_min), 설정: afBan(AF 게이지 이월 불가 → AF 없음)·buffTurnCap 1(턴 종료 버프 해제)·zoneBan(턴 종료 존 파괴)·zoneBanAll(존 금지), 편성 조건(comp)·전투불능 금지는 서약으로 */
 const curBossOf = P => { P = P || state.plan; return P.mode==='boss' ? BOSSES.find(x=>x.id===P.bossId) : P.mode==='kesshitsu' ? BOSSES.find(x=>x.id===P.kesId) : null; };
-const modsOn = b => { const P = state.plan, on = (P.mods && P.mods[b.id]) || []; return (b.modifiers||[]).filter(m=>on.includes(m.id)); };
-function effBoss(b){
+const modsOn = (b, sel) => { const P = state.plan, on = sel ? (sel.on||[]) : ((P.mods && P.mods[b.id]) || []); return (b.modifiers||[]).filter(m=>on.includes(m.id)); }; // sel: 공유 링크의 흉성·서약 {on, abs}
+function effBoss(b, sel){
   if(!b || !(b.modifiers||[]).length) return {boss:b, S:null, pledge:null};
-  const ms = modsOn(b); if(!ms.length) return {boss:b, S:null, pledge:null};
+  const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:null, pledge:null};
   const P = state.plan, B2 = JSON.parse(JSON.stringify(b)), S2 = {}; let pl = null, extra = 0, kmin = 0;
   for(const m of ms){ const f = m.fx||{}, ban = f.ban||[];
-    if(f.absorb_pick || (Array.isArray(f.absorb) && f.absorb.length)){ const els = (Array.isArray(f.absorb) && f.absorb.length ? f.absorb : []).concat((P.modAbs && P.modAbs[b.id]) ? [P.modAbs[b.id]] : []);
+    if(f.absorb_pick || (Array.isArray(f.absorb) && f.absorb.length)){ const els = (Array.isArray(f.absorb) && f.absorb.length ? f.absorb : []).concat(sel ? (sel.abs ? [sel.abs] : []) : ((P.modAbs && P.modAbs[b.id]) ? [P.modAbs[b.id]] : []));
       for(const el of els){ B2.weak = (B2.weak||[]).filter(x=>x!==el); B2.resist = (B2.resist||[]).filter(x=>x!==el); B2.absorb = [...new Set([...(B2.absorb||[]), el])]; } }
     if(+f.dmg_cut>=0.5 && +f.dmg_cut_turns>0) extra += +f.dmg_cut_turns*(+b.lives||1);
     if(+f.min_turns>0) kmin = Math.max(kmin, +f.min_turns);
@@ -2472,6 +2502,7 @@ function bind(){
   document.addEventListener('click',e=>{ const b=e.target.closest('button[data-goalsave]'); if(b) saveGoalFromResult(b.dataset.goalsave); });
   document.addEventListener('click',e=>{
     const b=e.target.closest('button[data-share]'); if(b){ copyShare(b.dataset.share, b); return; }
+    const rp=e.target.closest('button[data-report]'); if(rp){ copyReport(rp.dataset.report, rp); return; }
     const c=e.target.closest('button[data-linkclose]'); if(c){ c.closest('.sharelink').remove(); return; }
     if(e.target.closest('button[data-shareclose]')) closeShare();
   });

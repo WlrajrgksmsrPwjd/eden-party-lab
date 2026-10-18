@@ -146,7 +146,10 @@
    ],
    "strategy_kr": "약점·내성이 없어 순수 화력 승부이며, VERYHARD 誓約이 冥 캐릭터 한정이라 冥 刀 파티(シグレ(ES)·センヤ(AS)·シオン(ES) 등)가 기본이다. 35% 스토퍼 이후에는 최대 MP 50% 감소와 MP 흡수가 매 턴 겹쳐 MP가 고갈되므로 MP 회복 버디·스킬을 준비하고 딜러의 MP 부담을 줄이는 장비로 바꾼다. 65% 이후 독·혼란·기절·페인과 버프 해제가 섞여 나오니 상태이상 무효 수단과 버프 재부여 수단을 갖춘다. 朧影 구속은 카운트가 0이 되기 전에 끝내거나 해당 캐릭터를 교대해 대응한다.",
    "source": "https://altema.jp/anaden/nurarihyon",
-   "hp": 2.8
+   "hp": 2.8,
+   "affinity_note_kr": "챌린지·베리하드 모두 약점·내성·무효·흡수 없음. 妖魔変幻・巳式이 자기 물리 내성 버프(3턴) → 그동안 물리 효율 하락. VH 65% 스토퍼 妖魔変幻은 대미지 100% 경감 배리어 1턴.",
+   "affinity_none": true,
+   "affinity_src": "https://altema.jp/anaden/nurarihyon"
  },
  {
    "id": "youju_ryuukaku",
@@ -415,7 +418,10 @@
    "strategy_kr": "약점·내성이 없어 순수 화력으로 밀어붙이는 보스다. テンスインパクト(전체 최대HP 90%) 직후 추가 공격에 쓰러지지 않도록 즉시 회복할 수단을 갖춘다. 1회 부활 시 버프·디버프가 모두 지워지므로 부활 직후 다시 걸어 주고, AF가 남아 있으면 AF로 재정비하는 것이 좋다. 기절·페인·물리 내성 디버프가 섞이니 상태이상 대책을 준비하며, VH 誓約이 杖 1인 이상이라 アンペル·ライザ 등 杖 마법 딜러를 쓰면 편하다.",
    "source": "https://altema.jp/anaden/phantomedennosyo",
    "hp": 1.68,
-   "name_src": "https://arca.live/b/anothereden/162663332"
+   "name_src": "https://arca.live/b/anothereden/162663332",
+   "affinity_note_kr": "書架 공략 페이지(phantomedennosyo)는 접근 권한 문제로 직접 확인 못 함. 원작 본편 83장 보스 ファントム・エデン 표가 약점·내성 없음 + '1회만 부활'(書架 데이터의 1회 부활과 일치), 기존 데이터도 약점·내성 없음.",
+   "affinity_none": true,
+   "affinity_src": "https://altema.jp/anaden/dai83shou"
  },
  {
    "id": "teyuru_menas",
@@ -830,7 +836,10 @@
    "strategy_kr": "약점·내성이 없으며, 매 턴 개시 시 冥 캐릭터가 500 고정 피해+기절을 받으므로 天 캐릭터 중심으로 짜는 것이 기본이다(冥을 쓴다면 기절 내성 바지나 상태이상 무효 배리어 필수). 75/50/25% 스토퍼마다 HP 전회복·버프/디버프 해제·아군 디버프(99턴)가 걸리므로, 각 구간을 AF로 한 번에 넘기는 흐름(1턴 1구간)이 효율적이다. 3번째 스토퍼(25%) 이후에는 冥の気가 4스택 쌓이면 배리어·버티기를 관통하는 전멸기가 오므로 늦어도 4턴 안에 격파한다. 2·3차 이후의 경감 배리어와 봉인·독·페인·암흑에 대비해 배리어 관통과 해제 수단을 갖춘다.",
    "source": "https://altema.jp/anaden/meiryuuounotukai",
    "hp": 2.2,
-   "name_src": "https://arca.live/b/anothereden/162663332"
+   "name_src": "https://arca.live/b/anothereden/162663332",
+   "affinity_note_kr": "챌린지·베리하드 모두 약점·내성·무효·흡수 없음. 일시 내성: 冥の守護 자기 전속성 내성 버프(중, 5턴), 1차 스토퍼 뒤 冥竜の障壁(30% 경감 배리어 + 전속성 내성 5턴), 2·3차 뒤 冥竜の多重障壁(50% 경감 + 물리·전속성 내성 5턴). 75/50/25% 스토퍼마다 버프·디버프 전체 해제.",
+   "affinity_none": true,
+   "affinity_src": "https://altema.jp/anaden/meiryuuounotukai"
  },
  {
    "id": "tabi_no_noroi",
@@ -1225,7 +1234,10 @@
      "フィーネ"
    ],
    "strategy_kr": "약점·내성이 없으므로 누적 내성 디버프(クロード·アルド·ツキハ·シェイネ)를 같은 속성 파티로 쌓아 피해를 늘리는 것이 핵심이다. HP 60%부터 아군에 영구 디버프가 단계적으로 걸리고 10% 이하에서는 전체 9,999 고정 피해가 오므로, 60% 이하 장기전을 피하고 AF로 한 번에 끝낸다.",
-   "source": "https://9db.jp/アナデン/data/2214"
+   "source": "https://9db.jp/アナデン/data/2214",
+   "affinity_note_kr": "어나더 던전 魔獣城 보스 魔獣天使ジオ・アンギラス: 약점·내성 없음(9db 표, 알테마 AD 보스 공략 둘 다). 무효·흡수 기재 없음. 속성 변화 기믹 없음(天使の唄는 아군 디버프).",
+   "affinity_none": true,
+   "affinity_src": "https://9db.jp/アナデン/data/2214"
  },
  {
    "id": "ad_totodream_psychic_ido",
@@ -1270,7 +1282,10 @@
      "ロゼッタ"
    ],
    "strategy_kr": "약점·내성이 없으며 瓦礫 소환으로 완력·지성 버프를 쌓으므로 길게 끌수록 불리하다. AF 게이지가 있으면 개막부터 격파할 수 있다는 평가이며, 顕現 シュゼット는 AF 첫 행동에 '魔界の槍撃'을 넣는다. ロキド(AS)의 지성 디버프와 ヒスメナ의 2연격이 유효하고, 50% 이하에서는 물리 내성 버프와 전체 마법이 추가되므로 그 전에 끝낸다.",
-   "source": "https://altema.jp/anaden/anothertoto"
+   "source": "https://altema.jp/anaden/anothertoto",
+   "affinity_note_kr": "VH·하드 모두 약점·내성 없음(무효·흡수 칸 없음). 속성 변화 기믹 미기재(サイコパリエース는 자기 물리 내성 버프). 참고 FEAR: 狂気の遊行 돌 약점, 巣食われし偶像 화·참 약점.",
+   "affinity_none": true,
+   "affinity_src": "https://altema.jp/anaden/anothertoto"
  },
  {
    "id": "ad_damaku_ryuujin_tsukai",
@@ -1363,7 +1378,10 @@
      "アルド"
    ],
    "strategy_kr": "약점·내성이 없고 5턴 로테이션이 고정이다. 3턴째 단체 99% 비율 피해로 한 명이 빈사가 되고 2턴 뒤 전체 무속성 마법이 오므로 그 사이 반드시 회복한다. 지성 디버프와 속성 내성 버프를 끊기지 않게 유지하고, 힐러를 2명 이상 두어 MP가 떨어지면 교대하며 전체 회복을 이어간다.",
-   "source": "https://altema.jp/anaden/another-miguransujou-2691"
+   "source": "https://altema.jp/anaden/another-miguransujou-2691",
+   "affinity_note_kr": "하드·VH 모두 약점·내성 없음(무효·흡수 칸 없음), 속성 변화 기믹 없음. FEAR 親衛騎士·親衛闘士와 일반 몹도 전부 약점·내성 없음.",
+   "affinity_none": true,
+   "affinity_src": "https://altema.jp/anaden/another-miguransujou-2691"
  },
  {
   "id": "fuuiki_tamayura_gensitai",
@@ -2874,6 +2892,9 @@
    ],
    "strategy_kr": "약점이 매 턴 바뀌고 내성이 없으므로 약점 간파로 약점을 맞추는 セスタ(AS)나 다속성 딜러가 적합하다. 1.15억 HP라 개막 버프 후 AF 한 번으로 정리하는 화력 편성이 효율적이다.",
    "source": "https://altema.jp/anaden/anotherhosinomitayume",
-   "hp": 1.15
+   "hp": 1.15,
+   "affinity_note_kr": "어나더 던전(VH) 표: 약점 '変化'(매 턴 약점이 바뀜), 내성 없음, 무효·흡수 미기재. 어느 속성으로 바뀌는지·순서는 미기재 → 약점 간파(セスタ(AS)) 권장. 참고로 書架판 知恵の災厄ダアト(daatosyoka)는 약점 마법·내성 참·돌·타, 【巡る星】 턴 개시마다 약점 속성 랜덤 전환 — AD판도 같은지는 미확인.",
+   "weak_rotating": true,
+   "affinity_src": "https://altema.jp/anaden/anotherhosinomitayume"
  }
 ]

@@ -327,6 +327,7 @@ details.why summary{cursor:pointer; font-size:12.5px; color:var(--muted)}
 .basis{font-size:12.5px; color:var(--muted); margin-top:-4px}
 .sharelink{display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-width:0}
 .sharelink input{flex:1 1 220px; min-width:0; font-family:var(--f-mono); font-size:12px}
+.sharelink textarea{flex:1 1 100%; min-width:0; font-family:var(--f-mono); font-size:12px; resize:vertical}
 .sharelink .hint{flex-basis:100%}
 
 /* 보유 탭: 이름으로 체크 · 백업 */
@@ -666,6 +667,7 @@ dialog.guide::backdrop{background:rgba(8,12,30,.62)}
 .bosssum{border:1px solid var(--frame); border-radius:10px; padding:10px 12px; background:color-mix(in srgb, var(--gold) 6%, var(--surface)); display:grid; gap:6px; font-size:13px; box-shadow:inset 0 0 0 3px var(--surface), inset 0 0 0 4px var(--frame-in)}
 .bosssum .bshead{display:flex; flex-wrap:wrap; gap:6px; align-items:baseline}
 .bosssum .bsrels, .bosssum .bsneeds, .bosssum .bsparts{display:flex; flex-wrap:wrap; gap:4px; align-items:center}
+.bosssum .bsaff{margin:4px 0 0; line-height:1.5}
 .bosssum .bsl{font-size:11.5px; font-weight:700; color:var(--muted); margin-right:2px}
 .bosssum .rel{font-size:11.5px; padding:1px 7px; border-radius:999px; border:1px solid var(--line)}
 .bosssum .rel.weak{color:var(--good); border-color:color-mix(in srgb, var(--good) 50%, transparent)}
