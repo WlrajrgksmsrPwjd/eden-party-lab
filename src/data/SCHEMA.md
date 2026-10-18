@@ -297,7 +297,7 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - self_stk 항목 `e`: 조건(zone·req) 밖에서 남는 비율 — '招雷陣이면 2배'(이즈나 神轟雷嵐の舞 지성·속도), '전열 杖 2명 이상이면 2배'(紺色の夢魔 アバドンズコール)는 e 0.5, 조건 때만이면 e 0(이즈나 雷 공격 100%).
 - 성도 스킬을 안 다는 쪽(sbOff)이면 'SB 시' 존 전개·각성 후보도 없음.
 - 버디: 서브는 오라 발동 안 함(사용자 확인) — buddy_fx aura는 메인일 때만.
-- 버디 party 키(2026-10-18): stat·all_elem_atk·weapon_atk·wt_dmg·crit_rate·crit_dmg·dmg에 더해 pwr/int/spd_flat(고정값)·mp_up(최대 MP)·shinan·kesshi·charge도 계산. `to:{elem}`이면 그 속성 캐릭터만(건스 アクティーナ 帯電 = 雷). 존 전개·각성(zone_dep·zone_aw)·속성 변환(echg)은 아직 계산 안 함.
+- 버디 party 키(2026-10-18): stat·all_elem_atk·weapon_atk·wt_dmg·crit_rate·crit_dmg·dmg에 더해 pwr/int/spd_flat(고정값)·mp_up(최대 MP)·shinan·kesshi·charge도 계산. `to:{elem}`이면 그 속성 캐릭터만(건스 アクティーナ 帯電 = 雷). 차지 스킬 존 각성(sb/sb2 `zone_aw` 키, `zone_dep` level 2)은 팀의 평상 턴 존이 같은 존일 때만: 차지가 모인 턴(1 + ⌈cost ÷ 턴당 차지⌉)부터 주기(⌈cost ÷ 턴당 차지⌉)마다 그 턴·다음 턴 극(battleSim o.budAw, 지속 딜은 2/주기 비율). 존이 없는 팀에 새로 까는 효과·level 1 전개(튜시아 星海陣)·속성 변환(echg)은 아직 계산 안 함.
 - optimize·perCharBest 입력 `backN`(후열 인원 0~2, 결현현은 pledge.size가 우선): 후열 셔틀·아군 전체 글래·후열 추천 수, 0이면 VC·VC 존 없음.
 - 스킬(main) `zone_need: {zone, zlv?, off?}`: 그 존(등급)이 아니면 off 필드로 바꾸거나(off 없으면 main.alt) — 존이 있어야 연속 실행되는 주력(세스타 二刀神狼, 월화의 영애(AS) ヴァイスドルン).
 

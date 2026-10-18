@@ -2271,7 +2271,11 @@ function budAgg(bd, team, enemy, A){
   const brk = []; const addB = x => { if(!x) return; if(Array.isArray(x)){ x.forEach(addB); return; } if(x.brk && reqOK(x.req)) brk.push(x.brk); };
   addB(b.main); addB(b.main2); if(gfx){ addB(gfx.main); addB(gfx.main2); }
   const inf = gfx && gfx.inflict ? {poison: +gfx.inflict.poison||0, pain: +gfx.inflict.pain||0} : null;
-  return {parts, sup, enemyDown, afgA: +b.afg||0, afgC, ch, gear: gear ? gear.id : null, brk, inf};
+  // 차지 스킬의 존 각성·극 존 전개(2026-10-18): 릴레노 煌斬陣 각성(zone_aw), 하자마짱 極・轟打陣·건스+벨벳 極・招雷陣(zone_dep level 2) — 짝 조건(sb2 req)이 맞으면 그쪽
+  const zfxOf = x => { if(!x) return null; if(Array.isArray(x)){ for(const y of x){ const r = zfxOf(y); if(r) return r; } return null; } if(!reqOK(x.req)) return null;
+    if(x.zone_aw) return {key: x.zone_aw}; if(x.zone_dep && +x.zone_dep.level>=2) return {key: x.zone_dep.key}; return null; };
+  const zfx = zfxOf(b.sb2) || zfxOf(b.sb);
+  return {parts, sup, enemyDown, afgA: +b.afg||0, afgC, ch, gear: gear ? gear.id : null, brk, inf, zfx};
 }
 const budAfg = (bud, zone, team) => !bud ? 0 : (bud.afgA||0) + (bud.afgC ? bud.afgC*Math.min(1, (1 + budChgPlus(bud.ch.plus, zone, team) + (bud.ch.rnd||0))/bud.ch.cost) : 0);
 /* 속성 변환(변환자재): 아군 전체를 존 속성·특정 속성으로 바꾸는 서포터, 자기 속성을 존·약점·옆 아군에 맞추는 캐릭터 */
@@ -2411,7 +2415,8 @@ function battleSim(N, o){
     opts.push('none');
     if(R && R.cost && !e && g>=R.cost) opts.push('stack');
     for(const op of opts){
-      let d=0, g1=g, s1=s, e1=e, aw1=aw, ou1=ou||0; const rec={t, af:null, sb:null, combo:null, stack:false};
+      let d=0, g1=g, s1=s, e1=e, aw1 = o.budAw && o.budAw.has(t) ? Math.max(aw, 2) : aw, ou1=ou||0; const rec={t, af:null, sb:null, combo:null, stack:false}; // 버디 차지 스킬 존 각성 턴
+      if(o.budAw && o.budAw.has(t)) rec.budAw = true;
       const L = ()=> (aw1>0 || o.awConst) ? 2 : 1;
       const useSB = (inAF, fin)=>{ if(o.sbAw) aw1 = Math.max(aw1, 2); const lv = (o.sbAw||aw1>0||o.awConst) ? 2 : 1; let sv = o.sbT ? o.sbT(t) : {b:o.sbBurst, b1:o.sbBurst1, ch:o.sbChain||0};
         if(o.sbOnce){ const ox = o.sbOnce.t(t); if(ou1 || t>o.sbOnce.maxT){ sv = {b: sv.b - (lv>=2 ? ox.b : 0), b1: sv.b1 - (lv>=2 ? 0 : ox.b1), ch: sv.ch}; rec.sbNo1 = true; } else ou1 = 1; } // 틸릴(ES) 心の剣: 剣持つ救世主(개전 3턴) 중에만, 쓰면 해제 → 전투 중 1번
@@ -2637,11 +2642,17 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     if(bZ && bZ!==res.normal.zone) runSit('normal', bZ); }
   // 지속: 일반 존은 상시, 어나더 존은 2/5 턴 가동 (어나더 존 한정 버프도 그 동안만)
   const nz = res.normal.zone; zA = nz;
-  const susOf = () => { const z0 = res.normal.zone; if(!(z0 && z0.level>=2)) return res.normal.total;
+  let bzG = null; // 버디 차지 스킬 존 각성(아래)
+  const xNof = () => (res.normal.chain?res.normal.chain.total:0) + (res.normal.counter?res.normal.counter.total:0) + (res.normal.turnEnd?res.normal.turnEnd.total:0);
+  const bzNorm = () => sumZ(zdep ? coresFor('normal', bzG.z, simUse) : res.normal.cores, bzG.z, null, wN).v + xNof(); // 버디가 각성시킨 극 존의 평상 턴
+  const susOf = () => { const z0 = res.normal.zone;
+    if(bzG && bzG.up && z0 && z0.level===1 && z0.key===bzG.z.key) return res.normal.total*(1-bzG.frac) + bzNorm()*bzG.frac; // 극은 차지 주기 중 2턴
+    if(!(z0 && z0.level>=2)) return res.normal.total;
     const z1 = ({...z0, ...{level:1}});
     const cores1 = zdep ? coresFor('normal', z1, simUse) : res.normal.cores;
-    const xN = (res.normal.chain?res.normal.chain.total:0) + (res.normal.counter?res.normal.counter.total:0) + (res.normal.turnEnd?res.normal.turnEnd.total:0); // 일반 존 턴에도 체인·요격·턴 종료(근사: 극 존 때 값)
-    return (sumZ(cores1, z1, null, wN).v + xN)*0.6 + res.normal.total*0.4; };
+    const xN = xNof(); // 일반 존 턴에도 체인·요격·턴 종료(근사: 극 존 때 값)
+    const w2 = bzG && !bzG.up ? bzG.frac : 0.4;
+    return (sumZ(cores1, z1, null, wN).v + xN)*(1-w2) + res.normal.total*w2; };
   let sustain = susOf();
   let afGain = S.afBan ? 0 : afGainOf(nz, res.normal.cores); // S.afBan: 보스 흉성 등으로 AF 게이지를 이월 못 함 → AF 없음(2026-10-17)
   const afTurns = 1 + Math.max(1, Math.min(19, 100/Math.max(1, afGain))); // AF 주기 = 게이지를 채우는 평상 턴 + AF 턴(AF 턴엔 평상 행동·게이지 충전 없음, 2026-10-16)
@@ -2657,6 +2668,19 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     const p3 = afPick(coresFor('af', nz, false)); runSit('sb', sv.zone || null); const sb3 = ({...res.sb, ...{zones: sv.zones}}); res.sb = sv; A.realT = 0; A.tm.S0 = 0;
     return {cores:p3.cs, afA:p3.afA, avg:p3.avg, afS:p3.afS, sb:sb3, pick:p3.pick}; })();
   let af = R3.afS.v;
+  /* 버디 차지 스킬 존 각성(2026-10-18): 팀이 그 존(일반)을 깔 때만 — 차지가 모인 턴 시작에 써서 그 턴·다음 턴 극(SB 각성처럼 2턴), 차지 주기마다 다시.
+     차지 = 턴당 1 + chg_plus 조건 + 장비 확률. 이미 늘 극(스킬·극 글래스터 각성)이면 없음. 허수아비·1턴째는 차지가 없어 그대로 */
+  { const zf = A.bud && A.bud.zfx;
+    const awC0 = !!(nz && nz.level>=2 && (res.normal.zones||[]).some(q=>q.key===nz.key && q.level>=2 && q.how!=='개전 자동' && q.how!=='SB 시' && q.how!=='1회 각성' && !q.once));
+    if(zf && nz && nz.level>=1 && nz.kind!=='none' && (nz.key===zf.key || (nz.types||[]).includes(zf.key)) && !awC0){
+      const ch = A.bud.ch, r = 1 + budChgPlus(ch.plus, nz, team) + (ch.rnd||0), first = 1 + Math.ceil((ch.cost - (ch.c0||0))/r - 1e-9), per = Math.max(1, Math.ceil(ch.cost/r - 1e-9));
+      const turns = new Set(); for(let t=first; t<=40; t+=per) turns.add(t);
+      const frac = Math.min(1, 2/per);
+      if(nz.level>=2) bzG = {z: nz, up: false, turns, first, per, frac};
+      else { const zB = ({...nz, ...{level:2, how:'버디 각성', label:'극·'+(ZONE_KR[nz.key]||String(nz.label||'존'))}}), zS = zA; zA = zB;
+        const P1B = afPick(coresFor('af', zB, false)); A.realT = 3; A.tm.S0 = 2; const P3B = afPick(coresFor('af', zB, false)); A.realT = 0; A.tm.S0 = 0; zA = zS;
+        bzG = {z: zB, up: true, turns, first, per, frac, P1: P1B, P3: P3B}; }
+      sustain = susOf(); } }
   let afChain = null;
   // 체인 어빌리티는 AF 밖(평상·SB 턴)에서만 발동 (사용자 확인)
   const sbTurn = res.sb.total;
@@ -2666,6 +2690,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const sustainAF = sustain*susNW + (S.afCycle!==false ? af/afTurns : 0); // 지속 딜: 평상 턴(AF 턴 제외) + AF를 주기마다 한 번
   const out = {sbTurn, af, af1: afS.v, afPer: R3.afS.per, afChain, afA: R3.afA, afA1: afA, sustain: sustainAF, sustainNoAF: sustain, susNW, afGain, afTurns, burst: sbTurn + 0.5*af, surv: surv.score, survDet: surv.det,
     flux, light, shadow, hasSB, avgCombo: R3.avg, avgCombo1: avgCombo, normal:res.normal, sb:res.sb, sb3:R3.sb, A, posSets, sim, mule:A.mule, atkN};
+  if(bzG) out.budZ = {label: bzG.z.label, first: bzG.first, per: bzG.per, frac: bzG.frac};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; }
   // AF를 게이지 g0%에서 시작했을 때 (행동 수·콤보·화력). 100%는 위에서 계산한 값
   // 극존이 풀린(일반 존) 상태의 값: 개전 극존은 2턴, SB 극존은 그 턴·다음 턴만
@@ -2679,14 +2704,16 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const sbFr = !!sbz && sameZ(res.sb.zones, sbz).some(q=>q.how==='SB 시' && team.some(c=>c.id===q.by && c.raw && c.raw.zone && c.raw.zone.sb_fresh));
   const sbAw = sbAw0 && !(sbFr && nz && nz.key===sbz.key && nz.level>=1);
   const afMemo = {};
-  const afRun = (g0, lv, t)=>{ g0 = Math.max(50, Math.min(100, Math.round(g0/10)*10)); const lv2 = !(nz && nz.level>=2) || lv>=2, tc = t>=3 ? 3 : t===2 ? 2 : 1; const k=g0+(lv2?'a':'b')+tc; if(afMemo[k]) return afMemo[k];
+  const afRun = (g0, lv, t)=>{ g0 = Math.max(50, Math.min(100, Math.round(g0/10)*10)); const bU = !!(bzG && bzG.up && lv>=2), zH = bU ? bzG.z : nz; // bU: 버디가 각성시킨 극 존의 AF
+    const lv2 = !(zH && zH.level>=2) || lv>=2, tc = t>=3 ? 3 : t===2 ? 2 : 1; const k=g0+(lv2?'a':'b')+(bU?'B':'')+tc; if(afMemo[k]) return afMemo[k];
     if(tc===2){ const p = afRun(g0, lv, 1), q = afRun(g0, lv, 3), m = (x,y)=>(x+y)/2; // 2턴째 AF: 1턴째·3턴째의 중간
       return (afMemo[k] = {g0, dmg:m(p.dmg,q.dmg), per:p.per.map((v,i)=>m(v,q.per[i])), acts:m(p.acts,q.acts), fin:m(p.fin,q.fin), avg:m(p.avg,q.avg), n:p.n}); }
-    const cs = tc===3 ? R3.cores : afCores, a0 = tc===3 ? R3.afA : afA;
-    const a = g0>=100 ? a0 : afActionsOf(team, progs, cs, lv2?nz:nzL1, enemy, S, g0);
+    const PB = bU ? (tc===3 ? bzG.P3 : bzG.P1) : null;
+    const cs = PB ? PB.cs : tc===3 ? R3.cores : afCores, a0 = PB ? PB.afA : tc===3 ? R3.afA : afA, zU = lv2 ? zH : nzL1;
+    const a = g0>=100 ? a0 : afActionsOf(team, progs, cs, zU, enemy, S, g0);
     const gn = afG(cs, a.n);
-    const avg = Math.min(0.75+0.5*gn, S.comboCap>0 ? S.comboCap : Infinity), zz0 = (g0>=100 && lv2) ? (tc===3 ? R3.afS : afS) : afSum(cs, lv2?nz:nzL1, avg, a.n);
-    const zz = (g0>=100 && lv2) ? zz0 : addCx(zz0, cs, lv2?nz:nzL1, a.n, Math.min(0.75+gn, S.comboCap>0 ? S.comboCap : Infinity));
+    const avg = Math.min(0.75+0.5*gn, S.comboCap>0 ? S.comboCap : Infinity), zz0 = (g0>=100 && lv2) ? (PB ? PB.afS : tc===3 ? R3.afS : afS) : afSum(cs, zU, avg, a.n);
+    const zz = (g0>=100 && lv2) ? zz0 : addCx(zz0, cs, zU, a.n, Math.min(0.75+gn, S.comboCap>0 ? S.comboCap : Infinity));
     return (afMemo[k] = {g0, dmg:zz.v, per:zz.per, acts:a.n.reduce((x,y)=>x+y,0), fin:Math.min(0.75+gn, S.comboCap>0 ? S.comboCap : Infinity), avg, n:a.n}); };
   const sbIdx = team.map((c,i)=>i).filter(i=>team[i].stellar && progs[i].sbOK);
   const st = afStartOf(team, ctx, S);
@@ -2695,7 +2722,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const sbz1 = sbz && sbz.level>=2 ? ({...sbz, ...{level:1}}) : sbz, sbPer1 = sbz && sbz.level>=2 ? sumZ(res.sb.cores, sbz1, null, null).per : res.sb.per;
   const sb3 = R3.sb, sbz3 = sb3.zone, sbz31 = sbz3 && sbz3.level>=2 ? ({...sbz3, ...{level:1}}) : sbz3, sbPer31 = sbz3 && sbz3.level>=2 ? sumZ(sb3.cores, sbz31, null, null).per : sb3.per;
   const sbSum = (per) => sbIdx.reduce((v,i)=>v+(per[i]||0),0), sbCh = r => r.chain ? sbIdx.reduce((v,i)=>v+(r.chain.per[i]||0),0) : 0;
-  const simIn = {t1: out.tl ? out.tl.t1 : normal2, normal: normal2, normal1, sbBurst: sbSum(res.sb.per), sbBurst1: sbSum(sbPer1),
+  const simIn = {t1: out.tl ? out.tl.t1 : normal2, normal: bzG && bzG.up ? bzNorm() : normal2, normal1: bzG && bzG.up ? normal2 : normal1, budAw: bzG ? bzG.turns : null, sbBurst: sbSum(res.sb.per), sbBurst1: sbSum(sbPer1),
     sbChain: sbCh(res.sb), // 체인 추격은 평상 턴 SB에만(AF 안 SB엔 없음)
     sbT: t => { const w = Math.min(1, Math.max(0, (t-1)/2)), L = (x,y)=>x+(y-x)*w; return {b: L(sbSum(res.sb.per), sbSum(sb3.per)), b1: L(sbSum(sbPer1), sbSum(sbPer31)), ch: L(sbCh(res.sb), sbCh(sb3))}; }, // 실전 N턴의 SB: 턴이 지날수록 3턴째 값으로
     teN: res.normal.turnEnd ? res.normal.turnEnd.total : 0, // AF 턴에도 남는 턴 종료 공격(평상 턴 값)
@@ -2707,7 +2734,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     refill: (()=>{ const rc = sbIdx.length ? team.find(c=>c.afRefillR && c.afRefillR.on==='sb') : null; return rc ? {to:+rc.afRefillR.to||100, cost:+rc.afRefillR.cost||0, e0: +rc.afRefillR.start>0 ? 1 : 0, noAF: rc.afRefillR.af===false} : null; })(), // e0: 개전에 축적 1개(히스메나(ES) エスパーダ), noAF: AF 안 SB로는 안 채움
     teSB: (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.sb_only))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, sbz || nz, cap, fw, 'sb'); return r && r.total>0 ? r : null; })()}; // SB를 쓴 턴의 종료 공격
   // 지속 딜의 AF도 극 존이 계속 유지될 때만 극(2026-10-17): 개전 자동·1회 각성(네코코(ES) 颯 첫 사용 등)은 2턴 뒤 일반 존 — 평상 턴(susOf)과 같은 비율(일반 0.6·극 0.4)로 섞음. SB로 다시 각성(sbAw)하면 그대로
-  if(S.afCycle!==false && nz && nz.level>=2 && !awConst && !sbAw){ const a1 = afRun(100, 1, 3).dmg; if(a1 < af){ const dA = 0.6*(a1 - af)/afTurns; out.sustain += dA; out.susAfL1 = a1; } }
+  if(S.afCycle!==false && nz && nz.level>=2 && !awConst && !sbAw){ const a1 = afRun(100, 1, 3).dmg; if(a1 < af){ const dA = (bzG && !bzG.up ? 1-bzG.frac : 0.6)*(a1 - af)/afTurns; out.sustain += dA; out.susAfL1 = a1; } }
+  if(S.afCycle!==false && bzG && bzG.up){ const aB = afRun(100, 2, 3).dmg; if(aB > af){ out.sustain += bzG.frac*(aB - af)/afTurns; out.susAfB = aB; } } // 버디 각성 극 존 AF는 차지 주기 중 2턴 몫
   if(S.afCycle!==false){ if(simIn.teAF){ out.sustain += simIn.teAF.total/afTurns; out.teAF = simIn.teAF; } if(simIn.teN) out.sustain += simIn.teN/afTurns; } // AF 턴 종료 공격(AF 턴 전용 + 평상 턴 종료 공격)도 AF 주기마다
   // 지속 딜에 SB(2026-10-16, 사용자 확인: SB는 턴을 쓰지 않아 쓴 뒤에도 그 턴 행동을 그대로 함): SB 게이지가 차는 주기마다 한 번 더함.
   // 게이지 = 평상 턴 행동마다 + AF 행동마다(실전 시뮬과 같은 sbAct), 차는 몫이 AF 쪽이면 AF 끝 콤보로(실전 시뮬처럼 AF 안 SB)
@@ -2729,6 +2757,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const sus2 = susOf(), ex2 = (res.normal.chain?res.normal.chain.total:0) + (res.normal.counter?res.normal.counter.total:0) + (res.normal.turnEnd?res.normal.turnEnd.total:0);
       const nz2 = res.normal.zone, nz2L1 = nz2 && nz2.level>=2 ? ({...nz2, ...{level:1}}) : nz2;
       simIn.normal = res.normal.total; simIn.normal1 = nz2 && nz2.level>=2 ? sumZ(zdep ? coresFor('normal', nz2L1, simUse) : res.normal.cores, nz2L1, null, wN).v + ex2 : simIn.normal;
+      if(bzG && bzG.up){ simIn.normal1 = res.normal.total; simIn.normal = bzNorm(); }
       out.sustain += (sus2 - out.sustainNoAF)*susNW; out.sustainNoAF = sus2; out.normal = res.normal; out.sbUpN = u; } }
   if(res.normal.afPost && res.normal.afPost.total>0){ simIn.ctrAF = res.normal.afPost.total; out.ctrAF = res.normal.afPost; if(S.afCycle!==false) out.sustain += simIn.ctrAF/afTurns; } // AF 턴 뒤 요격·체인도 AF 주기마다
   /* 누적 효과 예열(2026-10-18): 평상 턴 t의 값 = 다 쌓인 값 × r(t) — r(1·2·3)은 그 턴 누적 수로 다시 계산, 그 뒤는 다 쌓이는 턴(stkSat)까지 직선으로 1.

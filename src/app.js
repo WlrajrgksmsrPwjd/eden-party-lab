@@ -1029,7 +1029,8 @@ const budTipHtml = b => b ? ` · 화력 위주면 메인 버디 <b>${esc(budName
 function budLine(x, o, key){
   const own=ownBud(); if(!own.length) return '';
   const cur=buddyInput(); const cm = x.bud || (cur&&cur.main?cur.main.id:null);
-  const gTx = x.bg ? (x.bg==='none' ? ' · 장비 없음' : ` · 장비 <b>${esc(bgName(x.bg))}</b>`) : '';
+  const gTx = (x.bg ? (x.bg==='none' ? ' · 장비 없음' : ` · 장비 <b>${esc(bgName(x.bg))}</b>`) : '')
+    + (x.ev && x.ev.budZ ? ` · 차지 스킬로 <b>${esc(x.ev.budZ.label)}</b> (${x.ev.budZ.first}턴째부터 ${x.ev.budZ.per}턴마다 2턴)` : ''); // 버디 존 각성(2026-10-18)
   if(x.bud) return `<div class="hint">버디: 메인 <b>${esc(budName(x.bud))}</b>${gTx} <span class="hint">(자동 — 이 조합에서 점수가 가장 높은 버디${x.bg && bgSet(x.bud)==='auto' ? '·장비' : ''})</span></div>`;
   if(x._budBest===undefined && own.length>1){ BUDQ.q.push({x, o, cm, own, tok:BUDQ.tok}); if(!BUDQ.run) setTimeout(runBudQ, 60); }
   return `<div class="hint">버디: 메인 ${esc(budName(cm)||'없음')}${gTx}<span class="budtip" data-budk="${esc(key||'')}">${budTipHtml(x._budBest)}</span></div>`;
