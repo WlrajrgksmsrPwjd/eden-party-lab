@@ -658,7 +658,7 @@
   },
   {
     "id": "obsession_beast",
-    "name_kr": "망집의 짐승 (미확인)",
+    "name_kr": "망집의 짐승",
     "name_jp": "妄執の獣",
     "content": "星詠みの書架",
     "level": 0,
@@ -1014,7 +1014,7 @@
   },
   {
     "id": "kaisei_uturo_ex5_terra_nivium",
-    "name_kr": "Terra NiVium — 공허한 진실 EX5",
+    "name_kr": "Terra NiVium — 허무한 진실을 포용하는 자 EX5",
     "name_jp": "Terra NiVium（虚ろなる真実を抱擁せし者の試練 EXステージ5）",
     "content": "廻生",
     "level": 0,
@@ -1089,7 +1089,7 @@
   },
   {
     "id": "kaisei_innga_ex4_deus_ex",
-    "name_kr": "데우스 엑스 (+리・아=발크) — 인과의 멍에 EX4",
+    "name_kr": "데우스 엑스 (+리・아=발크) — 인과의 굴레를 끊는 자 EX4",
     "name_jp": "デウス・エクス／リ・ア=バルク（因果の軛を断ちし者の試練 EXステージ4）",
     "content": "廻生",
     "level": 0,
@@ -1115,8 +1115,11 @@
   },
   {
     "id": "kaisei_tokinoyami_ex7_ogrebane_guildna",
-    "name_kr": "오거 베인 + 마수왕 길드너 — 시간의 어둠 EX7",
+    "name_kr": "오거 베인 + 마수왕 길드너 — 시간의 어둠을 비추는 자 EX7",
     "name_jp": "オーガベイン／魔獣王ギルドナ（時の闇を照らせし者の試練 EXステージ7）",
+    "hp": 1.6,
+    "hp_src": "https://arca.live/b/anothereden/27773984",
+    "hp_conf": "low",
     "content": "廻生",
     "level": 0,
     "weak": [],
@@ -1245,7 +1248,7 @@
   },
   {
     "id": "kaisei_tokinoibitsu_ex4_ogrezenon",
-    "name_kr": "오거 제논 — 시간의 뒤틀림 EX4",
+    "name_kr": "오거 제논 — 시간의 왜곡을 바로잡는 자 EX4",
     "name_jp": "オーガゼノン（時の歪を糺せし者の試練 EXステージ4）",
     "content": "廻生",
     "level": 0,
@@ -1270,7 +1273,7 @@
   },
   {
     "id": "kaisei_mouryou_ex4_yosuzume",
-    "name_kr": "야작 ×2 — 봉인된 재앙의 망량 EX4 (미확인)",
+    "name_kr": "밤참새 ×2 — 봉인된 재앙 망량 EX4",
     "name_jp": "夜雀×2（封じられし禍つ魍魎の試練 EXステージ4）",
     "content": "廻生",
     "level": 0,
@@ -1328,7 +1331,7 @@
   },
   {
     "id": "kaisei_dennou_ex4_mother",
-    "name_kr": "마더 (+레프트/라이트 비트) — 전영의 수수께끼 EX4",
+    "name_kr": "마더 (+레프트/라이트 비트) — 전영의 수수께끼를 밝히는 자 EX4",
     "name_jp": "マザー／レフトビット／ライトビット（電影の謎を明かせし者の試練 EXステージ4）",
     "content": "廻生",
     "level": 0,
@@ -1385,7 +1388,7 @@
   },
   {
     "id": "kaisei_kyoufuu_ex4_sylph",
-    "name_kr": "실프의 환령 — 준렬한 강풍폭란 EX4 (미확인)",
+    "name_kr": "실프의 환령 — 준렬한 광풍폭란 EX4 (미확인)",
     "name_jp": "シルフの幻霊（峻烈たる強風暴乱の試練 EXステージ4）",
     "content": "廻生",
     "level": 0,
@@ -1643,7 +1646,7 @@
         "hp": 1920
       }
     ],
-    "name_kr": "키마이라 볼카 (미확인)",
+    "name_kr": "키마이라 볼카",
     "name_jp": "キマイラ・ヴォルカ",
     "content": "外史（望郷の魂と逆星の旅人 第1弾 幻霊の剣と祈誓の灯火）追加ボス",
     "level": 0,

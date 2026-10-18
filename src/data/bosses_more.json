@@ -206,7 +206,7 @@
  },
  {
    "id": "hyougokuki",
-   "name_kr": "빙옥귀 (미확인)",
+   "name_kr": "빙옥귀",
    "name_jp": "氷獄鬼",
    "content": "星詠みの書架",
    "level": 0,
@@ -425,7 +425,7 @@
  },
  {
    "id": "teyuru_menas",
-   "name_kr": "테율 메나스 (미확인)",
+   "name_kr": "테유르 메나스",
    "name_jp": "テユール・メナス",
    "content": "星詠みの書架",
    "level": 0,
@@ -541,7 +541,7 @@
  },
  {
    "id": "godhand_eimi",
-   "name_kr": "갓 핸드 (에이미) (미확인)",
+   "name_kr": "갓핸드 (에이미)",
    "name_jp": "ゴッドハンド（エイミ）",
    "content": "星詠みの書架",
    "level": 0,
@@ -660,7 +660,7 @@
  },
  {
    "id": "kudan",
-   "name_kr": "쿠단 (미확인)",
+   "name_kr": "구단",
    "name_jp": "クダン",
    "content": "星詠みの書架",
    "level": 0,
@@ -1195,7 +1195,7 @@
  },
  {
    "id": "ad_majuujou_geo_angiras",
-   "name_kr": "지오 앙길라스 (미확인)",
+   "name_kr": "지오 앙길라스",
    "name_jp": "ジオ・アンギラス",
    "content": "アナザーダンジョン（魔獣城）ベリーハード",
    "level": 0,
@@ -1241,7 +1241,7 @@
  },
  {
    "id": "ad_totodream_psychic_ido",
-   "name_kr": "사이킥 이드 (미확인)",
+   "name_kr": "사이킥 이드",
    "name_jp": "サイキック・イド",
    "content": "アナザーダンジョン（トトドリームランド）ベリーハード",
    "level": 0,
@@ -1437,8 +1437,11 @@
  },
  {
   "id": "kaisei_tokinoyami_ex6",
-  "name_kr": "팬텀 연결체 / 파르지팔 왕 / 환시 태아 — 시간의 어둠 EX6 (팬텀 연결체 미확인)",
+  "name_kr": "팬텀 연결체 / 파르시팔 왕 / 환시 태아 — 시간의 어둠을 비추는 자 EX6",
   "name_jp": "ファントム連結体／パルシファル王／幻視胎（時の闇を照らせし者の試練 EXステージ6）",
+  "hp": 0.6,
+  "hp_src": "https://arca.live/b/anothereden/27773984",
+  "hp_conf": "low",
   "content": "廻生",
   "level": 0,
   "weak": [
@@ -1495,8 +1498,11 @@
  },
  {
   "id": "kaisei_tokinoyami_ex5",
-  "name_kr": "지오 앙길라스 / 마수 바레스 / 마수왕 / 마수왕 길드너 — 시간의 어둠 EX5 (지오 앙길라스 미확인)",
+  "name_kr": "지오 앙길라스 / 마수 바레스 / 마수왕 / 마수왕 길드너 — 시간의 어둠을 비추는 자 EX5",
   "name_jp": "ジオ・アンギラス／魔獣ヴァレス／魔獣王／魔獣王ギルドナ（時の闇を照らせし者の試練 EXステージ5）",
+  "hp": 0.8,
+  "hp_src": "https://arca.live/b/anothereden/27773984",
+  "hp_conf": "low",
   "content": "廻生",
   "level": 0,
   "weak": [
@@ -1552,7 +1558,7 @@
  },
  {
    "id": "kaisei_uturo_ex4",
-   "name_kr": "페닌슐라 풀미누 / 시누스 이리둠 / 마레 마르기니스 / 슈나우드 황 / 테율 메나스 — 공허한 진실 EX4 (미확인)",
+   "name_kr": "Peninsula Fulminu / Sinus Iridum / Mare Marginis / 슈나우드 황 / 테유르 메나스 — 허무한 진실을 포용하는 자 EX4",
    "name_jp": "PeninsulaFulminu／Sinuslridum／MareMarginis／シュナウド皇／テユール・メナス（虚ろなる真実を抱擁せし者の試練 EXステージ4）",
    "content": "廻生",
    "level": 0,
@@ -1686,7 +1692,7 @@
  },
  {
   "id": "kaisei_innga_ex3",
-  "name_kr": "데우스 엑스 / 크레이브 솔리시 / 리・아=발크 — 인과의 멍에 EX3 (크레이브 솔리시 미확인)",
+  "name_kr": "데우스 엑스 / 크레이브 솔리시 / 리・아=발크 — 인과의 굴레를 끊는 자 EX3 (크레이브 솔리시 미확인)",
   "name_jp": "デウス・エクス／クレイヴ・ソリッシュ／リ・ア=バルク（因果の軛を断ちし者の試練 EXステージ3）",
   "content": "廻生",
   "level": 0,
