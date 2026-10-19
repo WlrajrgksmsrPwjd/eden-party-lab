@@ -28,7 +28,7 @@ function multihitAvg(h){ h=Math.max(1,Math.round(h)); let s=0; for(let i=0;i<h;i
 const DEFAULT_SETTINGS = {
   grastaDefault: {mode:'auto', e:3, pa:0, po:0, ore:false}, // 공격 글래스터 기본 배치
   capOn: true,         // 1타 상한 (타수 중요도) 반영
-  afTotalCap: 999999999999, // AF 한 번(AF 안 SB 포함) 총 피해 상한 9999억 9999만(사용자 확인 2026-10-19 'AF도 맥뎀 9999억') — 0이면 없음
+  afTotalCap: 999999999999, // 실전 AF 한 번(AF 안 SB 포함) 총 피해 상한 9999억 9999만(사용자 확인 2026-10-20: 실전 AF는 9999억으로 표시·피통 9999억 넘는 보스 없음, 허수아비는 조 단위라 상한 없음) — 0이면 없음
   lifeCarryN: true,    // 평상 턴 피해는 목숨을 넘어 다음 목숨으로, AF는 목숨 하나(AF 뒤 요격·체인·턴 종료 공격은 다음 목숨에) — 사용자 확인 2026-10-19
   capAfterCombo: false, // true면 AF 콤보를 곱한 뒤 25억 경감(game-info 위키 순서). 2026-10-19 사용자 확인: AF 중 99.99억이 자주 나와 지금 순서(경감 → ×콤보 → 99.99억)가 맞음
   capAbs: 9999999999,  // 1타 대미지 상한 (100억-1)
@@ -3408,7 +3408,7 @@ function dummySim(o){
     const stAll = {acted: all, stepDone: team.map((c,j)=> B[j] ? castN[j] : 0), atk: all};
     const full = team.map((c,i)=>coreAt(stAll, nz, 'af', i, Object.assign(infAt(all, team.map((_,j)=>j===kAct)), {eg: egAll})));
     const fin = Math.min(combo, cmax);
-    if(+S.afTotalCap>0 && af + sb > +S.afTotalCap){ const k = +S.afTotalCap/(af + sb); af *= k; sb *= k; for(let i=0;i<per.length;i++) per[i] *= k; for(const x of sbPer) x[1] *= k; } // AF 한 번 총 피해 상한(9999억, AF 안 SB 포함)
+    /* 허수아비는 AF 총 피해 상한 없음(사용자 확인 2026-10-20: 허수아비는 조 단위로 나오고, 실전에서만 AF 피해가 9999억으로 표시) */
     return {total: af + sb, af, sb, afPer: per.map((v,i)=>v - sbPer.filter(x=>x[0]===i).reduce((q,x)=>q+x[1],0)), per, n: cnt, avg: af>0 ? cw/af : 0.75, fin,
       sbCombo: null, sbAt, lv: nz && nz.level>=2 && zFrom0 ? 2 : (nz ? nz.level : 0), sbWhen: sbAt!=null ? 'af' : null,
       sbGauge: Math.min(100, sbG), sbNeed: sbIdx.length>0 && sbAt==null, acts: afA.seq.length, order: prio, ex: 0, dur: afA.dur,
