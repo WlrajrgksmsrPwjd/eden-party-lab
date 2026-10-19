@@ -1484,7 +1484,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let rep = sk.repeat||0;
   if(situation!=='normal' && sk.repeat_af!=null) rep = +sk.repeat_af||0; // AF 중 재공격 횟수가 다른 스킬(이즈나 등 '非AF 시 재공격')
   else if(rep>0 && sk.rep_p!=null){ const rp = typeof sk.rep_p==='object' ? (situation==='normal' ? sk.rep_p.n : (sk.rep_p.af!=null ? sk.rep_p.af : sk.rep_p.n)) : sk.rep_p; rep *= Math.max(0, Math.min(1, +rp||0)); } // 재공격 조건 충족 확률(전수 대조: 개전 축적 등으로 늘 맞으면 1)
-  else if(situation!=='sb' && rep>0 && (sk.condition||'').length>0) rep*=0.7;
+  else if(situation!=='sb' && rep>0 && (sk.condition||'').length>0) rep *= (A.dummy && /HP\s*50%\s*이상/.test(sk.condition||'')) ? 1 : 0.7; // 조건부 재공격 평균 0.7 — 허수아비는 HP가 줄지 않아 'HP 50% 이상이면 재공격'은 늘 충족(2026-10-19)
   const totHits = hits*(1+rep);
   // 대상 수
   const nT = tgt==='aoe' ? Math.max(1,S.enemyCount) : 1;
@@ -3248,7 +3248,7 @@ function dummySim(o){
       afA.seq.forEach((a,q)=>{ const i=a.i, bo = isStepOf(i, c2), isInf = i===kAct && !ia[i] && !bo;
         if(!bo && !isInf){ const st=infAt(at, ia), wq = 1 + q/Math.max(1,L); w+=wq; sp+=wq*st.poison; sa+=wq*st.pain; }
         c2[i]++; if(isInf) ia[i]=true; else if(!bo) at[i]=true; });
-      var Av = ({...A, ...{_ecFix:true, eqOff:null, infPick:{poison: w>0?sp/w:0, pain: w>0?sa/w:0}, postSB:false, afN: afA.n.map((v,j)=>Math.max(1, v - (plan[j]||[]).length))}}); } // afN: 공격 행동 수(자원 소비형 상태)
+      var Av = ({...A, ...{_ecFix:true, dummy:true, eqOff:null, infPick:{poison: w>0?sp/w:0, pain: w>0?sa/w:0}, postSB:false, afN: afA.n.map((v,j)=>Math.max(1, v - (plan[j]||[]).length))}}); } // afN: 공격 행동 수(자원 소비형 상태)
     const pk = '|p'+Math.round(Av.infPick.poison*20)+'_'+Math.round(Av.infPick.pain*20); // 글래 배치가 같으면 행동 계획이 달라도 같은 상태의 계산은 재사용
     const coreAt = (st, z, sit, i, inow) => { // 그 순간 깔린 버프·독페인으로 i의 공격 1회 (필요한 것만 계산). st = {acted, stepDone, atk}
       sit = sit || 'af';
