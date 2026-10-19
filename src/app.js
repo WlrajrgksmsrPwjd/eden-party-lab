@@ -2350,19 +2350,23 @@ function suggestName(q){
 /* aecheck.com(AE Check) 저장 데이터 JSON(설정 → 데이터 복사)을 붙여 넣으면(2026-10-18 사용자 '여기 입력한 사람도 많아서 연동'): 값 = 단계×10000 + aecheck 캐릭터 번호.
    보유(inven)·현현(manifest 1 현현·2 진현현)·전용 글래스터(grasta)·성도각성(staralign 0~3) → 이 앱 보유 상태. 천명치는 aecheck에 없어 '새로 보유로 체크할 때 천명치' */
 function aecheckImport(d, msgEl, resetEl){
-  const msg = msgEl || $('#quickMsg'), rst = resetEl || $('#quickReset'), M = (AECHECK && AECHECK.map) || {}, nIn = (d.inven||[]).length;
-  if(!Object.keys(M).length){ msg.innerHTML = `aecheck 저장 데이터를 읽었어요(보유 ${nIn}명). 다만 aecheck 캐릭터 번호 ↔ 캐릭터 대응표가 아직 없어 불러올 수 없어요 — 대응표가 채워지면 같은 방법으로 바로 불러와요.`; return; }
+  const msg = msgEl || $('#quickMsg'), rst = resetEl || $('#quickReset'), M = (AECHECK && AECHECK.map) || {}, C4 = (AECHECK && AECHECK.c4) || {};
+  if(!Object.keys(M).length){ msg.innerHTML = `aecheck 저장 데이터를 읽었어요(보유 ${(d.inven||[]).length}개). 다만 aecheck 캐릭터 번호 ↔ 캐릭터 대응표가 아직 없어 불러올 수 없어요.`; return; }
   const step = (arr, n) => { const x = (arr||[]).find(v=>+v%10000===n); return x ? Math.floor(+x/10000) : 0; };
   const saMin = +AECHECK.sa_min>0 ? +AECHECK.sa_min : 1, GM = AECHECK.grasta || {};
+  /* ☆5·AS·ES 번호만 보유로(aecheck는 ☆5를 체크하면 ☆4 번호도 함께 넣음 — ☆4만 있으면 아직 클래스 체인지 전이라 뺌) */
+  const seen = new Set(), five = new Set(); let c4only = 0; const miss = [];
+  for(const v of (d.inven||[])){ const n = +v%10000; if(M[n] || M[String(n)]) five.add(M[n] || M[String(n)]); }
+  for(const v of (d.inven||[])){ const n = +v%10000, c4 = C4[n] || C4[String(n)]; if(c4 && !five.has(c4) && !seen.has('c4:'+c4)){ seen.add('c4:'+c4); c4only++; } else if(!c4 && !(M[n] || M[String(n)])) miss.push(n); }
   if(rst && rst.checked) state.owned = {}; else leaveSample();
-  let added = 0, upd = 0; const miss = [];
-  for(const v of (d.inven||[])){ const n = +v%10000, id = M[n] || M[String(n)]; const c = id && byId.get(id); if(!c){ miss.push(n); continue; }
+  let added = 0, upd = 0, got = 0;
+  for(const v of (d.inven||[])){ const n = +v%10000, id = M[n] || M[String(n)]; const c = id && byId.get(id); if(!c || seen.has(id)) continue; seen.add(id); got++;
     const m = Math.min(2, step(d.manifest, n)), gs = step(d.grasta, n), sa = step(d.staralign, n), g = GM[gs] || GM[String(gs)] || null;
     const o = state.owned[id];
     if(!o){ state.owned[id] = newOwn(id, {m, g: g || undefined, s: c.stellar ? sa >= saMin : undefined}); added++; continue; }
     let ch = false; if((+o.m||0)!==m){ o.m = m; ch = true; } if(g && (o.g||'none')!==g){ o.g = g; ch = true; } if(c.stellar && !!o.s!==(sa>=saMin)){ o.s = sa>=saMin; ch = true; } if(ch) upd++; }
   touchRoster(); renderRoster(); renderTap(); if(rst) rst.checked = false;
-  msg.innerHTML = `<b>aecheck에서 ${nIn - miss.length}명 불러옴</b>${added||upd ? ` (새로 ${added}명 · 상태 바뀜 ${upd}명)` : ''} <span class="hint">천명치는 aecheck에 없어 새로 넣은 캐릭터는 ${newT()}</span>${miss.length ? `, 대응표에 없는 번호 ${miss.length}개(${miss.slice(0,8).join(', ')}${miss.length>8?'…':''})` : ''}`;
+  msg.innerHTML = `<b>aecheck에서 ${got}명 불러옴</b>${added||upd ? ` (새로 ${added}명 · 상태 바뀜 ${upd}명)` : ''} <span class="hint">천명치는 aecheck에 없어 새로 넣은 캐릭터는 ${newT()}</span>${c4only ? ` · <span class="hint">☆4(클래스 체인지 전)만 있는 ${c4only}명은 뺌</span>` : ''}${miss.length ? `, 이 앱에 없는 번호 ${miss.length}개(${miss.slice(0,8).join(', ')}${miss.length>8?'…':''} — 3★·아직 데이터 없는 캐릭터)` : ''}`;
 }
 function quickCheck(){
   { const raw = String($('#quickText').value||'').trim(); if(raw[0]==='{'){ try{ const d = JSON.parse(raw); if(d && Array.isArray(d.inven)){ aecheckImport(d); return; } }catch(e){} } }
