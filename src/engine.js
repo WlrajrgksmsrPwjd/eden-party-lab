@@ -1511,7 +1511,8 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   }
   // 帯電(루나틱<帯電>, 알테마 ウツハラ 「自身の攻撃1Hitにつき雷属性の追撃(小)」): 타격마다 雷 小 1배 추격 1회 — 다른 캐릭터 문구엔 위력이 없어 같은 값으로.
   // 추격은 그 타격의 대상 1체라 연계처럼 단일 크기, 공격 종류(물리·마법)는 그 공격을 따름(미기재). 추격도 AF 콤보·게이지 타수에 들어감
-  if(chW>0){ const lsz = (SIZE_TABLE['st_'+kind+'_el']||SIZE_TABLE.st_phys_el)[SIZE_IDX.s]/100;
+  // 2026-10-19 game-info 状態効果まとめ 3: 帯電 = '攻撃1hitにつき、威力20%固定の雷属性攻撃' → 위력 20%(예전 단일 小 1배 = 140% 가정의 1/7), AF 콤보 +1%·게이지 0.5%(comboInc·refill)
+  if(chW>0){ const lsz = S.chargePow!=null ? +S.chargePow : 0.2;
     let rho = lsz*1.1/Math.max(1e-9, sizeV*mult*(tgt==='st'?1.1:1)/Math.max(1, sk.hits||1)); if(el==='none') rho *= 1.8;
     const n = totHits*chW; (links=links||[]).push({rho, el:'thunder', n, charge:true}); linkHits += n; }
   const csOK = sk.combo_scale && (!sk.combo_scale.when || !Object.keys(sk.combo_scale.when).length || ruleAct({w:sk.combo_scale.when}, idx, team, progs, situation==='af'?'normal':situation, zone, A)>0);
