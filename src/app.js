@@ -867,6 +867,7 @@ function renderPlanControls(){
   renderChips('#backChips', P.backLocked||[], 'backLocked');
   $('#optDiverse').checked = settings().diverse!==false;
   $('#optCap').checked = settings().capOn!==false;
+  { const ac = $('#optAfCap'); if(ac) ac.checked = +settings().afTotalCap>0; }
   { // 세부 조건에서 기본값과 다른 것 수
     const S=settings(), B=P.buddy||{}, n = [(S.burstTurns||3)!==3 && !$('#nturnRow').hidden, !!P.focus, P.mode!=='weak' && Object.values(P.enemy||{}).some(Boolean), (P.enemyCount||1)!==1,
       (B.main&&B.main!=='auto'), (P.excluded||[]).length>0, (P.backLocked||[]).length>0, P.mode!=='kesshitsu' && P.backN!=null && +P.backN!==2, (P.maxDiff||4)!==4, S.diverse===false, S.capOn===false].filter(Boolean).length;
@@ -2827,6 +2828,7 @@ function bind(){
   $('#diffSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-lv]'); if(!b) return; state.plan.maxDiff=+b.dataset.lv; save(); renderPlanControls(); runPlan(); });
   $('#optDiverse').addEventListener('change',e=>{ state.settings.diverse=e.target.checked; save(); });
   $('#optCap').addEventListener('change',e=>{ state.settings.capOn=e.target.checked; save(); });
+  { const ac = $('#optAfCap'); if(ac) ac.addEventListener('change',e=>{ state.settings.afTotalCap = e.target.checked ? 999999999999 : 0; save(); }); } // AF 총 피해 상한(2026-10-19 사용자 'AF도 맥뎀 9999억')
   $('#runBtn').addEventListener('click',runPlan);
   $('#burstN').addEventListener('change',e=>{ state.settings.burstTurns=Math.max(1,Math.min(10,+e.target.value||3)); save(); runPlan(); });
   $('#focusSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-fi]'); if(!b) return; const k=+b.dataset.fi; state.plan.focus = k<0?null:Object.assign({},FOCUS_LIST[k]); save(); renderPlanControls(); runPlan(); });
