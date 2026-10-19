@@ -14,7 +14,7 @@ const SLOTS = [['weapon', '무기'], ['armor', '방어구'], ['badge1', '배지 
 const OPT_ALL = SLOTS.map(x => x[0]);
 const SLOT_LOCK = { badge2: 120, g4: 200 };
 const lockOf = (k, fate) => SLOT_LOCK[k] && (+fate || 0) < SLOT_LOCK[k] ? SLOT_LOCK[k] : 0;
-const ZONE_AWK = ['열화진', '수천진', '지열진', '풍왕진', '초뢰진', '각음진', '휘정진', '황참진', '순돌진', '굉타진', '환마진', '쌍격진 참돌'];
+const ZONE_AWK = ['열화진', '수천진', '지열진', '풍왕진', '초뢰진', '각음진', '휘정진', '황참진', '순돌진', '굉타진', '환마진', '쌍격진 참돌', '쌍격진 참마', '월광진']; // 극·쌍격진 참마·극·월광진도 있음(game-info ZONE 1-2-12·13, 2026-10-19 — 딩 코어 목록엔 없음)
 const KIND_OF = { '물리': { '힘': '물리공격', '지능': '지능기반 물리', '속도': '속도기반 물리' }, '마법': { '지능': '마법공격', '힘': '힘기반 마법', '속도': '속도기반 마법' } };
 const clsOfWeapon = wt => wt === '지팡이' ? '마법' : '물리';
 const baseOfWeapon = wt => wt === '지팡이' ? '지능' : '힘';
@@ -106,9 +106,9 @@ function zoneEffect(s, wt) {
   if (z === '휘정진') { if (none) return 0; const wk = s.aff === '약점'; return el === '결정' ? (wk ? (k ? 220 : 110) : (k ? 60 : 30)) : (wk ? (k ? 130 : 50) : -30); }
   if (TY[z]) return !t ? 0 : t === TY[z] ? (k ? 60 : 30) : (k ? -60 : -30);
   if (z === '쌍격진 참돌') return !t ? 0 : ['베기', '찌르기'].includes(t) ? (k ? 60 : 30) : -30;
-  if (z === '쌍격진 참마') return !t ? 0 : ['베기', '마법'].includes(t) ? 30 : -30;
+  if (z === '쌍격진 참마') return !t ? 0 : ['베기', '마법'].includes(t) ? (k ? 60 : 30) : -30; // 극 +60(사용자 확인 2026-10-19 — 딩 코어는 극이어도 +30)
   if (z === '섬격진') return 30;
-  if (z === '월광진') return MEI.includes(el) ? 30 : SKY.includes(el) ? -30 : 0;
+  if (z === '월광진') return MEI.includes(el) ? (k ? 60 : 30) : SKY.includes(el) ? -30 : 0; // 극 +60(사용자 확인 2026-10-19)
   if (z === '견수진') return -50;
   if (z === '성해진') return s.afGauge >= 100 ? 100 : 0;
   return 0;

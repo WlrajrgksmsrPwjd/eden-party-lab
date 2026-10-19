@@ -2321,7 +2321,7 @@ function budAgg(bd, team, enemy, A){
   const zfxOf = x => { if(!x) return null; if(Array.isArray(x)){ for(const y of x){ const r = zfxOf(y); if(r) return r; } return null; } if(!reqOK(x.req)) return null;
     if(x.zone_aw) return {key: x.zone_aw}; if(x.zone_dep && +x.zone_dep.level>=2) return {key: x.zone_dep.key}; return null; };
   const zfx = zfxOf(b.sb2) || zfxOf(b.sb);
-  return {parts, sup, enemyDown, afgA: +b.afg||0, afgC, ch, gear: gear ? gear.id : null, brk, inf, zfx};
+  return {parts, sup, enemyDown, afgA: +b.afg||0, afgC, ch, gear: gear ? gear.id : null, brk, inf, zfx, autoAtk: b.auto_atk || null}; // autoAtk: 오토 스킬이 공격이면 그 공격 행동의 AF 게이지(존이면 행동당)
 }
 /* 흉성 3(AF 게이지 매 턴 소비, 2026-10-18 알테마 안・키・디그마): 턴을 넘겨 게이지를 못 모으니 버디 차지 스킬의 즉시 AF 게이지(afg)를 한 턴에 몰아 써서 50% 이상이면 AF.
    k = ⌈50 ÷ afg⌉번(건스(AS) 30 → 2번 60%), 필요 차지 k × cost, 차지 속도 r = 1 + chg_plus + 장비 → 첫 AF 1 + ⌈필요 ÷ r⌉턴째(초뢰진이면 6턴째 — 알테마 행동표와 같음), 그 뒤 ⌈필요 ÷ r⌉턴마다 */
@@ -2332,7 +2332,13 @@ function afDrainInj(bud, zone, team){
   for(let t=first; t<=40; t+=per) turns.add(t);
   return {g0: Math.min(100, k*bud.afgC), first, per, turns, k};
 }
-const budAfg = (bud, zone, team) => !bud ? 0 : (bud.afgA||0) + (bud.afgC ? bud.afgC*Math.min(1, (1 + budChgPlus(bud.ch.plus, zone, team) + (bud.ch.rnd||0))/bud.ch.cost) : 0);
+/* 버디 오토 스킬 공격도 공격 행동이라 AF 게이지가 참(2026-10-19, TK '無限AF' 레시피: 輝晶陣에서 질야 오토 +15) — buddy_fx auto_atk {el, wt, hits}(el 'zone' = 4대 속성 존이면 그 속성).
+   존이면 행동당 zoneAF, 없으면 타당 1.5%. 버디는 AF 중엔 안 움직이지만 AF가 끝난 그 턴에도 한 번 움직임(행동 밖 게이지 afOffOf에 들어감) */
+const budAtkAfg = (bud, zone, team) => { const a = bud && bud.autoAtk; if(!a) return 0;
+  const el = a.el==='zone' ? (zone && zone.kind==='elem' && ELEM4.includes(zone.key) ? zone.key : (a.el0||'none')) : (a.el||'none');
+  const ex = +a.execs>1 && (!a.execs_req || (team||[]).some(c=>c && c.id===a.execs_req)) ? +a.execs : 1; // 피탄(AS): 전열 질퍼니(AS)면 다시 공격
+  const za = zoneAF(zone, {el, wt: a.wt||null}, false); return za!=null ? za*ex : Math.min(30, Math.max(1, +a.hits||1)*ex)*1.5; };
+const budAfg = (bud, zone, team) => !bud ? 0 : (bud.afgA||0) + budAtkAfg(bud, zone, team) + (bud.afgC ? bud.afgC*Math.min(1, (1 + budChgPlus(bud.ch.plus, zone, team) + (bud.ch.rnd||0))/bud.ch.cost) : 0);
 /* 속성 변환(변환자재): 아군 전체를 존 속성·특정 속성으로 바꾸는 서포터, 자기 속성을 존·약점·옆 아군에 맞추는 캐릭터 */
 function echgOf(team, progs){
   const L=[]; team.forEach((c,i)=>{ const e=c.echange; if(!e) return; if(e.req && !reqMet(e.req, team, c)) return; L.push(Object.assign({i}, e)); });
@@ -2550,7 +2556,7 @@ function battleSim(N, o){
         if(full>0){ const k = 1 - full*(1 - o.afFull); nd *= k; if(rec.sb==='turn' && g1>=100){ d *= o.afFull; dS *= o.afFull; if(rec.sbD) rec.sbD = dS; rec.fS *= o.afFull; } rec.afFull = +full.toFixed(2); } }
       if(o.ss && !isAF && g>=100-1e-9){ nd *= 2; if(dS>0){ d += dS; dS *= 2; rec.sbD = dS; } rec.ss = true; } // 성해진: 게이지 100%인 평상 턴은 모든 공격 ×2
       d += nd; rec.nd = nd; rec.L = L(); // 누적 효과 예열(rmp). 2026-10-18 버그: 이 두 줄이 주석 안에 들어가 실전 딜 비중(bsim.per)에서 평상 턴이 빠졌었음
-      if(!isAF){ s1 = Math.min(100, s1 + o.sbAct*(o.sbW ? o.sbW.reduce((x,v)=>x+v, 0) : o.front)); g1 = Math.min(100, g1 + o.afGain); } else s1 = Math.min(100, s1); aw1 = Math.max(0, aw1-1);
+      if(!isAF){ s1 = Math.min(100, s1 + o.sbAct*((o.sbWN || o.sbW) ? (o.sbWN || o.sbW).reduce((x,v)=>x+v, 0) : o.front)); g1 = Math.min(100, g1 + o.afGain); } else s1 = Math.min(100, s1); aw1 = Math.max(0, aw1-1);
       if(rec.gSb) g1 = Math.min(100, g1 + rec.gSb); // SB 턴 종료 추격(메리나)
       let hs1 = hs0;
       if(o.hg && hs0){ const M = o.hg.M, segs = []; // 보스 타수 기믹(2026-10-19): AF(또는 평상) → SB 순으로 벗기며 그 구간 피해 ×배율
@@ -2984,6 +2990,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     return (afMemo[k] = {g0, dmg:zz.v, per:zz.per, acts:a.n.reduce((x,y)=>x+y,0), fin:Math.min(0.75+gn, S.comboCap>0 ? S.comboCap : Infinity), avg, n:a.n}); };
   const sbIdx = team.map((c,i)=>i).filter(i=>team[i].stellar && progs[i].sbOK);
   const sbW = team.map((c,i)=> sbFillOK(team, i, progs, S) ? 2 : 1); // SB 게이지 행동 1회 충전 배율(허수아비 dummySim과 같게)
+  const sbWN = sbW.map((w,i)=> w*(1 - Math.min(1, Math.max(0, (sim && sim.lock && +sim.lock[i]) || 0)))); // 평상 턴: 가창으로 잠긴 턴엔 행동이 없어 SB 게이지도 안 참(game-info 星導覚醒 '歌唱は使用したターンのみ', 2026-10-19)
   /* SB 게이지 가득(state sb_full {from, from_nosa, dur, cd}, 2026-10-19 game-info ユーチェリカ: 星天の力 상태에선 턴 시작에 天冥ゲージ를 天 200으로 채움 →
      그 상태 2턴 동안 매 턴 SB, 상태가 끝나면 星の導き를 다시 99까지(성도각성 + 개전 40이면 4턴째부터, 아니면 늦게)). 그 턴은 상태가 켜진 SB·AF·평상 턴으로 */
   const sbFullOf = (()=>{ if(!sbIdx.length || S.sbFull===false) return null; let set = null, info = null; const nm = new Set();
@@ -3017,7 +3024,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     sbOnce: (()=>{ const oi = sbIdx.filter(i=>team[i].sb && +team[i].sb.once_t>0); if(!oi.length) return null; const S1 = per => oi.reduce((v,i)=>v+(per[i]||0),0);
       return {maxT: Math.min(...oi.map(i=>+team[i].sb.once_t)), t: t => { const w = Math.min(1, Math.max(0, (t-1)/2)), L = (x,y)=>x+(y-x)*w; return {b: L(S1(res.sb.per), S1(sb3.per)), b1: L(S1(sbPer1), S1(sbPer31))}; }}; })(), // 전투 중 1회 SB(sb.once_t = 쓸 수 있는 마지막 턴)
     aw0: awStart ? 2 : 0, awConst, sbAw, hasSB: sbIdx.length>0,
-    ss: ssK>1, ssAF: S.starseaAF!==false, afGain, afDrain: dInj ? {turns: dInj.turns, g0: dInj.g0} : null, g0: st.g, s0: Math.min(50, 12.5*team.length), sbAct: S.sbPerAct!=null ? +S.sbPerAct : 2.5, front: team.length, sbW, afRun, /* SB 게이지 시작 = 전열 1명당 +25/200(2026-10-19 game-info 星導覚醒 'ステラバーストの細かい仕様' — 예전엔 천·명 중 많은 쪽 수만), sbW: 멤버별 행동 1회 충전 배율(스텔라 보드 天冥 어빌리티 증가(중) = +10/+5) */
+    ss: ssK>1, ssAF: S.starseaAF!==false, afGain, afDrain: dInj ? {turns: dInj.turns, g0: dInj.g0} : null, g0: st.g, s0: Math.min(50, 12.5*team.length), sbAct: S.sbPerAct!=null ? +S.sbPerAct : 2.5, front: team.length, sbW, sbWN, afRun, /* SB 게이지 시작 = 전열 1명당 +25/200(2026-10-19 game-info 星導覚醒 'ステラバーストの細かい仕様' — 예전엔 천·명 중 많은 쪽 수만), sbW: 멤버별 행동 1회 충전 배율(스텔라 보드 天冥 어빌리티 증가(중) = +10/+5) */
     refill: (()=>{ const rc = sbIdx.length ? team.find(c=>c.afRefillR && c.afRefillR.on==='sb') : null; return rc ? {to:+rc.afRefillR.to||100, cost:+rc.afRefillR.cost||0, e0: +rc.afRefillR.start>0 ? 1 : 0, noAF: rc.afRefillR.af===false} : null; })(), // e0: 개전에 축적 1개(히스메나(ES) エスパーダ), noAF: AF 안 SB로는 안 채움
     teSB: (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.sb_only))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, sbz || nz, cap, fw, 'sb'); return r && r.total>0 ? r : null; })()}; // SB를 쓴 턴의 종료 공격
   simIn.afSbG = S.afOffGain===false || S.afBan || S.afDrain ? 0 : sbIdx.reduce((v,i)=>{ const q = team[i].afTurnR; if(!q || !q.sb) return v; const n = Math.max(1, +q.acts||1), za = zoneAF(nz, {el:q.el||'none', wt:q.wt||null}, false); return v + (za!=null ? za*n : n*1.5); }, 0); // SB 턴 종료 추격(메리나 星導スキル)
@@ -3030,7 +3037,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   if(afCyc){ if(simIn.teAF){ out.sustain += simIn.teAF.total/afTurns; out.teAF = simIn.teAF; } if(simIn.teN) out.sustain += simIn.teN/afTurns; } // AF 턴 종료 공격(AF 턴 전용 + 평상 턴 종료 공격)도 AF 주기마다
   // 지속 딜에 SB(2026-10-16, 사용자 확인: SB는 턴을 쓰지 않아 쓴 뒤에도 그 턴 행동을 그대로 함): SB 게이지가 차는 주기마다 한 번 더함.
   // 게이지 = 평상 턴 행동마다 + AF 행동마다(실전 시뮬과 같은 sbAct), 차는 몫이 AF 쪽이면 AF 끝 콤보로(실전 시뮬처럼 AF 안 SB)
-  if(S.sbCycle!==false && sbIdx.length){ const sa = simIn.sbAct, afActs = R3.afA.n.reduce((x,y,i)=>x+y*sbW[i],0), gN = sa*sbW.reduce((x,v)=>x+v,0)*susNW, gA = afCyc ? sa*afActs/afTurns : 0, gT = gN + gA;
+  if(S.sbCycle!==false && sbIdx.length){ const sa = simIn.sbAct, afActs = R3.afA.n.reduce((x,y,i)=>x+y*sbW[i],0), gN = sa*sbWN.reduce((x,v)=>x+v,0)*susNW, gA = afCyc ? sa*afActs/afTurns : 0, gT = gN + gA;
     const sbTurns = Math.max(1, 100/Math.max(1, gT)), fr = gT>0 ? gA/gT : 0, fin = afRun(100, bzG && bzG.up ? 1 : 2, 3).fin, k = fr*fin + (1-fr); // 버디 각성 극 AF는 차지 주기 중 일부라 SB 주기 콤보엔 안 씀(2026-10-18 점검)
     const Hs = (A.tm && A.tm.H) || 6; // 전투 중 1회 SB(once_t)는 주기마다가 아니라 전투(H턴)에 한 번
     // 긴 전투 SB(2026-10-18, 빅트 歴戦 SB 71.4 → 꺼지면 39.4): AF처럼 개전·한 번 쓰는 상태 구간 끝마다 그 뒤 SB를 계산해 시간 가중(탐색 어림 단계는 생략)
