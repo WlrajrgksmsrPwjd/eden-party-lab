@@ -2031,11 +2031,11 @@ function buildCtx(input, ownedAll){
    행 = 속도 하한, 문자 = 1~15번째 행동 뒤 대기(문자 코드 − 48). 16번째부터 행동당 +0.6초. 속도는 버프 포함(위키: 리캐스트 계산에 속도 버프가 들어감) */
 const AF_WAIT = [[1,"2334556677889:;"],[7,"2334456677889::"],[19,"23344566778899:"],[35,"23344556778899:"],[72,"23344556678899:"],[92,"22344556678899:"],[113,"22344556677899:"],[135,"22334556677899:"],[157,"22334556677889:"],[179,"22334456677889:"],[202,"223344566778899"],[226,"223344556778899"],[249,"123344556778899"],[273,"123344556678899"],[297,"122344556678899"],[321,"122344556677899"],[346,"122334556677899"],[371,"122334556677889"],[395,"122334456677889"],[446,"122334455677889"],[471,"112334455677889"],[497,"112334455667889"],[522,"112234455667889"],[549,"112234455667789"],[574,"112233455667789"],[599,"112233455667788"],[626,"112233445667788"],[678,"112233445567788"],[704,"111233445567788"],[730,"111233445566788"],[757,"111223445566788"],[783,"111223445566778"],[810,"111223345566778"],[863,"111223344566778"],[916,"111223344556778"],[943,"111123344556778"],[970,"111123344556678"],[997,"111122344556678"]];
 /* AF 콤보 증가량(2026-10-19 game-info 'アナザーフォースまとめ' 3): 행동의 첫 타 = 처음 쓰는 스킬 5%·이미 쓴 스킬 4%(약점이면 +1%), 그 뒤 타격(연속 타·재공격·여러 대상)은 '직전에 맞힌 같은 스킬'이라 2% —
-   예전엔 타당 2.5% 고정이라 1타 스킬을 낮게(4~5% → 2.5%), 10타 넘는 스킬을 높게 봤음. 스킬 AF 콤보 배율(af_combo_x)은 그 스킬 타격에만, 연계·帯電 추격은 타당 2%, 장비 콤보 증가(cup)는 타당. S.comboWiki=false면 예전 방식 */
+   예전엔 타당 2.5% 고정이라 1타 스킬을 낮게(4~5% → 2.5%), 10타 넘는 스킬을 높게 봤음. 스킬 AF 콤보 배율(af_combo_x)은 그 스킬 타격에만, 연계 추격은 타당 2%·帯電 추격은 1%, 장비 콤보 증가(cup)는 타당. S.comboWiki=false면 예전 방식 */
 function comboInc(co, S, first){ if(!co) return 0; const tg = co.tgt==='aoe' ? Math.max(1, +S.enemyCount||1) : 1;
   if(S.comboWiki===false) return co.hitsPerAct*(0.025+(co.cup||0))*co.afx*tg;
-  const hp = Math.max(1, +co.totHits||1)*tg, lk = (+co.linkHits||0)*tg, own = (first ? 0.05 : 0.04) + (co.rel==='weak' ? 0.01 : 0) + 0.02*(hp - 1);
-  return own*(co.afxS!=null ? co.afxS : (co.afx||1)) + 0.02*lk + (co.cup||0)*(hp + lk); }
+  const hp = Math.max(1, +co.totHits||1)*tg, lk = (+co.linkHits||0)*tg, lkC = co.links ? co.links.reduce((x,l)=>x + (l.charge ? +l.n||0 : 0), 0)*tg : 0, own = (first ? 0.05 : 0.04) + (co.rel==='weak' ? 0.01 : 0) + 0.02*(hp - 1);
+  return own*(co.afxS!=null ? co.afxS : (co.afx||1)) + 0.02*Math.max(0, lk - lkC) + 0.01*lkC + (co.cup||0)*(hp + lk); } // 帯電 추격은 타당 1%(위키 3-3)
 function afWait(spd, k){ let r = AF_WAIT[0][1]; for(const [lo, w] of AF_WAIT){ if(spd >= lo) r = w; else break; } const kk = Math.max(1, Math.round(k)); return kk<=15 ? r.charCodeAt(kk-1) - 48 : (r.charCodeAt(14) - 48) + 0.6*(kk - 15); }
 /* ---------- AF 행동 수 (위키 기준) ----------
    AF는 실시간: 게이지 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찬다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%).
@@ -2054,9 +2054,10 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // pl
   const known = team.map((c,i)=> progs[i] && progs[i].spdSrc ? progs[i].spdSrc : null);
   const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
     const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
-    const byHit = Math.min(30, co.totHits + (co.linkHits||0))*(weak?3.5:1.5)*(co.cpy ? 0.5 : 1);
+    const lkG = 0.5*Math.min(30, co.linkHits||0); // 帯電·연계 추가 공격은 타당 +1/200 = 0.5%(존 있어도, 위키 2-1-1)
+    const byHit = Math.min(30, co.totHits)*(weak?3.5:1.5)*(co.cpy ? 0.5 : 1) + lkG;
     // 재공격은 실행마다 행동 한 번처럼 AF 게이지가 찬다(사용자 확인 — 루나틱 복사는 예외): 맞는 존은 실행당 7.5%, 그 밖은 타수 기준(재공격 타수 포함)
-    const za = zoneAFAct(z, co, true); if(za!=null) return za; // 존이 있으면 행동(실행)당 충전으로 바뀜(위키), 상극·안 맞는 타입은 0
+    const za = zoneAFAct(z, co, true); if(za!=null) return za + lkG; // 존이 있으면 행동(실행)당 충전으로 바뀜(위키), 상극·안 맞는 타입은 0
     return byHit; });
   // 연출 시간: 캐릭터별 값(af_anim)이 있으면 그 값. 재공격은 한 행동 안에서 이어 치므로 쿨타임은 행동당 한 번만 늘고(사용자 확인),
   // 이어 치는 연출은 실행당 S.afRepAnim배(기본 0.5)로 셈
@@ -2835,7 +2836,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
       const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5) * (co.cpy ? 0.5 : 1), byHit1 = Math.min(30, Math.max(1, Math.round((co.totHits||1)/Math.max(1, co.execs||1)))) * (weak?3.5:1.5);
       // 존이 있으면 행동(실행)당. 주력 아닌 공격 턴(공격 버프기·MP 부족 대체 공격)은 스킬 하나 = 실행 1번(2026-10-16: 주력의 연속 실행 수로 세던 문제 — 테오도로스·엑구레)
-      g += pM * (za!=null ? za : byHit) + pA * (za1!=null ? za1 : byHit1);
+      g += pM * ((za!=null ? za : byHit) + 0.5*Math.min(30, co.linkHits||0)) + pA * (za1!=null ? za1 : byHit1); // 帯電·연계 추가 공격 타당 0.5%(위키)
       g += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)];
     });
     if(A.bud) g += budAfg(A.bud, z, team); // 버디 AF 게이지(2026-10-17 조사): 모케 오토 스킬 턴당 5, 코로보·건스(AS) 차지 30 ÷ 차지 소모(예전엔 셋 다 턴당 5)
