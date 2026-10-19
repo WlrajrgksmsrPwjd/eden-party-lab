@@ -1514,7 +1514,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 이어 치는 스킬의 타격별 위력 비중(hit_w: [[타수, 위력]…], 타수 합 = hits일 때만 — 상태로 스킬이 바뀌면 무시): 큰 타격이 25억 경감을 더 받게(2026-10-16, 세스타(AS) 凶狼薙 2타가 위력 67%)
   const hw = Array.isArray(sk.hit_w) && sk.hit_w.length ? (g => { const H = g.reduce((a,x)=>a+x[0],0), W = g.reduce((a,x)=>a+x[1],0); return H===Math.max(1, sk.hits||1) && W>0 ? {H, g: g.map(x=>[x[0], x[1]/W])} : null; })(sk.hit_w.map(x=>[+x[0]||0, +x[1]||0]).filter(x=>x[0]>0 && x[1]>0)) : null;
   return {cs: csOK ? sk.combo_scale : null, ca: +sk.combo_add||0, cup: cupA, perHit: pN*critX, pN, cR, p, oc:ocP, totHits, hw, links, linkHits, nT, el, elN: elOwn, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
-    afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, rep, cpy: !!sk.copy, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, pw: Math.min(1, pierceW), sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
+    afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, afxS: sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : (+sk.af_combo_x||1), rep, cpy: !!sk.copy, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, pw: Math.min(1, pierceW), sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
     bh, defR, flatP, lunaF, auraF, auraR, chW, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpAtkSk, weakSk: weakUp, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st', spdBuf: dimin(spdv, 1), viaAlt:null, viaSbN:false, cycMain:0, mixL:null, mix:null}; // 뒤에 붙는 칸도 처음부터(같은 모양)
 }
 
@@ -2030,6 +2030,12 @@ function buildCtx(input, ownedAll){
 /* AF 대기 시간(리캐스트, 초) = 속도 × 행동 횟수 표(game-info 'アナザーフォースまとめ' 2-2, アルティマニア·アナデンの館 실측 확장, 2026-10-19):
    행 = 속도 하한, 문자 = 1~15번째 행동 뒤 대기(문자 코드 − 48). 16번째부터 행동당 +0.6초. 속도는 버프 포함(위키: 리캐스트 계산에 속도 버프가 들어감) */
 const AF_WAIT = [[1,"2334556677889:;"],[7,"2334456677889::"],[19,"23344566778899:"],[35,"23344556778899:"],[72,"23344556678899:"],[92,"22344556678899:"],[113,"22344556677899:"],[135,"22334556677899:"],[157,"22334556677889:"],[179,"22334456677889:"],[202,"223344566778899"],[226,"223344556778899"],[249,"123344556778899"],[273,"123344556678899"],[297,"122344556678899"],[321,"122344556677899"],[346,"122334556677899"],[371,"122334556677889"],[395,"122334456677889"],[446,"122334455677889"],[471,"112334455677889"],[497,"112334455667889"],[522,"112234455667889"],[549,"112234455667789"],[574,"112233455667789"],[599,"112233455667788"],[626,"112233445667788"],[678,"112233445567788"],[704,"111233445567788"],[730,"111233445566788"],[757,"111223445566788"],[783,"111223445566778"],[810,"111223345566778"],[863,"111223344566778"],[916,"111223344556778"],[943,"111123344556778"],[970,"111123344556678"],[997,"111122344556678"]];
+/* AF 콤보 증가량(2026-10-19 game-info 'アナザーフォースまとめ' 3): 행동의 첫 타 = 처음 쓰는 스킬 5%·이미 쓴 스킬 4%(약점이면 +1%), 그 뒤 타격(연속 타·재공격·여러 대상)은 '직전에 맞힌 같은 스킬'이라 2% —
+   예전엔 타당 2.5% 고정이라 1타 스킬을 낮게(4~5% → 2.5%), 10타 넘는 스킬을 높게 봤음. 스킬 AF 콤보 배율(af_combo_x)은 그 스킬 타격에만, 연계·帯電 추격은 타당 2%, 장비 콤보 증가(cup)는 타당. S.comboWiki=false면 예전 방식 */
+function comboInc(co, S, first){ if(!co) return 0; const tg = co.tgt==='aoe' ? Math.max(1, +S.enemyCount||1) : 1;
+  if(S.comboWiki===false) return co.hitsPerAct*(0.025+(co.cup||0))*co.afx*tg;
+  const hp = Math.max(1, +co.totHits||1)*tg, lk = (+co.linkHits||0)*tg, own = (first ? 0.05 : 0.04) + (co.rel==='weak' ? 0.01 : 0) + 0.02*(hp - 1);
+  return own*(co.afxS!=null ? co.afxS : (co.afx||1)) + 0.02*lk + (co.cup||0)*(hp + lk); }
 function afWait(spd, k){ let r = AF_WAIT[0][1]; for(const [lo, w] of AF_WAIT){ if(spd >= lo) r = w; else break; } const kk = Math.max(1, Math.round(k)); return kk<=15 ? r.charCodeAt(kk-1) - 48 : (r.charCodeAt(14) - 48) + 0.6*(kk - 15); }
 /* ---------- AF 행동 수 (위키 기준) ----------
    AF는 실시간: 게이지 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찬다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%).
@@ -2799,8 +2805,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     return (cs.alt = any ? L : null); };
   const afSplit = (cs, n) => { const al = afAltOf(cs); if(!al) return null; const nM = n.slice(), nA = n.map(()=>0);
     al.forEach((ca,i)=>{ if(!ca) return; const u = +team[i].main.uses; nM[i] = Math.min(n[i], u); nA[i] = Math.max(0, n[i]-u); }); return {al, nM, nA}; };
-  const cmb = co => co ? co.hitsPerAct*(0.025+(co.cup||0))*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1) : 0;
-  const afG = (cs, n) => { const sp = afSplit(cs, n); let g=0; cs.forEach((co,i)=>{ if(!co) return; g += sp ? sp.nM[i]*cmb(co) + sp.nA[i]*cmb(sp.al[i]||co) : n[i]*cmb(co); }); return g; };
+  const cmb = (co, k) => co && k>0 ? comboInc(co, S, true) + (k-1)*comboInc(co, S, false) : 0; // k번 쓰면 첫 번째만 '처음 쓰는 스킬'
+  const afG = (cs, n) => { const sp = afSplit(cs, n); let g=0; cs.forEach((co,i)=>{ if(!co) return; g += sp ? cmb(co, sp.nM[i]) + cmb(sp.al[i]||co, sp.nA[i]) : cmb(co, n[i]); }); return g; };
   const afSum = (cs, z, avg, n) => { const sp = afSplit(cs, n); if(!sp) return sumZ(cs, z, avg, n); const x = sumZ(cs, z, avg, sp.nM), y = sumZ(sp.al.map((ca,i)=>ca||cs[i]), z, avg, sp.nA); return {v: x.v+y.v, per: x.per.map((d,i)=>d+y.per[i])}; };
   // AF 콤보 배율 조건 통상 공격(once.json combo, 2026-10-17): AF 끝 콤보가 그 배율에 닿으면 그 AF에 한 번, 주력 한 번 대신(콤보는 문턱과 끝의 중간으로)
   const afCmbX = (cs, z, n, fin) => { if(!team.some(c=>c.once && c.once.some(e=>+e.combo>0))) return null; let v = 0; const per = team.map(()=>0);
@@ -3263,7 +3269,7 @@ function dummySim(o){
       const sk = {skill:e.name||'1회', target:a.target==='st'?'st':'aoe', kind:a.kind==='mag'?'mag':'phys', stat:a.stat||(a.kind==='mag'?'int':'pwr'), element:a.element||team[i].elem||'none', weapon_type:a.weapon_type||null, size:a.size||'xl', mult:Math.max(0.1,+a.mult||1), hits:Math.max(1,+a.hits||1), repeat:+a.repeat||0, crit_sure:!!a.crit_sure, def_ignore:!!a.def_ignore, barrier_pierce:!!a.barrier_pierce, af_combo_x:+a.af_combo_x||1, condition:''};
       const t2 = team.map((q,k)=> k===i ? ({...q, ...{main:sk, afSk:null, sbN:null, mainAlt:null, alts:null, _alt:true, _proxy:true}}) : q);
       const co = attackerCore(t2, i, progs, Av, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
-    const cUsed = team.map(()=>new Set()); // AF 콤보 조건 공격을 이번 AF에 썼는지
+    const cUsed = team.map(()=>new Set()), usedSk = team.map(()=>new Set()); // AF 콤보 조건 공격을 이번 AF에 썼는지 · 이번 AF에 쓴 스킬(콤보: 처음 쓰는 스킬 5%)
     const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), mu = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false), stepDone = team.map(()=>0); // mu: 주력 사용 횟수(횟수 제한 스킬용)
     const st = {acted, stepDone, atk};
     // 속성 변환은 건 사람이 그 스킬을 쓴 뒤부터(elem_change.skill이 버프 행동에 있으면 그 행동 뒤, 없으면 act 수만큼 행동한 뒤)
@@ -3285,10 +3291,10 @@ function dummySim(o){
         if(co && c.once) for(const e of c.once){ if(!(+e.combo>0) || cUsed[i].has(e.name) || combo + 1e-9 < +e.combo) continue; // AF 콤보 배율 조건 통상 공격(AF 1회, 2026-10-17: 플람라피스(ES) アム・ティンハル 600%·에이미 슈퍼 콤보 1000%)
           const cN = Math.min(combo, cmax), c2 = onceCoreAt(st, zNow, i, inow, e); if(c2 && applyZoneCap(c2, zNow, S, cap, cN)*fw(c2) > applyZoneCap(co, zNow, S, cap, cN)*fw(co)){ co = c2; cUsed[i].add(e.name); break; } }
         if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
-          combo += co.hitsPerAct*(0.025+(co.cup||0))*co.afx*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); }
+          combo += comboInc(co, S, !usedSk[i].has(co.skill)); usedSk[i].add(co.skill); }
       } else if(buffOnly && B[i]){ const s0 = B[i].steps[stepDone[i]]; used[i].push(s0.s);
         if(s0.k==='attack'){ const co = stepCoreAt(st, zNow, i, inow, s0); // 주력 아닌 공격 버프기: buff_acts 위력(pw), 없으면 특대 1배·데이터 타수(주력과 같은 속성·종류)
-          if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax); combo += co.hitsPerAct*(0.025+(co.cup||0))*(co.afx||1)*(co.tgt==='aoe'?Math.max(1,S.enemyCount):1); } } }
+          if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax); combo += comboInc(co, S, !usedSk[i].has(co.skill)); usedSk[i].add(co.skill); } } }
       acted[i] = true; if(buffOnly && B[i]) stepDone[i]++; cnt[i]++; sbG += sbRate[i]; if(isInf) ia[i] = true; else if(!buffOnly){ atk[i] = true; mainAtk[i]++; }
       if(i===zBy && nz && (zStep>=0 ? stepDone[i] > zStep : zMain ? atk[i] : true)){ const zt = zStaged ? nz1 : nz; // 존 전개 스킬을 쓴 뒤
         if(zoneOK(zCur, zt) && !(zCur && zCur.key===zt.key && zCur.level>=zt.level)) zCur = zt; }
