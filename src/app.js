@@ -1639,11 +1639,11 @@ function reviveTxt(team){
 /* 실전 N턴 계획 한 턴(engine battleSim 기록 rec: af 시작 게이지, sb 'af'|'turn', g 턴 시작 AF 게이지, s SB 게이지, afL 존 등급, bz 바뀐 보스 존, afFull 꽉 찬 게이지 감점 몫) */
 function turnRecTxt(r, ev, team, mainI){
   const g = Math.round(+r.g||0), bz = r.bz && r.bz!==true ? ` <span class="hint">(보스 존 ${esc(r.bz)})</span>` : '';
-  if(r.af){ const sb = r.sb==='af' ? ` → AF 안에서 <b>SB</b>${r.combo ? ` (콤보 ${Math.round(r.combo*100)}%)` : ''}` : '';
+  if(r.af){ const sb = r.sb==='af' ? ` → AF 안에서 <b>SB</b>${r.combo ? ` (콤보 ${Math.round(r.combo*100)}%)` : ''}` : r.sbHold && +r.s>=0 ? ' → <b>SB는 다음 턴에</b> <span class="hint">(AF 점수 상한 밖에서)</span>' : '';
     return `<b>${r.t}턴</b>: <b class="afk">AF 발동</b> (게이지 ${Math.round(+r.af||g)}%${r.afL>=2?' · 극 존':''})${sb} · ${fmtN(r.d)}${r.capped ? ` <span class="hint">(점수 상한 — 실제 ${fmtN(r.raw)})</span>` : ''}${r.ctrAF?' · AF 뒤 요격':''}${hgT(r)}${bz}`; }
-  const sb = r.sb==='turn' ? `<b>SB</b> + ` : '', st = r.stack ? '게이지 축적 소비 · ' : '';
+  const sb = r.sb==='turn' ? `<b>SB</b>${r.sbOn ? ' <span class="hint">(SB 게이지 가득 상태)</span>' : ''} + ` : '', st = r.stack ? '게이지 축적 소비 · ' : '';
   const full = r.afFull>0 ? ` <span class="warn">AF 게이지가 꽉 차 피해 감소</span>` : '';
-  return `<b>${r.t}턴</b>: ${st}${sb}평상 공격 (AF 게이지 ${g}%${g>=50 && !ev.afOff ? ' — 켤 수 있지만 모아 둠' : ''}) · ${fmtN(r.d)}${hgT(r)}${full}${bz}`;
+  return `<b>${r.t}턴</b>: ${st}${sb}평상 공격 (AF 게이지 ${g}%${g>=50 && !ev.afOff ? ' — 켤 수 있지만 모아 둠' : ''}${r.ss ? ' · 성해진 100% ×2' : ''}) · ${fmtN(r.d)}${hgT(r)}${full}${bz}`;
 }
 /* 서가 편성 보너스 1000은 파티 전원(후열 포함) 지정 퍼스널리티 — 엔진은 전열만 봐서 추천 후열이 맞는지 따로 알려 줌 */
 const compBack = (x, boss) => { const sp = boss && boss.score_bonus && boss.score_bonus.pers, R = (x.reserves||[]).filter(Boolean); if(!sp) return ''; if(!R.length) return ' — 후열이 있으면 후열도 지정 퍼스널리티여야 함';
