@@ -776,7 +776,7 @@ function zoneStepUseless(team, progs, i, zc){
 function zoneForce(zs, pick){ // pick: 개전 자동 존이 둘 이상이면 고른 전개자 id(evalTeam이 둘 다 계산해 나은 쪽, 2026-10-16: 넣은 순서에 따라 결과가 6배까지 달라지던 문제)
   const aus = (zs||[]).filter(q=>q && q.level>0 && q.how==='개전 자동').sort((a,b)=>b.level-a.level);
   const au = (pick && aus.find(q=>q.by===pick && q.level===aus[0].level)) || aus[0];
-  if(!au) return zs; return zs.filter(q=>q===au || (q && q.level>0 && ((au.level<2 && q.level>=2) || q.brk)));
+  if(!au) return zs; return zs.filter(q=>q===au || (q && q.level>0 && ((au.level<2 && q.level>=2) || q.brk || (q.level===3 && au.level===2 && q.key===au.key)))); // 같은 존의 絶 각성(ZONE覚醒強化 — 紫装の槍使い(AS) リチュアルクォーツ '地裂陣/極・地裂陣' 때)은 極 위에도(2026-10-19 알테마)
 }
 /* ---------- 존 후보 계산 ---------- */
 function zoneCandidates(team, progs, situation){
@@ -2123,7 +2123,7 @@ function chainActP(m, i, on, cores, sit, sim){
   return 0;
 }
 function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, combo, fw, ctr, ctrOnly){ // ctrOnly: 요격으로만 발동(AF 턴: AF가 끝난 뒤 적 공격 → 요격 → 체인, 사용자 확인 2026-10-17)
-  const per = team.map(()=>0), trig = team.map(()=>0);
+  const per = team.map(()=>0), trig = team.map(()=>0), trigA = team.map(()=>0);
   let any=false, stk=null;
   for(let h=0;h<team.length;h++){
     const c=team[h]; if(!c.chain) continue;
@@ -2132,16 +2132,16 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
       if(e.when && Object.keys(e.when).length && ruleAct({w:e.when}, h, team, progs, sit==='af'?'normal':sit, z, A)<=0) continue;
       const on = e.on||{};
       const opts = Array.isArray(on.rand) && on.rand.length ? on.rand.map(o=>({...o, ...{by:on.by}})) : [on];
-      let n=0;
+      let n=0, nA=0;
       for(const o of opts){
-        let s=0;
+        let s=0, sA=0;
         for(let i=0;i<team.length;i++){ if(i===h && (o.by||'other')!=='any') continue; if(sit==='sb' && cores[i] && cores[i].usingSB) continue; // SB 공격은 체인 어빌리티를 발동시키지 않음(사용자 확인 2026-10-16)
-          if(!ctrOnly) s += chainActP(team[i], i, o, cores, sit==='af'?'sb':sit, sim);
+          if(!ctrOnly){ const q = chainActP(team[i], i, o, cores, sit==='af'?'sb':sit, sim); s += q; sA += q; if(e.stk) trigA[i] += q/opts.length; }
           // 요격도 공격(사용자 확인: 네코코(ES) 変幻自在로 알마(AS) 요격을 번개로 → 벨벳(AS) イレクトリ가 턴 최대 10번): 평상 턴 요격 횟수만큼
           if(ctr && sit==='normal' && ctr.trig[i]>0 && (o.act||'attack')==='attack' && (!o.elem || o.elem.includes(ctr.els[i])) && (!o.wt || o.wt.includes(ctr.wts[i])) && (!o.kind || ctr.kinds[i]===o.kind) && (!o.tgt || ctr.tgts[i]===o.tgt)) s += ctr.trig[i]; }
-        n += sit==='af' ? (s>0 ? (e.max||1) : 0) : Math.min(e.max||1, s);
+        n += sit==='af' ? (s>0 ? (e.max||1) : 0) : Math.min(e.max||1, s); nA += Math.min(e.max||1, sA);
       }
-      n /= opts.length;
+      n /= opts.length; nA /= opts.length;
       if(e.every>1) n = Math.floor(n/e.every+1e-9) + (sit==='normal' ? (n%e.every)/e.every*0.5 : 0);
       if(n<=0) continue;
       const a=e.atk; let mult=+a.mult||1;
@@ -2161,20 +2161,35 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
       if(e.stk && sit!=='af'){ const nE = Math.max(1, S.enemyCount||1), inc = pct(+e.stk.res||0)*(+e.stk.avg||1)/(sk.target==='st' ? nE : 1), b0 = 1+co.typeR+co.physR;
         // brk: 맞힐 때 거는 브레이크(イレクトリ 「ブレイク付与」 雷) — 두 번째 발동부터 ×1.5(이미 걸려 있으면 그대로)
         const bF = e.stk.brk ? Math.max(1, ((e.stk.brk===co.el || e.stk.brk===co.wt) ? 1.5 : 1.3)/Math.max(1, co.brk||1)) : 1;
-        let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+co.typeR+Math.min(1, co.physR+inc*k))/b0*(k>0 ? bF : 1);
-        multSum *= sF/n; stk = stk || {inc:0, n:0, brk:null}; stk.inc = Math.max(stk.inc, inc); stk.n = Math.max(stk.n, n); if(e.stk.brk) stk.brk = e.stk.brk; }
+        let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+co.typeR+rvAdd(S, co.physR, inc*k))/b0*(k>0 ? bF : 1);
+        multSum *= sF/n; stk = stk || {inc:0, n:0, nA:0, brk:null, h, unc: S.revmaUncap!==false}; stk.inc = Math.max(stk.inc, inc); stk.n = Math.max(stk.n, n); stk.nA = Math.max(stk.nA, Math.min(n, nA)); if(e.stk.brk) stk.brk = e.stk.brk; }
       per[h] += d1*multSum; trig[h] += n; any=true;
     }
   }
-  return any ? {per, trig, stk, total:per.reduce((x,y)=>x+y,0)} : null;
+  return any ? {per, trig, trigA, stk, total:per.reduce((x,y)=>x+y,0)} : null;
 }
 /* 체인이 쌓는 내성 DOWN(stk)을 같은 턴 요격에도: 요격 k번째(0부터)는 그 앞의 체인 발동 min(k, 체인 수)번만큼 깎인 상태 */
+/* 턴 동안 쌓이는 내성 DOWN 스택(イレクトリ レヴマ: 1개당 물리·마법 내성 10% DOWN, 최대 99 = 990% — 알테마·위키 댓글 '99蓄積 990%DOWN', 2026-10-19):
+   다른 내성 DOWN(합쳐 100% 상한) 위에 따로 더함(최대 9.9). S.revmaUncap=false면 예전처럼 합쳐 100% */
+const RV_MAX = 9.9;
+const rvAdd = (S, p, x) => S.revmaUncap===false ? Math.min(1, p + x) : p + Math.min(RV_MAX, x);
+const scaleCore = (co, f) => !co ? co : co.mixL ? ({...co, mixL: co.mixL.map(x=>({...x, co: scaleCore(x.co, f)}))}) : ({...co, pN: co.pN*f});
+/* 아군 공격도 같은 턴에 쌓인 레브마를 받음(2026-10-19): 체인 주인 말고 그 턴에 체인을 일으키는 아군 공격(stk.nA번) 사이 순서는 모르니 평균 —
+   발동시키는 아군 i는 다른 아군 발동의 절반((nA − 자기 몫)/2), 그 밖 공격(체인 주인 자신 등)은 nA/2만큼 쌓인 상태로. 25억 경감 전 대미지에 곱해 다시 계산 */
+function rvAllyBoost(team, cores, z, S, cap, fw, w, ch){
+  const st = ch && ch.stk; if(!st || !st.unc || !(st.inc>0) || !(st.nA>0) || !cores) return null;
+  const per = team.map(()=>0); let tot = 0;
+  cores.forEach((co,i)=>{ if(!co) return; const own = i===st.h ? 0 : Math.min(st.nA, (+ch.trigA && ch.trigA[i]) || 0), k = i===st.h ? st.nA/2 : (st.nA - own)/2;
+    if(!(k>0)) return; const ty = +co.typeR||0, ph = +co.physR||0, b0 = 1+ty+ph, f = (1+ty+rvAdd(S, ph, st.inc*k))/b0; if(!(f>1.0001)) return;
+    const d = (applyZoneCap(scaleCore(co, f), z, S, cap, null) - applyZoneCap(co, z, S, cap, null))*fw(co)*(w ? w[i] : 1); per[i] += d; tot += d; });
+  return tot>0 ? {per, total: tot} : null;
+}
 function counterStk(ctr, ch){
   if(!ctr || !ch || !ch.stk || !(ch.stk.inc>0 || ch.stk.brk)) return;
-  const {inc, n:nc, brk:bk} = ch.stk; let tot=0;
+  const {inc, n:nc, brk:bk} = ch.stk, nA0 = ch.stk.unc ? (+ch.stk.nA||0) : 0, add = (p, x) => ch.stk.unc ? p + Math.min(RV_MAX, x) : Math.min(1, p + x); let tot=0; // 요격은 아군 행동 뒤(적 턴) — 아군 공격으로 쌓인 레브마(nA0)부터(2026-10-19)
   ctr.per = ctr.per.map((v,i)=>{ const r=ctr.res[i], n=ctr.trig[i]; if(!(v>0) || !r || !(n>0)) return v; const b0 = 1+r.ty+r.ph;
     const bF = bk ? Math.max(1, ((bk===ctr.els[i] || bk===ctr.wts[i]) ? 1.5 : 1.3)/Math.max(1, r.brk||1)) : 1; // 체인이 건 브레이크(요격 속성이 같으면 ×1.5)
-    let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+r.ty+Math.min(1, r.ph+inc*Math.min(k, nc)))/b0*(k>0 && nc>0 ? bF : 1);
+    let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+r.ty+add(r.ph, inc*Math.min(nA0 + k, nc)))/b0*((k>0 || nA0>0) && nc>0 ? bF : 1);
     const w = v*sF/n; tot += w; return w; });
   ctr.total = tot;
 }
@@ -2323,7 +2338,7 @@ function budAgg(bd, team, enemy, A){
   const inf = gfx && gfx.inflict ? {poison: +gfx.inflict.poison||0, pain: +gfx.inflict.pain||0} : null;
   // 차지 스킬의 존 각성·극 존 전개(2026-10-18): 릴레노 煌斬陣 각성(zone_aw), 하자마짱 極・轟打陣·건스+벨벳 極・招雷陣(zone_dep level 2) — 짝 조건(sb2 req)이 맞으면 그쪽
   const zfxOf = x => { if(!x) return null; if(Array.isArray(x)){ for(const y of x){ const r = zfxOf(y); if(r) return r; } return null; } if(!reqOK(x.req)) return null;
-    if(x.zone_aw) return {key: x.zone_aw}; if(x.zone_dep && +x.zone_dep.level>=2) return {key: x.zone_dep.key}; return null; };
+    if(x.zone_aw) return {key: x.zone_aw}; if(x.zone_dep && +x.zone_dep.level>=2) return {key: x.zone_dep.key, dep: true}; return null; }; // dep: 존이 없어도 극 존을 새로 깖
   const zfx = zfxOf(b.sb2) || zfxOf(b.sb);
   return {parts, sup, enemyDown, afgA: +b.afg||0, afgC, ch, gear: gear ? gear.id : null, brk, inf, zfx, autoAtk: b.auto_atk || (gear && HYUGA_GEAR_WT[gear.id] && (b.id==null || b.id==='hyuga') ? {el:'shade', wt:HYUGA_GEAR_WT[gear.id], hits:1} : null), chgAtk: b.chg_atk || null}; // 휴우가: 機甲 장비를 껴야 오토 스킬에 공격(陰, 장비 종류로 타입 — 알테마 buddy/16) // autoAtk: 오토 스킬이 공격이면 그 공격 행동의 AF 게이지(존이면 행동당)
 }
@@ -2801,6 +2816,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const uo = useSim && uptLow ? uptArr : null; let FXn; const fxN = () => FXn!==undefined ? FXn : (FXn = (s2==='normal' && cores && cores.FX!==undefined && cores.upt===uo && zdep) ? cores.FX : (anyR||uo) ? buildBF(team,progs,'normal',z,A,posSets,uo) : null);
       if(hasCtr && sit==='normal') ctr = counterCalc(team, progs, A, enemy, S, cx, fxN(), z, cap, fw);
       if(hasChain){ const FXc = s2==='normal' ? fxN() : (anyR||eqAny ? buildBF(team,progs,s2,z,A,posSets,eqAny?eqArr:null) : null); ch = chainCalc(team, progs, A, enemy, S, s2, cx, FXc, z, cores, useSim?sim:null, cap, null, fw, ctr); }
+      if(ch && ch.stk && sit==='normal' && !ch.rv){ const rv = rvAllyBoost(team, cores, z, S, cap, fw, w, ch); if(rv){ ch.per = ch.per.map((v,i)=>v + rv.per[i]); ch.total += rv.total; ch.rv = rv; } } // 아군 공격이 받는 레브마(체인 몫으로)
       const ctr0 = ctr ? {per: ctr.per.slice(), total: ctr.total} : null; // AF 턴 뒤 요격은 평상 턴 체인이 쌓은 스택 없이(2026-10-17 점검: 평상 턴 스택을 그대로 써 크게 잡힘)
       if(ctr && ch) counterStk(ctr, ch);
       let afPost = null; // AF를 쓴 턴: AF가 끝난 뒤 적이 공격 → 요격, 그 요격으로만 체인(아군 평상 행동·AF 공격으로는 체인 없음)
@@ -2898,9 +2914,9 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const nz = res.normal.zone; zA = nz;
   let bzG = null; // 버디 차지 스킬 존 각성(아래)
   const xNof = () => (res.normal.chain?res.normal.chain.total:0) + (res.normal.counter?res.normal.counter.total:0) + (res.normal.turnEnd?res.normal.turnEnd.total:0);
-  const bzNorm = () => sumZ(zdep ? coresFor('normal', bzG.z, simUse) : res.normal.cores, bzG.z, null, wN).v + xNof(); // 버디가 각성시킨 극 존의 평상 턴
+  const bzNorm = () => sumZ(zdep || (bzG && bzG.dep) ? coresFor('normal', bzG.z, simUse) : res.normal.cores, bzG.z, null, wN).v + xNof(); // 버디가 각성시킨 극 존의 평상 턴
   const susOf = () => { const z0 = res.normal.zone;
-    if(bzG && bzG.up && z0 && z0.level===1 && z0.key===bzG.z.key) return res.normal.total*(1-bzG.frac) + bzNorm()*bzG.frac; // 극은 차지 주기 중 2턴
+    if(bzG && bzG.up && (bzG.dep ? !(z0 && z0.level>=1 && z0.kind!=='none') : z0 && z0.level===1 && z0.key===bzG.z.key)) return res.normal.total*(1-bzG.frac) + bzNorm()*bzG.frac; // 극은 차지 주기 중 2턴(dep: 존 없는 팀에 버디가 새로 깖)
     if(!(z0 && z0.level>=2)) return res.normal.total;
     const z1 = ({...z0, ...{level:1}});
     const cores1 = zdep ? coresFor('normal', z1, simUse) : res.normal.cores;
@@ -2956,7 +2972,15 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       else { const zB = ({...nz, ...{level:2, how:'버디 각성', label:'극·'+(ZONE_KR[nz.key]||String(nz.label||'존'))}}), zS = zA; zA = zB;
         const P1B = afPick(coresFor('af', zB, false)); A.realT = 3; A.tm.S0 = 2; const P3B = afPick(coresFor('af', zB, false)); A.realT = 0; A.tm.S0 = 0; zA = zS;
         bzG = {z: zB, up: true, turns, first, per, frac, P1: P1B, P3: P3B}; }
-      sustain = susOf(); } }
+      sustain = susOf(); }
+    /* 존이 없는 팀에 버디가 극 존을 새로 까는 경우(2026-10-19: 하자마짱 極・轟打陣, 건스+벨벳 極・招雷陣): 차지 턴·다음 턴 극, 그 밖엔 존 없음. 평상 턴이 나아질 때만(안 맞는 타입 팀이면 안 씀) */
+    else if(zf && zf.dep && !(nz && nz.level>=1 && nz.kind!=='none') && zoneOpt(zf.key)){
+      const zo = zoneOpt(zf.key), ch = A.bud.ch, r = 1 + budChgPlus(ch.plus, null, team) + (ch.rnd||0), first = 1 + Math.ceil((ch.cost - (ch.c0||0))/r - 1e-9), per = Math.max(1, Math.ceil(ch.cost/r - 1e-9));
+      const zB = ({...zo, ...{level:2, how:'버디 전개', label:'극·'+(ZONE_KR[zo.key]||zo.key)}}), turns = new Set(); for(let t=first; t<=40; t+=per) turns.add(t);
+      const vB = sumZ(coresFor('normal', zB, simUse), zB, null, wN).v + xNof();
+      if(vB > res.normal.total*1.01){ const zS = zA; zA = zB;
+        const P1B = afPick(coresFor('af', zB, false)); A.realT = 3; A.tm.S0 = 2; const P3B = afPick(coresFor('af', zB, false)); A.realT = 0; A.tm.S0 = 0; zA = zS;
+        bzG = {z: zB, up: true, dep: true, turns, first, per, frac: Math.min(1, 2/per), P1: P1B, P3: P3B}; sustain = susOf(); } } }
   let afChain = null;
   // 체인 어빌리티는 AF 밖(평상·SB 턴)에서만 발동 (사용자 확인)
   const sbTurn = res.sb.total;
@@ -3222,7 +3246,7 @@ function dummySim(o){
   const zBy = nz && nz.level>0 ? team.findIndex(c=>c.id===nz.by) : -1;
   const zFrom0 = !!(nz && nz.level>0 && (awStart || nz.how==='개전 자동'));
   // 존은 하나(사용자 확인): 비어 있으면 펴고, 일반 존이 깔려 있으면 극(각성) 존만 덮어씀, 극 존은 존 파괴 없이는 못 바꿈
-  const zoneOK = (cur, q) => !!(q && q.level>0) && (!cur || !cur.level || (cur.level<2 && q.level>=2) || (q.brk && !(cur.key===q.key && cur.level>=q.level))); // brk: 존 파괴 후 전개(zone.breaks)
+  const zoneOK = (cur, q) => !!(q && q.level>0) && (!cur || !cur.level || (cur.level<2 && q.level>=2) || (q.level===3 && cur.level===2 && cur.key===q.key) || (q.brk && !(cur.key===q.key && cur.level>=q.level))); // brk: 존 파괴 후 전개(zone.breaks)
   // 독·페인(글래스터 39·40행·'독 시 ○배' 스킬): 허수아비 1턴에선 실제로 건 뒤부터. inflict.json dummy —
   // start=개전 자동, main=주력 공격 뒤, skill=주력이 아닌 스킬이라 AF 행동 한 번을 그 스킬에 써야 함, 잠재 광석=그 캐릭터가 공격한 뒤
   const nE = Math.max(1, S.enemyCount||1);
