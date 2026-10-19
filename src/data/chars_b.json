@@ -411,7 +411,7 @@
   "tier": "S",
   "score": 98,
   "roles": ["dps", "zone", "support"],
-  "main": {"skill": "アクアランペイジ", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "slash", "mult": 20, "size": "xl", "hits": 2, "repeat": 1, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "기본 10배 2히트 후 재공격. 星海陣 전개 시 위력 2배(=20배)"},
+  "main": {"skill": "アクアランペイジ", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "slash", "mult": 20, "size": "xl", "hits": 2, "repeat": 1, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "기본 10배 2히트 후 재공격. 星海陣 전개 시 위력 2배(=20배)", "rep_p": 1},
   "sb": {"skill": "ミュルスインパクト", "target": "aoe", "kind": "phys", "stat": "pwr", "element": "water", "weapon_type": "slash", "mult": 30, "size": "xxl", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "선제. SB 시 존 파괴 후 星海陣 전개·30배·EX레벨 +5. 星海陣 시 아군 전체 연계(공격 시 수속성 추가공격 특대 4배, 3턴)"},
   "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 0, "weapon_atk": 100, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": true, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "전위 속성 퍼스널리티 비중복 시 크리율 버프 횟수 2배·MP 50 회복", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"ax": 100}, "crit_rate": 100, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": false, "overthrow": true, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": true, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false},
