@@ -28,7 +28,7 @@ function multihitAvg(h){ h=Math.max(1,Math.round(h)); let s=0; for(let i=0;i<h;i
 const DEFAULT_SETTINGS = {
   grastaDefault: {mode:'auto', e:3, pa:0, po:0, ore:false}, // 공격 글래스터 기본 배치
   capOn: true,         // 1타 상한 (타수 중요도) 반영
-  lifeCarryN: false,   // true면 평상 턴 피해가 목숨을 넘어 다음 목숨으로(AF는 목숨 하나) — 사용자 확인 대기
+  lifeCarryN: true,    // 평상 턴 피해는 목숨을 넘어 다음 목숨으로, AF는 목숨 하나(AF 뒤 요격·체인·턴 종료 공격은 다음 목숨에) — 사용자 확인 2026-10-19
   capAfterCombo: false, // true면 AF 콤보를 곱한 뒤 25억 경감(game-info 위키 순서). 2026-10-19 사용자 확인: AF 중 99.99억이 자주 나와 지금 순서(경감 → ×콤보 → 99.99억)가 맞음
   capAbs: 9999999999,  // 1타 대미지 상한 (100억-1)
   statK: 22000,        // 스탯 환산 계수: 상대값 1 = 실제 대미지 약 statK (완력·무기 공격 기준 기본 대미지)
@@ -3612,7 +3612,7 @@ function killTurnsM(ev, boss, hm){
   // 스토퍼(2026-10-18 사용자: '반피 까면 더 안 내려가고 기믹 발동 — 한 번에 어포로 끝낼 수 있었으면 공략이 필요 없지'): 그 HP%에 닿으면 그 턴 남은 피해는 버려짐. 목숨이 여럿이면 마지막 줄에만(stopper_all이면 모든 줄)
   const stops = seq ? [] : (hm.stopper||[]).map(Number).filter(v=>v>0 && v<100).sort((x,y)=>y-x); // bar_seq면 스토퍼가 이미 줄로 들어가 있음
   let done = 0, t = 0, hpF = Math.min(1, barsF - (bars - 1)); // 첫 줄이 덜 찬 줄(예: 3.5배 = 반 줄 + 3줄)일 수 있음
-  let rem = seq ? seq[0] : bar*hpF; const reset = !!hm.reset, step = +hm.step>0 ? +hm.step : 0, carry = hm.carry===true, lcN = hm.carry_n!=null ? !!hm.carry_n : !!DEFAULT_SETTINGS.lifeCarryN, /* lcN: 평상 턴은 목숨을 깎은 뒤 다음 공격이 부활한 목숨에(부활 = 끼어드는 보스 행동, AF 중엔 못 함 — 2026-10-19 사용자 확인 대기) */ kpt = Math.max(1, Math.round(+hm.kpt||1)); /* kpt: 한 턴에 깰 수 있는 줄 수(결실 애니 박쥐 2마리 — 전체 공격으로 둘 다, 2026-10-19) */
+  let rem = seq ? seq[0] : bar*hpF; const reset = !!hm.reset, step = +hm.step>0 ? +hm.step : 0, carry = hm.carry===true, lcN = hm.carry_n!=null ? !!hm.carry_n : !!DEFAULT_SETTINGS.lifeCarryN, /* lcN: 평상 턴은 목숨을 깎은 뒤 다음 공격이 부활한 목숨에(부활 = 끼어드는 보스 행동, AF 중엔 못 함 — 2026-10-19 사용자 확인) */ kpt = Math.max(1, Math.round(+hm.kpt||1)); /* kpt: 한 턴에 깰 수 있는 줄 수(결실 애니 박쥐 2마리 — 전체 공격으로 둘 다, 2026-10-19) */
   const win = []; for(const q of cuts) if(q.k==='start' || q.k==='always') win.push({a:1, b:q.turns, x:q.x, st: q.k==='start'}); // 켜진 경감 구간 [a, b]턴
   const bsCut = !!(ev.bsim && ev.bsim.cutS); // 실전 N턴 기록에 개시 경감이 이미 들어감(battleSim cutW)
   const cutAt = t => win.reduce((m,w)=> t>=w.a && t<=w.b && !(w.st && bsCut && t<=N) ? Math.min(m, w.x) : m, 1);
@@ -3655,7 +3655,9 @@ function killTurnsM(ev, boss, hm){
     const px = PR && !(t<=N && ev.bsim && ev.bsim.protS) ? (+PR.rel[plv-1]>0 ? +PR.rel[plv-1] : 1) : 1; if(PR) L.plv = plv; // 실전 N턴 기록에 이미 들어갔으면 그 턴은 곱하지 않음(단계는 그대로 따라감)
     let d = d0*pf/mg*cx*px*hx; L.d = d0; if(cx<1) L.cut = cx; if(HGon && done<bars){ const rb = t<=N && !(k>=0 && !ZL[k].from) && bsHG && rec[t-1] && +rec[t-1].hg>0 ? +rec[t-1].hg : 1; hgD0 += d0*pf/mg*cx*px/rb; hgD1 += d; } /* 기믹 없을 때 대비 비율(실전 N턴 기록은 개시 기믹이 이미 곱해져 있어 되돌림) */
     if(reset){ let p = Math.min(1, d/bar); if(step>0) p = Math.floor(p/step + 1e-9)*step; done += p; L.pr = +done.toFixed(2); if(log.length<60) log.push(L); continue; } // 턴 종료 전회복: 그 턴에 깎은 만큼만(갑개룡 초생명력)
-    let kTurn = 0;
+    let kTurn = 0; /* AF 턴: AF 피해는 목숨 하나까지(AF 중 부활 못 함), AF가 끝난 뒤 요격·체인·턴 종료 공격(dPost)은 부활한 목숨에 — 사용자 확인 2026-10-19 */
+    const rT = t<=N && !(k>=0 && !ZL[k].from) ? rec[t-1] : null, dPost = L.af && lcN && rT && d0>0 ? d*Math.min(1, ((+rT.ctrAF||0) + (+rT.teAF||0) + (+rT.teN||0))/d0) : 0; d -= dPost; let inPost = false;
+    for(;;){
     while(d>0 && done<bars){
       if(stopOn(done)){ const sv = stops.map(v=>v/100*bar).find(v=>v < rem - 1e-6); if(sv!=null && d >= rem - sv){ rem = sv; d = 0; L.ev.push({k:'stop', hp: Math.round(sv/bar*100)}); if(HGon) HG.forEach((g,j)=>{ if(g.reset_on==='stop' && hst[j]!=null) hst[j] = hgS0(g); }); break; } } // 다음 스토퍼까지 깎고 그 턴 끝 · 스토퍼마다 다시 쌓는 기믹
       if(d >= rem){ d -= rem; done++; L.ev.push({k:'kill', n: done, last: done>=bars}); rem = barK(done);
@@ -3665,7 +3667,8 @@ function killTurnsM(ev, boss, hm){
           if((o==='revive' && (!(g.cut && hgRv2) || done===1)) || (o==='revive2' && done>=2)){ hst[j] = hgS0(g); hAt[j] = t+1; }
           else if(g.off==='revive2' && done>=2) hst[j] = null;
           else if(g.reset_on==='revive' && hst[j]!=null) hst[j] = hgS0(g); });
-        if(!carry && !(lcN && !L.af) && ++kTurn >= kpt) break; } else { rem -= d; d = 0; } }
+        if(!carry && !(lcN && (!L.af || inPost)) && ++kTurn >= kpt) break; } else { rem -= d; d = 0; } }
+    if(inPost || !(dPost>0) || done>=bars) break; d = dPost; inPost = true; }
     if(PR){ const na = L.af ? actN.af : Math.max(+actN.n||0, +actN.cap||0); /* 평상 턴은 횟수를 노려 전원이 주력(실행 수 많은 공격)을 쓴다고 봄 */ if(na >= (+PR.down||15)) plv = Math.max(1, plv-1); else if(na <= (+PR.up||4)) plv = Math.min(prN, plv+1); L.acts = na; }
     L.hp = done>=bars ? 0 : Math.round(rem/barK(Math.floor(done))*100); L.n = done; if(log.length<60) log.push(L); }
   const kmin = Math.max(+hm.kt_min||0, +boss.kt_min||0), tt = Math.min(99, Math.max(kmin, t + (+boss.kt_extra||0)));
