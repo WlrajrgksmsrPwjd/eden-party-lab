@@ -870,7 +870,7 @@ function zoneFactor(z, el, wt, S, rel){
   const up = S.zoneWeap[L], up0 = S.zoneWeap[0], dn = S.zoneOffWeap, dnK = 1-2*(1-S.zoneOffWeap); // +30(+60) / −30(−60)
   if(z.kind==='elem'){
     const key = z.key || z.types[0];
-    if(key==='moonlight') return z.types.includes(el) ? up0 : ELEM4.includes(el) ? dn : 1;          // 월광진: 극이어도 +30
+    if(key==='moonlight') return z.types.includes(el) ? up : ELEM4.includes(el) ? dn : 1;           // 월광진: +30(극 +60, 사용자 확인 2026-10-19·game-info — 딩 코어는 극이어도 +30), 그 외 −30
     if(key==='crystal'){ if(el==='none') return 1; const wk = rel==='weak';                          // 휘정진: 약점이면 결정 +110(+220), 그 외 +50(+130)
       if(el==='crystal') return wk ? (K?3.2:2.1) : up; return wk ? (K?2.3:1.5) : dn; }
     if(key==='thunder') return el==='thunder' ? up : el==='shade' ? dn : 1;                            // 초뢰진
@@ -882,7 +882,7 @@ function zoneFactor(z, el, wt, S, rel){
   }
   if(z.kind==='weap'){
     const key = z.key || z.types.join('_'), hit = z.types.includes(wt);
-    if(key==='slash_magic') return hit ? up0 : dn;           // 쌍격진 참마: 극이어도 +30, 그 외 −30
+    if(key==='slash_magic') return hit ? up : dn;            // 쌍격진 참마: +30(극 +60, 사용자 확인 2026-10-19 — 딩 코어는 극이어도 +30), 그 외 −30
     if(key==='slash_pierce') return hit ? up : dn;           // 쌍격진 참돌: +30(+60), 그 외 −30
     return hit ? up : (K ? dnK : dn);                        // 황참·순돌·굉타·환마: +30(+60), 그 외 −30(−60)
   }
