@@ -1264,7 +1264,7 @@ async function runBudQ(){
 function tlOf(x, o){
   const ev=x.ev; if(ev.tl) return ev.tl;
   const boss=o&&o.boss;
-  try{ ev.tl = E.turnTimeline(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, {focus:o&&o.focus||null, needPierce:!!(boss&&boss.needs&&boss.needs.barrier_pierce)}, ev); }catch(e){ ev.tl=null; }
+  try{ ev.tl = E.turnTimeline(x.team, x.progs, o&&o.enemy||null, x.S||settings(), cap, {focus:o&&o.focus||null, needPierce:!!(boss&&boss.needs&&boss.needs.barrier_pierce) && !(E.barrierModeled && E.barrierModeled(boss))}, ev); }catch(e){ ev.tl=null; }
   return ev.tl;
 }
 /* N턴 계산 순서 한 줄: 턴별 AF·SB 발동과 그 턴 대미지 */
@@ -2596,7 +2596,7 @@ function effBoss(b, sel){
     bzS = Object.assign({}, bzS, {bossZoneLate: b.zone_late.map(q=>Object.assign({}, q, {bar, bars, note: undefined}))}); }
   { const af = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).find(q=>q && q.when==='af_full' && +q.x>0 && +q.x<1); if(af) bzS = Object.assign({}, bzS, {afFull: +af.x}); } // AF 게이지가 꽉 차면 아군 주는 피해 ×x
   if(b && b.hp_model && b.hp_model.protect) bzS = Object.assign({}, bzS, {protect: b.hp_model.protect}); // 공격 행동 수로 내려가는 보스 내성 단계(마크바브) → 실전 N턴
-  { const cw = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).filter(q=>q && /^start/.test(String(q.when||'start')) && q.x!=null && +q.x>=0 && +q.x<1 && +q.turns>0 && !(+q.hits>0)).map(q=>({t:+q.turns, x:+q.x})); if(cw.length) bzS = Object.assign({}, bzS, {cutWin: cw}); } // 개시 피해 경감 구간 → 실전 N턴 계획이 그 뒤에 AF (횟수 배리어는 아래 타수 기믹)
+  { const cw = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).filter(q=>q && /^start/.test(String(q.when||'start')) && q.x!=null && +q.x>=0 && +q.x<1 && +q.turns>0 && !(+q.hits>0)).map(q=>({t:+q.turns, x:+q.x, b: /배리어|バリア/.test(String(q.when||''))})); if(cw.length) bzS = Object.assign({}, bzS, {cutWin: cw}); } /* b: 배리어 경감 — 엔진이 팀 배리어 관통 몫만큼 덜 깎음 */ // 개시 피해 경감 구간 → 실전 N턴 계획이 그 뒤에 AF (횟수 배리어는 아래 타수 기믹)
   if(shokaChal(b)) bzS = Object.assign({}, bzS, {afScoreCap: 999999999}, b.score_bonus && b.score_bonus.pers ? {scoreBonus: {pers: b.score_bonus.pers, af: b.score_bonus.af, comp: b.score_bonus.comp}} : null); // 서가 챌린지 점수: AF 중 준 피해는 한 번에 999,999,999까지만(알테마 星詠みの書架) — 스텔라 난이도 id는 처치형이라 제외
   { const hg = b && E.hgList ? E.hgList(b) : []; if(hg.length) bzS = Object.assign({}, bzS, {hitGim: hg}); } // 타수로 벗기는 기믹(스택·횟수 배리어·연격 경감, 2026-10-19) → 실전 N턴·처치 턴
   if(!b || !(b.modifiers||[]).length) return {boss:b, S:bzS, pledge:null};

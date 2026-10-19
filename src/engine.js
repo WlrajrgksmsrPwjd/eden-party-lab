@@ -1511,7 +1511,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 이어 치는 스킬의 타격별 위력 비중(hit_w: [[타수, 위력]…], 타수 합 = hits일 때만 — 상태로 스킬이 바뀌면 무시): 큰 타격이 25억 경감을 더 받게(2026-10-16, 세스타(AS) 凶狼薙 2타가 위력 67%)
   const hw = Array.isArray(sk.hit_w) && sk.hit_w.length ? (g => { const H = g.reduce((a,x)=>a+x[0],0), W = g.reduce((a,x)=>a+x[1],0); return H===Math.max(1, sk.hits||1) && W>0 ? {H, g: g.map(x=>[x[0], x[1]/W])} : null; })(sk.hit_w.map(x=>[+x[0]||0, +x[1]||0]).filter(x=>x[0]>0 && x[1]>0)) : null;
   return {cs: csOK ? sk.combo_scale : null, ca: +sk.combo_add||0, cup: cupA, perHit: pN*critX, pN, cR, p, oc:ocP, totHits, hw, links, linkHits, nT, el, elN: elOwn, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
-    afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, rep, cpy: !!sk.copy, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
+    afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, rep, cpy: !!sk.copy, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, pw: Math.min(1, pierceW), sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
     bh, defR, flatP, lunaF, auraF, auraR, chW, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpAtkSk, weakSk: weakUp, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st', viaAlt:null, viaSbN:false, cycMain:0, mixL:null, mix:null}; // 뒤에 붙는 칸도 처음부터(같은 모양)
 }
 
@@ -2021,7 +2021,7 @@ function buildCtx(input, ownedAll){
   const pool = (Array.isArray(input.shuttlePool) && input.shuttlePool.length ? input.shuttlePool : shuttlePoolOf((ownedAll||[]).filter(o=>o && o.pc).map(o=>o.pc)))
     .map(p=>({...p, ...{own: ownIds.has(p.id)}})).filter(p=>(p.own || p.ns!==false) && !exS.has(p.id)) // 보유하지 않은 캐릭터는 기본 스타일(NS)만 — AS·ES·AC는 셔틀로 따로 키우기 어려움. 제외 목록은 셔틀로도 안 씀
     .sort((a,b)=>(b.own-a.own) || (a.id<b.id?-1:a.id>b.id?1:0));
-  return {pool, needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce), focus: input.focus||null, noConv: !!input.noConv, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null,
+  return {pool, needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce) && !barrierModeled(boss), focus: input.focus||null, noConv: !!input.noConv, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null,
     burstN: input.pledge && input.pledge.turns>0 ? Math.min(10, input.pledge.turns) : null};
 }
 /* ---------- AF 행동 수 (위키 기준) ----------
@@ -2435,6 +2435,16 @@ function afStartOf(team, ctx, S){
    k 'multihit' 스킬 한 번 안에서 2타째부터 step씩 덜 들어감(연격 경감) — 실행당 타수가 많을수록 손해
    공통: on 'start'(기본)|'revive'(부활마다)|'revive2'(2회째 부활부터), off 'revive2', from = 그 턴부터, reset_on 'revive'|'stop'(부활·스토퍼마다 s0), turns = 켜진 뒤 최대 턴.
    hp_model.dmg_cut 중 hits가 있는 것(경감 배리어 N회)도 barrier로 — 예전엔 turns 동안 통째로 경감하거나(결실 히스메나 50회 배리어를 3턴 내내) 아예 빠졌음 */
+/* 배리어 경감(2026-10-19, 유튜브 클리어 대조 — 결실 마리엘 2T 투고 vs 엔진 12T): '경감·무효 배리어'는 배리어 관통 공격엔 안 먹음(Hinaden: 100% 감소 배리어를 공명(관통)으로 돌파).
+   팀 배리어 관통 몫(평상 턴 캐릭터별 대미지 × 관통 비율 — ev.pierceS)만큼 경감을 덜 받음: x → x + (1 − x)·관통 몫. 경감 구간을 따로 모델링한 보스는 예전 일괄 관통 감점(needs.barrier_pierce: 관통 없는 공격 ×0.25 내내)을 안 씀 — 두 번 깎던 것 */
+const isBarrierCut = q => !!q && !q.nopierce && /배리어|バリア|barrier/i.test(String(q.when||q.label||''));
+function barrierModeled(b){ const hm = (b && b.hp_model) || {}; return (hm.dmg_cut||[]).some(isBarrierCut) || (Array.isArray(b && b.hitgim) && b.hitgim.some(g=>g && g.k==='barrier' && isBarrierCut(g))); }
+const pierceX = (x, ps) => x + (1 - x)*Math.max(0, Math.min(1, +ps||0));
+/* 팀에 맞춘 타수 기믹: 배리어는 관통 몫만큼 덜, '내성' 스택(보스 물리·마법 내성 UP)은 아군 내성 다운과 같은 합연산 묶음(대미지 × (1 + 내성 다운 − 보스 내성 UP))이라
+   스택 1개 몫 r → r ÷ (1 + 팀 내성 다운 R)(2026-10-19 — 예전엔 따로 곱해 결실 마리엘 白亜 3스택이 ×0.1, 내성 다운 100% 덱도 ×0.2). pw > 1이면 그중 한 갈래만 내성(res로 지정) */
+const hgTeam = (g, ps, R) => { if(!g) return g; if(g.k==='barrier') return isBarrierCut(g) ? ({...g, x: pierceX(+g.x||0, ps)}) : g;
+  if(g.k==='stack' && +g.r>0 && +R>0 && /내성/.test(String(g.label||''))){ const p = +g.pw>0 ? +g.pw : 1, rP = g.res!=null ? Math.min(p, Math.max(0, +g.res)) : (p>1 ? 1 : p), r1 = (+g.r)/(1 + (+R)); return ({...g, r: ((p - rP)*(+g.r) + rP*r1)/p}); }
+  return g; };
 function hgList(b){ const L = []; if(!b) return L; const hm = b.hp_model || {}; // b = 보스(boss.hitgim — gim/merge.py가 hp_model 줄을 다시 쓰므로 바깥에 둠)
   for(const g of (Array.isArray(b.hitgim) ? b.hitgim : [])) if(g && (g.k==='multihit' ? +g.step>0 : (+g.s0>0 || +g.regen>0))) L.push({...g, k: g.k||'stack'});
   if(!b.hitgim_nocut) for(const q of (hm.dmg_cut||[])){ /* hitgim_nocut: 횟수 배리어를 hitgim에 직접 적었으면 dmg_cut hits는 안 씀 */ if(!q || !(+q.hits>0) || q.x==null || !(+q.x>=0 && +q.x<1)) continue; const mk = /^(start|revive2|revive|always)/.exec(String(q.when||'start')); if(!mk) continue;
@@ -2931,12 +2941,13 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const sbz1 = sbz && sbz.level>=2 ? ({...sbz, ...{level:1}}) : sbz, sbPer1 = sbz && sbz.level>=2 ? sumZ(res.sb.cores, sbz1, null, null).per : res.sb.per;
   const sb3 = R3.sb, sbz3 = sb3.zone, sbz31 = sbz3 && sbz3.level>=2 ? ({...sbz3, ...{level:1}}) : sbz3, sbPer31 = sbz3 && sbz3.level>=2 ? sumZ(sb3.cores, sbz31, null, null).per : sb3.per;
   const sbSum = (per) => sbIdx.reduce((v,i)=>v+(per[i]||0),0), sbCh = r => r.chain ? sbIdx.reduce((v,i)=>v+(r.chain.per[i]||0),0) : 0;
+  { const P = res.normal.per||[], C = res.normal.cores||[]; let a = 0, w0 = 0; P.forEach((v,i)=>{ const w = Math.max(0, +v||0); w0 += w; a += w*(C[i] ? Math.min(1, +C[i].pw||0) : 0); }); out.pierceS = w0>0 ? +(a/w0).toFixed(3) : 0; let b = 0; P.forEach((v,i)=>{ const c = C[i]; if(c) b += Math.max(0, +v||0)*Math.max(0, (+c.typeR||0) + (+c.physR||0)); }); out.resR = w0>0 ? +(b/w0).toFixed(3) : 0; } /* 배리어 관통 몫·팀 내성 다운(대미지 비중 평균) */
   const simIn = {t1: out.tl ? out.tl.t1 : normal2, normal: bzG && bzG.up ? bzNorm() : normal2, normal1: bzG && bzG.up ? normal2 : normal1, budAw: bzG ? bzG.turns : null, sbBurst: sbSum(res.sb.per), sbBurst1: sbSum(sbPer1),
     sbChain: sbCh(res.sb), // 체인 추격은 평상 턴 SB에만(AF 안 SB엔 없음)
     sbT: t => { const w = Math.min(1, Math.max(0, (t-1)/2)), L = (x,y)=>x+(y-x)*w; return {b: L(sbSum(res.sb.per), sbSum(sb3.per)), b1: L(sbSum(sbPer1), sbSum(sbPer31)), ch: L(sbCh(res.sb), sbCh(sb3))}; }, // 실전 N턴의 SB: 턴이 지날수록 3턴째 값으로
     afTailV: (Array.isArray(S.cutWin) && S.cutWin.length) || S.protect ? af : 0,
-    cutW: Array.isArray(S.cutWin) && S.cutWin.length ? S.cutWin.filter(w=>w && +w.t>0 && +w.x>=0 && +w.x<1).map(w=>({t:+w.t, x:+w.x})) : null, // 보스 개시 피해 경감 구간(앱 effBoss — hp_model.dmg_cut start)
-    hg: (()=>{ const G = Array.isArray(S.hitGim) && S.hitGim.length && out.hitN ? S.hitGim : null; if(!G) return null; // 보스 타수 기믹(앱 effBoss — hgList(hp_model)): 실전 N턴은 개시·n턴째부터 켜지는 것만(부활 뒤 것은 처치 턴 계산에서)
+    cutW: Array.isArray(S.cutWin) && S.cutWin.length ? S.cutWin.filter(w=>w && +w.t>0 && +w.x>=0 && +w.x<1).map(w=>({t:+w.t, x: w.b ? pierceX(+w.x, out.pierceS) : +w.x})) : null, // 보스 개시 피해 경감 구간(앱 effBoss — hp_model.dmg_cut start)
+    hg: (()=>{ const G0 = Array.isArray(S.hitGim) && S.hitGim.length && out.hitN ? S.hitGim : null; if(!G0) return null; const G = G0.map(g=> hgTeam(g, out.pierceS, out.resR)); // 보스 타수 기믹(앱 effBoss — hgList(hp_model)): 실전 N턴은 개시·n턴째부터 켜지는 것만(부활 뒤 것은 처치 턴 계산에서)
       const on = g => (g.on||'start')==='start'; return {G, M: out.hitN.m, ch: out.hitN.ch, s0: G.map(g=> on(g) && !(+g.from>1) ? hgS0(g) : null), at: G.map(g=> on(g) ? Math.max(1, +g.from||1) : 0)}; })(),
     afFull: +S.afFull>0 && +S.afFull<1 ? +S.afFull : 0, // 보스 오라: AF 게이지가 꽉 차 있으면 아군 주는 피해 ×x(진·현현 유나·멜리나 — 게이지 100% 전에 AF)
     teN: res.normal.turnEnd ? res.normal.turnEnd.total : 0, // AF 턴에도 남는 턴 종료 공격(평상 턴 값)
@@ -3548,7 +3559,7 @@ function killTurnsM(ev, boss, hm){
   /* 보스 피해 경감(hm.dmg_cut): when 앞머리로 시점 — start(개시부터 turns턴)·revive(부활마다, revive2가 따로 있으면 1회째만)·revive2(2회째 부활부터)·always(내내).
      설명이 붙은 when('start (50% 경감 배리어 5턴)' 등)도 앞머리로 읽음(2026-10-18: 예전엔 정확히 'start'·'revive'만 읽어 결실 보스 경감 대부분이 빠졌음). 겹치면 가장 작은 x */
   const cKind = q => { const m = /^(start|revive2|revive|always)/.exec(String(q.when||'start')); return m ? m[1] : null; };
-  const cuts = (hm.dmg_cut||[]).filter(q=>q && q.x!=null && +q.x>=0 && +q.x<1 && cKind(q) && !(+q.hits>0) && (+q.turns>0 || cKind(q)==='always')).map(q=>({x:+q.x, turns: cKind(q)==='always' ? 99 : +q.turns, k: cKind(q)}));
+  const cuts = (hm.dmg_cut||[]).filter(q=>q && q.x!=null && +q.x>=0 && +q.x<1 && cKind(q) && !(+q.hits>0) && (+q.turns>0 || cKind(q)==='always')).map(q=>({x: isBarrierCut(q) ? pierceX(+q.x, ev.pierceS) : +q.x, turns: cKind(q)==='always' ? 99 : +q.turns, k: cKind(q)}));
   const hasRv2 = cuts.some(q=>q.k==='revive2');
   // 스토퍼(2026-10-18 사용자: '반피 까면 더 안 내려가고 기믹 발동 — 한 번에 어포로 끝낼 수 있었으면 공략이 필요 없지'): 그 HP%에 닿으면 그 턴 남은 피해는 버려짐. 목숨이 여럿이면 마지막 줄에만(stopper_all이면 모든 줄)
   const stops = seq ? [] : (hm.stopper||[]).map(Number).filter(v=>v>0 && v<100).sort((x,y)=>y-x); // bar_seq면 스토퍼가 이미 줄로 들어가 있음
@@ -3567,7 +3578,7 @@ function killTurnsM(ev, boss, hm){
   const actN = ev.actN || {n: +ev.atkN||4, af: 15}, px0 = () => PR ? (+PR.rel[plv-1]>0 ? +PR.rel[plv-1] : 1) : 1;
   /* 타수로 벗기는 기믹(hgList — hp_model.hitgim + 횟수 배리어 dmg_cut hits, 2026-10-19): 턴마다 그 턴 타수(AF 턴 = AF 행동 × 타수, 평상 턴 = 평상 타수)로 스택을 깎으며 피해 × 평균 배율.
      실전 N턴 기록에 개시 기믹이 이미 들어갔으면(bsim.hgS) 그 턴은 나머지(부활 뒤 기믹)만 곱하고 개시 기믹 스택은 기록대로 */
-  const HG = hgList(boss), HM = ev.hitN && Array.isArray(ev.hitN.m) && ev.hitN.m.length ? ev.hitN.m : null, HGon = HG.length>0 && !!HM, bsHG = !!(ev.bsim && ev.bsim.hgS);
+  const HG = hgList(boss).map(g=> hgTeam(g, ev.pierceS, ev.resR)), HM = ev.hitN && Array.isArray(ev.hitN.m) && ev.hitN.m.length ? ev.hitN.m : null, HGon = HG.length>0 && !!HM, bsHG = !!(ev.bsim && ev.bsim.hgS);
   let hst = HG.map(g => (g.on||'start')==='start' && !(+g.from>1) ? hgS0(g) : null); const hAt = HG.map(g => (g.on||'start')==='start' ? Math.max(1, +g.from||1) : 0), hgRv2 = HG.some(g=>g.cut && g.on==='revive2');
   const hSeg = (k, d, n) => { const M = HM, aN = n || (ev.hitN && ev.hitN.aN) || [];
     return k==='a' ? {k, d, w: M.map((q,i)=>(+aN[i]||0)*q.h), u: M.map((q,i)=>(+aN[i]||0)*q.x), p: M.map(q=>q.pa), e: M.map(q=>q.en)}
@@ -4156,7 +4167,7 @@ async function perCharBest(input, onProgress){
   return {list, evaluated:N, poolSize:pool.length, nmax:{b:mb, s:ms, t:mt}};
 }
 
-const API = {hitInfo, dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
+const API = {barrierModeled, hitInfo, dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   SURV_CATS, SURV_W, prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
   explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, shuttlePoolOf, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
   statsAt, charStats, STAT_ORDER, killTurns, hgList, needPenalty, weakFit, budCands, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO, dupBase, PGL_ALL, PGL_HPMAX, PGL_ZONE5, PGL_HPLOW, PGL_ELEMP, pglPlan};
