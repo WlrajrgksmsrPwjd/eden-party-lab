@@ -1649,7 +1649,7 @@ function comboF(core, combo){
 function applyZoneCap(core, z, S, cap, combo){
   if(!core) return 0;
   if(core.mixL){ let v=0; for(const x of core.mixL) v += x.w*applyZoneCap(x.co, z, S, cap, combo); return v; }
-  const zf = zoneFactorEff(z, core.el, core.wt, S, core.rel)*(core.sit==='af' && S.starseaAF!==false && isSS(z) ? 2 : 1), c = combo||1, p = core.p, oc = core.oc||0; // 성해진: AF는 100%에서만 켜지고 그 AF 공격은 내내 ×2
+  const zf = zoneFactorEff(z, core.el, core.wt, S, core.rel)*(core.sit==='af' && S.starseaZone!==false && S.starseaAF!==false && isSS(z) ? 2 : 1), c = combo||1, p = core.p, oc = core.oc||0; // 성해진: AF는 100%에서만 켜지고 그 AF 공격은 내내 ×2
   const H = v => Math.min(HIT_MAX, v*c);
   const E1 = x => !S.capOn ? x*c*((1-p) + p*core.cR*(1+oc))
     : S.capAfterCombo ? (1-p)*dingCap(x*c) + p*((1-oc)*dingCap(x*core.cR*c) + oc*dingCap(2*x*core.cR*c)) // 시험: 위키·공식('계산상 대미지가 25억을 넘으면 감쇠') 순서 — AF 콤보를 곱한 뒤 25억 경감
@@ -2049,7 +2049,9 @@ function comboInc(co, S, first, sh){ if(!co) return 0; const tg = co.tgt==='aoe'
   if(S.comboWiki===false) return co.hitsPerAct*(0.025+(co.cup||0))*co.afx*tg;
   const hp = Math.max(1, +co.totHits||1)*tg, lk = (+co.linkHits||0)*tg, lkC = co.links ? co.links.reduce((x,l)=>x + (l.charge ? +l.n||0 : 0), 0)*tg : 0, own = (first ? 0.05 : 0.04) + (co.rel==='weak' ? 0.01 : 0) + 0.02*(hp - 1);
   return own*(co.afxS!=null ? co.afxS : (co.afx||1)) + 0.02*Math.max(0, lk - lkC) + 0.01*lkC + (co.cup||0)*(hp + lk); } // 帯電 추격은 타당 1%(위키 3-3)
-function afWait(spd, k){ let r = AF_WAIT[0][1]; for(const [lo, w] of AF_WAIT){ if(spd >= lo) r = w; else break; } const kk = Math.max(1, Math.round(k)); return kk<=15 ? r.charCodeAt(kk-1) - 48 : (r.charCodeAt(14) - 48) + 0.6*(kk - 15); }
+function afRow(spd){ let r = AF_WAIT[0][1]; for(const [lo, w] of AF_WAIT){ if(spd >= lo) r = w; else break; } return r; }
+function afWaitR(r, k){ const kk = Math.max(1, Math.round(k)); return kk<=15 ? r.charCodeAt(kk-1) - 48 : (r.charCodeAt(14) - 48) + 0.6*(kk - 15); }
+function afWait(spd, k){ return afWaitR(afRow(spd), k); }
 /* ---------- AF 행동 수 (위키 기준) ----------
    AF는 실시간: 게이지 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찬다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%).
    캐릭터마다 행동 → 연출(기본 2초, 캐릭터별 값이 있으면 그 값, 재행동은 실행 횟수만큼) → 대기. 대기는 행동할수록 늘어남: 속도(버프 포함)·행동 횟수 표 AF_WAIT(2026-10-19 위키 — 예: 속도 300이면 1·2·2·3·4·4·5·5…초).
@@ -2063,6 +2065,7 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // pl
   const spdOf = i=>{ const p=progs[i]; return p && p.spd ? p.spd : 0; };
   const fromBuild = i=>{ const p=progs[i]; return !!(p && (p.spdSrc==='build'||p.spdSrc==='build-st')); };
   const wTbl = S.afWaitTbl!==false, spd0 = team.map((c,i)=> !fromBuild(i) && S.afFastDefault ? Math.max(260, spdOf(i)) : (spdOf(i) || 200)), spdE = team.map((c,i)=>{ const co = cores[i]; return spd0[i]*(1 + (co && co.spdBuf>0 ? co.spdBuf : 0)); }); // 버프 포함 속도(모르면 200) — 첫 행동의 대기는 버프 전 속도(리캐스트는 스킬을 쓰는 순간의 속도, 위키)
+  const rw0 = wTbl ? spd0.map(afRow) : null, rwE = wTbl ? spdE.map(afRow) : null; // 대기 표 행은 호출마다 한 번(2026-10-19 속도: 행동마다 표를 훑던 것)
   const fast = team.map((c,i)=> wTbl ? spdE[i]>=249 : (!fromBuild(i) && S.afFastDefault ? true : (spdOf(i) ? spdOf(i)>=249 : false)));
   const known = team.map((c,i)=> progs[i] && progs[i].spdSrc ? progs[i].spdSrc : null);
   const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
@@ -2090,7 +2093,7 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // pl
     const pk = plan ? (plan[i] && cnt[i] < plan[i].length ? plan[i][cnt[i]] : null) : lk && lk[i]!=null ? 'buff' : (prio && cnt[i]===0 && team[i].buffAct ? 'buff' : null); // 버프만 거는 행동은 게이지 0 (위키·사용자 확인), 가창 거는 행동도
     g = Math.min(100, gAt + (pk==='buff' ? 0 : refill[i])); t = tn;
     seq.push({i, t:tn, k:cnt[i], pk});
-    cnt[i]++; next[i] = tn + (pk ? (team[i].afAnim||anim) : animOf[i]) + (wTbl ? afWait(cnt[i]>1 ? spdE[i] : spd0[i], cnt[i]) : (fast[i] ? cnt[i] : cnt[i]+1)); // 대기: 속도·행동 횟수 표(예전: 249 이상 1·2·3…, 미만 2·3·4…)
+    cnt[i]++; next[i] = tn + (pk ? (team[i].afAnim||anim) : animOf[i]) + (wTbl ? afWaitR(cnt[i]>1 ? rwE[i] : rw0[i], cnt[i]) : (fast[i] ? cnt[i] : cnt[i]+1)); // 대기: 속도·행동 횟수 표(예전: 249 이상 1·2·3…, 미만 2·3·4…)
   }
   if(g>0) t += g/10;
   // 가창자의 공격 행동 수: 계획(plan) 없이 막힌 경우 가창을 거는 행동뿐이라 0(계획이 있으면 부르는 쪽이 계획 길이를 뺌)
@@ -2190,7 +2193,8 @@ function turnEndCalc(team, progs, A, enemy, S, cx, FX, z, cap, fw, mode){ // mod
       const q = c.turnEnd.indexOf(e), tk = 'te'+q, tg = (A.eqOff && A.eqOff[h] && A.eqOff[h][tk]===0) ? 0 : (afM || mode==='sb') ? 1 : (A.teU && A.teU[h] && A.teU[h][tk]!=null ? A.teU[h][tk] : 1); // 거는 스킬 장착·유지율(AF 턴은 AF 행동 1번으로 씀)
       const up = (e.up!=null ? Math.max(0, Math.min(1, +e.up)) : 1)*tg; if(!(up>0)) continue;
       if(e.fixed && +e.fixed.v>0){ const a=e.atk||{}; const nT = (e.fixed.target||a.target)==='st' ? 1 : Math.max(1, S.enemyCount||1);
-        per[h] += Math.min(HIT_MAX, +e.fixed.v)*Math.max(1, +e.fixed.n||1)*nT*up; any=true; continue; }
+        per[h] += Math.min(HIT_MAX, +e.fixed.v)*Math.max(1, +e.fixed.n||1)*nT*up; any=true;
+        afg += up*(z && z.level>0 && z.kind!=='none' ? 1.5*Math.max(1, +e.acts||1) : Math.min(30, Math.max(1, +e.fixed.n||1))*1.5); continue; } // 고정 대미지도 AF 게이지(존이면 '그 밖의 공격' 행동당 1.5%, 위키)
       const a=e.atk; if(!a) continue;
       const sk = {skill:e.name||'턴 종료', target:a.target==='st'?'st':'aoe', kind:a.kind==='mag'?'mag':'phys', stat:a.stat||(a.kind==='mag'?'int':'pwr'), element:a.element||'none',
         weapon_type:a.weapon_type||null, size:a.size||'xl', mult:Math.max(0.1, +a.mult||1), hits:Math.max(1,a.hits||1), repeat:0, crit_sure:!!a.crit_sure, def_ignore:!!a.def_ignore, barrier_pierce:!!a.barrier_pierce, af_combo_x:1, condition:''};
@@ -2321,7 +2325,7 @@ function budAgg(bd, team, enemy, A){
   const zfxOf = x => { if(!x) return null; if(Array.isArray(x)){ for(const y of x){ const r = zfxOf(y); if(r) return r; } return null; } if(!reqOK(x.req)) return null;
     if(x.zone_aw) return {key: x.zone_aw}; if(x.zone_dep && +x.zone_dep.level>=2) return {key: x.zone_dep.key}; return null; };
   const zfx = zfxOf(b.sb2) || zfxOf(b.sb);
-  return {parts, sup, enemyDown, afgA: +b.afg||0, afgC, ch, gear: gear ? gear.id : null, brk, inf, zfx, autoAtk: b.auto_atk || null}; // autoAtk: 오토 스킬이 공격이면 그 공격 행동의 AF 게이지(존이면 행동당)
+  return {parts, sup, enemyDown, afgA: +b.afg||0, afgC, ch, gear: gear ? gear.id : null, brk, inf, zfx, autoAtk: b.auto_atk || (gear && HYUGA_GEAR_WT[gear.id] && (b.id==null || b.id==='hyuga') ? {el:'shade', wt:HYUGA_GEAR_WT[gear.id], hits:1} : null), chgAtk: b.chg_atk || null}; // 휴우가: 機甲 장비를 껴야 오토 스킬에 공격(陰, 장비 종류로 타입 — 알테마 buddy/16) // autoAtk: 오토 스킬이 공격이면 그 공격 행동의 AF 게이지(존이면 행동당)
 }
 /* 흉성 3(AF 게이지 매 턴 소비, 2026-10-18 알테마 안・키・디그마): 턴을 넘겨 게이지를 못 모으니 버디 차지 스킬의 즉시 AF 게이지(afg)를 한 턴에 몰아 써서 50% 이상이면 AF.
    k = ⌈50 ÷ afg⌉번(건스(AS) 30 → 2번 60%), 필요 차지 k × cost, 차지 속도 r = 1 + chg_plus + 장비 → 첫 AF 1 + ⌈필요 ÷ r⌉턴째(초뢰진이면 6턴째 — 알테마 행동표와 같음), 그 뒤 ⌈필요 ÷ r⌉턴마다 */
@@ -2338,7 +2342,11 @@ const budAtkAfg = (bud, zone, team) => { const a = bud && bud.autoAtk; if(!a) re
   const el = a.el==='zone' ? (zone && zone.kind==='elem' && ELEM4.includes(zone.key) ? zone.key : (a.el0||'none')) : (a.el||'none');
   const ex = +a.execs>1 && (!a.execs_req || (team||[]).some(c=>c && c.id===a.execs_req)) ? +a.execs : 1; // 피탄(AS): 전열 질퍼니(AS)면 다시 공격
   const za = zoneAF(zone, {el, wt: a.wt||null}, false); return za!=null ? za*ex : Math.min(30, Math.max(1, +a.hits||1)*ex)*1.5; };
-const budAfg = (bud, zone, team) => !bud ? 0 : (bud.afgA||0) + budAtkAfg(bud, zone, team) + (bud.afgC ? bud.afgC*Math.min(1, (1 + budChgPlus(bud.ch.plus, zone, team) + (bud.ch.rnd||0))/bud.ch.cost) : 0);
+const HYUGA_GEAR_WT = {kikou_kagizume:'slash', kikou_teyari:'pierce', kikou_kentsuba:'blunt'};
+const budChgRate = (bud, zone, team) => bud && bud.ch && +bud.ch.cost>0 ? Math.min(1, (1 + budChgPlus(bud.ch.plus, zone, team) + (bud.ch.rnd||0))/bud.ch.cost) : 0; // 턴당 차지 스킬 사용 횟수(평균)
+const budChgAtkAfg = (bud, zone) => { const a = bud && bud.chgAtk; if(!a) return 0; const el = a.el==='zone' ? (zone && zone.kind==='elem' && ELEM4.includes(zone.key) ? zone.key : (a.el0||'none')) : (a.el||'none');
+  const za = zoneAF(zone, {el, wt: a.wt||null}, false); return za!=null ? za : Math.min(30, Math.max(1, +a.hits||1))*1.5; }; // 차지 공격 한 번의 AF 게이지
+const budAfg = (bud, zone, team) => !bud ? 0 : (bud.afgA||0) + budAtkAfg(bud, zone, team) + ((bud.afgC||0) + budChgAtkAfg(bud, zone))*budChgRate(bud, zone, team);
 /* 속성 변환(변환자재): 아군 전체를 존 속성·특정 속성으로 바꾸는 서포터, 자기 속성을 존·약점·옆 아군에 맞추는 캐릭터 */
 function echgOf(team, progs){
   const L=[]; team.forEach((c,i)=>{ const e=c.echange; if(!e) return; if(e.req && !reqMet(e.req, team, c)) return; L.push(Object.assign({i}, e)); });
@@ -2799,7 +2807,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       if(ctr && ctr.total>0 && sit==='normal'){ const chC = hasChain ? chainCalc(team, progs, A, enemy, S, 'normal', cx, fxN(), z, cores, useSim?sim:null, cap, null, fw, ctr, true) : null;
         afPost = {per: ctr0.per.map((v,i)=>v + (chC ? chC.per[i] : 0)), total: ctr0.total + (chC ? chC.total : 0), ctr: ctr0.total, ch: chC ? chC.total : 0}; }
       if(hasTE && sit==='normal') te = turnEndCalc(team, progs, A, enemy, S, cx, fxN(), z, cap, fw);
-      if(z && z._once && hasOnce && sit==='normal'){ const on1 = onceCalc(team, progs, A, enemy, S, cx, fxN(), z, cap, fw, cores); if(on1) te = te ? {per: te.per.map((v,i)=>v+on1.per[i]), total: te.total+on1.total} : on1; }
+      if(z && z._once && hasOnce && sit==='normal'){ const on1 = onceCalc(team, progs, A, enemy, S, cx, fxN(), z, cap, fw, cores); if(on1) te = te ? {per: te.per.map((v,i)=>v+on1.per[i]), total: te.total+on1.total, afg: te.afg||0} : {...on1, afg: 0}; }
       return {ctr, ch, te, afPost, v:(ctr?ctr.total:0)+(ch?ch.total:0)+(te?te.total:0)}; };
     const withX = (hasCtr && sit==='normal') || hasChain || (hasTE && sit==='normal');
     let best=null, bestV=-1, bestPer=null, bestCores=shared, bestX=null; const cands = [];
@@ -2861,7 +2869,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const afPas = z => team.reduce((v,c,i)=>{ const q = c.afTurnR; if(!q || !(+q.v>0) || q.sb) return v;
     if(Array.isArray(q.zone) && q.zone.length && !(z && z.level>0 && q.zone.some(k => k===z.key || (k==='starsea' && isSS(z))))) return v;
     if(q.song && !(c.song && !(progs[i] && progs[i].songOff))) return v;
-    return v + (+q.v)*(q.p!=null ? +q.p : 1); }, 0);
+    const su = q.song && sim && sim.songUp && sim.songUp[i]!=null ? Math.min(1, Math.max(0, +sim.songUp[i]||0)) : 1; // 가창 중에만: 가창 유지율만큼
+    return v + (+q.v)*(q.p!=null ? +q.p : 1)*su; }, 0);
   const teAfg = () => (res.normal && res.normal.turnEnd && +res.normal.turnEnd.afg) || 0;
   const afOffOf = z => S.afOffGain===false || S.afBan || S.afDrain ? 0 : Math.min(100, afPas(z) + teAfg() + (A.bud ? budAfg(A.bud, z, team) : 0));
   const afCyc1 = (g, off) => 1 + Math.max(off>=50 ? 0 : 1, Math.min(19, Math.max(0, 100 - off)/Math.max(1, g))); // AF 주기 = 평상 턴(AF 턴 뒤 남는 게이지 off에서 100%까지) + AF 턴
@@ -2872,10 +2881,10 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const byHit = Math.min(30, co.totHits) * (weak?3.5:1.5) * (co.cpy ? 0.5 : 1), byHit1 = Math.min(30, Math.max(1, Math.round((co.totHits||1)/Math.max(1, co.execs||1)))) * (weak?3.5:1.5);
       // 존이 있으면 행동(실행)당. 주력 아닌 공격 턴(공격 버프기·MP 부족 대체 공격)은 스킬 하나 = 실행 1번(2026-10-16: 주력의 연속 실행 수로 세던 문제 — 테오도로스·엑구레)
       g += pM * ((za!=null ? za : byHit) + 0.5*Math.min(30, co.linkHits||0)) + pA * (za1!=null ? za1 : byHit1); // 帯電·연계 추가 공격 타당 0.5%(위키)
-      if(!c.afTurnR) g += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)]; // 패시브 수치가 있으면 등급 대신 아래 afPas
+      if(S.afOffGain===false || !c.afTurnR) g += [0,2,4,7][Math.min(3,(c.sup&&c.sup.af_gauge)||0)]; // 패시브 수치가 있으면 등급 대신 아래 afPas
     });
     if(S.afOffGain!==false) g += afPas(z) + teAfg(); // 턴 시작·종료 패시브·턴 종료 추격(평상 턴에도)
-    if(A.bud) g += budAfg(A.bud, z, team); // 버디 AF 게이지(2026-10-17 조사): 모케 오토 스킬 턴당 5, 코로보·건스(AS) 차지 30 ÷ 차지 소모(예전엔 셋 다 턴당 5)
+    if(A.bud) g += S.afOffGain===false ? (A.bud.afgA||0) + (A.bud.afgC||0)*budChgRate(A.bud, z, team) : budAfg(A.bud, z, team); // 버디 AF 게이지(2026-10-17 조사): 모케 오토 스킬 턴당 5, 코로보·건스(AS) 차지 30 ÷ 차지 소모(예전엔 셋 다 턴당 5)
     // 요격은 AF 게이지를 채우지 않음(사용자 확인 2026-10-16 — 예전엔 note.com 글 하나를 근거로 요격 1번 = 행동 1번으로 채웠음). counterCalc의 afg는 참고값
     return g; };
   /* 평상 턴 존 고르기에 AF도(2026-10-17 점검: 평상 턴 대미지만으로 존을 고르면 52→54억 조금 나은 존을 고르다 AF 게이지 22→13·AF가 한 턴 늦어
@@ -2902,9 +2911,15 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   let afGain = (S.afBan || S.afDrain) ? 0 : afGainOf(nz, res.normal.cores); // S.afBan: AF 금지, S.afDrain: 보스 흉성 3(AF 게이지 매 턴 소비) → 평상 턴 충전 없음
   const dInj = S.afDrain && !S.afBan ? afDrainInj(A.bud, nz, team) : null; // 흉성 3에서도 버디 차지 AF 게이지(건스(AS)·코로보)를 모아 그 턴에 쓰면 AF
   const afOff = !!(S.afBan || (S.afDrain && !dInj)), afCyc = S.afCycle!==false && !afOff; // AF를 못 쓰면 지속 딜에 AF 주기 없음(예전엔 afBan이어도 AF ÷ 20턴을 더했음)
-  const afOffG = afOffOf(nz); // AF 턴 뒤(AF가 끝난 다음) 행동 밖에서 차는 게이지
-  const afTurns = dInj ? dInj.per : afCyc1(afGain, afOffG); // AF 주기 = 게이지를 채우는 평상 턴 + AF 턴(AF 턴엔 평상 행동·게이지 충전 없음, 2026-10-16 — 행동 밖 충전 afOffG만, 2026-10-19)
-  const susNW = afCyc ? (afTurns-1)/afTurns : 1; // 지속 딜에서 평상 턴 비율
+  const offOK = !(S.afOffGain===false || S.afBan || S.afDrain);
+  const teAF0 = (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.when && e.when.af))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, nz, cap, fw, 'af'); return r && r.total>0 ? r : null; })(); // AF 턴 종료 공격(콤보 최대 기준 위력, 그 스킬 칸·AF 행동 1번은 따로 안 셈)
+  const afOffG = offOK ? Math.min(100, afOffOf(nz) + ((teAF0 && +teAF0.afg)||0)) : 0; // AF 턴 뒤(AF가 끝난 다음) 행동 밖에서 차는 게이지(빅트(AS) AF 턴 종료 공격 포함)
+  let afTurns = dInj ? dInj.per : afCyc1(afGain, afOffG); // AF 주기 = 게이지를 채우는 평상 턴 + AF 턴(AF 턴엔 평상 행동·게이지 충전 없음, 2026-10-16 — 행동 밖 충전 afOffG만, 2026-10-19)
+  let susNW = afCyc ? (afTurns-1)/afTurns : 1; // 지속 딜에서 평상 턴 비율
+  const sbIdx = team.map((c,i)=>i).filter(i=>team[i].stellar && progs[i].sbOK);
+  const sbW = team.map((c,i)=> sbFillOK(team, i, progs, S) ? 2 : 1); // SB 게이지 행동 1회 충전 배율(허수아비 dummySim과 같게)
+  const sbWN = sbW.map((w,i)=> w*(1 - Math.min(1, Math.max(0, (sim && sim.lock && +sim.lock[i]) || 0)))); // 평상 턴: 가창으로 잠긴 턴엔 행동이 없어 SB 게이지도 안 참(game-info 星導覚醒 '歌唱は使用したターンのみ', 2026-10-19)
+  let afSbG = offOK ? sbIdx.reduce((v,i)=>{ const q = team[i].afTurnR; if(!q || !q.sb) return v; const n = Math.max(1, +q.acts||1), za = zoneAF(nz, {el:q.el||'none', wt:q.wt||null}, false); return v + (za!=null ? za*n : n*1.5); }, 0) : 0; // SB 턴 종료 추격(메리나 星導スキル)
   // 허수아비는 1턴만, AF 100%로 시작(사용자 확인) → 세팅 턴 없음: 축적은 AF 중 행동 횟수만큼
   A.tm.S0 = 0;
   runSit('sb');
@@ -2915,6 +2930,11 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const R3 = (()=>{ const sv = res.sb; A.realT = 3; A.tm.S0 = 2;
     const p3 = afPick(coresFor('af', nz, false)); runSit('sb', sv.zone || null); const sb3 = ({...res.sb, ...{zones: sv.zones}}); res.sb = sv; A.realT = 0; A.tm.S0 = 0;
     return {cores:p3.cs, afA:p3.afA, avg:p3.avg, afS:p3.afS, sb:sb3, pick:p3.pick}; })();
+  /* SB 턴 종료 추격의 AF 게이지(afSbG)는 SB를 쓴 턴마다 — 턴당 평균(SB 주기로)을 평상 턴 충전·AF 턴 뒤 게이지에 더해 AF 주기를 다시(2026-10-19 점검: 실전 시뮬과 지속 딜·처치 턴이 다르던 것) */
+  const teSB0 = (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.sb_only))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, res.sb.zone || nz, cap, fw, 'sb'); return r && r.total>0 ? r : null; })(); // SB를 쓴 턴의 종료 공격
+  if(offOK && teSB0) afSbG += +teSB0.afg||0; // 그 AF 게이지도 SB 턴 끝에(피네(AS) 残響)
+  if(afSbG>0 && afCyc && !dInj && S.sbCycle!==false){ const sa = S.sbPerAct!=null ? +S.sbPerAct : 2.5, aA = R3.afA.n.reduce((x,y,i)=>x+y*sbW[i],0), gT = sa*sbWN.reduce((x,v)=>x+v,0)*susNW + sa*aA/afTurns, sbR = Math.min(1, gT/100);
+    afTurns = afCyc1(afGain + afSbG*sbR, Math.min(100, afOffG + afSbG*sbR)); susNW = (afTurns-1)/afTurns; }
   const ssK = S.starseaZone!==false && isSS(nz) ? 2 : 1; let af = R3.afS.v; // ssK: 평상 존이 성해진(AF 공격 ×2는 applyZoneCap이 — 코어 sit 'af')
   /* 긴 전투의 AF(2026-10-18, 사용자 '빅트 고평가 — 단기전이라?'): 개전·한 번 쓰는 상태(歴戦 5턴·개전 3턴 등)는 지속 딜의 AF에서도 늘 켜져 있었음 →
      긴 전투(S.susHorizon, 기본 15턴) 중 그 구간 안의 AF 비율(구간 끝 ÷ 15)만 켜진 AF, 나머지는 구간이 끝난 뒤 AF(A.lateAF)로 섞음 */
@@ -2963,6 +2983,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
         en: h/x, es: sbU ? (Math.max(1, +so.totHits||1))/Math.max(1, +so.execs||1) : 1, pn: +(res.normal.per||[])[i]||0, pa: +((R3.afS && R3.afS.per)||[])[i]||0, ps: sbU ? +((res.sb && res.sb.per)||[])[i]||0 : 0}; });
     const ch = (res.normal.chain ? sm(res.normal.chain.trig) : 0) + (res.normal.counter ? sm(res.normal.counter.trig) : 0);
     return {m, ch, aN, n: +(m.reduce((v,q)=>v+q.hN, 0) + ch).toFixed(1), af: +m.reduce((v,q,i)=>v+(+aN[i]||0)*q.h, 0).toFixed(1), sb: +m.reduce((v,q)=>v+q.hS, 0).toFixed(1)}; })();
+  if(S.lifeCarryN!=null) out.lcN = !!S.lifeCarryN; // 처치 턴(killTurnsM) 목숨 넘김은 쓰는 설정으로
   if(bzG) out.budZ = {label: bzG.z.label, first: bzG.first, per: bzG.per, frac: bzG.frac};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; }
   // AF를 게이지 g0%에서 시작했을 때 (행동 수·콤보·화력). 100%는 위에서 계산한 값
@@ -2977,9 +2998,9 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const sbFr = !!sbz && sameZ(res.sb.zones, sbz).some(q=>q.how==='SB 시' && team.some(c=>c.id===q.by && c.raw && c.raw.zone && c.raw.zone.sb_fresh));
   const sbAw = sbAw0 && !(sbFr && nz && nz.key===sbz.key && nz.level>=1);
   const afMemo = {};
-  const afRun = (g0, lv, t)=>{ g0 = Math.max(50, Math.min(100, Math.round(g0/10)*10)); const bU = !!(bzG && bzG.up && lv>=2), zH = bU ? bzG.z : nz; // bU: 버디가 각성시킨 극 존의 AF
-    const lv2 = !(zH && zH.level>=2) || lv>=2, tOn = onT(t), tc = t>=3 || tOn ? 3 : t===2 ? 2 : 1; const k=g0+(lv2?'a':'b')+(bU?'B':'')+tc+(tOn?'O':''); if(afMemo[k]) return afMemo[k]; // tOn: 상태가 켜진 턴(sb_full)
-    if(tc===2){ const p = afRun(g0, lv, 1), q = afRun(g0, lv, 3), m = (x,y)=>(x+y)/2; // 2턴째 AF: 1턴째·3턴째의 중간
+  const afRun = (g0, lv, t, gen)=>{ /* gen: 일반 '3턴째 이후' 값(지속 딜·SB 주기·2턴째 평균) — sb_full 상태 켜진 턴(onT) 무시(2026-10-19 점검) */ g0 = Math.max(50, Math.min(100, Math.round(g0/10)*10)); const bU = !!(bzG && bzG.up && lv>=2), zH = bU ? bzG.z : nz; // bU: 버디가 각성시킨 극 존의 AF
+    const lv2 = !(zH && zH.level>=2) || lv>=2, tOn = !gen && onT(t), tc = t>=3 || tOn ? 3 : t===2 ? 2 : 1; const k=g0+(lv2?'a':'b')+(bU?'B':'')+tc+(tOn?'O':''); if(afMemo[k]) return afMemo[k]; // tOn: 상태가 켜진 턴(sb_full)
+    if(tc===2){ const p = afRun(g0, lv, 1, true), q = afRun(g0, lv, 3, true), m = (x,y)=>(x+y)/2; // 2턴째 AF: 1턴째·3턴째의 중간
       return (afMemo[k] = {g0, dmg:m(p.dmg,q.dmg), per:p.per.map((v,i)=>m(v,q.per[i])), acts:m(p.acts,q.acts), fin:m(p.fin,q.fin), avg:m(p.avg,q.avg), n:p.n}); }
     const PB = bU ? (tc===3 ? bzG.P3 : bzG.P1) : null;
     const ON = tOn && !PB ? onVals() : null, cs = PB ? PB.cs : ON ? ON.cs : tc===3 ? R3.cores : afCores, a0 = PB ? PB.afA : ON ? ON.afA : tc===3 ? R3.afA : afA, zU = lv2 ? zH : nzL1;
@@ -2988,9 +3009,6 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     const avg = Math.min(0.75+0.5*gn, S.comboCap>0 ? S.comboCap : Infinity), zz0 = (g0>=100 && lv2) ? (PB ? PB.afS : ON ? ON.afS : tc===3 ? R3.afS : afS) : afSum(cs, zU, avg, a.n);
     const zz = (g0>=100 && lv2) ? zz0 : addCx(zz0, cs, zU, a.n, Math.min(0.75+gn, S.comboCap>0 ? S.comboCap : Infinity));
     return (afMemo[k] = {g0, dmg:zz.v, per:zz.per, acts:a.n.reduce((x,y)=>x+y,0), fin:Math.min(0.75+gn, S.comboCap>0 ? S.comboCap : Infinity), avg, n:a.n}); };
-  const sbIdx = team.map((c,i)=>i).filter(i=>team[i].stellar && progs[i].sbOK);
-  const sbW = team.map((c,i)=> sbFillOK(team, i, progs, S) ? 2 : 1); // SB 게이지 행동 1회 충전 배율(허수아비 dummySim과 같게)
-  const sbWN = sbW.map((w,i)=> w*(1 - Math.min(1, Math.max(0, (sim && sim.lock && +sim.lock[i]) || 0)))); // 평상 턴: 가창으로 잠긴 턴엔 행동이 없어 SB 게이지도 안 참(game-info 星導覚醒 '歌唱は使用したターンのみ', 2026-10-19)
   /* SB 게이지 가득(state sb_full {from, from_nosa, dur, cd}, 2026-10-19 game-info ユーチェリカ: 星天の力 상태에선 턴 시작에 天冥ゲージ를 天 200으로 채움 →
      그 상태 2턴 동안 매 턴 SB, 상태가 끝나면 星の導き를 다시 99까지(성도각성 + 개전 40이면 4턴째부터, 아니면 늦게)). 그 턴은 상태가 켜진 SB·AF·평상 턴으로 */
   const sbFullOf = (()=>{ if(!sbIdx.length || S.sbFull===false) return null; let set = null, info = null; const nm = new Set();
@@ -3011,7 +3029,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   { const P = res.normal.per||[], C = res.normal.cores||[]; let a = 0, w0 = 0; P.forEach((v,i)=>{ const w = Math.max(0, +v||0); w0 += w; a += w*(C[i] ? Math.min(1, +C[i].pw||0) : 0); }); out.pierceS = w0>0 ? +(a/w0).toFixed(3) : 0; let b = 0; P.forEach((v,i)=>{ const c = C[i]; if(c) b += Math.max(0, +v||0)*Math.max(0, (+c.typeR||0) + (+c.physR||0)); }); out.resR = w0>0 ? +(b/w0).toFixed(3) : 0; } /* 배리어 관통 몫·팀 내성 다운(대미지 비중 평균) */
   const simIn = {t1: out.tl ? out.tl.t1 : normal2, normal: bzG && bzG.up ? bzNorm() : normal2, normal1: bzG && bzG.up ? normal2 : normal1, budAw: bzG ? bzG.turns : null, sbBurst: sbSum(res.sb.per), sbBurst1: sbSum(sbPer1),
     sbChain: sbCh(res.sb), // 체인 추격은 평상 턴 SB에만(AF 안 SB엔 없음)
-    sbT: t => { if(onT(t)){ const O = onVals(), b = sbSum(O.sb.per), r1 = sbSum(sb3.per)>0 ? sbSum(sbPer31)/sbSum(sb3.per) : 1; return {b, b1: b*r1, ch: sbCh(O.sb), on: true}; } // sb_full 턴: 상태가 켜진 SB
+    sbT: t => { if(onT(t)){ const O = onVals(), b = sbSum(O.sb.per), r1 = sbSum(sb3.per)>0 ? sbSum(sbPer31)/sbSum(sb3.per) : 1; const ch = sbCh(O.sb); return {b, b1: (b - ch)*r1, ch, on: true}; } // sb_full 턴: 상태가 켜진 SB
       const w = Math.min(1, Math.max(0, (t-1)/2)), L = (x,y)=>x+(y-x)*w; return {b: L(sbSum(res.sb.per), sbSum(sb3.per)), b1: L(sbSum(sbPer1), sbSum(sbPer31)), ch: L(sbCh(res.sb), sbCh(sb3))}; }, // 실전 N턴의 SB: 턴이 지날수록 3턴째 값으로
     sbFull: sbFullOf ? sbFullOf.set : null, ndOn: sbFullOf ? (t => onT(t) ? onVals().nr : 1) : null,
     afTailV: (Array.isArray(S.cutWin) && S.cutWin.length) || S.protect ? af : 0,
@@ -3020,25 +3038,25 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const on = g => (g.on||'start')==='start'; return {G, M: out.hitN.m, ch: out.hitN.ch, s0: G.map(g=> on(g) && !(+g.from>1) ? hgS0(g) : null), at: G.map(g=> on(g) ? Math.max(1, +g.from||1) : 0)}; })(),
     afFull: +S.afFull>0 && +S.afFull<1 ? +S.afFull : 0, // 보스 오라: AF 게이지가 꽉 차 있으면 아군 주는 피해 ×x(진·현현 유나·멜리나 — 게이지 100% 전에 AF)
     teN: res.normal.turnEnd ? res.normal.turnEnd.total : 0, // AF 턴에도 남는 턴 종료 공격(평상 턴 값)
-    teAF: (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.when && e.when.af))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, nz, cap, fw, 'af'); return r && r.total>0 ? r : null; })(), // AF 턴 종료 공격(콤보 최대 기준 위력, 그 스킬 칸·AF 행동 1번은 따로 안 셈)
+    teAF: teAF0,
     sbOnce: (()=>{ const oi = sbIdx.filter(i=>team[i].sb && +team[i].sb.once_t>0); if(!oi.length) return null; const S1 = per => oi.reduce((v,i)=>v+(per[i]||0),0);
       return {maxT: Math.min(...oi.map(i=>+team[i].sb.once_t)), t: t => { const w = Math.min(1, Math.max(0, (t-1)/2)), L = (x,y)=>x+(y-x)*w; return {b: L(S1(res.sb.per), S1(sb3.per)), b1: L(S1(sbPer1), S1(sbPer31))}; }}; })(), // 전투 중 1회 SB(sb.once_t = 쓸 수 있는 마지막 턴)
     aw0: awStart ? 2 : 0, awConst, sbAw, hasSB: sbIdx.length>0,
     ss: ssK>1, ssAF: S.starseaAF!==false, afGain, afDrain: dInj ? {turns: dInj.turns, g0: dInj.g0} : null, g0: st.g, s0: Math.min(50, 12.5*team.length), sbAct: S.sbPerAct!=null ? +S.sbPerAct : 2.5, front: team.length, sbW, sbWN, afRun, /* SB 게이지 시작 = 전열 1명당 +25/200(2026-10-19 game-info 星導覚醒 'ステラバーストの細かい仕様' — 예전엔 천·명 중 많은 쪽 수만), sbW: 멤버별 행동 1회 충전 배율(스텔라 보드 天冥 어빌리티 증가(중) = +10/+5) */
     refill: (()=>{ const rc = sbIdx.length ? team.find(c=>c.afRefillR && c.afRefillR.on==='sb') : null; return rc ? {to:+rc.afRefillR.to||100, cost:+rc.afRefillR.cost||0, e0: +rc.afRefillR.start>0 ? 1 : 0, noAF: rc.afRefillR.af===false} : null; })(), // e0: 개전에 축적 1개(히스메나(ES) エスパーダ), noAF: AF 안 SB로는 안 채움
-    teSB: (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.sb_only))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, sbz || nz, cap, fw, 'sb'); return r && r.total>0 ? r : null; })()}; // SB를 쓴 턴의 종료 공격
-  simIn.afSbG = S.afOffGain===false || S.afBan || S.afDrain ? 0 : sbIdx.reduce((v,i)=>{ const q = team[i].afTurnR; if(!q || !q.sb) return v; const n = Math.max(1, +q.acts||1), za = zoneAF(nz, {el:q.el||'none', wt:q.wt||null}, false); return v + (za!=null ? za*n : n*1.5); }, 0); // SB 턴 종료 추격(메리나 星導スキル)
-  simIn.afOffG = S.afOffGain===false || S.afBan || S.afDrain ? 0 : Math.min(100, afOffG + ((simIn.teAF && +simIn.teAF.afg)||0)); out.afOffG = simIn.afOffG>0 ? +simIn.afOffG.toFixed(1) : 0; // AF 턴 뒤 게이지(빅트(AS) AF 턴 종료 공격 포함)
+    teSB: teSB0};
+  simIn.afSbG = afSbG;
+  simIn.afOffG = afOffG; out.afOffG = simIn.afOffG>0 ? +simIn.afOffG.toFixed(1) : 0; // AF 턴 뒤 게이지(빅트(AS) AF 턴 종료 공격 포함)
   // 지속 딜의 AF도 극 존이 계속 유지될 때만 극(2026-10-17): 개전 자동·1회 각성(네코코(ES) 颯 첫 사용 등)은 2턴 뒤 일반 존 — 평상 턴(susOf)과 같은 비율(일반 0.6·극 0.4)로 섞음. SB로 다시 각성(sbAw)하면 그대로
-  if(afCyc && !dInj && nz && nz.level>=2 && !awConst && !sbAw){ const a1 = afRun(100, 1, 3).dmg; if(a1 < af){ const dA = (bzG && !bzG.up ? 1-Math.max(0.4, bzG.frac) : 0.6)*(a1 - af)/afTurns; out.sustain += dA; out.susAfL1 = a1; } }
-  if(afCyc && !dInj && bzG && bzG.up){ const aB = afRun(100, 2, 3).dmg; if(aB > af){ out.sustain += bzG.frac*(aB - af)/afTurns; out.susAfB = aB; } } // 버디 각성 극 존 AF는 차지 주기 중 2턴 몫
+  if(afCyc && !dInj && nz && nz.level>=2 && !awConst && !sbAw){ const a1 = afRun(100, 1, 3, true).dmg; if(a1 < af){ const dA = (bzG && !bzG.up ? 1-Math.max(0.4, bzG.frac) : 0.6)*(a1 - af)/afTurns; out.sustain += dA; out.susAfL1 = a1; } }
+  if(afCyc && !dInj && bzG && bzG.up){ const aB = afRun(100, 2, 3, true).dmg; if(aB > af){ out.sustain += bzG.frac*(aB - af)/afTurns; out.susAfB = aB; } } // 버디 각성 극 존 AF는 차지 주기 중 2턴 몫
   if(afCyc && !dInj && afLate){ out.sustain += (afLate.v - af)/afTurns; out.afLate = afLate; } // 긴 전투 AF(구간 상태가 끝난 뒤 섞음)
-  if(afCyc && dInj){ const aD = afRun(dInj.g0, 1, 3).dmg; out.sustain += (aD - af)/afTurns; out.afDrain = {first: dInj.first, per: dInj.per, g0: dInj.g0, k: dInj.k, af: aD}; } // 흉성 3: 차지로 채운 게이지(g0)에서 시작하는 AF
+  if(afCyc && dInj){ const aD = afRun(dInj.g0, 1, 3, true).dmg; out.sustain += (aD - af)/afTurns; out.afDrain = {first: dInj.first, per: dInj.per, g0: dInj.g0, k: dInj.k, af: aD}; } // 흉성 3: 차지로 채운 게이지(g0)에서 시작하는 AF
   if(afCyc){ if(simIn.teAF){ out.sustain += simIn.teAF.total/afTurns; out.teAF = simIn.teAF; } if(simIn.teN) out.sustain += simIn.teN/afTurns; } // AF 턴 종료 공격(AF 턴 전용 + 평상 턴 종료 공격)도 AF 주기마다
   // 지속 딜에 SB(2026-10-16, 사용자 확인: SB는 턴을 쓰지 않아 쓴 뒤에도 그 턴 행동을 그대로 함): SB 게이지가 차는 주기마다 한 번 더함.
   // 게이지 = 평상 턴 행동마다 + AF 행동마다(실전 시뮬과 같은 sbAct), 차는 몫이 AF 쪽이면 AF 끝 콤보로(실전 시뮬처럼 AF 안 SB)
   if(S.sbCycle!==false && sbIdx.length){ const sa = simIn.sbAct, afActs = R3.afA.n.reduce((x,y,i)=>x+y*sbW[i],0), gN = sa*sbWN.reduce((x,v)=>x+v,0)*susNW, gA = afCyc ? sa*afActs/afTurns : 0, gT = gN + gA;
-    const sbTurns = Math.max(1, 100/Math.max(1, gT)), fr = gT>0 ? gA/gT : 0, fin = afRun(100, bzG && bzG.up ? 1 : 2, 3).fin, k = fr*fin + (1-fr); // 버디 각성 극 AF는 차지 주기 중 일부라 SB 주기 콤보엔 안 씀(2026-10-18 점검)
+    const sbTurns = Math.max(1, 100/Math.max(1, gT)), fr = gT>0 ? gA/gT : 0, fin = afRun(100, bzG && bzG.up ? 1 : 2, 3, true).fin, k = fr*fin + (1-fr); // 버디 각성 극 AF는 차지 주기 중 일부라 SB 주기 콤보엔 안 씀(2026-10-18 점검)
     const Hs = (A.tm && A.tm.H) || 6; // 전투 중 1회 SB(once_t)는 주기마다가 아니라 전투(H턴)에 한 번
     // 긴 전투 SB(2026-10-18, 빅트 歴戦 SB 71.4 → 꺼지면 39.4): AF처럼 개전·한 번 쓰는 상태 구간 끝마다 그 뒤 SB를 계산해 시간 가중(탐색 어림 단계는 생략)
     let sbP = sb3.per; if(afLate && afLate.ends && afLate.ends.length && !(ctx && ctx.stFast)){ const sv0 = res.sb, E0 = afLate.ends, acc = sb3.per.map(v=>(v||0)*E0[0]); let prev = E0[0];
@@ -3104,8 +3122,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
         if(rc.teSB && simIn.teSB) add(simIn.teSB.per, 1);
         if(rc.af){ const r = afRun(rc.af, rc.afL, rc.t); add(r.per, rc.fA!=null ? rc.fA : 1); if(rc.teAF && simIn.teAF) add(simIn.teAF.per, 1); if(rc.teN && res.normal.turnEnd) add(res.normal.turnEnd.per, 1); if(rc.ctrAF && res.normal.afPost) add(res.normal.afPost.per, 1); }
         if(rc.sb){ const w = Math.min(1, Math.max(0, (rc.t-1)/2)), lv2 = rc.L>=2, ch1 = lv2 && res.sb.chain ? res.sb.chain.per : null, ch3 = lv2 && sb3.chain ? sb3.chain.per : null, k = (rc.sb==='af' ? (rc.combo||1) : 1)*(rc.fS!=null ? rc.fS : 1);
-          const pOn = rc.sbOn ? onVals().sb.per : null, p1 = pOn || (lv2 ? res.sb.per : sbPer1), p3 = pOn || (lv2 ? sb3.per : sbPer31);
-          sbIdx.forEach(i=>{ if(rc.sbNo1 && team[i].sb && +team[i].sb.once_t>0) return; const a1 = (p1[i]||0) - (ch1 ? ch1[i]||0 : 0), a3 = (p3[i]||0) - (ch3 ? ch3[i]||0 : 0); per[i] += Math.max(0, a1 + (a3-a1)*w)*k; }); }
+          const pOn = rc.sbOn ? onVals().sb.per : null, p1 = pOn || (lv2 ? res.sb.per : sbPer1), p3 = pOn || (lv2 ? sb3.per : sbPer31), chO = pOn && onVals().sb.chain ? onVals().sb.chain.per : null; // sb_full 턴은 상태가 켜진 SB의 체인을 뺌(2026-10-19 점검)
+          sbIdx.forEach(i=>{ if(rc.sbNo1 && team[i].sb && +team[i].sb.once_t>0) return; const a1 = (p1[i]||0) - (pOn ? (chO ? chO[i]||0 : 0) : ch1 ? ch1[i]||0 : 0), a3 = (p3[i]||0) - (pOn ? (chO ? chO[i]||0 : 0) : ch3 ? ch3[i]||0 : 0); per[i] += Math.max(0, a1 + (a3-a1)*w)*k; }); }
         add(res.normal.per, (rc.nd||0)/nT); }
       return per; };
     let tot = 0; const perW = team.map(()=>0);
@@ -3221,7 +3239,7 @@ function dummySim(o){
   // 속성 변환(elem_change): 건 사람이 행동한 뒤부터. act:2 = 파티 버프와 다른 스킬이라 버프 행동 다음 행동에(네코코(ES) 猫又巫女神楽)
   const egAll = A.echg ? A.echg.map(()=>'1').join('') : '';
   const all = team.map(()=>true);
-  const full0 = team.map((c,i)=>attackerCore(team, i, progs, A, enemy, S, 'af', cx, buildBF(team, progs, 'af', nz, A, posSets, team.map(()=>1), true), nz));
+  const Ad0 = ({...A, ...{dummy:true}}), full0 = team.map((c,i)=>attackerCore(team, i, progs, Ad0, enemy, S, 'af', cx, buildBF(team, progs, 'af', nz, Ad0, posSets, team.map(()=>1), true), nz)); // 행동 수·연출도 대미지(Av)와 같은 허수아비 조건으로(2026-10-19 점검: 'HP 50% 이상 재공격'이 행동 수에선 ×0.7)
   const cmax = S.comboCap>0 ? S.comboCap : Infinity;
   const sbAct = S.sbPerAct!=null ? +S.sbPerAct : 2.5;
   // 성도 게이지 충전 보너스(강화): 성도 각성한 캐릭터는 조건을 채운다고 보고 2배(설정으로 끔)
@@ -3318,7 +3336,7 @@ function dummySim(o){
     const egOf = () => A.echg ? A.echg.map(e=>{ if(e.to==='self' || passive[e.i]) return '1';
       const b=B[e.i]; if(b && e.skill){ const k=b.steps.findIndex(x=>x.s===e.skill); if(k>=0) return stepDone[e.i] > k ? '1' : '0'; }
       return cnt[e.i] >= ((+e.act||1) > 1 && team[e.i].buffAct ? 2 : 1) ? '1' : '0'; }).join('') : '';
-    let combo = 0.75, af = 0, cw = 0, sbG = Math.min(50, 12.5*o.team.length); const ssF = z => S.starseaAF!==false && isSS(z) ? 2 : 1; // 허수아비 AF는 100%에서 켬 → 성해진이면 SB도 ×2
+    let combo = 0.75, af = 0, cw = 0, sbG = Math.min(50, 12.5*o.team.length); const ssF = z => S.starseaZone!==false && S.starseaAF!==false && isSS(z) ? 2 : 1; // 허수아비 AF는 100%에서 켬 → 성해진이면 SB도 ×2
     let sbAt = null, sb = 0, zCur = zFrom0 ? nz : null; const sbPer = [], sbCo = {}, used = team.map(()=>[]);
     for(const a of afA.seq){
       const i = a.i, c = team[i];
@@ -3386,8 +3404,8 @@ function dummySim(o){
   const cands = infT.map((t,j)=>t && ((t.wPo==='skill' && t.po>0 && base.poison<t.po) || (t.wPa==='skill' && t.pa>0 && base.pain<t.pa)) ? j : -1).filter(j=>j>=0)
     .sort((x,y)=>(infT[y].po+infT[y].pa)-(infT[x].po+infT[x].pa) || prio.indexOf(x)-prio.indexOf(y)).slice(0,2);
   let bestK = null; if(!o.quick) for(const k of cands){ const r = run(k, castN); if(r.total > best.total*1.0005){ best = r; bestK = k; } }
-  if(!o.quick && best.sbAt!=null){ const r0 = run(bestK, castN), f0 = r0.sbAt!=null ? r0.sbAt : best.sbAt, N0 = best.acts; if(r0.total > best.total*1.0005) best = r0; // SB를 미루는 쪽(게이지가 일찍 차면 SB 콤보가 낮고, 너무 늦으면 SB 뒤 버프를 못 받음 — 시작 게이지 50%로 바로잡은 뒤): 남은 행동을 10등분
-    for(const q of [...new Set(Array.from({length: 10}, (_, x)=>Math.round(f0 + (N0 - f0)*(x+1)/10)))]){ if(q<=f0) continue; const r = run(bestK, castN, q); if(r.sbAt!=null && r.total > best.total*1.0005) best = r; } }
+  if(!o.quick && best.sbAt!=null){ const f0 = best.sbAt, N0 = best.acts, nq = o.deep===false ? 5 : 10; // best = run(bestK, castN) 그대로(예전엔 한 번 더 돌림), 탐색 어림 단계(deep false)는 5등분 — SB를 미루는 쪽(게이지가 일찍 차면 SB 콤보가 낮고, 너무 늦으면 SB 뒤 버프를 못 받음 — 시작 게이지 50%로 바로잡은 뒤): 남은 행동을 10등분
+    for(const q of [...new Set(Array.from({length: nq}, (_, x)=>Math.round(f0 + (N0 - f0)*(x+1)/nq)))]){ if(q<=f0) continue; const r = run(bestK, castN, q); if(r.sbAt!=null && r.total > best.total*1.0005) best = r; } }
   return best;
 }
 /* 계산 근거: 공격 1회의 1타 (존 배율 → 일반·크리·오버크리 → 25억 경감 → AF 콤보 → 99.99억 상한) */
@@ -3620,12 +3638,12 @@ function killTurnsM(ev, boss, hm){
   const pf = partsEff(ev, boss), mg = 1.15, barsF = seq ? seq.length : Math.max(1, +hm.bars||1), bars = Math.ceil(barsF - 1e-9), bar = seq ? seq[seq.length-1] : +hm.bar>0 ? +hm.bar*1e8 : (+boss.hp>0 ? +boss.hp*1e8/barsF : 0);
   if(!(bar>0)) return null;
   const barK = k => seq ? seq[Math.min(seq.length-1, k)] : bar;
-  const rec = (ev.bsim && ev.bsim.turns) || [], N = rec.length, per = Math.max(2, Math.round(+ev.afTurns||4)), afOn = !ev.afOff;
+  const rec = (ev.bsim && ev.bsim.turns) || [], N = rec.length, per = Math.max(+ev.afOffG>=50 ? 1 : 2, Math.round(+ev.afTurns||4)), afOn = !ev.afOff; /* AF 턴 뒤 게이지가 50% 이상이면 매 턴 AF도(2026-10-19 점검) */
   const nD = Math.max(0, (+ev.sustainNoAF||0) + (+ev.sustainSB||0)), /* 평상 턴 한 번(SB는 주기 평균) */ aD = afOn ? Math.max(0, ev.afDrain ? +ev.afDrain.af||0 : ev.afLate ? +ev.afLate.v||0 : +ev.af||0) : 0;
   const lastAF = (()=>{ let k = 0; rec.forEach((r,i)=>{ if(r.af) k = i+1; }); return k; })();
   // 전투 중에 바뀌는 보스 존·상성(ev.zLate, evalTeam): 바뀐 뒤엔 그 단계의 평상 턴·AF 주기(턴 기준 단계의 N턴 안은 이미 합친 턴 기록)
   const ZL = Array.isArray(ev.zLate) && ev.zLate.length ? ev.zLate : null;
-  const mdl = p => p ? {per: Math.max(2, Math.round(+p.afTurns||4)), nD: Math.max(0, (+p.sustainNoAF||0) + (+p.sustainSB||0)), aD: p.afOff ? 0 : Math.max(0, p.afDrain ? +p.afDrain.af||0 : p.afLate ? +p.afLate.v||0 : +p.af||0), dr: p.afDrain || null}
+  const mdl = p => p ? {per: Math.max(+p.afOffG>=50 ? 1 : 2, Math.round(+p.afTurns||4)), nD: Math.max(0, (+p.sustainNoAF||0) + (+p.sustainSB||0)), aD: p.afOff ? 0 : Math.max(0, p.afDrain ? +p.afDrain.af||0 : p.afLate ? +p.afLate.v||0 : +p.af||0), dr: p.afDrain || null}
     : {per, nD, aD, dr: ev.afDrain || null};
   const M0 = mdl(null), MZ = ZL ? ZL.map(mdl) : null;
   let prog = 0; const trT = ZL ? ZL.map(()=>0) : null; // 깬 줄 수 + 지금 줄 진행 비율, HP 기준 단계가 처음 닿은 턴(2턴 뒤 일반 존 단계용)
@@ -3640,7 +3658,7 @@ function killTurnsM(ev, boss, hm){
   // 스토퍼(2026-10-18 사용자: '반피 까면 더 안 내려가고 기믹 발동 — 한 번에 어포로 끝낼 수 있었으면 공략이 필요 없지'): 그 HP%에 닿으면 그 턴 남은 피해는 버려짐. 목숨이 여럿이면 마지막 줄에만(stopper_all이면 모든 줄)
   const stops = seq ? [] : (hm.stopper||[]).map(Number).filter(v=>v>0 && v<100).sort((x,y)=>y-x); // bar_seq면 스토퍼가 이미 줄로 들어가 있음
   let done = 0, t = 0, hpF = Math.min(1, barsF - (bars - 1)); // 첫 줄이 덜 찬 줄(예: 3.5배 = 반 줄 + 3줄)일 수 있음
-  let rem = seq ? seq[0] : bar*hpF; const reset = !!hm.reset, step = +hm.step>0 ? +hm.step : 0, carry = hm.carry===true, lcN = hm.carry_n!=null ? !!hm.carry_n : !!DEFAULT_SETTINGS.lifeCarryN, /* lcN: 평상 턴은 목숨을 깎은 뒤 다음 공격이 부활한 목숨에(부활 = 끼어드는 보스 행동, AF 중엔 못 함 — 2026-10-19 사용자 확인) */ kpt = Math.max(1, Math.round(+hm.kpt||1)); /* kpt: 한 턴에 깰 수 있는 줄 수(결실 애니 박쥐 2마리 — 전체 공격으로 둘 다, 2026-10-19) */
+  let rem = seq ? seq[0] : bar*hpF; const reset = !!hm.reset, step = +hm.step>0 ? +hm.step : 0, carry = hm.carry===true, lcN = hm.carry_n!=null ? !!hm.carry_n : ev.lcN!=null ? !!ev.lcN : !!DEFAULT_SETTINGS.lifeCarryN, /* lcN: 평상 턴은 목숨을 깎은 뒤 다음 공격이 부활한 목숨에(부활 = 끼어드는 보스 행동, AF 중엔 못 함 — 2026-10-19 사용자 확인) */ kpt = Math.max(1, Math.round(+hm.kpt||1)); /* kpt: 한 턴에 깰 수 있는 줄 수(결실 애니 박쥐 2마리 — 전체 공격으로 둘 다, 2026-10-19) */
   const win = []; for(const q of cuts) if(q.k==='start' || q.k==='always') win.push({a:1, b:q.turns, x:q.x, st: q.k==='start'}); // 켜진 경감 구간 [a, b]턴
   const bsCut = !!(ev.bsim && ev.bsim.cutS); // 실전 N턴 기록에 개시 경감이 이미 들어감(battleSim cutW)
   const cutAt = t => win.reduce((m,w)=> t>=w.a && t<=w.b && !(w.st && bsCut && t<=N) ? Math.min(m, w.x) : m, 1);
@@ -3683,12 +3701,14 @@ function killTurnsM(ev, boss, hm){
     const px = PR && !(t<=N && ev.bsim && ev.bsim.protS) ? (+PR.rel[plv-1]>0 ? +PR.rel[plv-1] : 1) : 1; if(PR) L.plv = plv; // 실전 N턴 기록에 이미 들어갔으면 그 턴은 곱하지 않음(단계는 그대로 따라감)
     let d = d0*pf/mg*cx*px*hx; L.d = d0; if(cx<1) L.cut = cx; if(HGon && done<bars){ const rb = t<=N && !(k>=0 && !ZL[k].from) && bsHG && rec[t-1] && +rec[t-1].hg>0 ? +rec[t-1].hg : 1; hgD0 += d0*pf/mg*cx*px/rb; hgD1 += d; } /* 기믹 없을 때 대비 비율(실전 N턴 기록은 개시 기믹이 이미 곱해져 있어 되돌림) */
     if(reset){ let p = Math.min(1, d/bar); if(step>0) p = Math.floor(p/step + 1e-9)*step; done += p; L.pr = +done.toFixed(2); if(log.length<60) log.push(L); continue; } // 턴 종료 전회복: 그 턴에 깎은 만큼만(갑개룡 초생명력)
-    let kTurn = 0; /* AF 턴: AF 피해는 목숨 하나까지(AF 중 부활 못 함), AF가 끝난 뒤 요격·체인·턴 종료 공격(dPost)은 부활한 목숨에 — 사용자 확인 2026-10-19 */
+    let kTurn = 0, stopped = false; /* AF 턴: AF 피해는 목숨 하나까지(AF 중 부활 못 함), AF가 끝난 뒤 요격·체인·턴 종료 공격(dPost)은 부활한 목숨에 — 사용자 확인 2026-10-19 */
     const rT = t<=N && !(k>=0 && !ZL[k].from) ? rec[t-1] : null, dPost = L.af && lcN && rT && d0>0 ? d*Math.min(1, ((+rT.ctrAF||0) + (+rT.teAF||0) + (+rT.teN||0))/d0) : 0; d -= dPost; let inPost = false;
+    /* 목숨 넘김(lcN) 평상 턴: 피해를 공격 nA번(평상 턴 공격 행동 수)으로 나눠, 목숨을 끝낸 공격의 넘친 몫은 버림(넘친 피해는 안 넘어감) — 한 턴에 깰 목숨도 nA개까지(2026-10-19 점검) */
+    const nA = Math.max(kpt, Math.round(+actN.n||4)); let lcC = lcN && !carry && !L.af, ch = lcC ? d/nA : 0;
     for(;;){
     while(d>0 && done<bars){
-      if(stopOn(done)){ const sv = stops.map(v=>v/100*bar).find(v=>v < rem - 1e-6); if(sv!=null && d >= rem - sv){ rem = sv; d = 0; L.ev.push({k:'stop', hp: Math.round(sv/bar*100)}); if(HGon) HG.forEach((g,j)=>{ if(g.reset_on==='stop' && hst[j]!=null) hst[j] = hgS0(g); }); break; } } // 다음 스토퍼까지 깎고 그 턴 끝 · 스토퍼마다 다시 쌓는 기믹
-      if(d >= rem){ d -= rem; done++; L.ev.push({k:'kill', n: done, last: done>=bars}); rem = barK(done);
+      if(stopOn(done)){ const sv = stops.map(v=>v/100*bar).find(v=>v < rem - 1e-6); if(sv!=null && d >= rem - sv){ rem = sv; d = 0; stopped = true; L.ev.push({k:'stop', hp: Math.round(sv/bar*100)}); if(HGon) HG.forEach((g,j)=>{ if(g.reset_on==='stop' && hst[j]!=null) hst[j] = hgS0(g); }); break; } } // 다음 스토퍼까지 깎고 그 턴 끝 · 스토퍼마다 다시 쌓는 기믹
+      if(d >= rem){ if(lcC && ch>0) d = Math.max(0, d - Math.ceil(rem/ch - 1e-9)*ch); else d -= rem; done++; L.ev.push({k:'kill', n: done, last: done>=bars}); rem = barK(done);
         if(done<bars) for(const q of cuts) if((q.k==='revive' && (!hasRv2 || done===1)) || (q.k==='revive2' && done>=2)) win.push({a:t+1, b:t+q.turns, x:q.x}); // 부활한 다음 턴부터
         if(PR && done<bars) plv = Math.min(prN, +PR.lv0||prN); // 부활하면 내성 단계 처음으로
         if(HGon && done<bars) HG.forEach((g,j)=>{ const o = g.on||'start'; // 부활: 부활 뒤 기믹 켜기·다시 쌓기·끄기
@@ -3696,7 +3716,7 @@ function killTurnsM(ev, boss, hm){
           else if(g.off==='revive2' && done>=2) hst[j] = null;
           else if(g.reset_on==='revive' && hst[j]!=null) hst[j] = hgS0(g); });
         if(!carry && !(lcN && (!L.af || inPost)) && ++kTurn >= kpt) break; } else { rem -= d; d = 0; } }
-    if(inPost || !(dPost>0) || done>=bars) break; d = dPost; inPost = true; }
+    if(inPost || !(dPost>0) || done>=bars || stopped) break; d = dPost; ch = dPost/nA; lcC = !carry; inPost = true; }
     if(PR){ const na = L.af ? actN.af : Math.max(+actN.n||0, +actN.cap||0); /* 평상 턴은 횟수를 노려 전원이 주력(실행 수 많은 공격)을 쓴다고 봄 */ if(na >= (+PR.down||15)) plv = Math.max(1, plv-1); else if(na <= (+PR.up||4)) plv = Math.min(prN, plv+1); L.acts = na; }
     L.hp = done>=bars ? 0 : Math.round(rem/barK(Math.floor(done))*100); L.n = done; if(log.length<60) log.push(L); }
   const kmin = Math.max(+hm.kt_min||0, +boss.kt_min||0), tt = Math.min(99, Math.max(kmin, t + (+boss.kt_extra||0)));

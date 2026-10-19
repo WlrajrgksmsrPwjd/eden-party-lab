@@ -126,7 +126,7 @@ for c in chars:
 tend=json.load(open(P('data','turn_end.json'),encoding='utf-8')) if os.path.exists(P('data','turn_end.json')) else {}
 sstk=json.load(open(P('data','self_stk.json'),encoding='utf-8')) if os.path.exists(P('data','self_stk.json')) else {}
 for c in chars:
-    if tend.get(c['id']) and not c['id'].startswith('_'): c['turn_end']=[{k:e[k] for k in ('name','atk','fixed','when','up','sb_only','act') if k in e} for e in tend[c['id']]]
+    if tend.get(c['id']) and not c['id'].startswith('_'): c['turn_end']=[{k:e[k] for k in ('name','atk','fixed','when','up','sb_only','act','acts') if k in e} for e in tend[c['id']]]
     if sstk.get(c['id']) and not c['id'].startswith('_'): c['self_stk']={k:{x:v[x] for x in ('stack','turns','start','af_grows','af_p','af_r','sb_fill','req','cnt','zone','zlv','per','e','hp','mp','af','enemy','turn','other','noaf','stat','full','buff','sum') if x in v} for k,v in sstk[c['id']].items()}
 stks=json.load(open(P('data','stacks.json'),encoding='utf-8')) if os.path.exists(P('data','stacks.json')) else {}
 for c in chars:  # 누적 효과 예열(2026-10-18): 평상 턴 t에 몇 번 쌓였는지(how·per·rate·k0·gate·share), 계산용 칸만
