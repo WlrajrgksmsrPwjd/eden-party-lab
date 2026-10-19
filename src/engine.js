@@ -2156,28 +2156,31 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
       if(!co) continue;
       const d1 = applyZoneCap(co, z, S, cap, combo)*fw(co);
       // 축적에 따라 타수가 느는 체인(벨벳(AS) イレクトリ: 특대 3타, デドメナ 1개당 +1타·최대 6타, 2026-10-16): 평상 턴은 그 사이 평균(hits_avg, 없으면 (hits+hits_max)/2)
-      if(a.hits_max && sit!=='af'){ const h0 = Math.max(1,a.hits||1), hA = a.hits_avg!=null ? +a.hits_avg : (h0 + +a.hits_max)/2; multSum *= hA/h0; }
+      const ifV = q => q && Array.isArray(q.ids) && team.some(m=>m && q.ids.includes(m.id)) ? +q.v : null; // hits_avg_if·avg_if: 그 캐릭터가 전열에 있으면(번개술사(AS)가 데도메나를 앞당김)
+      if(a.hits_max && sit!=='af'){ const h0 = Math.max(1,a.hits||1), hA = ifV(a.hits_avg_if) || (a.hits_avg!=null ? +a.hits_avg : (h0 + +a.hits_max)/2); multSum *= hA/h0; }
       // 맞은 적에 턴 종료까지 쌓이는 내성 DOWN(stk: イレクトリ レヴマ 1개당 물리·마법 내성 10% DOWN, 발동 1번에 1~6개 — デドメナ 수): k번째 발동은 앞선 k−1번만큼 더 깎인 상태로
-      if(e.stk && sit!=='af'){ const nE = Math.max(1, S.enemyCount||1), inc = pct(+e.stk.res||0)*(+e.stk.avg||1)/(sk.target==='st' ? nE : 1), b0 = 1+co.typeR+co.physR;
+      if(e.stk && sit!=='af'){ const nE = Math.max(1, S.enemyCount||1), inc = pct(+e.stk.res||0)*(ifV(e.stk.avg_if) || +e.stk.avg||1)/(sk.target==='st' ? nE : 1), b0 = 1+co.typeR+co.physR;
         // brk: 맞힐 때 거는 브레이크(イレクトリ 「ブレイク付与」 雷) — 두 번째 발동부터 ×1.5(이미 걸려 있으면 그대로)
         const bF = e.stk.brk ? Math.max(1, ((e.stk.brk===co.el || e.stk.brk===co.wt) ? 1.5 : 1.3)/Math.max(1, co.brk||1)) : 1;
-        let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+co.typeR+rvAdd(S, co.physR, inc*k))/b0*(k>0 ? bF : 1);
-        multSum *= sF/n; stk = stk || {inc:0, n:0, nA:0, brk:null, h, unc: S.revmaUncap!==false}; stk.inc = Math.max(stk.inc, inc); stk.n = Math.max(stk.n, n); stk.nA = Math.max(stk.nA, Math.min(n, nA)); if(e.stk.brk) stk.brk = e.stk.brk; }
+        /* brk_each(2026-10-19, 딩 DB 「일렉트리」: 타격마다 브레이크(자연 해제 = 다음 1타 2배)): 그 턴 체인 타격은 첫 타 말고 전부 2배 — 이미 받는 브레이크 이득(co.brk)은 빼고 */
+        const Ht = n*Math.max(1, multSum/Math.max(1e-9, mult*n)), bE = e.stk.brk_each ? Math.max(1, ((2*Ht - 1)/Math.max(1, Ht))/Math.max(1, co.brk||1)) : 0;
+        let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+co.typeR+rvAdd(S, co.physR, inc*k))/b0*(bE ? bE : (k>0 ? bF : 1));
+        multSum *= sF/n; stk = stk || {inc:0, n:0, nA:0, brk:null, h, unc: S.revmaUncap===true}; stk.inc = Math.max(stk.inc, inc); stk.n = Math.max(stk.n, n); stk.nA = Math.max(stk.nA, Math.min(n, nA)); if(e.stk.brk) stk.brk = e.stk.brk; }
       per[h] += d1*multSum; trig[h] += n; any=true;
     }
   }
   return any ? {per, trig, trigA, stk, total:per.reduce((x,y)=>x+y,0)} : null;
 }
 /* 체인이 쌓는 내성 DOWN(stk)을 같은 턴 요격에도: 요격 k번째(0부터)는 그 앞의 체인 발동 min(k, 체인 수)번만큼 깎인 상태 */
-/* 턴 동안 쌓이는 내성 DOWN 스택(イレクトリ レヴマ: 1개당 물리·마법 내성 10% DOWN, 최대 99 = 990% — 알테마·위키 댓글 '99蓄積 990%DOWN', 2026-10-19):
-   다른 내성 DOWN(합쳐 100% 상한) 위에 따로 더함(최대 9.9). S.revmaUncap=false면 예전처럼 합쳐 100% */
+/* 턴 동안 쌓이는 내성 DOWN 스택(イレクトリ レヴマ: 1개당 물리·마법 내성 10% DOWN, 최대 99 — 2026-10-19): 다른 내성 DOWN과 합쳐 100% 상한
+   (아카라이브 메타 정리 '물리·마법 저항 디버프는 CA 1회당 최대 60, 실질적으로 100% 상시 유지'). 위키 댓글 '99蓄積 990%DOWN'처럼 상한 없이 보려면 S.revmaUncap=true(최대 9.9 따로) */
 const RV_MAX = 9.9;
-const rvAdd = (S, p, x) => S.revmaUncap===false ? Math.min(1, p + x) : p + Math.min(RV_MAX, x);
+const rvAdd = (S, p, x) => S.revmaUncap===true ? p + Math.min(RV_MAX, x) : Math.min(1, p + x);
 const scaleCore = (co, f) => !co ? co : co.mixL ? ({...co, mixL: co.mixL.map(x=>({...x, co: scaleCore(x.co, f)}))}) : ({...co, pN: co.pN*f});
 /* 아군 공격도 같은 턴에 쌓인 레브마를 받음(2026-10-19): 체인 주인 말고 그 턴에 체인을 일으키는 아군 공격(stk.nA번) 사이 순서는 모르니 평균 —
    발동시키는 아군 i는 다른 아군 발동의 절반((nA − 자기 몫)/2), 그 밖 공격(체인 주인 자신 등)은 nA/2만큼 쌓인 상태로. 25억 경감 전 대미지에 곱해 다시 계산 */
 function rvAllyBoost(team, cores, z, S, cap, fw, w, ch){
-  const st = ch && ch.stk; if(!st || !st.unc || !(st.inc>0) || !(st.nA>0) || !cores) return null;
+  const st = ch && ch.stk; if(!st || !(st.inc>0) || !(st.nA>0) || !cores) return null;
   const per = team.map(()=>0); let tot = 0;
   cores.forEach((co,i)=>{ if(!co) return; const own = i===st.h ? 0 : Math.min(st.nA, (+ch.trigA && ch.trigA[i]) || 0), k = i===st.h ? st.nA/2 : (st.nA - own)/2;
     if(!(k>0)) return; const ty = +co.typeR||0, ph = +co.physR||0, b0 = 1+ty+ph, f = (1+ty+rvAdd(S, ph, st.inc*k))/b0; if(!(f>1.0001)) return;
@@ -2186,7 +2189,7 @@ function rvAllyBoost(team, cores, z, S, cap, fw, w, ch){
 }
 function counterStk(ctr, ch){
   if(!ctr || !ch || !ch.stk || !(ch.stk.inc>0 || ch.stk.brk)) return;
-  const {inc, n:nc, brk:bk} = ch.stk, nA0 = ch.stk.unc ? (+ch.stk.nA||0) : 0, add = (p, x) => ch.stk.unc ? p + Math.min(RV_MAX, x) : Math.min(1, p + x); let tot=0; // 요격은 아군 행동 뒤(적 턴) — 아군 공격으로 쌓인 레브마(nA0)부터(2026-10-19)
+  const {inc, n:nc, brk:bk} = ch.stk, nA0 = +ch.stk.nA||0, add = (p, x) => ch.stk.unc ? p + Math.min(RV_MAX, x) : Math.min(1, p + x); let tot=0; // 요격은 아군 행동 뒤(적 턴) — 아군 공격으로 쌓인 레브마(nA0)부터(2026-10-19)
   ctr.per = ctr.per.map((v,i)=>{ const r=ctr.res[i], n=ctr.trig[i]; if(!(v>0) || !r || !(n>0)) return v; const b0 = 1+r.ty+r.ph;
     const bF = bk ? Math.max(1, ((bk===ctr.els[i] || bk===ctr.wts[i]) ? 1.5 : 1.3)/Math.max(1, r.brk||1)) : 1; // 체인이 건 브레이크(요격 속성이 같으면 ×1.5)
     let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+r.ty+add(r.ph, inc*Math.min(nA0 + k, nc)))/b0*((k>0 || nA0>0) && nc>0 ? bF : 1);
