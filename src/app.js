@@ -2353,7 +2353,7 @@ function aecheckImport(d, msgEl, resetEl){
   const msg = msgEl || $('#quickMsg'), rst = resetEl || $('#quickReset'), M = (AECHECK && AECHECK.map) || {}, C4 = (AECHECK && AECHECK.c4) || {};
   if(!Object.keys(M).length){ msg.innerHTML = `aecheck 저장 데이터를 읽었어요(보유 ${(d.inven||[]).length}개). 다만 aecheck 캐릭터 번호 ↔ 캐릭터 대응표가 아직 없어 불러올 수 없어요.`; return; }
   const step = (arr, n) => { const x = (arr||[]).find(v=>+v%10000===n); return x ? Math.floor(+x/10000) : 0; };
-  const saMin = +AECHECK.sa_min>0 ? +AECHECK.sa_min : 1, GM = AECHECK.grasta || {};
+  const saMin = +AECHECK.sa_min>0 ? +AECHECK.sa_min : 3, GM = AECHECK.grasta || {}; /* staralign 1·2·3 = 성도각성 조건 축적 횟수, 3 = 성도각성 완료(사용자 확인) */
   /* ☆5·AS·ES 번호만 보유로(aecheck는 ☆5를 체크하면 ☆4 번호도 함께 넣음 — ☆4만 있으면 아직 클래스 체인지 전이라 뺌) */
   const seen = new Set(), five = new Set(); let c4only = 0; const miss = [];
   for(const v of (d.inven||[])){ const n = +v%10000; if(M[n] || M[String(n)]) five.add(M[n] || M[String(n)]); }
