@@ -2568,7 +2568,8 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   let late = ''; const kl = !ev.score && x.kt && Array.isArray(x.kt.log) ? x.kt.log : null; /* 서가 챌린지는 N턴에서 끝 — 처치 계획 AF 없음 */
   if(kl){ const N = T.length, A = kl.filter(l=>l.t>N && l.af).map(l=>l.t), H = kl.some(l=>l.t>N && l.hold); if(A.length) late = ` → 그 뒤 ${A.slice(0,4).join('·')}${A.length>4?'…':''}턴${H?' (스토퍼·목숨 직전엔 아껴 둠)':''}`; }
   const full = T.some(r=>r.afFull>0) ? ' <span class="warn">게이지가 꽉 차면 피해 감소 — 100% 전에</span>' : (x.S||settings()).afFull ? ' <span class="hint">(게이지가 꽉 차면 피해 감소 — 100% 전에 켬)</span>' : '';
-  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${full}</div>`; }
+  const sbF = ev.sbFull ? ` · <b>${esc(ev.sbFull.by)}</b> ${esc(ev.sbFull.name)}: ${ev.sbFull.from}턴째부터 ${ev.sbFull.dur}턴 동안 매 턴 SB 게이지 가득(약 ${ev.sbFull.per}턴마다)` : ''; // SB 게이지 가득 상태(2026-10-19 유우체리카 星天の力)
+  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${sbF}${full}</div>`; }
 /* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
 function zlLine(ev){ const L = ev && Array.isArray(ev.zLate) ? ev.zLate.filter(p=>!p.auto || p.from) : []; if(!L.length) return '';
   const z0 = ev.normal && ev.normal.zone ? ev.normal.zone.label : '존 없음';
