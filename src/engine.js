@@ -2484,7 +2484,7 @@ function battleSim(N, o){
     const hit = memo.get(key); if(hit) return hit;
     let best = null;
     const opts = [];
-    if(g>=50) opts.push('af');
+    if(g>=50 && !o.noAF) opts.push('af'); // noAF: 서가 챌린지 점수 비교용(AF 턴엔 행동 보너스가 없음)
     opts.push('none');
     if(R && R.cost && !e && g>=R.cost) opts.push('stack');
     for(const op of opts){
@@ -3025,7 +3025,16 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       tot += w*bs.total; perOf(bs).forEach((v,i)=>{ perW[i] += w*v; }); });
     out.bsim.total0 = out.bsim.total; out.bsim.total = tot; out.bsim.per = perW;
     out.burstOld = out.burst; out.burst = out.bsim.total;
-    if(+S.afScoreCap>0){ const sc = battleSim(NB, ({...simIn, ...{scoreCap: +S.afScoreCap}})); out.score = {total: sc.total, turns: sc.turns, cap: +S.afScoreCap}; out.burst = sc.total; } // 서가 챌린지: 성향 점수의 '실전'은 점수(AF 상한) — 처치 턴은 실제 피해(bsim)
+    /* 서가 챌린지 점수(2026-10-19, 알테마 투고 6건으로 확인): 점수 = 피해(AF 1회 999,999,999까지) × 보너스 × 10⁻⁵, 보너스 = 행동 보너스(지정 퍼스널리티를 가진 캐릭터가 AF 아닌 턴마다 1번 —
+       맞는 퍼스널리티 값의 합, 피해 없는 행동이면 1.5배) + AF 1회 50 + 편성 1000(전열 전원이 지정 퍼스널리티 — 후열은 엔진이 모름). AF 턴엔 행동 보너스가 없어 AF를 안 쓰는 계획과도 비교 */
+    if(+S.afScoreCap>0){ const scB = S.scoreBonus && S.scoreBonus.pers ? S.scoreBonus : null, base = ({...simIn, ...{scoreCap: +S.afScoreCap}});
+      const plans = [battleSim(NB, base)]; if(scB) plans.push(battleSim(NB, ({...base, ...{noAF: true}})));
+      const vI = team.map(c=> scB ? [...(c.pers||[])].reduce((a,p)=>a + (+scB.pers[p]||0), 0) : 0);
+      const mI = team.map((c,i)=> simUse ? 1 + 0.5*Math.max(0, 1 - Math.min(1, (sim.act[i]||0) + (sim.alt[i]||0) + (sim.na[i]||0))) : 1);
+      const comp = scB && vI.every(v=>v>0) ? (+scB.comp>0 ? +scB.comp : 1000) : 0, perT = vI.reduce((x,v,i)=>x + v*mI[i], 0);
+      const bonusOf = pl => !scB ? null : comp + pl.turns.reduce((a,r)=> a + (r.af ? (+scB.af>0 ? +scB.af : 50) : perT), 0);
+      let best = null; for(const pl of plans){ const B = bonusOf(pl), v = B!=null ? pl.total*B*1e-5 : pl.total; if(!best || v > best.v) best = {v, pl, B}; }
+      out.score = {total: best.v, dmg: best.pl.total, bonus: best.B, comp: !!comp, vI, perT: +perT.toFixed(1), turns: best.pl.turns, cap: +S.afScoreCap}; out.burst = best.v; } // 성향 점수의 '실전'은 이 점수 — 처치 턴은 실제 피해(bsim)
     out.opener = NB===1 ? out.bsim.total : battleSim(1, simIn).total;
   } else { out.bsim = {total:0, turns:[], N:NB, afStart:st, s0:simIn.s0}; }
   if(needDummy && ctx && ctx.dummyFast){ // 탐색 1단계: 허수아비를 빠르게 어림(버프 다 깔린 AF + AF 끝 콤보 SB), 상위 후보만 2단계에서 정밀 계산
@@ -3600,7 +3609,7 @@ function killTurnsM(ev, boss, hm){
 }
 const S_afOK = ev => !(ev && ev.afOff);
 /* 보스 '턴 단축'(2026-10-18, 추천 덱 대조: 결실 라디카에서 1턴에 잡는 불 덱보다 2턴 걸리는 덱이 1위): 예상 처치 턴(HP 아는 보스만)을 점수에 — × 처치 턴^−0.6(1턴 1, 2턴 0.66, 4턴 0.44). 같은 턴이면 원래 점수 순 */
-const ktFactor = (ev, boss) => { const k = killTurns(ev, boss); return k && k.t>0 ? Math.pow(Math.max(1, k.t), -0.6) : 1; };
+const ktFactor = (ev, boss) => { if(ev && ev.score) return 1; /* 서가 챌린지는 처치가 아니라 5턴 점수(2026-10-19) */ const k = killTurns(ev, boss); return k && k.t>0 ? Math.pow(Math.max(1, k.t), -0.6) : 1; };
 function partsEff(ev, boss){
   if(!boss || !Array.isArray(boss.parts) || !boss.parts.length) return 1;
   const per = (ev.bsim && Array.isArray(ev.bsim.per) && ev.bsim.per.length) ? ev.bsim.per : ((ev.normal && ev.normal.per) || []);
@@ -3907,7 +3916,7 @@ async function optimize(input, onProgress){
       if(!(need>0)) return 0; return b0 >= need ? NBo : su>0 ? NBo + Math.ceil((need - b0)/su) : 99; };
     // 어림을 통과한 조합은 실제 처치 턴(killTurns — 목숨·스토퍼·바뀌는 보스 존·상성 단계)으로 다시 확인(2026-10-18: 부활 뒤 풍 무효인 츠키하에서 풍 덱이 63턴인데 안정성 목록에 남았음)
     const ktP = new Map(), ktOf = i => { if(ktP.has(i)) return ktP.get(i); const ids = teams[i]; let v = 0; try{ const k = killTurns(evalTeam(ids.map(q=>pool[q].pc), ids.map(q=>pool[q].prog), enemy, S, cap, ctx), boss); v = k ? k.t : 0; }catch(e){} ktP.set(i, v); return v; };
-    const kt0 = (need>0 || hmB>0) && chosen.length ? Math.max(ktA(chosen[0].i), ktOf(chosen[0].i)) : 0, ktMax = kt0 ? Math.max(kt0*2, kt0+4) : Infinity;
+    const kt0 = !(+S.afScoreCap>0) && (need>0 || hmB>0) && chosen.length ? Math.max(ktA(chosen[0].i), ktOf(chosen[0].i)) : 0, ktMax = kt0 ? Math.max(kt0*2, kt0+4) : Infinity;
     for(const [sc,i] of sS){ if(finalListS.length>=nTop) break; const ids = teams[i]; if(ktA(i) > ktMax) continue; if(kt0 && ktOf(i) > ktMax) continue; if(finalListS.some(c=>{ const set=new Set(c.ids); return 4-ids.filter(x=>set.has(x)).length < minDiff; })) continue; finalListS.push({ids, sc, i}); } }
   /* 턴 제한 최대 딜(boss.turn_limit, 2026-10-18 사용자 '서가 챌린지는 5턴 제한 — 5턴 내 최대 딜과 안정 클리어로 구분'): 실전 N턴(= 턴 제한) 총딜 순, 생존이 너무 낮으면 ×0.85, 필요 요소·위협 감점만(처치 턴 보정은 뺌) */
   let finalList3 = null;
