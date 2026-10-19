@@ -28,6 +28,7 @@ function multihitAvg(h){ h=Math.max(1,Math.round(h)); let s=0; for(let i=0;i<h;i
 const DEFAULT_SETTINGS = {
   grastaDefault: {mode:'auto', e:3, pa:0, po:0, ore:false}, // 공격 글래스터 기본 배치
   capOn: true,         // 1타 상한 (타수 중요도) 반영
+  capAfterCombo: false, // true면 AF 콤보를 곱한 뒤 25억 경감(game-info 위키·공식 공지 순서, 2026-10-19 사용자 확인 대기 — 기본은 사용자 확인값: 경감 → ×콤보 → 99.99억)
   capAbs: 9999999999,  // 1타 대미지 상한 (100억-1)
   statK: 22000,        // 스탯 환산 계수: 상대값 1 = 실제 대미지 약 statK (완력·무기 공격 기준 기본 대미지)
   zoneElem: [1.5, 2.0, 2.0],   // 속성 존: 일반 / 극(어나더 존) / 절(극과 같음)
@@ -1640,8 +1641,9 @@ function applyZoneCap(core, z, S, cap, combo){
   if(core.mixL){ let v=0; for(const x of core.mixL) v += x.w*applyZoneCap(x.co, z, S, cap, combo); return v; }
   const zf = zoneFactorEff(z, core.el, core.wt, S, core.rel), c = combo||1, p = core.p, oc = core.oc||0;
   const H = v => Math.min(HIT_MAX, v*c);
-  const E1 = x => S.capOn ? (1-p)*H(dingCap(x)) + p*((1-oc)*H(dingCap(x*core.cR)) + oc*H(dingCap(2*x*core.cR)))
-                          : x*c*((1-p) + p*core.cR*(1+oc));
+  const E1 = x => !S.capOn ? x*c*((1-p) + p*core.cR*(1+oc))
+    : S.capAfterCombo ? (1-p)*dingCap(x*c) + p*((1-oc)*dingCap(x*core.cR*c) + oc*dingCap(2*x*core.cR*c)) // 시험: 위키·공식('계산상 대미지가 25억을 넘으면 감쇠') 순서 — AF 콤보를 곱한 뒤 25억 경감
+    : (1-p)*H(dingCap(x)) + p*((1-oc)*H(dingCap(x*core.cR)) + oc*H(dingCap(2*x*core.cR)));
   const cF = (core.cs || core.ca) ? comboF(core, combo) : 1;
   let tot = 0;
   if(core.hw){ const k = core.totHits/core.hw.H; for(const g of core.hw.g) tot += E1(core.pN*zf*cF*g[1]*core.hw.H/g[0])*g[0]*k; } // 타격별 위력 비중
