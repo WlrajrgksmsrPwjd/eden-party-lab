@@ -1283,7 +1283,7 @@ function dummyHtml(x, o){
   const nm=i=>esc(x.team[i].name), tot=d.per.reduce((a,b)=>a+b,0)||1;
   const top=d.per.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]).filter(p=>p[0]/tot>=0.05).map(([v,i])=>`${nm(i)} ${Math.round(v/tot*100)}%`).join(' · ');
   const ord=(x.ex&&x.ex.order)||d.n.map((_,i)=>i);
-  const sbTxt = d.sbWhen ? ` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(AF ${d.sbAt}번째 행동에서 SB 게이지 100%)</span>` : d.sbNeed ? ` <span class="hint">· SB 못 씀 (AF가 끝날 때 SB 게이지 ${Math.round(d.sbGauge)}%)</span>` : ' <span class="hint">· 성도 없음</span>';
+  const sbTxt = d.sbWhen ? ` + SB <span class="num">${fmtN(d.sb)}</span> <span class="hint">(AF ${d.sbAt}번째 행동 뒤에 SB)</span>` : d.sbNeed ? ` <span class="hint">· SB 못 씀 (AF가 끝날 때 SB 게이지 ${Math.round(d.sbGauge)}%)</span>` : ' <span class="hint">· 성도 없음</span>';
   const mu = d.mule && d.mule.auto && !(d.mule.inv) ? ' · 후열 연성 P글래 셔틀 2명 가정' : '';
   // 버프 행동(버프 스킬 하나에 AF 행동 1번, 게이지 안 참): 누가 무엇을 썼는지, 안 쓰는 게 나아 뺀 것
   const atkS = (i,nmS) => { const st=(x.team[i].bact&&x.team[i].bact.steps||[]).find(z=>z.s===nmS); return st&&st.k==='attack' ? '(공격)' : ''; };
