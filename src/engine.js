@@ -28,7 +28,7 @@ function multihitAvg(h){ h=Math.max(1,Math.round(h)); let s=0; for(let i=0;i<h;i
 const DEFAULT_SETTINGS = {
   grastaDefault: {mode:'auto', e:3, pa:0, po:0, ore:false}, // 공격 글래스터 기본 배치
   capOn: true,         // 1타 상한 (타수 중요도) 반영
-  capAfterCombo: false, // true면 AF 콤보를 곱한 뒤 25억 경감(game-info 위키·공식 공지 순서, 2026-10-19 사용자 확인 대기 — 기본은 사용자 확인값: 경감 → ×콤보 → 99.99억)
+  capAfterCombo: false, // true면 AF 콤보를 곱한 뒤 25억 경감(game-info 위키 순서). 2026-10-19 사용자 확인: AF 중 99.99억이 자주 나와 지금 순서(경감 → ×콤보 → 99.99억)가 맞음
   capAbs: 9999999999,  // 1타 대미지 상한 (100억-1)
   statK: 22000,        // 스탯 환산 계수: 상대값 1 = 실제 대미지 약 statK (완력·무기 공격 기준 기본 대미지)
   zoneElem: [1.5, 2.0, 2.0],   // 속성 존: 일반 / 극(어나더 존) / 절(극과 같음)
