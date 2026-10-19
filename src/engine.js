@@ -1214,7 +1214,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     if(nd.some((n,i)=>n!==sk.mcond.need[i])){ const m1 = condMult(sk, sk.mcond, situation, team, c, progs, idx, A, zone, enemy, el); if(m1>0) dmg *= condMult(sk, ({...sk.mcond, ...{need:nd}}), situation, team, c, progs, idx, A, zone, enemy, el)/m1; } }
   // 자기 버프(self_buff)는 '자신이 받는 최대치'라 자기 파티 버프를 이미 포함한다 → 같은 항목은 자기 파티 버프를 또 더하지 않음(판정은 보정 전 값으로)
   const has = k => { const v=c.self[k], w=me[k]; return (typeof v==='number' ? v>0 : !!v) && (typeof w==='number' ? w>0 : !!w); }; // 출처 행동 전이라 꺼진 자기 버프면 자기 파티 버프를 받음
-  const sv=[pct(me[stat])], ev=[conv ? 0 : pct(me.elem_atk)], wv=[pct(me.weapon_atk)], spv=[], mpv=[pct(me.mp_up)];
+  const sv=[pct(me[stat])], ev=[conv ? 0 : pct(me.elem_atk)], wv=[pct(me.weapon_atk)], spv=[], mpv=[pct(me.mp_up)], spdv=[pct(me.spd)]; // spdv: 속도 버프(AF 대기 시간용, 2026-10-19)
   // 자기 상태 효과 조건: true 또는 {sb: SB 때(그 AF의 남은 행동 포함), req: 편성 조건, zone/zlv: 존}
   const selfOn = q => q===true || (!!q && typeof q==='object' && (!q.sb || situation==='sb' || (situation==='af' && A.postSB))
     && (!q.req || reqMet(q.req, team, c)) && (!q.zone || zoneMatch(q.zone, zone)) && (!q.zlv || (zone && zone.level>=q.zlv)));
@@ -1255,6 +1255,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     row = FX&&FX[j] ? FX[j] : null;
     const own = j===idx;
     if(!(own && has(stat))){ const v = pct(p[stat]); sv.push(v ? v*F(j,stat) : 0); }
+    if(p.spd && !(own && has('spd'))){ const v = pct(p.spd); if(v) spdv.push(stat==='spd' ? sv[sv.length-1] : v*F(j,'spd')); }
     if(!(own && has('elem_atk') && !conv)){ // 바뀐 속성이면 자기 파티 버프 중 전속성·그 속성 몫만
       if(el!=='none'){
         { const v = pct(p.all_elem_atk); ev.push(v ? v*F(j,'all_elem_atk') : 0); }
@@ -1317,6 +1318,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   if(BUD) for(const b of BUD){ const p=b.party; if(!p) continue; const f=b.p;
     if(b.to && b.to.elem && !(c.elems||[c.elem]).includes(b.to.elem)) continue;
     if(p[stat]) sv.push(pct(p[stat])*f);
+    if(p.spd) spdv.push(pct(p.spd)*f);
     if(p.all_elem_atk && el!=='none') ev.push(pct(p.all_elem_atk)*f);
     if(p.weapon_atk && p.weapon_atk[c.weapon]) wv.push(pct(p.weapon_atk[c.weapon])*f);
     if(p.wt_dmg && p.wt_dmg[wt]) wv.push(pct(p.wt_dmg[wt])*f);
@@ -1513,7 +1515,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const hw = Array.isArray(sk.hit_w) && sk.hit_w.length ? (g => { const H = g.reduce((a,x)=>a+x[0],0), W = g.reduce((a,x)=>a+x[1],0); return H===Math.max(1, sk.hits||1) && W>0 ? {H, g: g.map(x=>[x[0], x[1]/W])} : null; })(sk.hit_w.map(x=>[+x[0]||0, +x[1]||0]).filter(x=>x[0]>0 && x[1]>0)) : null;
   return {cs: csOK ? sk.combo_scale : null, ca: +sk.combo_add||0, cup: cupA, perHit: pN*critX, pN, cR, p, oc:ocP, totHits, hw, links, linkHits, nT, el, elN: elOwn, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
     afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, rep, cpy: !!sk.copy, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, pw: Math.min(1, pierceW), sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
-    bh, defR, flatP, lunaF, auraF, auraR, chW, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpAtkSk, weakSk: weakUp, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st', viaAlt:null, viaSbN:false, cycMain:0, mixL:null, mix:null}; // 뒤에 붙는 칸도 처음부터(같은 모양)
+    bh, defR, flatP, lunaF, auraF, auraR, chW, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpAtkSk, weakSk: weakUp, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st', spdBuf: dimin(spdv, 1), viaAlt:null, viaSbN:false, cycMain:0, mixL:null, mix:null}; // 뒤에 붙는 칸도 처음부터(같은 모양)
 }
 
 /* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
@@ -2025,9 +2027,13 @@ function buildCtx(input, ownedAll){
   return {pool, needPierce: !!(boss&&boss.needs&&boss.needs.barrier_pierce) && !barrierModeled(boss), focus: input.focus||null, noConv: !!input.noConv, mules, maxBack, buddy: input.buddy||null, enemyCC: enemyCCOf(boss), pgl: input.pgl||null,
     burstN: input.pledge && input.pledge.turns>0 ? Math.min(10, input.pledge.turns) : null};
 }
+/* AF 대기 시간(리캐스트, 초) = 속도 × 행동 횟수 표(game-info 'アナザーフォースまとめ' 2-2, アルティマニア·アナデンの館 실측 확장, 2026-10-19):
+   행 = 속도 하한, 문자 = 1~15번째 행동 뒤 대기(문자 코드 − 48). 16번째부터 행동당 +0.6초. 속도는 버프 포함(위키: 리캐스트 계산에 속도 버프가 들어감) */
+const AF_WAIT = [[1,"2334556677889:;"],[7,"2334456677889::"],[19,"23344566778899:"],[35,"23344556778899:"],[72,"23344556678899:"],[92,"22344556678899:"],[113,"22344556677899:"],[135,"22334556677899:"],[157,"22334556677889:"],[179,"22334456677889:"],[202,"223344566778899"],[226,"223344556778899"],[249,"123344556778899"],[273,"123344556678899"],[297,"122344556678899"],[321,"122344556677899"],[346,"122334556677899"],[371,"122334556677889"],[395,"122334456677889"],[446,"122334455677889"],[471,"112334455677889"],[497,"112334455667889"],[522,"112234455667889"],[549,"112234455667789"],[574,"112233455667789"],[599,"112233455667788"],[626,"112233445667788"],[678,"112233445567788"],[704,"111233445567788"],[730,"111233445566788"],[757,"111223445566788"],[783,"111223445566778"],[810,"111223345566778"],[863,"111223344566778"],[916,"111223344556778"],[943,"111123344556778"],[970,"111123344556678"],[997,"111122344556678"]];
+function afWait(spd, k){ let r = AF_WAIT[0][1]; for(const [lo, w] of AF_WAIT){ if(spd >= lo) r = w; else break; } const kk = Math.max(1, Math.round(k)); return kk<=15 ? r.charCodeAt(kk-1) - 48 : (r.charCodeAt(14) - 48) + 0.6*(kk - 15); }
 /* ---------- AF 행동 수 (위키 기준) ----------
    AF는 실시간: 게이지 100%에서 초당 10%씩 줄고, AF 중 타격으로 다시 찬다(타당 1.5%, 약점 3.5%, 맞는 ZONE은 행동당 7.5%).
-   캐릭터마다 행동 → 연출(기본 2초, 캐릭터별 값이 있으면 그 값, 재행동은 실행 횟수만큼) → 대기. 대기는 행동할수록 늘어남: 속도 249 이상 1·2·3…초, 미만 2·3·4…초.
+   캐릭터마다 행동 → 연출(기본 2초, 캐릭터별 값이 있으면 그 값, 재행동은 실행 횟수만큼) → 대기. 대기는 행동할수록 늘어남: 속도(버프 포함)·행동 횟수 표 AF_WAIT(2026-10-19 위키 — 예: 속도 300이면 1·2·2·3·4·4·5·5…초).
    게이지가 0이 될 때까지 각자 몇 번 행동하는지 센다. 속도는 빌드 코드(장비 포함) → 기본 스탯(+장비 속도 설정) 순. */
 function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // plan[i]: 처음 행동들이 버프('buff', 게이지 0)·주력 아닌 공격('attack')인지, lk[i]: 가창으로 그 뒤 행동 불가가 되는 행동 수(0 = 처음부터 가창 중)
   const n = team.length; g0 = g0==null ? 100 : g0;
@@ -2037,7 +2043,8 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // pl
   // 속도: 빌드 코드(장비 포함) 그대로, 아니면 기본 스탯(+장비 속도 설정). '빌드 없는 캐릭터도 249 이상'을 켜면 빌드 없는 캐릭터는 빠른 쪽
   const spdOf = i=>{ const p=progs[i]; return p && p.spd ? p.spd : 0; };
   const fromBuild = i=>{ const p=progs[i]; return !!(p && (p.spdSrc==='build'||p.spdSrc==='build-st')); };
-  const fast = team.map((c,i)=> !fromBuild(i) && S.afFastDefault ? true : (spdOf(i) ? spdOf(i)>=249 : false));
+  const wTbl = S.afWaitTbl!==false, spd0 = team.map((c,i)=> !fromBuild(i) && S.afFastDefault ? Math.max(260, spdOf(i)) : (spdOf(i) || 200)), spdE = team.map((c,i)=>{ const co = cores[i]; return spd0[i]*(1 + (co && co.spdBuf>0 ? co.spdBuf : 0)); }); // 버프 포함 속도(모르면 200) — 첫 행동의 대기는 버프 전 속도(리캐스트는 스킬을 쓰는 순간의 속도, 위키)
+  const fast = team.map((c,i)=> wTbl ? spdE[i]>=249 : (!fromBuild(i) && S.afFastDefault ? true : (spdOf(i) ? spdOf(i)>=249 : false)));
   const known = team.map((c,i)=> progs[i] && progs[i].spdSrc ? progs[i].spdSrc : null);
   const refill = team.map((c,i)=>{ const co=cores[i]; if(!co) return 0;
     const weak = enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak');
@@ -2063,12 +2070,12 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // pl
     const pk = plan ? (plan[i] && cnt[i] < plan[i].length ? plan[i][cnt[i]] : null) : lk && lk[i]!=null ? 'buff' : (prio && cnt[i]===0 && team[i].buffAct ? 'buff' : null); // 버프만 거는 행동은 게이지 0 (위키·사용자 확인), 가창 거는 행동도
     g = Math.min(100, gAt + (pk==='buff' ? 0 : refill[i])); t = tn;
     seq.push({i, t:tn, k:cnt[i], pk});
-    cnt[i]++; next[i] = tn + (pk ? (team[i].afAnim||anim) : animOf[i]) + (fast[i] ? cnt[i] : cnt[i]+1);
+    cnt[i]++; next[i] = tn + (pk ? (team[i].afAnim||anim) : animOf[i]) + (wTbl ? afWait(cnt[i]>1 ? spdE[i] : spd0[i], cnt[i]) : (fast[i] ? cnt[i] : cnt[i]+1)); // 대기: 속도·행동 횟수 표(예전: 249 이상 1·2·3…, 미만 2·3·4…)
   }
   if(g>0) t += g/10;
   // 가창자의 공격 행동 수: 계획(plan) 없이 막힌 경우 가창을 거는 행동뿐이라 0(계획이 있으면 부르는 쪽이 계획 길이를 뺌)
   const nOut = lk && !plan ? cnt.map((v,k)=> lk[k]!=null ? 0 : v) : cnt;
-  return {n:nOut, dur:t, fast, known, spd:team.map((c,i)=>spdOf(i)), auto:true, seq, lk: lk||null, tok: tok>1 ? tok : null};
+  return {n:nOut, dur:t, fast, known, spd:team.map((c,i)=>spdOf(i)), spdE: spdE.map(v=>Math.round(v)), auto:true, seq, lk: lk||null, tok: tok>1 ? tok : null};
 }
 /* ---------- 체인 어빌리티: 다른 아군의 행동에 반응하는 추격 ----------
    턴당 발동 수 = min(최대, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치 */
@@ -4189,7 +4196,7 @@ async function perCharBest(input, onProgress){
   return {list, evaluated:N, poolSize:pool.length, nmax:{b:mb, s:ms, t:mt}};
 }
 
-const API = {barrierModeled, hitInfo, dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
+const API = {AF_WAIT, afWait, barrierModeled, hitInfo, dingHit, dingCap, G5_OF, GEAR_STD, GEAR_FX, ELEMS,WTYPES,WEAPON_TYPE,ELEM_KR,WT_KR,WEAPON_KR,ZONE_KR,DEFAULT_SETTINGS,SPECIAL_GRASTA,MANIFEST,
   SURV_CATS, SURV_W, prepChar, charProg, grastaFactor, parseZoneCond, reqText, teamDifficulty, DIFF_LV, evalTeam, computeCap, optimize, perCharBest, survival, zoneCandidates, multihitAvg, dimin,
   explainTeam, charFocusMatch, compileRules, simTeam, PERS_KR, buildCtx, shuttlePoolOf, WEAPON_PERS, SIZE_TABLE, SIZE_IDX, turnTimeline, inflictOf,
   statsAt, charStats, STAT_ORDER, killTurns, hgList, needPenalty, weakFit, budCands, isBuilderDefault, gearSpdOf, GEAR_SPD_AUTO, dupBase, PGL_ALL, PGL_HPMAX, PGL_ZONE5, PGL_HPLOW, PGL_ELEMP, pglPlan};
