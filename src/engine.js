@@ -2037,7 +2037,8 @@ function buildCtx(input, ownedAll){
 const AF_WAIT = [[1,"2334556677889:;"],[7,"2334456677889::"],[19,"23344566778899:"],[35,"23344556778899:"],[72,"23344556678899:"],[92,"22344556678899:"],[113,"22344556677899:"],[135,"22334556677899:"],[157,"22334556677889:"],[179,"22334456677889:"],[202,"223344566778899"],[226,"223344556778899"],[249,"123344556778899"],[273,"123344556678899"],[297,"122344556678899"],[321,"122344556677899"],[346,"122334556677899"],[371,"122334556677889"],[395,"122334456677889"],[446,"122334455677889"],[471,"112334455677889"],[497,"112334455667889"],[522,"112234455667889"],[549,"112234455667789"],[574,"112233455667789"],[599,"112233455667788"],[626,"112233445667788"],[678,"112233445567788"],[704,"111233445567788"],[730,"111233445566788"],[757,"111223445566788"],[783,"111223445566778"],[810,"111223345566778"],[863,"111223344566778"],[916,"111223344556778"],[943,"111123344556778"],[970,"111123344556678"],[997,"111122344556678"]];
 /* AF 콤보 증가량(2026-10-19 game-info 'アナザーフォースまとめ' 3): 행동의 첫 타 = 처음 쓰는 스킬 5%·이미 쓴 스킬 4%(약점이면 +1%), 그 뒤 타격(연속 타·재공격·여러 대상)은 '직전에 맞힌 같은 스킬'이라 2% —
    예전엔 타당 2.5% 고정이라 1타 스킬을 낮게(4~5% → 2.5%), 10타 넘는 스킬을 높게 봤음. 스킬 AF 콤보 배율(af_combo_x)은 그 스킬 타격에만, 연계 추격은 타당 2%·帯電 추격은 1%, 장비 콤보 증가(cup)는 타당. S.comboWiki=false면 예전 방식 */
-function comboInc(co, S, first){ if(!co) return 0; const tg = co.tgt==='aoe' ? Math.max(1, +S.enemyCount||1) : 1;
+function comboInc(co, S, first, sh){ if(!co) return 0; const tg = co.tgt==='aoe' ? Math.max(1, +S.enemyCount||1) : 1; // sh: 感電(放電) 타당 추가 콤보
+  if(sh>0) return comboInc(co, S, first) + sh*Math.max(1, +co.totHits||1)*tg; // 帯電 추격은 感電을 안 일으킴(위키 3-3)
   if(S.comboWiki===false) return co.hitsPerAct*(0.025+(co.cup||0))*co.afx*tg;
   const hp = Math.max(1, +co.totHits||1)*tg, lk = (+co.linkHits||0)*tg, lkC = co.links ? co.links.reduce((x,l)=>x + (l.charge ? +l.n||0 : 0), 0)*tg : 0, own = (first ? 0.05 : 0.04) + (co.rel==='weak' ? 0.01 : 0) + 0.02*(hp - 1);
   return own*(co.afxS!=null ? co.afxS : (co.afx||1)) + 0.02*Math.max(0, lk - lkC) + 0.01*lkC + (co.cup||0)*(hp + lk); } // 帯電 추격은 타당 1%(위키 3-3)
@@ -2813,7 +2814,9 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const afSplit = (cs, n) => { const al = afAltOf(cs); if(!al) return null; const nM = n.slice(), nA = n.map(()=>0);
     al.forEach((ca,i)=>{ if(!ca) return; const u = +team[i].main.uses; nM[i] = Math.min(n[i], u); nA[i] = Math.max(0, n[i]-u); }); return {al, nM, nA}; };
   const cmb = (co, k) => co && k>0 ? comboInc(co, S, true) + (k-1)*comboInc(co, S, false) : 0; // k번 쓰면 첫 번째만 '처음 쓰는 스킬'
-  const afG = (cs, n) => { const sp = afSplit(cs, n); let g=0; cs.forEach((co,i)=>{ if(!co) return; g += sp ? cmb(co, sp.nM[i]) + cmb(sp.al[i]||co, sp.nA[i]) : cmb(co, n[i]); }); return g; };
+  /* 感電(ルナティック<放電>, state shock = 타당 콤보, 2026-10-19 game-info 状態効果まとめ 4-4·AF 3-3): 건 사람이 공격한 뒤 그 적을 맞히는 모든 타격 +4%/타 — AF 상태 가동률만큼 */
+  const shockAF = () => { let v = 0; team.forEach((c,i)=>{ for(const q of (c.states||[]).slice(0,3)) if(q && +q.shock>0) v = Math.max(v, +q.shock*stUp(q, 'af', A, c, i, team, zA)); }); return v; };
+  const afG = (cs, n) => { const sp = afSplit(cs, n), sh = shockAF(); let g=0; cs.forEach((co,i)=>{ if(!co) return; g += sp ? cmb(co, sp.nM[i]) + cmb(sp.al[i]||co, sp.nA[i]) : cmb(co, n[i]); if(sh>0) g += sh*(n[i]||0)*Math.max(1, +co.totHits||1)*(co.tgt==='aoe' ? Math.max(1, +S.enemyCount||1) : 1); }); return g; };
   const afSum = (cs, z, avg, n) => { const sp = afSplit(cs, n); if(!sp) return sumZ(cs, z, avg, n); const x = sumZ(cs, z, avg, sp.nM), y = sumZ(sp.al.map((ca,i)=>ca||cs[i]), z, avg, sp.nA); return {v: x.v+y.v, per: x.per.map((d,i)=>d+y.per[i])}; };
   // AF 콤보 배율 조건 통상 공격(once.json combo, 2026-10-17): AF 끝 콤보가 그 배율에 닿으면 그 AF에 한 번, 주력 한 번 대신(콤보는 문턱과 끝의 중간으로)
   const afCmbX = (cs, z, n, fin) => { if(!team.some(c=>c.once && c.once.some(e=>+e.combo>0))) return null; let v = 0; const per = team.map(()=>0);
@@ -3276,7 +3279,7 @@ function dummySim(o){
       const sk = {skill:e.name||'1회', target:a.target==='st'?'st':'aoe', kind:a.kind==='mag'?'mag':'phys', stat:a.stat||(a.kind==='mag'?'int':'pwr'), element:a.element||team[i].elem||'none', weapon_type:a.weapon_type||null, size:a.size||'xl', mult:Math.max(0.1,+a.mult||1), hits:Math.max(1,+a.hits||1), repeat:+a.repeat||0, crit_sure:!!a.crit_sure, def_ignore:!!a.def_ignore, barrier_pierce:!!a.barrier_pierce, af_combo_x:+a.af_combo_x||1, condition:''};
       const t2 = team.map((q,k)=> k===i ? ({...q, ...{main:sk, afSk:null, sbN:null, mainAlt:null, alts:null, _alt:true, _proxy:true}}) : q);
       const co = attackerCore(t2, i, progs, Av, enemy, S, 'af', cx, FX, z); coMemo.set(key, co); return co; };
-    const cUsed = team.map(()=>new Set()), usedSk = team.map(()=>new Set()); // AF 콤보 조건 공격을 이번 AF에 썼는지 · 이번 AF에 쓴 스킬(콤보: 처음 쓰는 스킬 5%)
+    const cUsed = team.map(()=>new Set()), usedSk = team.map(()=>new Set()); const shockNow = () => { let v = 0; team.forEach((c,j)=>{ if(!atk[j]) return; for(const q of (c.states||[]).slice(0,3)) if(q && +q.shock>0) v = Math.max(v, +q.shock*stUp(q, 'af', A, c, j, team, zCur)); }); return v; }; // 感電: 건 사람(放電)이 공격한 뒤 // AF 콤보 조건 공격을 이번 AF에 썼는지 · 이번 AF에 쓴 스킬(콤보: 처음 쓰는 스킬 5%)
     const acted = team.map(()=>false), per = team.map(()=>0), cnt = team.map(()=>0), mu = team.map(()=>0), atk = team.map(()=>false), ia = team.map(()=>false), stepDone = team.map(()=>0); // mu: 주력 사용 횟수(횟수 제한 스킬용)
     const st = {acted, stepDone, atk};
     // 속성 변환은 건 사람이 그 스킬을 쓴 뒤부터(elem_change.skill이 버프 행동에 있으면 그 행동 뒤, 없으면 act 수만큼 행동한 뒤)
@@ -3298,10 +3301,10 @@ function dummySim(o){
         if(co && c.once) for(const e of c.once){ if(!(+e.combo>0) || cUsed[i].has(e.name) || combo + 1e-9 < +e.combo) continue; // AF 콤보 배율 조건 통상 공격(AF 1회, 2026-10-17: 플람라피스(ES) アム・ティンハル 600%·에이미 슈퍼 콤보 1000%)
           const cN = Math.min(combo, cmax), c2 = onceCoreAt(st, zNow, i, inow, e); if(c2 && applyZoneCap(c2, zNow, S, cap, cN)*fw(c2) > applyZoneCap(co, zNow, S, cap, cN)*fw(co)){ co = c2; cUsed[i].add(e.name); break; } }
         if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax);
-          combo += comboInc(co, S, !usedSk[i].has(co.skill)); usedSk[i].add(co.skill); }
+          combo += comboInc(co, S, !usedSk[i].has(co.skill), shockNow()); usedSk[i].add(co.skill); }
       } else if(buffOnly && B[i]){ const s0 = B[i].steps[stepDone[i]]; used[i].push(s0.s);
         if(s0.k==='attack'){ const co = stepCoreAt(st, zNow, i, inow, s0); // 주력 아닌 공격 버프기: buff_acts 위력(pw), 없으면 특대 1배·데이터 타수(주력과 같은 속성·종류)
-          if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax); combo += comboInc(co, S, !usedSk[i].has(co.skill)); usedSk[i].add(co.skill); } } }
+          if(co){ const d = applyZoneCap(co, zNow, S, cap, Math.min(combo, cmax))*fw(co); af += d; per[i] += d; cw += d*Math.min(combo,cmax); combo += comboInc(co, S, !usedSk[i].has(co.skill), shockNow()); usedSk[i].add(co.skill); } } }
       acted[i] = true; if(buffOnly && B[i]) stepDone[i]++; cnt[i]++; sbG += sbRate[i]; if(isInf) ia[i] = true; else if(!buffOnly){ atk[i] = true; mainAtk[i]++; }
       if(i===zBy && nz && (zStep>=0 ? stepDone[i] > zStep : zMain ? atk[i] : true)){ const zt = zStaged ? nz1 : nz; // 존 전개 스킬을 쓴 뒤
         if(zoneOK(zCur, zt) && !(zCur && zCur.key===zt.key && zCur.level>=zt.level)) zCur = zt; }
