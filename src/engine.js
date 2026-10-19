@@ -3883,6 +3883,32 @@ async function optimize(input, onProgress){
       if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r2=>setTimeout(r2,0)); } }
     if(shard && shard.stage==='prec') return shardOut();
     mb=1e-9; ms=1e-9; mt=1e-9; for(let i=0;i<teams.length;i++){ mb=Math.max(mb,raws[4*i]); ms=Math.max(ms,raws[4*i+1]); mt=Math.max(mt,raws[4*i+2]); } }
+  /* 꼭 쓸 캐릭터가 제 몫을 하는 덱(2026-10-19 테스터 피드백 '성각 안 한 5★을 넣어도 어질퍼니 휘정진 덱만'): 가장 센 덱에 끼워 넣기만 하면 꼭 쓸 의미가 없어서,
+     상위 조합마다 그 캐릭터 자리에 다른 보유 캐릭터(혼자 화력 상위 4명)를 넣어 보고(어림 단계 값끼리) 비율 = 이 조합 ÷ 가장 나은 대체 조합 → 0.97 이상이면 그대로, 아니면 점수 × 0.45 × 비율²(제 몫 하는 덱이 먼저). 결현현 필수 캐릭터는 제외 */
+  const userLock = lockIds.filter(id=>!(pl && pl.required===id)), lockFit = new Map();
+  if(userLock.length && teams.length && input.lockFit!==false){
+    const baseSc = i => { const tt = raws[4*i+2]/mt; let v = w.b*raws[4*i]/mb + w.s*raws[4*i+1]/ms + w.t*tt; if((mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all'||mode==='boss') && tt<0.25) v*=0.85; return v*raws[4*i+3]; };
+    const ord = teams.map((_,i)=>i).sort((a,b)=>baseSc(b)-baseSc(a)), T0 = [], triS = new Set();
+    for(const i of ord){ if(T0.length>=24) break; const ids = teams[i].map(k=>pool[k].pc.id).filter(id=>!userLock.includes(id)).sort().join(); if(triS.has(ids)) continue; triS.add(ids); T0.push(i); }
+    for(const L of deckIdx) if(L && L.length){ let bi=-1, bs=-1; for(const i of L){ const v=baseSc(i); if(v>bs){ bs=v; bi=i; } } if(bi>=0 && !T0.includes(bi)) T0.push(bi); }
+    const potL = own.filter(o=>!userLock.includes(o.pc.id) && (!cvBlock(o.pc, ctx))).map(o=>({o, p:soloPotential(o.pc,o.prog,enemy,S,cap,ctx)})).sort((a,b)=>(b.p.dps+b.p.sup*0.5)-(a.p.dps+a.p.sup*0.5));
+    const st0 = ctx.stFast; ctx.stFast = true; /* 어림 값끼리 비교(대체 조합은 정밀 계산 안 함) */
+    const fsc = r => { const tt = r[2]/mt; let v = w.b*r[0]/mb + w.s*r[1]/ms + w.t*tt; if((mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all'||mode==='boss') && tt<0.25) v*=0.85; return v*r[3]; };
+    let fMin = 1;
+    for(const i of T0){ const cur = teams[i], v0 = fsc(evalRaw(cur, tkey[i])); let ratio = 1, alt = null;
+      for(let j=0;j<4;j++){ const id = pool[cur[j]].pc.id; if(!userLock.includes(id)) continue;
+        let bestA = -1, bestO = null, n = 0;
+        for(const q of potL){ if(n>=4) break; if(cur.some(k=>pool[k].pc.id===q.o.pc.id)) continue;
+          if(!posOf.has(q.o.pc.id)){ posOf.set(q.o.pc.id, pool.length); pool.push(q.o); }
+          const nt = cur.slice(); nt[j] = posOf.get(q.o.pc.id); const tm = nt.map(k=>pool[k].pc); if(dupBase(tm) || (compOK && !compOK(tm))) continue; n++;
+          const key = tm.map(c=>c.id).sort().join(), va = fsc(evalRaw(nt, key)); if(va>bestA){ bestA = va; bestO = q.o.pc; } }
+        if(bestA>0 && v0>0){ const r = v0/bestA; if(r<ratio){ ratio = r; alt = {lock:id, by:bestO.id, name:bestO.name}; } } }
+      const f = ratio >= 0.97 ? 1 : 0.45*Math.pow(Math.min(1, ratio), 2); lockFit.set(i, {f, ratio:+ratio.toFixed(3), alt}); fMin = Math.min(fMin, f); /* 제 몫(대체보다 3% 안쪽)이면 그대로, 아니면 뒤로(끼워 넣기끼리는 점수 × 비율² 순) */
+      if(Date.now()-lastYield>40){ lastYield=Date.now(); await new Promise(r2=>setTimeout(r2,0)); } }
+    ctx.stFast = st0;
+    for(let i=0;i<teams.length;i++) if(!lockFit.has(i)) lockFit.set(i, {f:fMin, ratio:null, alt:null}); /* 확인 안 한 조합은 확인한 것 중 가장 낮은 값으로 */
+  }
+  const lkF = i => lockFit.size ? lockFit.get(i).f : 1;
   const scored = [];
   const maxLv = input.maxDiff||4;
   for(let i=0;i<teams.length;i++){
@@ -3891,7 +3917,7 @@ async function optimize(input, onProgress){
     const b=raws[4*i]/mb, s=raws[4*i+1]/ms, t=raws[4*i+2]/mt;
     let sc = w.b*b + w.s*s + w.t*t;
     if(mode==='sustain'||mode==='weak'||mode==='opener'||mode==='all'||mode==='boss') sc *= (t<0.25?0.85:1);
-    scored.push([sc*raws[4*i+3],i]);
+    scored.push([sc*raws[4*i+3]*lkF(i),i]);
   }
   scored.sort((a,b)=>b[0]-a[0]);
   const chosen=[];
@@ -3910,7 +3936,7 @@ async function optimize(input, onProgress){
   let finalListS = null;
   if(mode==='boss'){ const wS = modeWeights('boss_stable', boss), sS = [];
     for(let i=0;i<teams.length;i++){ if(maxLv<4 && teamDifficulty(teams[i].map(k=>pool[k].pc)).lv>maxLv) continue; if(compOK && !compOK(teams[i].map(k=>pool[k].pc))) continue;
-      sS.push([(wS.b*raws[4*i]/mb + wS.s*raws[4*i+1]/ms + wS.t*raws[4*i+2]/mt)*raws[4*i+3], i]); }
+      sS.push([(wS.b*raws[4*i]/mb + wS.s*raws[4*i+1]/ms + wS.t*raws[4*i+2]/mt)*raws[4*i+3]*lkF(i), i]); }
     sS.sort((a,b)=>b[0]-a[0]); finalListS = [];
     // 안정성이라도 깨는 데 너무 오래 걸리면 뺌(보스 HP를 알 때): 어림 처치 턴 = N턴 총딜 뒤 지속 딜로, 턴 단축 1위의 2배·+4턴 중 큰 쪽까지
     const NBo = Math.max(1, Math.min(10, (ctx && ctx.burstN) || +S.burstTurns || 3)), need = +((boss && boss.hp) || 0)*1e8*1.3;
@@ -3967,11 +3993,12 @@ async function optimize(input, onProgress){
     const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog);
     const bp = budPickFor(team, progs, w), ev = bp.ev;
     const np=needPenalty(ev,boss); if(mode==='weak') np.miss = np.miss.concat(weakFit(ev, enemy).miss);
+    const lf = lockFit.size ? lockFit.get(c.i) : null; if(lf && lf.alt && lf.ratio!=null && lf.ratio<0.95){ const lc = team.find(t=>t.id===lf.alt.lock); np.miss = np.miss.concat([`꼭 쓸 캐릭터 ${lc ? lc.name : ''}: 이 조합에선 ${lf.alt.name}을(를) 대신 넣으면 점수 약 ${Math.round((1/lf.ratio-1)*100)}% 높음`]); }
     // 후방 2명: 남은 보유 캐릭터 중 생존 기여 상위
     const {reserves, fixedBack} = pickReserves(team, progs, ev);
     return {rank:rank+1, team, progs, ev, reserves, score:c.sc, rel:c.sc/topScore,
       norm:{b:BR(ev)/mb, s:ev.sustain/ms, t:ev.surv/mt}, miss:np.miss, kt: killTurns(ev, boss), bud: bp.bud, bg: bp.gear,
-      recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id))};
+      recCount: team.filter(t=>recSet.has(t.id)).length, diff: teamDifficulty(team), fixedBack: new Set(fixedBack.map(c=>c.id)), lockFit: lf ? {ratio: lf.ratio, alt: lf.alt} : null};
   });
   const topS = finalListS && finalListS.length ? finalListS[0].sc : 1;
   const results2 = finalListS ? finalListS.map((c,rank)=>{ const team=c.ids.map(k=>pool[k].pc), progs=c.ids.map(k=>pool[k].prog), bp=budPickFor(team, progs, modeWeights('boss_stable', boss)), ev=bp.ev, np=needPenalty(ev,boss), {reserves, fixedBack} = pickReserves(team, progs, ev);
@@ -4110,8 +4137,13 @@ async function perCharBest(input, onProgress){
     for(let j=0;j<4;j++){ const k=T[4*i+j], e = TB.get(triK(i, j)), alt = e ? (e[1]===i ? e[2] : e[0]) : -1;
       if(sc>fillSc[k]){ fillSc[k]=sc; fillI[k]=i; }
       if(sc >= alt*(1-1e-9) && sc>bestSc[k]){ bestSc[k]=sc; bestI[k]=i; } } }
+  /* 제 몫을 하는 덱이 없으면(2026-10-19 테스터 피드백) 가장 센 덱에 끼워 넣기 대신 덜 손해 보는 덱: 점수 × min(1, 이 조합 ÷ 같은 세 명 + 다른 4번째 최고)² 가 가장 큰 것 */
+  const fbV = new Float64Array(own.length).fill(-1), fbI = new Int32Array(own.length).fill(-1);
+  for(let i=0;i<N;i++){ if(SC[i]<0) continue; const sc = SC[i];
+    for(let j=0;j<4;j++){ const k=T[4*i+j]; if(bestI[k]>=0) continue; const e = TB.get(triK(i, j)), alt = e ? (e[1]===i ? e[2] : e[0]) : -1, r = alt>0 ? Math.min(1, sc/alt) : 1, v = sc*r*r;
+      if(v>fbV[k]){ fbV[k]=v; fbI[k]=i; } } }
   const filler = new Uint8Array(own.length);
-  for(let k=0;k<own.length;k++) if(bestI[k]<0 && fillI[k]>=0){ bestI[k]=fillI[k]; bestSc[k]=fillSc[k]; filler[k]=1; }
+  for(let k=0;k<own.length;k++) if(bestI[k]<0 && fbI[k]>=0){ bestI[k]=fbI[k]; bestSc[k]=SC[fbI[k]]; filler[k]=1; }
   let top=1e-9; for(const v of bestSc) top=Math.max(top,v);
   const evM = new Map(); // 같은 조합은 한 번만(워커에선 ev를 버리므로 input.noEv면 계산 안 함)
   const list = own.map((o,k)=>{
