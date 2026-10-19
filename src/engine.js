@@ -2519,10 +2519,10 @@ function battleSim(N, o){
     const hit = memo.get(key); if(hit) return hit;
     let best = null;
     const opts = [];
-    if(g >= (o.ss ? 100 : 50) && !o.noAF && !(o.maxAF!=null && (na||0) >= o.maxAF)) opts.push('af'); // 성해진: 100% 미만이면 AF 못 켬 // noAF: 서가 챌린지 점수 비교용(AF 턴엔 행동 보너스가 없음)
+    if(g >= (o.ss ? 100 : 50) && !o.noAF && !(o.maxAF!=null && (na||0) >= o.maxAF)) opts.push('af'); if(opts.includes('af') && o.hasSB && o.sbHold) opts.push('afH'); // 성해진: 100% 미만이면 AF 못 켬 // noAF: 서가 챌린지 점수 비교용(AF 턴엔 행동 보너스가 없음)
     opts.push('none');
     if(R && R.cost && !e && g>=R.cost) opts.push('stack');
-    for(const op of opts){
+    for(const op of opts){ const isAF = op==='af' || op==='afH'; // afH: AF 안에서 SB를 쓰지 않고 다음 평상 턴으로 미룸(서가 챌린지처럼 AF 피해에 상한이 있을 때, 2026-10-19)
       let d=0, g1=g, s1=s, e1=e, aw1 = o.budAw && o.budAw.has(t) ? Math.max(aw, 2) : aw, ou1=ou||0, dA=0, dS=0, rA=null; const rec={t, af:null, sb:null, combo:null, stack:false, fA:1, fS:1}; // 버디 차지 스킬 존 각성 턴 · fA·fS: 그 턴 AF·SB 몫에 곱해진 배율(타수 기믹·경감 — 딜 비중용)
       if(o.budAw && o.budAw.has(t)) rec.budAw = true;
       const L = ()=> (aw1>0 || o.awConst) ? 2 : 1;
@@ -2532,31 +2532,31 @@ function battleSim(N, o){
         if(o.teSB){ d += o.teSB.total; rec.teSB = o.teSB.total; } // SB 턴 종료 공격
         if(R && (e1 || !R.cost) && !(inAF && R.noAF)){ g1=Math.max(g1, R.to); e1=0; rec.refill=true; } };
       // AF를 쓴 턴(사용자 확인 2026-10-16·17): AF가 끝나면 아군 평상 행동 없이 적이 공격 → 요격, 요격으로 체인(AF 공격으로는 체인 없음). AF 게이지·SB 게이지는 AF 안에서만. 턴 종료 공격은 남음
-      if(op==='af'){ const r=o.afRun(g1, L(), t); d+=r.dmg; s1+=o.sbAct*(o.sbW && r.n ? r.n.reduce((x,v,i)=>x+(+v||0)*(o.sbW[i]||1), 0) : r.acts); g1=0; rec.af=r.g0; rec.afD=r.dmg; rec.afL=L(); if(o.teAF){ d += o.teAF.total; rec.teAF = o.teAF.total; } if(o.teN){ d += o.teN; rec.teN = o.teN; }
+      if(isAF){ const r=o.afRun(g1, L(), t); d+=r.dmg; s1+=o.sbAct*(o.sbW && r.n ? r.n.reduce((x,v,i)=>x+(+v||0)*(o.sbW[i]||1), 0) : r.acts); g1=0; rec.af=r.g0; rec.afD=r.dmg; rec.afL=L(); if(o.teAF){ d += o.teAF.total; rec.teAF = o.teAF.total; } if(o.teN){ d += o.teN; rec.teN = o.teN; }
         if(o.ctrAF){ d += o.ctrAF; rec.ctrAF = o.ctrAF; } // AF가 끝난 뒤 적 공격 → 요격 + 요격으로 발동한 체인(2026-10-17)
-        dA = d; rA = r; rec.afN = r.n; if(o.hasSB && s1>=100) useSB(true, r.fin); dS = d - dA; }
+        dA = d; rA = r; rec.afN = r.n; if(o.hasSB && s1>=100 && op!=='afH') useSB(true, r.fin); if(op==='afH') rec.sbHold = true; dS = d - dA; }
       if(op==='stack'){ g1-=R.cost; e1=1; rec.stack=true; }
-      if(op!=='af' && o.hasSB && !rec.sb && s1>=100){ const dq = d; useSB(false); dS = d - dq; }
+      if(!isAF && o.hasSB && !rec.sb && s1>=100){ const dq = d; useSB(false); dS = d - dq; }
       if(dS>0) rec.sbD = dS;
-      let nd = op==='af' ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1)*(o.rmp ? o.rmp(t) : 1)*(o.ndOn ? o.ndOn(t) : 1);
-      if(o.afFull && op!=='af'){ const gn = o.afGain>0 ? o.afGain : 1, full = g1>=100 ? 1 : Math.max(0, Math.min(1, (g1 + gn - 100)/gn)); // 게이지가 100%에 닿은 뒤 몫(평상 행동 중 차는 것은 고르게)
+      let nd = isAF ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1)*(o.rmp ? o.rmp(t) : 1)*(o.ndOn ? o.ndOn(t) : 1);
+      if(o.afFull && !isAF){ const gn = o.afGain>0 ? o.afGain : 1, full = g1>=100 ? 1 : Math.max(0, Math.min(1, (g1 + gn - 100)/gn)); // 게이지가 100%에 닿은 뒤 몫(평상 행동 중 차는 것은 고르게)
         if(full>0){ const k = 1 - full*(1 - o.afFull); nd *= k; if(rec.sb==='turn' && g1>=100){ d *= o.afFull; dS *= o.afFull; if(rec.sbD) rec.sbD = dS; rec.fS *= o.afFull; } rec.afFull = +full.toFixed(2); } }
-      if(o.ss && op!=='af' && g>=100-1e-9){ nd *= 2; if(dS>0){ d += dS; dS *= 2; rec.sbD = dS; } rec.ss = true; } // 성해진: 게이지 100%인 평상 턴은 모든 공격 ×2
+      if(o.ss && !isAF && g>=100-1e-9){ nd *= 2; if(dS>0){ d += dS; dS *= 2; rec.sbD = dS; } rec.ss = true; } // 성해진: 게이지 100%인 평상 턴은 모든 공격 ×2
       d += nd; rec.nd = nd; rec.L = L(); // 누적 효과 예열(rmp). 2026-10-18 버그: 이 두 줄이 주석 안에 들어가 실전 딜 비중(bsim.per)에서 평상 턴이 빠졌었음
-      if(op!=='af'){ s1 = Math.min(100, s1 + o.sbAct*(o.sbW ? o.sbW.reduce((x,v)=>x+v, 0) : o.front)); g1 = Math.min(100, g1 + o.afGain); } else s1 = Math.min(100, s1); aw1 = Math.max(0, aw1-1);
+      if(!isAF){ s1 = Math.min(100, s1 + o.sbAct*(o.sbW ? o.sbW.reduce((x,v)=>x+v, 0) : o.front)); g1 = Math.min(100, g1 + o.afGain); } else s1 = Math.min(100, s1); aw1 = Math.max(0, aw1-1);
       let hs1 = hs0;
       if(o.hg && hs0){ const M = o.hg.M, segs = []; // 보스 타수 기믹(2026-10-19): AF(또는 평상) → SB 순으로 벗기며 그 구간 피해 ×배율
-        if(op==='af' && rA) segs.push({k:'a', d:dA, w: (rA.n||[]).map((v,i)=>(+v||0)*M[i].h), u: (rA.n||[]).map((v,i)=>(+v||0)*M[i].x), p: rA.per, e: M.map(q=>q.en)});
+        if(isAF && rA) segs.push({k:'a', d:dA, w: (rA.n||[]).map((v,i)=>(+v||0)*M[i].h), u: (rA.n||[]).map((v,i)=>(+v||0)*M[i].x), p: rA.per, e: M.map(q=>q.en)});
         else segs.push({k:'n', d:nd, w: M.map(q=>q.hN), u: M.map(q=>q.aN), p: M.map(q=>q.pn), e: M.map(q=>q.en), ch: o.hg.ch});
         if(dS>0) segs.push({k:'s', d:dS, w: M.map(q=>q.hS), u: M.map(q=>q.xS), p: M.map(q=>q.ps), e: M.map(q=>q.es)});
         const R = hgTurn(o.hg.G, hs0, segs, M); hs1 = R.s; rec.hgS = hs1;
-        if(Math.abs(R.x - 1) > 1e-9){ const xa = op==='af' ? R.xs[0] : 1, xn = op==='af' ? 1 : R.xs[0], xsb = dS>0 ? R.xs[1] : 1;
+        if(Math.abs(R.x - 1) > 1e-9){ const xa = isAF ? R.xs[0] : 1, xn = isAF ? 1 : R.xs[0], xsb = dS>0 ? R.xs[1] : 1;
           d = d - dA - dS - nd + dA*xa + dS*xsb + nd*xn; rec.nd = nd*xn; if(rec.afD) rec.afD *= xa; if(rec.sbD) rec.sbD *= xsb; rec.fA *= xa; rec.fS *= xsb; rec.hg = +R.x.toFixed(3); } }
       if(o.cutW || o.turnX){ const m = (o.cutW ? o.cutW.reduce((q,w)=> t<=w.t ? Math.min(q, w.x) : q, 1) : 1)*(o.turnX && o.turnX[t-1]>0 ? o.turnX[t-1] : 1); if(m!==1){ d *= m; rec.nd *= m; if(rec.afD) rec.afD *= m; if(rec.sbD) rec.sbD *= m; rec.fA *= m; rec.fS *= m; rec.cut = +m.toFixed(3); } } // 보스 개시 피해 경감·턴마다 바뀌는 보스 내성 단계(그 턴 피해 전부 ×x — 낮아진 뒤 AF를 쓰는 계획을 고르게)
       /* 서가 챌린지 점수(o.scoreCap, 2026-10-19 알테마 星詠みの書架: 'AF 중에는 10억 이상 줘도 999,999,999까지만 가산'): AF 안에서 준 피해(AF + AF 안 SB)는 한 번에 상한까지만 → 점수를 최대로 하는 계획 */
-      if(o.scoreCap>0 && op==='af'){ const inAF = (+rec.afD||0) + (rec.sb==='af' ? Math.max(0, (+rec.sbD||0) - (+rec.teSB||0)) : 0); /* SB 턴 종료 공격(teSB)은 AF가 끝난 뒤라 상한 밖 */ if(inAF > o.scoreCap){ rec.raw = d; d = d - inAF + o.scoreCap; rec.capped = true; } }
+      if(o.scoreCap>0 && isAF){ const inAF = (+rec.afD||0) + (rec.sb==='af' ? Math.max(0, (+rec.sbD||0) - (+rec.teSB||0)) : 0); /* SB 턴 종료 공격(teSB)은 AF가 끝난 뒤라 상한 밖 */ if(inAF > o.scoreCap){ rec.raw = d; d = d - inAF + o.scoreCap; rec.capped = true; } }
       rec.d = d; rec.g = g; rec.s = s; rec.g1 = g1;
-      const nx = f(t+1, g1, s1, e1, aw1, ou1, hs1, (na||0) + (op==='af' ? 1 : 0)), v = d + nx.v;
+      const nx = f(t+1, g1, s1, e1, aw1, ou1, hs1, (na||0) + (isAF ? 1 : 0)), v = d + nx.v;
       if(!best || v>best.v) best = {v, plan:[rec].concat(nx.plan)};
     }
     memo.set(key, best); return best;
@@ -3088,7 +3088,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     out.burstOld = out.burst; out.burst = out.bsim.total;
     /* 서가 챌린지 점수(2026-10-19, 알테마 투고 6건으로 확인): 점수 = 피해(AF 1회 999,999,999까지) × 보너스 × 10⁻⁵, 보너스 = 행동 보너스(지정 퍼스널리티를 가진 캐릭터가 AF 아닌 턴마다 1번 —
        맞는 퍼스널리티 값의 합, 피해 없는 행동이면 1.5배) + AF 1회 50 + 편성 1000(전열 전원이 지정 퍼스널리티 — 후열은 엔진이 모름). AF 턴엔 행동 보너스가 없어 AF를 안 쓰는 계획과도 비교 */
-    if(+S.afScoreCap>0){ const scB = S.scoreBonus && S.scoreBonus.pers ? S.scoreBonus : null, base = ({...simIn, ...{scoreCap: +S.afScoreCap, afTailV: 0}}); /* 챌린지는 N턴에서 끝 — 남은 게이지 값 없음 */
+    if(+S.afScoreCap>0){ const scB = S.scoreBonus && S.scoreBonus.pers ? S.scoreBonus : null, base = ({...simIn, ...{scoreCap: +S.afScoreCap, afTailV: 0, sbHold: true}}); /* 챌린지는 N턴에서 끝 — 남은 게이지 값 없음 · sbHold: AF 안에서 찬 SB를 다음 평상 턴(상한 없음)에 쓰는 계획도 */
       const plans = [battleSim(NB, base)]; if(scB) for(const mx of [0, 1, 2]) plans.push(battleSim(NB, ({...base, ...{maxAF: mx}}))); /* AF 1회 +50 대 그 턴 행동 보너스 — AF 횟수별로 */
       const vI = team.map(c=> scB ? [...(c.pers||[])].reduce((a,p)=>a + (+scB.pers[p]||0), 0) : 0);
       const mI = team.map((c,i)=> simUse ? 1 + 0.5*Math.max(0, 1 - Math.min(1, (sim.act[i]||0) + (sim.alt[i]||0) + (sim.na[i]||0))) : 1);
