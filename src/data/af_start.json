@@ -1,10 +1,11 @@
 {
   "_doc": "전투 시작 AF 게이지(기본 50%, 계산 방식 탭)를 바꾸는 캐릭터. start: 시작 게이지 %, need: 전열 조건 {elem, n}, buddy: 메인·서브 버디 중 하나 필요(buddy_fx 키). _refill: 전투 중 게이지 회복 {on: sb(SB 사용 시), to: %, cost: 먼저 비AF 턴에 이만큼 AF 게이지를 써서 축적해 둬야 함(히스메나(ES) エスパーダ)}. 출처: 캐릭터 데이터·사용자 확인(질퍼니(AS)+피탄)",
-  "myrus_es": {"start":100},
-  "izuna": {"start":100,"need":{"elem":"thunder","n":3}},
-  "jilfany_as": {"start":100,"buddy":["pitan","pitan_as"]},
-  "_refill": {"hismena_es":{"on":"sb","to":100,"cost":50,"start":1,"af":false}},
-  "aldo": {"start":100,"need":{"align":"light","n":3}},
-  "fiene_as": {"start":100,"need":{"align":["light","shadow"],"n":3}},
+  "myrus_es": {"start": 100},
+  "izuna": {"start": 100, "need": {"elem": "thunder", "n": 3}},
+  "jilfany_as": {"start": 100, "buddy": ["pitan", "pitan_as"]},
+  "_turn": {"_doc_turn": "_turn: 행동 밖에서 차는 AF 게이지(턴 시작·종료 패시브, %). AF를 쓴 턴에도 AF가 끝난 뒤 차서 다음 턴 AF가 가능(TK 蝕時ゴブキング '無限AF' 레시피: 輝晶陣 + 버디 오토·턴 종료 추격 + ソイラ 턴 시작 회복으로 매 턴 50%↑). v %, at start|end, zone 존 키 조건, song 가창 중만, p 확률. 출처: 딩 DB(오를레아(AS)·알도(AS)·밀디·피치카·듀이(AS)), TK 영상(소이라(AS)) sb: SB를 쓴 턴의 턴 종료 추격(acts 행동, el·wt로 존 게이지).", "orleya_as": {"v": 10, "at": "end"}, "aldo_as": {"v": 20, "at": "end", "zone": ["guard", "starsea"]}, "mildy": {"v": 10, "at": "end", "song": true}, "pizzica": {"v": 10, "at": "end", "song": true}, "pizzica_as": {"v": 10, "at": "end", "song": true}, "dewey_ac_as": {"v": 7.5, "at": "end", "p": 0.5}, "soira_as": {"v": 10, "at": "start"}, "melina": {"sb": true, "acts": 3, "el": "water", "wt": "blunt", "why": "星導スキル 君よ 翼となりて: 엘의 노래 + 턴 종료 水 打 극대 추격(インヴォーク 소진까지 최대 3회, 알테마 chara/167) — SB 턴 뒤 존이면 행동당 게이지(Hinaden Sinuslridum 4AF '메리나와 미스트레아의 추격타')"}},
+  "_refill": {"hismena_es": {"on": "sb", "to": 100, "cost": 50, "start": 1, "af": false}},
+  "aldo": {"start": 100, "need": {"align": "light", "n": 3}},
+  "fiene_as": {"start": 100, "need": {"align": ["light", "shadow"], "n": 3}},
   "hismena_es": {}
 }

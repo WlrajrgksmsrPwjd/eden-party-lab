@@ -66,6 +66,8 @@ for c in chars:
     if c['id'] in afst and not c['id'].startswith('_'): c['af_start']=afst[c['id']]
     rf=(afst.get('_refill') or {}).get(c['id'])
     if rf: c['af_refill']=rf
+    tu=(afst.get('_turn') or {}).get(c['id'])
+    if tu: c['af_turn']=tu
 # AF 중 스킬 연출 시간(초) 캐릭터별 값
 afan=json.load(open(P('data','af_anim.json'),encoding='utf-8'))
 for c in chars:

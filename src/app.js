@@ -1038,6 +1038,7 @@ function renderResults(r, boss, enemy, mode){
   if(boss) for(const x of all) if(x.kt===undefined) x.kt = E.killTurns(x.ev, boss);
   const ref = all.length ? {sbTurn:all[0].ev.sbTurn, af:mx('af'), sustain:mx('sustain'), surv:mx('surv'), burst:mx('burst'), dummyT: showDummy(mode) ? mx('dummyT') : 0, opener:mx('opener')} : null;
   const lockSet=new Set(P.locked);
+  if(boss && boss.gauntlet && all.length && bv!=='stable') h+=`<section class="growbox" id="gauntBox"><h3>${boss.gauntlet.n}연전 편성 (덱 ${boss.gauntlet.n}개)</h3><p style="margin:0 0 4px"><b>이 보스는 ${boss.gauntlet.n}연전이라 서로 다른 멤버로 덱 ${boss.gauntlet.n}개가 필요합니다.</b> 아래 1~${all.length}위 카드는 한 전투(1전)용 후보이고, ${boss.gauntlet.n}개 덱 묶음은 여기서 바로 계산합니다.</p><p class="hint" style="margin:0">${esc(boss.gauntlet.note_kr||'')} 1전은 아래 1위 조합, 다음 전투는 앞 전투 멤버를 빼고 앞 전투가 붙이는 흉성(약점 친 속성 흡수·존 파괴 등)을 넣어 다시 계산합니다.</p><button type="button" class="btn small" id="gauntRun">${boss.gauntlet.n}연전 다시 계산</button><div id="gauntList"></div></section>`;
   for(const x of all){
     const key='p'+x.rank; RES.set(key, {x, focus:r.focus, mode, bossId:boss?boss.id:''});
     h+=cardHtml(x, key, {boss, enemy, focus:r.focus, ref, hot:HOT[mode], lockSet, mode, pledge:r.pledge||null});
@@ -1049,10 +1050,10 @@ function renderResults(r, boss, enemy, mode){
       h+=`<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${d.focus.kind==='elem'?`<span class="dot ${d.focus.v}"></span> `:''}${esc(focusLabel(d.focus))}${zoneOfFocus(d.focus)?` <small class="dz">${esc(zoneOfFocus(d.focus))}</small>`:''}</span><span class="dm">${d.team.map(c=>esc(c.name)).join(', ')}</span><span class="num">${(d.rel*100).toFixed(0)}</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; });
     h+='</section>';
   }
-  if(boss && boss.gauntlet && all.length && bv!=='stable') h+=`<section class="growbox" id="gauntBox"><h3>${boss.gauntlet.n}연전 편성 (덱 ${boss.gauntlet.n}개)</h3><p class="hint" style="margin:0">${esc(boss.gauntlet.note_kr||'')} 1전은 위 1위 조합, 다음 전투는 앞 전투 멤버를 빼고 앞 전투가 붙이는 흉성(약점 친 속성 흡수·존 파괴 등)을 넣어 다시 계산합니다.</p><button type="button" class="btn small" id="gauntRun">${boss.gauntlet.n}연전 계산하기</button><div id="gauntList"></div></section>`;
   if(all.length && !state.sample && !(all[0] && all[0].shared)) h+=`<section class="growbox" id="growBox"><h3>육성 추천</h3><p class="hint" style="margin:0">위 조합 멤버 중 한 단계만 올렸을 때(성도각성 · 천명치 다음 단계 · 현현 무기) 이 성향 점수가 가장 많이 오르는 것. 다른 조합으로 바뀌는 효과는 세지 않습니다.</p><button type="button" class="btn small" id="growRun">계산하기</button><div id="growList"></div><h3 style="margin-top:14px">획득 추천</h3><p class="hint" style="margin:0">안 가진 SS·S 캐릭터(천명치 80·성도각성 가정)를 위 1~3위 조합 멤버와 한 명씩 바꿔 넣어 봤을 때 가장 많이 오르는 캐릭터. 그 캐릭터 중심의 새 조합까지는 찾지 않습니다.</p><button type="button" class="btn small" id="getRun">계산하기</button><div id="getList"></div></section>`;
   out.innerHTML=h;
   GROW.all = all; GROW.r = r; GROW.mode = mode; GROW.tok++; cancelChan('gaunt'); // 결과를 새로 그리면 하던 연전 계산(워커)은 버림
+  if(boss && boss.gauntlet && all.length && bv!=='stable'){ const tk = GROW.tok; setTimeout(()=>{ if(tk===GROW.tok) gauntRun(); }, 60); } // 연전 보스는 덱 N개 묶음을 바로 계산(2026-10-19 사용자 '안키 디그마는 파티 3개를 들고 가야')
 }
 const DECKCTX={};
 /* N연전 편성(2026-10-18, 사용자 '안키 디그마 3연전이라 덱 3개'): boss.gauntlet {n, absorb_prev} — 1전 = 지금 결과 1위, k전 = 앞 전투들 멤버 제외 +
