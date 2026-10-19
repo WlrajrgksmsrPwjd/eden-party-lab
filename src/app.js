@@ -1649,7 +1649,7 @@ function turnRecTxt(r, ev, team, mainI){
 const compBack = (x, boss) => { const sp = boss && boss.score_bonus && boss.score_bonus.pers, R = (x.reserves||[]).filter(Boolean); if(!sp) return ''; if(!R.length) return ' — 후열이 있으면 후열도 지정 퍼스널리티여야 함';
   const no = R.filter(c=>![...(c.pers||[])].some(p=>sp[p])); return no.length ? ` — 추천 후열 ${no.map(c=>esc(c.name)).join('·')}은(는) 해당 없음: 지정 퍼스널리티 캐릭터로 바꿔야 1000` : ' — 추천 후열도 해당'; };
 const scoreTxt = v => { v = +v||0; return v>=1e8 ? (v/1e8).toFixed(v>=1e9 ? 1 : 2)+'억점' : Math.round(v).toLocaleString()+'점'; };
-const hgT = r => +r.hg>0 && +r.hg<0.995 ? ` <span class="hint">(타수 기믹 ×${r.hg})</span>` : '';
+const hgT = r => r && r.hg!=null && +r.hg<0.995 ? ` <span class="hint">(타수 기믹 ×${r.hg})</span>` : '';
 /* 처치 계획(engine killTurnsM log): 실전 N턴 뒤 AF 주기·아껴 둔 AF·스토퍼·목숨 처치·존 단계를 묶어서 */
 function killPlanTxt(kt, N){
   const out = [], L = kt.log; let run = null;
@@ -2539,7 +2539,7 @@ function hpModelHtml(b){ const h = b.hp_model; if(!h || !(+h.bars>1 || h.reset |
   const bits = []; if(+h.bar>0) bits.push(`한 줄 ${Number(h.bar).toLocaleString()}억 × ${h.bars||1}번`); else if(+h.bars>1) bits.push(`${h.bars}번 깎아야 함`);
   if(h.reset) bits.push('턴 종료마다 전회복(한 턴에 최대 한 줄만 진행)'); else if(h.carry===false && +h.bars>1) bits.push('넘친 피해는 다음 줄로 안 넘어감');
   if((h.stopper||[]).length) bits.push(`HP ${h.stopper.join('%·')}% 스토퍼(그 턴 남은 피해는 버려짐)`);
-  if(+h.kt_min>0) bits.push(`최소 ${h.kt_min}턴`); for(const q of (h.dmg_cut||[]).filter(q=>+q.turns>0)) bits.push(`${q.when==='revive'?'부활 뒤':'개전'} ${q.turns}턴 피해 ×${q.x}`);
+  if(+h.kt_min>0) bits.push(`최소 ${h.kt_min}턴`); for(const q of (h.dmg_cut||[]).filter(q=>+q.turns>0 && !(+q.hits>0) && q.x!=null)) bits.push(`${/^revive2/.test(q.when||'') ? '2회 부활 뒤' : /^revive/.test(q.when||'') ? '부활 뒤' : /^always/.test(q.when||'') ? '내내' : '개전'} ${q.turns>=99 ? '' : q.turns+'턴 '}피해 ×${q.x}`); /* 횟수 배리어(hits)는 '타수 기믹' 줄에 */
   return `<div class="bsneeds"><span class="bsl">HP 구조</span><span class="hint">${esc(bits.join(' · '))}${h.note_kr?` — ${esc(String(h.note_kr).split(/(?<=[.다요])\s+/)[0])}`:''}</span></div>`; }
 /* 서가 챌린지 점수 규칙(2026-10-19, 사용자·알테마 星詠みの書架): 5턴 동안 준 피해 + 편성·행동 보너스, AF 중 준 피해는 한 번에 999,999,999까지만 */
 function scoreRuleHtml(b){ if(!shokaChal(b)) return ''; const sb = b.score_bonus, pk = p => (E.PERS_KR && E.PERS_KR[p]) || p;
@@ -2561,7 +2561,7 @@ function singLine(x){ const ev = x.ev, T = x.team; if(!T.some(c=>c.song)) return
 function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.turns) || (ev && ev.bsim && ev.bsim.turns) || []; if(!T.length || (o && (o.mode==='burst' || o.mode==='opener'))) return '';
   if(ev.afOff) return `<div class="kt hint">AF: 이 상대에선 못 씀${ev.hasSB ? ' — SB는 게이지가 차는 턴에' : ''}</div>`;
   const af = T.filter(r=>r.af).map(r=>`<b>${r.t}턴</b>${Math.round(+r.af)<100 ? `(게이지 ${Math.round(+r.af)}%)` : ''}${r.sb==='af' ? '+SB' : ''}`), sbT = T.filter(r=>r.sb==='turn').map(r=>r.t+'턴');
-  let late = ''; const kl = x.kt && Array.isArray(x.kt.log) ? x.kt.log : null;
+  let late = ''; const kl = !ev.score && x.kt && Array.isArray(x.kt.log) ? x.kt.log : null; /* 서가 챌린지는 N턴에서 끝 — 처치 계획 AF 없음 */
   if(kl){ const N = T.length, A = kl.filter(l=>l.t>N && l.af).map(l=>l.t), H = kl.some(l=>l.t>N && l.hold); if(A.length) late = ` → 그 뒤 ${A.slice(0,4).join('·')}${A.length>4?'…':''}턴${H?' (스토퍼·목숨 직전엔 아껴 둠)':''}`; }
   const full = T.some(r=>r.afFull>0) ? ' <span class="warn">게이지가 꽉 차면 피해 감소 — 100% 전에</span>' : (x.S||settings()).afFull ? ' <span class="hint">(게이지가 꽉 차면 피해 감소 — 100% 전에 켬)</span>' : '';
   return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${full}</div>`; }
