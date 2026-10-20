@@ -1722,10 +1722,12 @@ function stepValues(team, progs, A, enemy, S, cx, cap, posSets, noRed){ // noRed
   /* 겹치는 버프 행동(2026-10-20, 사용자 '속도 버프 이미 100%면 더 걸 필요가 있나'): 다른 아군 버프로 이미 상한(능력치 +100% — dimin 상한 1)이거나 같은 상태(심기일체 등)라
      빼도 AF·평상 턴 대미지와 속도(AF 대기)가 그대로인 버프 행동은 순위 −1 → 평상 턴에 안 걸고 스킬 칸도 안 씀(예: 다르니스(AS) ギャラントリー 속도 100% 옆 번개술사(AS) オグメントパッチ).
      버프 스킬(k buff)만 보고 독·디버프·존·연계·속성 변환이 붙은 행동은 그대로(서로 미루다 둘 다 빠지는 것 방지), id 순으로 빼 가며 앞에서 뺀 효과는 뒤 캐릭터 계산에서 꺼짐. S.dropRedundantBuff=false면 끔 */
-  const red = []; if(S.dropRedundantBuff!==false && !noRed){ const BADK = x => x.indexOf('d_')===0 || x==='brk' || x==='link' || x==='echg' || x.indexOf('weak')===0;
+  const red = []; if(S.dropRedundantBuff!==false && !noRed){ const BADK = x => x.indexOf('d_')===0 || x==='brk' || x==='link' || x==='echg' || x.indexOf('weak')===0 || x==='ctr' || /^te\d+$/.test(x); // ctr(요격·도발 자세)·te(턴 종료 공격)는 대미지·속도 비교로 못 잼(2026-10-20 점검: 미나르카(AS) 둠·시온(AS) 臥龍の構え가 '겹침'으로 빠졌음)
     const idR = team.map((c,j)=>c.bact && c.bact.steps.length ? j : -1).filter(j=>j>=0).sort((a,b)=>team[a].id<team[b].id?-1:team[a].id>team[b].id?1:a-b);
     // 다른 아군은 스킬 칸에 달 행동만(평상 턴 시뮬과 같은 순서: 존 전개 → 순위, 2026-10-20 — 칸이 모자라 안 다는 아나벨(ES) 聖騎士の軌跡를 '이미 있음'으로 봐서 백자의 마인 기도 버프를 빼던 문제)
-    const eqIdx = k => { const c = team[k], b = c.bact, rk = out[k], ord = b.steps.map((st,q)=>q).filter(q=>!b.steps[q].na && !(rk && rk[q]<0)).sort((x,y)=>((b.steps[y].z?1:0)-(b.steps[x].z?1:0)) || (rk ? rk[y]-rk[x] : 0) || x-y);
+    const zcR = team.some(c=>c.bact && c.bact.steps.some(st=>st.z)) ? zoneCandidates(team, progs, 'normal') : null, agR = !!(zcR && zcR.some(q=>q && q.how==='개전 자동' && q.level>=2));
+    const eqIdx = k => { const c = team[k], b = c.bact, rk = out[k], zU = !(b.steps.some(st=>st.z) && zoneStepUseless(team, progs, k, zcR)), zp = q => zU && b.steps[q].z && !(agR && b.steps[q].z==='awaken') ? 1 : 0; // simTeam ord0과 같은 칸 고르기(2026-10-20 점검)
+      const ord = b.steps.map((st,q)=>q).filter(q=>!b.steps[q].na && !(rk && rk[q]<0) && ((zU && !(agR && b.steps[q].z==='awaken')) || !b.steps[q].z || (b.steps[q].g && b.steps[q].g.size))).sort((x,y)=>zp(y)-zp(x) || (rk ? rk[y]-rk[x] : 0) || x-y);
       return new Set(slotPick(b.steps, ord, skillSlots(c, progs[k]), freeSk(c, progs[k])).concat(b.steps.map((st,q)=>st.na?q:-1).filter(q=>q>=0))); };
     const fullM = k => { const b = team[k].bact, m = new Set(b.auto), E = eqIdx(k); for(const x of b.main) m.add(x); b.steps.forEach((st,q)=>{ if(E.has(q) && st.g) for(const x of st.g) m.add(x); }); return m; };
     // 존마다(평상 턴 존은 이 뒤에 고르므로 후보 전부 + 존 없음): 버프 규칙이 존 조건이라 어떤 존에선 겹쳐도 다른 존에선 필요(벨벳(AS) エクソシア는 招雷陣에서만 100% — 각음진이면 백자의 마인 버프가 필요)
@@ -2763,7 +2765,7 @@ function evalTeamV(team, progs, enemy, S, cap, ctx){
     if(!(ev.afCastN >= (S.afBuffMin!=null ? +S.afBuffMin : 0.15))) return ev; // 평상 턴에 버프를 거의 안 거는 조합은 차이가 없어 계산 생략
     const cl = x => Math.max(1.5, Math.min(8, +x||3)), e1 = C => evalTeam0(team, pr, enemy, S, cap, ({...c1, ...{_redOff: !!ev.redOff, _afBuff: C}})), vk = evalKey(ctx);
     let C = cl(ev.afTurns), e2 = e1(C); const k0 = vk(ev), k1 = vk(e2); if(!(k1 > k0*(S.afBuffCut!=null ? +S.afBuffCut : 0.97))) return ev; // 첫 계산이 기본 운용보다 3% 넘게 낮으면 더 안 봄(계산량 — 무작위 120조합 결과 같음, 정밀 평가 약 −20%)
-    if(Math.abs(cl(e2.afTurns) - C) > 0.4){ C = cl(e2.afTurns); e2 = e1(C); } // AF 주기가 바뀌면(평상 턴 공격이 늘어 게이지가 빨리 참) 한 번 더 맞춤
+    if(Math.abs(cl(e2.afTurns) - C) > 0.4){ const C2 = cl(e2.afTurns), e3 = e1(C2); if(vk(e3) >= k1){ C = C2; e2 = e3; } } // 주기를 맞춘 쪽이 낫을 때만(2026-10-20 점검) // AF 주기가 바뀌면(평상 턴 공격이 늘어 게이지가 빨리 참) 한 번 더 맞춤
     let cv = C; if(e2.afMinD < C - 1e-9){ const e3 = e1(-C); if(vk(e3) > vk(e2)*(1+1e-9)){ e2 = e3; cv = -C; } } // 다음 AF 전에 버프가 끊기면: 끊긴 턴에 평상 턴에서 다시 거는 쪽도(afRe — 값은 −C)
     if(vk(e2) > vk(ev)*(1+1e-9)){ e2.redOff = !!ev.redOff; if(ev.redSkip) e2.redSkip = ev.redSkip; e2.afBuf = cv; return e2; } return ev; };
   const redPick = (ev, pr, c1) => bufPick(redPick0(ev, pr, c1), pr, c1);

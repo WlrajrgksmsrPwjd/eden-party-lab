@@ -1354,7 +1354,7 @@ function timelineHtml(x, o){
     ${cell('1턴', tl.t1, `보장 ${fmtN(tl.t1g)} ~ 속도 맞춤 ${fmtN(tl.t1u)}<br>${esc(pTxt)}`, o.hot==='o')}
     ${cell('2턴', tl.t2, '버프 깔린 평타 턴')}
     ${cell('SB 턴', ev.sbTurn, ev.hasSB?'게이지 차면':'성도 없음')}
-    ${cell('AF 1회', ev.af, `${ev.afA&&ev.afA.auto?`행동 ${ev.afA.n.join('·')}회 · 약 ${ev.afA.dur.toFixed(0)}초 · `:''}콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afOff ? ' · 지금 조건(흉성 등)에선 AF를 못 씀' : ev.afDrain ? ` · 차지 스킬로 ${ev.afDrain.first}턴째부터 ${ev.afDrain.per}턴마다 (게이지 ${ev.afDrain.g0}%에서)` : ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
+    ${cell('AF 1회', ev.af, `${ev.afA&&ev.afA.auto?`행동 ${ev.afA.n.map(v=>Math.round(10*v)/10).join('·')}회${ev.afA.nAll && ev.afA.nAll.some((v,k)=>v>ev.afA.n[k]+0.05) ? ` (+ 버프 ${ev.afA.nAll.map((v,k)=>Math.round(10*(v-ev.afA.n[k]))/10).join('·')})` : ''} · 약 ${ev.afA.dur.toFixed(0)}초 · `:''}콤보 ${(ev.avgCombo*100).toFixed(0)}%${ev.afOff ? ' · 지금 조건(흉성 등)에선 AF를 못 씀' : ev.afDrain ? ` · 차지 스킬로 ${ev.afDrain.first}턴째부터 ${ev.afDrain.per}턴마다 (게이지 ${ev.afDrain.g0}%에서)` : ev.afTurns?` · 약 ${ev.afTurns.toFixed(1)}턴마다 (턴당 게이지 ${Math.round(ev.afGain)}%)`:''}`)}
   </div>${dummyHtml(x, o)}${bsimHtml(ev)}`;
 }
 /* 결과 카드 한 장. 편성 추천 결과와 공유받은 조합이 같이 쓴다. */
@@ -1935,10 +1935,10 @@ function setupHtml(x, i){
     if(ev.afA && ev.afA.auto){ const fa=ev.afA.fast[i], kn=ev.afA.known&&ev.afA.known[i], sp=ev.afA.spd&&ev.afA.spd[i], S0=settings(), gs=E.gearSpdOf(c, S0), gAuto=S0.gearSpd==null||S0.gearSpd==='';
       const gTxt = gs ? ` + 장비 ${gs}${gAuto?'(자동: 대미지 최적 장비 기준)':''}` : ', 장비 제외';
       const src = kn==='build'?'빌드 코드, 장비 포함':kn==='build-st'?`빌드에 넣은 스탯${gTxt}`:kn==='wiki'?`기본 스탯·천명치 ${pr.t}${gTxt}`:'모름';
-      const sE = ev.afA.spdE && ev.afA.spdE[i] ? ev.afA.spdE[i] : 0, nA = ev.afA.n[i]||1, buf = sE && sp ? sE/sp : 1; // 버프 포함 속도(엔진 afActionsOf spdE)
+      const sE = ev.afA.spdE && ev.afA.spdE[i] ? ev.afA.spdE[i] : 0, nA = Math.max(1, Math.round((ev.afA.nAll||ev.afA.n)[i]||1)), buf = sE && sp ? sE/sp : 1; // 버프 포함 속도(엔진 afActionsOf spdE)
       const wSum = v => { let w = 0; for(let k=1;k<=nA;k++) w += E.afWait ? E.afWait(k>1 ? v : v/buf, k) : 0; return w; }; // 이번 AF 행동 수만큼의 대기 합
       let nxt = null; if(E.AF_WAIT && sE){ for(const [lo] of E.AF_WAIT){ if(lo<=sE) continue; const g = wSum(sE) - wSum(lo); if(g>=0.99){ nxt = {lo, need: Math.ceil((lo - sE)/buf), g}; break; } if(lo - sE > 400) break; } } // 대기 합이 1초 이상 줄어드는 다음 구간
-      G.push(`<li>${mark(fa)} AF 중 행동 <b>${ev.afA.n[i]}회</b> (AF 약 ${ev.afA.dur.toFixed(0)}초) · 속도 ${sp?`<b>${sp}</b>${sE && Math.round(sE)!==sp ? ` (버프 포함 ${Math.round(sE)})` : ''}`:'모름'} <span class="hint">${src}</span>${nxt && nxt.need>0 ? ` — 기본 속도 <b>+${nxt.need}</b>이면 대기 표 다음 구간(${nxt.lo}): AF ${nA}행동 대기 합 약 ${nxt.g.toFixed(0)}초 짧아짐. ${esc(spdGearTip(nxt.need))} — 대미지 장비 한 칸을 내주는 셈` : ''}</li>`); }
+      G.push(`<li>${mark(fa)} AF 중 행동 <b>${Math.round(10*(ev.afA.n[i]||0))/10}회</b>${ev.afA.nAll && ev.afA.nAll[i] > (ev.afA.n[i]||0)+0.05 ? ` + 버프 ${Math.round(10*(ev.afA.nAll[i]-(ev.afA.n[i]||0)))/10}회` : ''} (AF 약 ${ev.afA.dur.toFixed(0)}초) · 속도 ${sp?`<b>${sp}</b>${sE && Math.round(sE)!==sp ? ` (버프 포함 ${Math.round(sE)})` : ''}`:'모름'} <span class="hint">${src}</span>${nxt && nxt.need>0 ? ` — 기본 속도 <b>+${nxt.need}</b>이면 대기 표 다음 구간(${nxt.lo}): AF ${nA}행동 대기 합 약 ${nxt.g.toFixed(0)}초 짧아짐. ${esc(spdGearTip(nxt.need))} — 대미지 장비 한 칸을 내주는 셈` : ''}</li>`); }
     const sm = ev.sim;
     if(sm){ const mi=sm.mainN[i], H=sm.H;
       G.push(`<li>${mark(!sm.out[i])} MP: 주력기 ${c.mpMain!=null?c.mpMain:'?'} · 최대 약 ${sm.mpMax[i]} → ${H}턴 중 주력기 ${mi}번${sm.out[i]?`, ${sm.out[i]}턴째부터 부족 → MP 소비 감소 글래스터·MP 회복 지원·후열 교대`:' (여유)'}</li>`); }
@@ -2629,7 +2629,7 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   const sbF = ev.sbFull ? ` · <b>${esc(ev.sbFull.by)}</b> ${esc(ev.sbFull.name)}: ${ev.sbFull.from}턴째부터 ${ev.sbFull.dur}턴 동안 매 턴 SB 게이지 가득(약 ${ev.sbFull.per}턴마다)` : ''; // SB 게이지 가득 상태(2026-10-19 유우체리카 星天の力)
   const bf = ev.afBuf && ev.afBufSk && ev.afBufSk.some(L=>L && L.length) ? ` · 버프 스킬은 <b>AF 첫 행동</b>으로(평상 턴엔 공격)` : ''; // AF 안 버프 운용(2026-10-20)
   /* AF 상한 여유(2026-10-20 사용자 '천명 200 이상에 세팅 좋으면 맥뎀 찍을 파티원 구성이 자유로움'): 실전 AF가 9999억 상한에 닿으면 상한 없을 때 값과 비율 — 화력 대신 생존·유지력 캐릭터를 넣을 여유 */
-  const capR = T.filter(r=>r.afCap && +r.afRaw>0), cTot = +(x.S||settings()).afTotalCap||0;
+  const capR = ev.score ? [] : T.filter(r=>r.afCap && +r.afRaw>0), cTot = +(x.S||settings()).afTotalCap||0;
   const capT = capR.length && cTot>0 ? (()=>{ const mx = Math.max(...capR.map(r=>+r.afRaw)), sl = 1 - cTot/mx; return ` · <b class="capok">AF가 상한(9999억)에 닿음</b> <span class="hint">— 상한 없으면 약 ${fmtN(mx)}${sl>=0.25 ? `라 화력의 약 ${Math.round(100*sl)}%는 남음: 딜러 하나를 생존·유지력 캐릭터로 바꿔도 AF 피해는 거의 그대로` : ` (여유 약 ${Math.round(100*sl)}% — 화력을 빼면 상한 아래로 내려감)`}</span>`; })() : '';
   return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${full}</div>`; }
 /* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
