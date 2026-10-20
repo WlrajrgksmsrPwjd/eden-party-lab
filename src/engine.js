@@ -1424,6 +1424,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 약점 부여가 켜진 비율(2026-10-16): 예전엔 켜짐/꺼짐(0.5 문턱)뿐이라 개전 1턴만·스킬 쓴 턴만·SB 그 턴만인 약점 간파가 평상 턴 내내 켜지던 문제 → 비율로 섞음
   const c01 = v => Math.max(0, Math.min(1, +v||0));
   const wkF = t => { let best = 0; for(const w of (A.weakInfo||[])){ if(!wkHit(w, t, zone)) continue; let f = 1;
+      if(wkGone(w, A)) continue; // 개전 n턴 한정 약점 간파(베르단타 3턴): 긴 전투의 그 뒤 AF(A.lateAF·realT)엔 없음
       if(w.noaf && situation!=='normal' && !wR(w)) f = 0;
       if(f>0 && (w.sb || (w.sbOnly && !wR(w)))) f = situation==='sb' || (situation==='af' && A.postSB) ? 1 : situation==='normal' && !w.sb1 ? c01(sbU(w.j)) : 0;
       if(f>0 && !w.start){ const rf = FX && FX[w.j]; if(rf){ const wx = rowV(rf, idx, 'weak_x'); if(wx!=null) f *= c01(wx); } }
@@ -1537,8 +1538,11 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
 /* 약점 부여 속성: 'zone'이면 깔린 속성 존의 속성(없으면 기본 dflt, 네코코(ES) 猫又巫女神楽 「属性ZONEに応じて弱点看破属性変化」, 2026-10-16) */
 const wkEl = (w, zone) => w.t!=='zone' ? w.t : (zone && zone.kind==='elem' && zone.level>0 ? zone.types : [w.dflt||'wind']);
 const wkHit = (w, t, zone) => { const e = wkEl(w, zone); return Array.isArray(e) ? e.includes(t) : e===t; };
+/* 개전 n턴 한정 약점 간파(weak_expose_up.t, 2026-10-20 — 베르단타 ジェネラルブレイズ: 전열 개전 시 敵全体 弱点看破(水) 3턴, 다시 거는 수단 없음(알테마 1185)):
+   그 턴이 지난 AF(긴 전투 지속 딜의 A.lateAF, 실전 N턴의 4턴째 이후 AF — realT)엔 없음. 평상 턴 평균 유지율은 up.n */
+const wkGone = (w, A) => !!(w && w.up && +w.up.t>0 && (A.realT||0) > +w.up.t);
 function weakFrac(A, el, sit, zone){ let best = 0;
-  for(const w of (A.weakInfo||[])){ if(!(w.t===el || wkHit(w, el, zone))) continue; let f = 1;
+  for(const w of (A.weakInfo||[])){ if(!(w.t===el || wkHit(w, el, zone))) continue; let f = 1; if(wkGone(w, A)) continue;
     if(w.up) f = sit==='normal' ? +w.up.n||0 : (A.realT>1 && w.up.real!=null ? +w.up.real||0 : (w.up.af!=null ? +w.up.af||0 : 1));
     if(w.noaf && sit!=='normal' && !(A.realT>1)) f = 0;
     if(w.sbOnly || w.sb) f *= sit==='normal' ? (w.sb1 ? 0 : 0.3) : (sit==='sb' || A.postSB) ? 1 : 0;
@@ -3060,10 +3064,11 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const ssK = S.starseaZone!==false && isSS(nz) ? 2 : 1; let af = capAF(R3.afS.v); // ssK: 평상 존이 성해진(AF 공격 ×2는 applyZoneCap이 — 코어 sit 'af')
   /* 긴 전투의 AF(2026-10-18, 사용자 '빅트 고평가 — 단기전이라?'): 개전·한 번 쓰는 상태(歴戦 5턴·개전 3턴 등)는 지속 딜의 AF에서도 늘 켜져 있었음 →
      긴 전투(S.susHorizon, 기본 15턴) 중 그 구간 안의 AF 비율(구간 끝 ÷ 15)만 켜진 AF, 나머지는 구간이 끝난 뒤 AF(A.lateAF)로 섞음 */
-  const HL = Math.max(6, +S.susHorizon||15), wEnds = [...new Set(team.flatMap(c=>(c.states||[]).filter(q=>q && q.up==null && !q.cycle && !q.res && (+q.dur>0 || +q.start>0)).map(q=>(+q.start||0) + (+q.uses||0)*(+q.dur||0))))].filter(w=>w>=1 && w<HL).sort((x,y)=>x-y).slice(0, 3);
+  const HL = Math.max(6, +S.susHorizon||15), wEnds = [...new Set(team.flatMap(c=>(c.states||[]).filter(q=>q && q.up==null && !q.cycle && !q.res && (+q.dur>0 || +q.start>0)).map(q=>(+q.start||0) + (+q.uses||0)*(+q.dur||0))).concat((A.weakInfo||[]).filter(w=>w.up && +w.up.t>0).map(w=>+w.up.t)))].filter(w=>w>=1 && w<HL).sort((x,y)=>x-y).slice(0, 3); // 개전 n턴 한정 약점 간파도 구간 끝
+  let pLate = null; // 첫 구간이 끝난 뒤 AF(실전 N턴에서 그 턴이 지난 AF — afRun)
   let afLate = null; // 구간 끝이 여럿이면(빅트 歴戦 5턴·다른 멤버 10턴) 구간마다 AF를 따로: [0,w1] = 3턴째 AF, (w1,w2] = w1+1턴째 AF … → 긴 전투(HL턴) 평균
   if(wEnds.length && S.afCycle!==false && !(ctx && ctx.stFast)){ const sv = res.sb; let acc = af*wEnds[0], prev = wEnds[0]; // 탐색 어림 단계(stFast)는 생략 — 정밀 단계에서
-    try{ for(let k=0; k<wEnds.length; k++){ A.realT = wEnds[k] + 1; A.tm.S0 = 2; A.lateAF = true; const v = capAF(afPick(coresFor('af', nz, false)).afS.v), until = k+1<wEnds.length ? wEnds[k+1] : HL; acc += v*(until - prev); prev = until; } }
+    try{ for(let k=0; k<wEnds.length; k++){ A.realT = wEnds[k] + 1; A.tm.S0 = 2; A.lateAF = true; const P = afPick(coresFor('af', nz, false)), v = capAF(P.afS.v), until = k+1<wEnds.length ? wEnds[k+1] : HL; if(k===0) pLate = {t: wEnds[0], cores: P.cs, afA: P.afA, afS: P.afS, pl: P.pl, w: P.w}; acc += v*(until - prev); prev = until; } }
     finally { A.lateAF = false; A.realT = 0; A.tm.S0 = 0; res.sb = sv; }
     afLate = {v: acc/HL, w: wEnds[0]/HL, h: HL, ends: wEnds}; }
   /* 버디 차지 스킬 존 각성(2026-10-18): 팀이 그 존(일반)을 깔 때만 — 차지가 모인 턴 시작에 써서 그 턴·다음 턴 극(SB 각성처럼 2턴), 차지 주기마다 다시.
@@ -3137,11 +3142,11 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   /* AF 안 버프 운용(순수)의 첫 AF(2026-10-20 점검): 그 전엔 그 버프를 건 적이 없어 3턴째 이후 AF도 다 걸어야 함 — 섞기(afBW < 1, 지속이 길어 AF 한 번 걸러 다시 거는 버프)여도 첫 AF는 'cast' */
   const afFirstOn = !!(afBufC && ctx && ctx._afBuff > 0 && afPlC && afBW < 0.999); let R3c = null; const r3Cast = () => R3c || (R3c = afWith('cast', mkR3));
   const afRun = (g0, lv, t, gen, f1)=>{ /* gen: 일반 '3턴째 이후' 값(지속 딜·SB 주기·2턴째 평균) — sb_full 상태 켜진 턴(onT) 무시(2026-10-19 점검), f1: 순수 AF 안 버프 운용의 첫 AF */ g0 = Math.max(50, Math.min(100, Math.round(g0/10)*10)); const bU = !!(bzG && bzG.up && lv>=2), zH = bU ? bzG.z : nz; // bU: 버디가 각성시킨 극 존의 AF
-    const lv2 = !(zH && zH.level>=2) || lv>=2, tOn = !gen && onT(t), tc = t>=3 || tOn ? 3 : t===2 ? 2 : 1, fC = !!(f1 && afFirstOn && !bU && !tOn); const k=g0+(lv2?'a':'b')+(bU?'B':'')+tc+(tOn?'O':'')+(fC?'F':''); if(afMemo[k]) return afMemo[k]; // tOn: 상태가 켜진 턴(sb_full)
+    const lv2 = !(zH && zH.level>=2) || lv>=2, tOn = !gen && onT(t), tc = t>=3 || tOn ? 3 : t===2 ? 2 : 1, fC = !!(f1 && afFirstOn && !bU && !tOn), lt = !!(!gen && pLate && t > pLate.t && tc===3 && !bU && !tOn && !fC); const k=g0+(lv2?'a':'b')+(bU?'B':'')+tc+(tOn?'O':'')+(fC?'F':'')+(lt?'L':''); if(afMemo[k]) return afMemo[k]; // tOn: 상태가 켜진 턴(sb_full), lt: 개전 상태·약점 간파가 끝난 뒤 AF(2026-10-20)
     if(tc===2){ const p = afRun(g0, lv, 1, true), q = afRun(g0, lv, 3, true, fC), m = (x,y)=>(x+y)/2; // 2턴째 AF: 1턴째·3턴째의 중간
       return (afMemo[k] = {g0, dmg:m(p.dmg,q.dmg), per:p.per.map((v,i)=>m(v,q.per[i])), acts:m(p.acts,q.acts), fin:m(p.fin,q.fin), avg:m(p.avg,q.avg), n:p.n.map((v,i)=>m(v,q.n[i])), nS:(p.nS||p.n).map((v,i)=>m(v,(q.nS||q.n)[i]))}); }
     const PB = bU ? (tc===3 ? bzG.P3 : bzG.P1) : null;
-    const R3x = tc===3 && fC ? r3Cast() : R3, ON = tOn && !PB ? onVals() : null, cs = PB ? PB.cs : ON ? ON.cs : tc===3 ? R3x.cores : afCores, a0 = PB ? PB.afA : ON ? ON.afA : tc===3 ? R3x.afA : afA, zU = lv2 ? zH : nzL1;
+    const R3x = tc===3 && fC ? r3Cast() : lt ? pLate : R3, ON = tOn && !PB ? onVals() : null, cs = PB ? PB.cs : ON ? ON.cs : tc===3 ? R3x.cores : afCores, a0 = PB ? PB.afA : ON ? ON.afA : tc===3 ? R3x.afA : afA, zU = lv2 ? zH : nzL1;
     const cC = S.comboCap>0 ? S.comboCap : Infinity, P0 = PB || ON || (tc===3 ? R3x : P1), pl0 = P0 && P0.pl, w0 = pl0 ? (P0.w!=null ? +P0.w : 1) : 0; // AF 안 버프 행동(afMd)
     if(g0<100 && pl0){ /* 게이지 g0%에서 시작: 버프 행동을 거는 AF(pl0)·안 거는 AF를 같은 비율(w0)로 */
       const runA = pl => { const a1 = afActionsOf(team, progs, cs, zU, enemy, S, g0, undefined, pl || undefined, lkAt(tc)), n = pl ? a1.n.map((v,i)=>Math.max(0, v - pl[i].length)) : a1.n, gn = afG(cs, n), avg = Math.min(0.75+0.5*gn, cC), fin = Math.min(0.75+gn, cC);
