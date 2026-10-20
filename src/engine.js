@@ -2785,7 +2785,10 @@ function evalTeamA(team, progs, enemy, S, cap, ctx){
    탐색 어림(stFast)은 어림 가동률(exFast) 한 번 */
 function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
   const exOK = S && S.exModel!==false && !(S && S.exG), exI = exOK ? team.map((c,i)=> c && c.exD && c.bact && c.bact.exOnly ? i : -1).filter(i=>i>=0) : [];
-  if(!exOK || !team.some(c=>c && c.exD) || (ctx && ctx.stFast)) return evalTeamZ(team, progs, enemy, S, cap, ctx, sw); // EX 효과 항목이 없는 ES도 EX 피해·시점은 셈
+  if(!exOK || !team.some(c=>c && c.exD)) return evalTeamZ(team, progs, enemy, S, cap, ctx, sw); // EX 효과 항목이 없는 ES도 EX 피해·시점은 셈
+  /* 탐색 어림·최고점(허수아비만 봄)은 한 번만: 효과 항목은 어림 가동률(exFast), AF 게이지 EX는 어림 시점으로 지속 딜 충전만(S.exAfgAvg) */
+  if((ctx && ctx.stFast) || (ctx && ctx.mode==='burst')){ const fa = team.filter(c=>c && c.exD && c.exD.afg); if(!fa.length || S.exAfg===false) return evalTeamZ(team, progs, enemy, S, cap, ctx, sw);
+    const g = fa.reduce((a,c)=>a + (c.exD.afg[0]||0)*exFast(c)/Math.max(1, c.exD.dur||1), 0); /* 턴당 평균 = 첫 값 × 나간 횟수 ÷ 긴 전투(어림 가동률 ÷ 지속) */ return evalTeamZ(team, progs, enemy, ({...S, ...{exAfgAvg: g}}), cap, ctx, sw); }
   /* EX를 노린 계획(2026-10-21): EX는 100%에서 켠 AF에서만 나가니, AF를 100%에서만 켜는 계획도 계산해 성향 기준이 큰 쪽 — 측정해 보니 무작위 ES 조합 45개(실전 3·6턴)에서 나아진 게 거의 없고(최대 +0.1%) 계산만 1.5배라 기본은 끔(S.exPlan=true면 켬) */
   if(!S.afMin100 && !S.afInj && S.exPlan===true && team.some(c=>c && c.exD && ((c.bact && c.bact.exOnly) || c.exD.afg))){
     const a = evalTeamX(team, progs, enemy, ({...S, ...{exPlan: false}}), cap, ctx, sw), b = evalTeamX(team, progs, enemy, ({...S, ...{exPlan: false, afMin100: true}}), cap, ctx, sw), vk = evalKey(ctx);
@@ -2806,16 +2809,20 @@ function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
   const TL = exTimeline(P, HL, afAt, actsAt), LA = P.map((m,k)=>({...m, on: TL.on[k], first: TL.first[k], n: TL.n[k], f: TL.on[k].size/HL})).filter(m=>m.gate), L = LA.filter(m=>exI.includes(m.i));
   /* EX의 AF 게이지(2026-10-21 — 뮬루스(ES) 턴 종료 50%(쓸 때마다 30·10%)·나기(ES) 50%·플람라피스(ES) 25%, 딩 DB '발동한 턴으로부터 1턴 경과하는 턴' 종료): EX가 나간 다음 턴 끝에 그만큼 →
      실전 계획에 넣어(S.afInj {턴: %}) 한 번 더 계산, 지속 딜은 긴 전투 평균만큼 평상 턴 충전에(S.exAfgAvg) */
-  if(!S.afInj && S.exAfg!==false && P.some(m=>m.d.afg)){ const inj = {}, used = P.map(()=>0); let tot = 0;
+  if(S.exAfg!==false && P.some(m=>m.d.afg)){ const inj = {}, used = P.map(()=>0); let tot = 0;
     for(const f of TL.fires){ const m = P[f.k]; if(!m || !m.d.afg) continue; const v = m.d.afg[Math.min(used[f.k], m.d.afg.length-1)]; used[f.k]++; if(f.t+1 <= HL){ inj[f.t+1] = (inj[f.t+1]||0) + v; tot += v; } }
-    if(tot>0) return evalTeamX(team, progs, enemy, ({...S, ...{afInj: inj, exAfgAvg: tot/HL}}), cap, ctx, sw); }
+    /* 넣은 게이지로 계획이 바뀌면 EX 시점도 바뀌니 시점이 그대로일 때까지 다시(최대 3번, 2026-10-21 점검: 한 번만 하면 EX가 안 나간 턴에 게이지가 들어가던 것), 같은 변형으로(워커·화면 값이 같게) */
+    if(JSON.stringify(inj) !== JSON.stringify(S.afInj || {}) && (+S.afInjR||0) < 3){
+      const vr0 = ctx && ctx.variant ? ctx.variant : {sbOff: e0.sbOff || null, uni: e0.uni || null, songOff: e0.songOff || null, azBy: e0.azBy==null ? null : e0.azBy, redOff: !!e0.redOff, afBuff: +e0.afBuf||0};
+      return evalTeamX(team, progs, enemy, ({...S, ...{afInj: inj, exAfgAvg: tot/HL, afInjR: (+S.afInjR||0) + 1}}), cap, ({...ctx||{}, ...{variant: vr0}}), sw); } }
   const L1 = Math.min(10, 1 + P.reduce((a,m)=>a + Math.max(0, m.d.lv - 1), 0));
   const info = LA.map(x=>({id: x.id, name: x.name, first: x.first || null, dur: x.d.dur, lv: L1, n: x.n, onN: [...x.on].filter(t=>t<=N).sort((a,b)=>a-b), f: +x.f.toFixed(3), afg: x.d.afg ? x.d.afg[0] : 0}));
   /* EX 피해(game-info AF まとめ 4-2-2: 'AF必殺技 + AF中の合計ダメージ量の35%', 1타 상한 99.99억 — AF 필살기 몫은 작아 뺌): EX가 나간 AF 턴에 그 AF 피해 × 0.35, 지속 딜은 긴 전투 중 나간 횟수만큼 */
   const exHit = d => Math.min(9999999999, 0.35*Math.max(0, +d||0));
   const exDmg = ev => { if(!TL.fires.length) return; const who = f => { const m = P[f.k] || P[0]; return team.indexOf(team[m.i]); };
     if(ev.bsim && ev.bsim.turns && !ev.score){ const turns = ev.bsim.turns.slice(), per = (ev.bsim.per||[]).slice(); let add = 0;
-      for(const f of TL.fires){ if(f.t>N) continue; const r = turns[f.t-1]; if(!r || !r.af) continue; const x = exHit(r.afD!=null ? r.afD : r.d), sc = (per.reduce((a,v)=>a+(+v||0),0))/Math.max(1, +ev.bsim.total||0); /* per는 total과 단위가 달라 비율로 */
+      const sc = (per.reduce((a,v)=>a+(+v||0),0))/Math.max(1, +ev.bsim.total||0); /* per는 total과 단위가 달라 비율로(고치기 전 값으로 한 번) */
+      for(const f of TL.fires){ if(f.t>N) continue; const r = turns[f.t-1]; if(!r || !r.af) continue; const x = exHit(r.afD!=null ? r.afD : r.d);
         turns[f.t-1] = ({...r, ...{d: (+r.d||0) + x, exHit: x}}); add += x; const wi = who(f); if(per[wi]!=null) per[wi] += x*sc; }
       if(add>0){ ev.bsim = ({...ev.bsim, ...{turns, total: (+ev.bsim.total||0) + add, per}}); ev.burst = (+ev.burst||0) + add; } }
     const nH = TL.fires.length, aV = ev.afLate ? +ev.afLate.v||0 : +ev.af||0; if(nH && aV>0 && ev.sustain!=null){ ev.sustain = +ev.sustain + nH*exHit(aV)/HL; ev.exSusAdd = nH*exHit(aV)/HL; } };
@@ -2842,12 +2849,20 @@ function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
       const c0 = cnt(recA); e0.burst = c0>0 ? e0.score.total*cnt(turns)/c0 : e0.score.total; }
     else e0.burst = tot; }
   // 지속 딜·처치 턴 값: 긴 전투 HL턴 중 켜진 턴 비율(켜진 조합별)로 섞음
-  const cnt = new Map(); for(let t=1;t<=HL;t++){ const ids = onAt(t); if(!ids.length) continue; const k = ids.join(','); cnt.set(k, (cnt.get(k)||0) + 1); }
-  const mixK = ['sustain','sustainNoAF','sustainSB','af','af1'], base = Object.fromEntries(mixK.map(k=>[k, +e0[k]||0])), afl0 = e0.afLate ? +e0.afLate.v||0 : null; let fOn = 0;
-  const acc = Object.fromEntries(mixK.map(k=>[k, 0])); let aflA = 0;
-  for(const [k, n] of cnt){ const e = evOn(k.split(',')), w = n/HL; fOn += w; for(const q of mixK) acc[q] += w*(+e[q]||0); if(afl0!=null) aflA += w*(e.afLate ? +e.afLate.v||0 : +e.af||0); }
-  for(const q of mixK) if(e0[q]!=null) e0[q] = base[q]*(1-fOn) + acc[q];
-  if(afl0!=null) e0.afLate = ({...e0.afLate, ...{v: afl0*(1-fOn) + aflA}});
+  /* 평상 턴 몫(sustainNoAF × 평상 턴 비율)은 평상 턴 중 켜진 비율, 나머지(AF·SB·턴 종료)와 AF 값은 AF 턴 중 켜진 비율로(2026-10-21 점검: EX 효과는 AF 다음 턴부터라 짧은 EX는 AF 턴에 거의 안 켜짐 — 전체 턴 비율로 섞으면 AF 몫이 과대). 1턴째 AF(af1)는 그대로 */
+  const cntN = new Map(), cntA = new Map(); let nN = 0, nA = 0;
+  for(let t=1;t<=HL;t++){ const isA = afAt(t)>0; if(isA) nA++; else nN++; const ids = onAt(t); if(!ids.length) continue; const k = ids.join(','), M = isA ? cntA : cntN; M.set(k, (M.get(k)||0) + 1); }
+  if(!nA){ for(const [k, n] of cntN) cntA.set(k, n); nA = nN; } // AF가 없으면 같은 비율
+  const nw = Math.max(0, Math.min(1, +e0.susNW>=0 ? +e0.susNW : 1)), split = e => { const Nn = (+e.sustainNoAF||0)*nw; return {Nn, R: (+e.sustain||0) - Nn}; };
+  const b0 = split(e0), afl0 = e0.afLate ? +e0.afLate.v||0 : null; let fN = 0, fA = 0, nnA = 0, rA = 0, sNA = 0, sbA = 0, afA0 = 0, aflA = 0;
+  for(const [k, n] of cntN){ const e = evOn(k.split(',')), w = n/Math.max(1, nN); fN += w; const q = split(e); nnA += w*q.Nn; sNA += w*(+e.sustainNoAF||0); }
+  for(const [k, n] of cntA){ const e = evOn(k.split(',')), w = n/Math.max(1, nA); fA += w; const q = split(e); rA += w*q.R; sbA += w*(+e.sustainSB||0); afA0 += w*(+e.af||0); if(afl0!=null) aflA += w*(e.afLate ? +e.afLate.v||0 : +e.af||0); }
+  const base = {sustain: +e0.sustain||0};
+  e0.sustain = b0.Nn*(1-fN) + nnA + b0.R*(1-fA) + rA;
+  if(e0.sustainNoAF!=null) e0.sustainNoAF = (+e0.sustainNoAF||0)*(1-fN) + sNA;
+  if(e0.sustainSB!=null) e0.sustainSB = (+e0.sustainSB||0)*(1-fA) + sbA;
+  if(e0.af!=null) e0.af = (+e0.af||0)*(1-fA) + afA0;
+  if(afl0!=null) e0.afLate = ({...e0.afLate, ...{v: afl0*(1-fA) + aflA}});
   exDmg(e0); e0.exInfo = info; e0.exSus0 = base.sustain; e0.exFires = TL.fires.length; return e0;
 }
 function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
@@ -2947,7 +2962,7 @@ const NOAW_C = new WeakMap();
 function evalTeam0(team, progs, enemy, S, cap, ctx){
   if(team.some((c,i)=>c && c.bact && c.bact.noAw && !(progs[i] && (progs[i].sbOK || progs[i].sbAw)))) team = team.map((c,i)=>{ if(!(c && c.bact && c.bact.noAw) || (progs[i] && (progs[i].sbOK || progs[i].sbAw))) return c; let v = NOAW_C.get(c); if(!v){ v = ({...c, ...{bact: c.bact.noAw}}); NOAW_C.set(c, v); } return v; }); // 성도각성 전: aw 행동은 버프 행동
   if(ctx && ctx.maxBack===0 && !progs.noBack){ progs = progs.slice(); progs.noBack = true; } // 후열 없음: VC(교대) 효과·VC 존 없음
-  const A = teamAgg(team); A.azPick = ctx && ctx._azPick || null; A.noBack = !!progs.noBack; A.adNone = !!(ctx && ctx._adNone); A.adOff = true; // 臨機応変은 평상 턴 시뮬이 그 스킬을 다는지 정한 뒤부터(행동 가치 순서는 예전 그대로)
+  const A = teamAgg(team); A.azPick = ctx && ctx._azPick || null; A.noBack = !!progs.noBack; A.adNone = !!(ctx && ctx._adNone) || !!(S && S.adaptAll===false); A.adOff = true; // 臨機応変은 평상 턴 시뮬이 그 스킬을 다는지 정한 뒤부터(행동 가치 순서는 예전 그대로)
   A.inf = inflictOf(team, progs, S);
   A.echg = echgOf(team, progs);
   A.bud = ctx && ctx.buddy ? budAgg(ctx.buddy, team, enemy, A) : null;
@@ -3339,7 +3354,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     ss: ssK>1, ssAF: S.starseaAF!==false, afGain, afDrain: dInj ? {turns: dInj.turns, g0: dInj.g0} : null, g0: st.g, s0: Math.min(50, 12.5*team.length), sbAct: S.sbPerAct!=null ? +S.sbPerAct : 2.5, front: team.length, sbW, sbWN, afRun, /* SB 게이지 시작 = 전열 1명당 +25/200(2026-10-19 game-info 星導覚醒 'ステラバーストの細かい仕様' — 예전엔 천·명 중 많은 쪽 수만), sbW: 멤버별 행동 1회 충전 배율(스텔라 보드 天冥 어빌리티 증가(중) = +10/+5) */
     refill: (()=>{ const rc = sbIdx.length ? team.find(c=>c.afRefillR && c.afRefillR.on==='sb') : null; return rc ? {to:+rc.afRefillR.to||100, cost:+rc.afRefillR.cost||0, e0: +rc.afRefillR.start>0 ? 1 : 0, noAF: rc.afRefillR.af===false} : null; })(), // e0: 개전에 축적 1개(히스메나(ES) エスパーダ), noAF: AF 안 SB로는 안 채움
     teSB: teSB0};
-  simIn.afSbG = afSbG; if(S.afInj) simIn.afInj = S.afInj; if(S.afMin100) simIn.afMin100 = true; // afMin100: AF는 게이지 100%에서만(EX必殺技 계획 비교용) simIn.afFirst = afFirstOn; // afFirst: 순수 AF 안 버프 운용의 첫 AF는 버프를 다 걸고(afRun f1)
+  simIn.afSbG = afSbG; if(S.afInj) simIn.afInj = S.afInj; if(S.afMin100) simIn.afMin100 = true; /* afMin100: AF는 게이지 100%에서만(EX必殺技 계획 비교용) */ simIn.afFirst = afFirstOn; // afFirst: 순수 AF 안 버프 운용의 첫 AF는 버프를 다 걸고(afRun f1)
   simIn.afTotCap = +S.afTotalCap||0; // AF 한 번 총 피해 상한
   simIn.afOffG = afOffG; out.afOffG = simIn.afOffG>0 ? +simIn.afOffG.toFixed(1) : 0; // AF 턴 뒤 게이지(빅트(AS) AF 턴 종료 공격 포함)
   // 지속 딜의 AF도 극 존이 계속 유지될 때만 극(2026-10-17): 개전 자동·1회 각성(네코코(ES) 颯 첫 사용 등)은 2턴 뒤 일반 존 — 평상 턴(susOf)과 같은 비율(일반 0.6·극 0.4)로 섞음. SB로 다시 각성(sbAw)하면 그대로
