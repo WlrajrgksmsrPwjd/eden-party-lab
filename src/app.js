@@ -1056,7 +1056,7 @@ function renderResults(r, boss, enemy, mode){
       h+=`<button type="button" class="deckrow" data-deck="${key}" aria-expanded="false"><span class="dk">${d.focus.kind==='elem'?`<span class="dot ${d.focus.v}"></span> `:''}${esc(focusLabel(d.focus))}${zoneOfFocus(d.focus)?` <small class="dz">${esc(zoneOfFocus(d.focus))}</small>`:''}</span><span class="dm">${d.team.map(c=>esc(c.name)).join(', ')}</span><span class="num">${(d.rel*100).toFixed(0)}</span></button><div class="deckcard" id="dc-${key}" hidden></div>`; });
     h+='</section>';
   }
-  if(all.length && !state.sample && !(all[0] && all[0].shared)) h+=`<section class="growbox" id="growBox"><h3>육성 추천</h3><p class="hint" style="margin:0">위 조합 멤버 중 한 단계만 올렸을 때(성도각성 · 천명치 다음 단계 · 현현 무기) 이 성향 점수가 가장 많이 오르는 것. 다른 조합으로 바뀌는 효과는 세지 않습니다.</p><button type="button" class="btn small" id="growRun">계산하기</button><div id="growList"></div><h3 style="margin-top:14px">획득 추천</h3><p class="hint" style="margin:0">안 가진 SS·S 캐릭터(천명치 80·성도각성 가정)를 위 1~3위 조합 멤버와 한 명씩 바꿔 넣어 봤을 때 가장 많이 오르는 캐릭터. 그 캐릭터 중심의 새 조합까지는 찾지 않습니다.</p><button type="button" class="btn small" id="getRun">계산하기</button><div id="getList"></div></section>`;
+  if(all.length && !state.sample && !(all[0] && all[0].shared)) h+=`<section class="growbox" id="growBox"><h3>육성 추천</h3><p class="hint" style="margin:0">위 조합 멤버 중 한 단계만 올렸을 때(성도각성 · 천명치 다음 단계 · 현현 무기) 이 성향 점수가 가장 많이 오르는 것. 다른 조합으로 바뀌는 효과는 세지 않습니다.</p><button type="button" class="btn small" id="growRun">계산하기</button><div id="growList"></div><h3 style="margin-top:14px">획득 추천</h3><p class="hint" style="margin:0">안 가진 SS·S 캐릭터(천명치 80·성도각성 가정)를 위 1~3위 조합 멤버와 한 명씩 바꿔 넣어 봤을 때 가장 많이 오르는 캐릭터. 그 캐릭터 중심의 새 조합까지는 찾지 않습니다.</p><button type="button" class="btn small" id="getRun">계산하기</button><div id="getList"></div><h3 style="margin-top:14px">생존 보강 교체</h3><p class="hint" style="margin:0">위 1~3위 조합 멤버 하나를 생존 지원(회복·배리어·피해 경감·부활 등)이 큰 보유 캐릭터로 바꿀 때, 딜 손해가 가장 적은 교체. AF가 9999억 상한에 넉넉히 닿는 조합은 손해가 작습니다.</p><button type="button" class="btn small" id="spRun">계산하기</button><div id="spList"></div></section>`;
   out.innerHTML=h;
   GROW.all = all; GROW.r = r; GROW.mode = mode; GROW.tok++; cancelChan('gaunt'); // 결과를 새로 그리면 하던 연전 계산(워커)은 버림
   if(boss && boss.gauntlet && all.length && bv!=='stable'){ const tk = GROW.tok; setTimeout(()=>{ if(tk===GROW.tok) gauntRun(); }, 60); } // 연전 보스는 덱 N개 묶음을 바로 계산(2026-10-19 사용자 '안키 디그마는 파티 3개를 들고 가야')
@@ -1176,19 +1176,24 @@ async function growRun(){
   if(btn){ btn.disabled = true; btn.textContent = '계산 중…'; }
   try{
   // 기준값도 지금 설정으로 다시 계산(결과를 낸 뒤 설정·흉성을 바꿨으면 x.ev와 설정이 달라 증가율이 어긋남)
-  const top = GROW.all.slice(0, 5), s0 = []; for(const x of top){ let v = sc(x.ev, x.team); try{ v = sc(E.evalTeam(x.team, x.progs, en, S, cap, x.ctx || ctxOf({})), x.team); }catch(e){} s0.push(v); await yieldUI(); if(tok!==GROW.tok) return; }
+  const top = GROW.all.slice(0, 5), s0 = [], sF = [], fastC = x => Object.assign({}, x.ctx || ctxOf({}), {_azPick:null}); // 두 단계(2026-10-20 계산량): 변형 없이 어림 → 상위 12개만 정식 계산
+  for(const x of top){ let v = sc(x.ev, x.team), f = v; try{ v = sc(E.evalTeam(x.team, x.progs, en, S, cap, x.ctx || ctxOf({})), x.team); f = sc(E.evalTeam(x.team, x.progs, en, S, cap, fastC(x)), x.team); }catch(e){} s0.push(v); sF.push(f); await yieldUI(); if(tok!==GROW.tok) return; }
   const best = Math.max(1e-12, ...s0);
   const res = new Map(); // 캐릭터·항목 → {c, label, note, gains:[{rank, g}]}
   let n = 0, total = top.reduce((a,x)=>a + x.team.reduce((b,c)=>b + growCands(c).length, 0), 0);
   for(let k=0; k<top.length; k++){ const x = top[k];
     for(let i=0; i<x.team.length; i++){ const c = x.team[i]; if(!state.owned[c.id]) continue;
       for(const cd of growCands(c)){ if(tok!==GROW.tok) return;
-        let g = 0; try{ const p2 = x.progs.slice(); p2[i] = E.charProg(c, cd.own, S); const ev2 = E.evalTeam(x.team, p2, en, S, cap, x.ctx || ctxOf({})); g = sc(ev2, x.team)/Math.max(1e-12, s0[k]) - 1; }catch(e){}
+        let g = 0, p2 = null; try{ p2 = x.progs.slice(); p2[i] = E.charProg(c, cd.own, S); const ev2 = E.evalTeam(x.team, p2, en, S, cap, fastC(x)); g = sc(ev2, x.team)/Math.max(1e-12, sF[k]) - 1; }catch(e){}
         const key = c.id+'|'+cd.label; if(!res.has(key)) res.set(key, {c, label:cd.label, note:cd.note||'', gains:[]});
-        res.get(key).gains.push({rank:x.rank, g, w: s0[k]/best});
+        res.get(key).gains.push({rank:x.rank, g, w: s0[k]/best, k, p2});
         n++; if(btn) btn.textContent = `계산 중 ${n}/${total}`; await yieldUI(); } } }
   if(tok!==GROW.tok) return;
-  const L = [...res.values()].map(v=>Object.assign(v, {v: Math.max(...v.gains.map(q=>q.g*q.w))})).filter(v=>v.v>0.001).sort((a,b)=>b.v-a.v).slice(0, 10);
+  { const Q = [...res.values()].flatMap(v=>v.gains).filter(q=>q.g>0.001 && q.p2).sort((a,b)=>b.g*b.w - a.g*a.w).slice(0, 12); let m = 0; // 어림 상위 12개만 정식 계산
+    const keep = new Set(Q); for(const v of res.values()) v.gains = v.gains.filter(q=>keep.has(q));
+    for(const q of Q){ const x = top[q.k]; try{ const ev2 = E.evalTeam(x.team, q.p2, en, S, cap, x.ctx || ctxOf({})); q.g = sc(ev2, x.team)/Math.max(1e-12, s0[q.k]) - 1; }catch(e){}
+      m++; if(btn) btn.textContent = `정밀 계산 ${m}/${Q.length}`; await yieldUI(); if(tok!==GROW.tok) return; } }
+  const L = [...res.values()].filter(v=>v.gains.length).map(v=>Object.assign(v, {v: Math.max(...v.gains.map(q=>q.g*q.w))})).filter(v=>v.v>0.001).sort((a,b)=>b.v-a.v).slice(0, 10);
   const pct = v=>'+'+(v*100).toFixed(1)+'%';
   box.innerHTML = L.length ? `<ol class="growlist">${L.map(v=>`<li><b>${esc(v.c.name)}</b> ${esc(v.label)}${v.note?` <span class="hint">(${esc(v.note)})</span>`:''} — ${v.gains.filter(q=>q.g>0.001).sort((a,b)=>a.rank-b.rank).map(q=>`${q.rank}위 조합 <b>${pct(q.g)}</b>`).join(' · ')}</li>`).join('')}</ol><p class="hint" style="margin:4px 0 0">한 번에 하나씩 올린 값이고, 조합 점수가 1위에 가까울수록 앞에 둡니다.</p>`
     : '<p class="hint">위 조합 멤버는 이 단계들로 점수가 거의 안 바뀝니다(이미 다 키웠거나 효과가 작음).</p>';
@@ -1213,7 +1218,8 @@ async function getRun(){
   const cands = [...byId.values()].filter(c=>!state.owned[c.id] && !c._custom && (c.tier==='SS'||c.tier==='S') && !(P.excluded||[]).includes(c.id) && !cvSkip(c)).sort((a,b)=>(+b.score||0)-(+a.score||0) || (a.id<b.id?-1:1)).slice(0, 30);
   if(btn){ btn.disabled = true; btn.textContent = '계산 중…'; }
   try{
-  const top = GROW.all.slice(0, 3), s0 = []; for(const x of top){ let v = sc(x.ev, x.team); try{ v = sc(E.evalTeam(x.team, x.progs, en, S, cap, x.ctx || ctxOf({})), x.team); }catch(e){} s0.push(v); await yieldUI(); if(tok!==GROW.tok) return; }
+  const top = GROW.all.slice(0, 3), s0 = [], sF = [], fastC = x => Object.assign({}, x.ctx || ctxOf({}), {_azPick:null}); // 두 단계(2026-10-20 계산량): 변형 없이 한 번씩 어림(sF 기준) → 상위만 정식 계산
+  for(const x of top){ let v = sc(x.ev, x.team), f = v; try{ v = sc(E.evalTeam(x.team, x.progs, en, S, cap, x.ctx || ctxOf({})), x.team); f = sc(E.evalTeam(x.team, x.progs, en, S, cap, fastC(x)), x.team); }catch(e){} s0.push(v); sF.push(f); await yieldUI(); if(tok!==GROW.tok) return; }
   const best = Math.max(1e-12, ...s0);
   const total = cands.length*top.reduce((a,x)=>a + x.team.length, 0); let n = 0; const out = [];
   for(const c of cands){ const own = Object.assign(BASE_OWN(), {t:80, s:!!c.stellar}); let pr = null; try{ pr = E.charProg(c, own, S); }catch(e){ continue; } let bestV = 0, bestAt = null;
@@ -1221,14 +1227,50 @@ async function getRun(){
       for(let i=0; i<x.team.length; i++){ n++; if(tok!==GROW.tok) return; if(lock.has(x.team[i].id)) continue;
         const t2 = x.team.slice(); t2[i] = c; if(E.dupBase(t2)) continue;
         const p2 = x.progs.slice(); p2[i] = pr;
-        let g = -1; try{ const ev2 = E.evalTeam(t2, p2, en, S, cap, x.ctx || ctxOf({})); g = sc(ev2, t2)/Math.max(1e-12, s0[k]) - 1; }catch(e){}
-        const v = g*(s0[k]/best); if(v > bestV){ bestV = v; bestAt = {rank:x.rank, out:x.team[i], g}; }
+        let g = -1; try{ const ev2 = E.evalTeam(t2, p2, en, S, cap, fastC(x)); g = sc(ev2, t2)/Math.max(1e-12, sF[k]) - 1; }catch(e){}
+        const v = g*(s0[k]/best); if(v > bestV){ bestV = v; bestAt = {rank:x.rank, out:x.team[i], g, k, i, pr}; }
         if(btn) btn.textContent = `계산 중 ${n}/${total}`; await yieldUI(); } }
     if(bestAt) out.push({c, v:bestV, at:bestAt}); }
   if(tok!==GROW.tok) return;
+  { const S2 = out.filter(o=>o.v>0).sort((a,b)=>b.v-a.v).slice(0, 15); let m = 0; // 어림 상위 15명만 정식 계산(변형·AF 안 버프 포함)
+    for(const o of S2){ const x = top[o.at.k], t2 = x.team.slice(), p2 = x.progs.slice(); t2[o.at.i] = o.c; p2[o.at.i] = o.at.pr;
+      try{ const ev2 = E.evalTeam(t2, p2, en, S, cap, x.ctx || ctxOf({})); o.at.g = sc(ev2, t2)/Math.max(1e-12, s0[o.at.k]) - 1; o.v = o.at.g*(s0[o.at.k]/best); }catch(e){}
+      m++; if(btn) btn.textContent = `정밀 계산 ${m}/${S2.length}`; await yieldUI(); if(tok!==GROW.tok) return; }
+    out.length = 0; out.push(...S2); }
   const L = out.filter(o=>o.v>0.005).sort((a,b)=>b.v-a.v).slice(0, 10), pct = v=>'+'+(v*100).toFixed(1)+'%';
   box.innerHTML = L.length ? `<ol class="growlist">${L.map(o=>`<li><b>${esc(o.c.name)}</b> <span class="tier ${o.c.tier}">${esc(o.c.tier)}</span> — ${o.at.rank}위 조합의 ${esc(o.at.out.name)} 대신 <b>${pct(o.at.g)}</b></li>`).join('')}</ol><p class="hint" style="margin:4px 0 0">천명치 80·성도각성으로 가정한 값이고, 바꿔 넣은 조합 점수가 1위에 가까울수록 앞에 둡니다.</p>`
     : '<p class="hint">위 조합에 한 명씩 넣어서는 점수가 오르는 캐릭터가 없습니다.</p>';
+  } finally { if(btn && tok===GROW.tok){ btn.disabled = false; btn.textContent = '다시 계산'; } }
+}
+/* 생존 보강 교체(2026-10-20, 사용자 '천명 200 이상에 세팅 좋으면 맥뎀 찍을 파티원 구성이 자유로움'): 1~3위 조합 멤버를 생존 지원 큰 보유 캐릭터(엔진 생존 가중치 SURV_W·부활로 줄 세운 20명)로 하나씩 바꿔
+   생존이 5% 넘게 오르는 교체 중 실전 딜 손해가 가장 적은 것. 먼저 변형 없이 한 번씩(빠른 어림) 걸러 상위 6개만 정식 계산 — 측정: 사용자 보유 상위 조합은 어느 교체든 실전 딜 −30% 이상(존·디버프·AF 게이지가 맞물림) */
+async function surplusRun(){
+  const box = $('#spList'), btn = $('#spRun'); if(!box || !GROW.all) return;
+  const tok = GROW.tok, S = settings(), P = state.plan, lock = new Set(P.locked||[]), en = (LAST_PLAN && LAST_PLAN.enemy) || null;
+  const W = E.SURV_W || {}, supV = c => { const sp = c.sup || {}; let v = 0; for(const k of (E.SURV_CATS||[])) v += (W[k]||0)*(+sp[k]||0); return v + 5*(+sp.revive||0); };
+  const top = GROW.all.slice(0, 3);
+  const cands = Object.keys(state.owned).map(id=>byId.get(id)).filter(c=>c && !(P.excluded||[]).includes(c.id) && supV(c)>0).sort((a,b)=>supV(b)-supV(a) || (a.id<b.id?-1:1)).slice(0, 20);
+  const ownOf = c => Object.assign(BASE_OWN(), state.owned[c.id]||{}), totB = ev => +((ev && ev.bsim && ev.bsim.total) || (ev && ev.burst) || 0);
+  if(btn){ btn.disabled = true; btn.textContent = '계산 중…'; }
+  try{
+  const fastC = x => Object.assign({}, x.ctx || ctxOf({}), {_azPick:null}), base = [], baseF = [];
+  for(const x of top){ let ev = x.ev, ef = x.ev; try{ ev = E.evalTeam(x.team, x.progs, en, S, cap, x.ctx || ctxOf({})); ef = E.evalTeam(x.team, x.progs, en, S, cap, fastC(x)); }catch(e){} base.push(ev); baseF.push(ef); await yieldUI(); if(tok!==GROW.tok) return; }
+  const total = cands.length*top.reduce((a,x)=>a + x.team.length, 0); let n = 0; const pre = new Map();
+  for(let k=0; k<top.length; k++){ const x = top[k], b0 = baseF[k]; if(!b0) continue; const B = totB(b0), Sv = +b0.surv||0; if(!(B>0)) continue; // 어림 단계는 어림 기준값과 비교
+    for(const c of cands){ if(x.team.some(m=>m.id===c.id)){ n += x.team.length; continue; } let pr = null; try{ pr = E.charProg(c, ownOf(c), S); }catch(e){ n += x.team.length; continue; }
+      for(let i=0; i<x.team.length; i++){ n++; if(tok!==GROW.tok) return; if(lock.has(x.team[i].id) || supV(c) <= supV(x.team[i])) continue;
+        const t2 = x.team.slice(); t2[i] = c; if(E.dupBase(t2)) continue; const p2 = x.progs.slice(); p2[i] = pr;
+        try{ const ev2 = E.evalTeam(t2, p2, en, S, cap, fastC(x)), V2 = +ev2.surv||0; // 빠른 어림(변형 없이 한 번)
+          if(V2 > Sv*1.05 + 1){ const key = k+'|'+i, q = {k, i, c, pr, dB: totB(ev2)/B - 1}; if(!pre.has(key) || pre.get(key).dB < q.dB) pre.set(key, q); } }catch(e){}
+        if(btn) btn.textContent = `어림 계산 ${n}/${total}`; await yieldUI(); } } }
+  if(tok!==GROW.tok) return;
+  const pick = [0,1,2].flatMap(k=>[...pre.values()].filter(q=>q.k===k).sort((a,b)=>b.dB-a.dB).slice(0, 3)), out = []; let m = 0; // 조합마다 어림 상위 3자리만 정식 계산(조합끼리 어림 기준이 달라 섞어 자르지 않음)
+  for(const q of pick){ const x = top[q.k], b0 = base[q.k], t2 = x.team.slice(), p2 = x.progs.slice(); t2[q.i] = q.c; p2[q.i] = q.pr;
+    try{ const ev2 = E.evalTeam(t2, p2, en, S, cap, x.ctx || ctxOf({})); out.push({rank:x.rank, c:q.c, outC:x.team[q.i], dB: totB(ev2)/totB(b0) - 1, dS: (+b0.sustain>0 ? (+ev2.sustain||0)/(+b0.sustain) - 1 : 0), v0: +b0.surv||0, v1: +ev2.surv||0, capped: !!(b0.bsim && (b0.bsim.turns||[]).some(r=>r.afCap))}); }catch(e){}
+    m++; if(btn) btn.textContent = `정밀 계산 ${m}/${pick.length}`; await yieldUI(); if(tok!==GROW.tok) return; }
+  const L = out.filter(o=>o.v1 > o.v0).sort((a,b)=>b.dB-a.dB), pc = v => (v>=0?'+':'')+(v*100).toFixed(1)+'%';
+  box.innerHTML = L.length ? `<ol class="growlist">${L.map(o=>`<li>${o.rank}위 조합 <b>${esc(o.outC.name)}</b> → <b>${esc(o.c.name)}</b> — 생존 ${Math.round(o.v0)} → <b>${Math.round(o.v1)}</b> · 실전 딜 <b>${pc(o.dB)}</b> · 지속 딜 ${pc(o.dS)}${o.capped?' <span class="hint">(AF 상한에 닿던 조합)</span>':''}</li>`).join('')}</ol><p class="hint" style="margin:4px 0 0">${L[0].dB > -0.05 ? '딜을 거의 안 잃고 생존을 올릴 수 있는 교체가 있어요.' : '어느 교체든 딜이 꽤 줄어요 — 이 조합들은 존·디버프·AF 게이지가 서로 맞물려 있어 한 명만 바꿔도 화력이 빠집니다.'} 보유한 천명치·성도각성 그대로, 같은 자리에선 딜 손해가 가장 적은 후보 하나만.</p>`
+    : '<p class="hint">생존이 오르는 교체 후보가 없습니다(이미 생존 지원이 큰 캐릭터가 들어 있음).</p>';
   } finally { if(btn && tok===GROW.tok){ btn.disabled = false; btn.textContent = '다시 계산'; } }
 }
 const sameTeam=(a,b)=>a.length===b.length && a.every(c=>b.some(d=>d.id===c.id));
@@ -2814,7 +2856,7 @@ function bind(){
   $('#plCompBox').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const C=plOf().comp; const L = b.dataset.pce ? C.elem : C.weap, v=b.dataset.pce||b.dataset.pcw;
     const i=L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); C.on=true; plChanged(); });
   $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
-  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); if(e.target.closest('#getRun')) getRun(); if(e.target.closest('#gauntRun')) gauntRun(); });
+  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); if(e.target.closest('#getRun')) getRun(); if(e.target.closest('#spRun')) surplusRun(); if(e.target.closest('#gauntRun')) gauntRun(); });
   $('#planBossQ').addEventListener('input', ()=>renderPlanControls());
   $('#bossCatSel').addEventListener('change', e=>{ state.plan.bossCat = e.target.value; state.plan.bossSub = ''; save(); renderPlanControls(); });
   $('#bossSubSel').addEventListener('change', e=>{ state.plan.bossSub = e.target.value; save(); renderPlanControls(); }); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
