@@ -178,7 +178,7 @@ function workerMain(){
   /* 이 함수는 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
   const E = self.AEOpt;
   let byId = new Map(), SP = null;
-  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null, redOff: !!ev.redOff, afBuff: +ev.afBuf||0} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
+  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null, redOff: !!ev.redOff, afBuff: +ev.afBuf||0, adNone: ev.adNone==null ? null : !!ev.adNone} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})),
@@ -2640,7 +2640,10 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   /* EX必殺技(2026-10-20): 게이지 100%에서 켠 AF가 끝날 때 누적 AF 행동이 EX 레벨 기준(⌈1200 ÷ 레벨²⌉)을 넘으면 자동 — 엔진 ev.exInfo */
   const exL = Array.isArray(ev.exInfo) && ev.exInfo.length ? ' · ' + ev.exInfo.map(q=>{ const on = q.onN || [];
     return `<b>${esc(q.name)}</b> EX必殺技: ${q.first ? `처음 ${q.first}턴째 AF 뒤 ${q.dur>=99 ? '끝까지' : q.dur+'턴'}${on.length ? ` (실전 ${on[0]}~${on[on.length-1]}턴)` : ` (실전 ${T.length}턴 뒤)`} · 긴 전투 ${Math.round(100*q.f)}% 켜짐` : '긴 전투에서도 거의 안 나감'} <span class="hint">(게이지 100%에서 켠 AF가 끝날 때 — EX 레벨은 턴마다 +1·AF 뒤 1, AF 행동 ⌈1200÷레벨²⌉회 누적${q.lv>1 ? `, 시작 Lv${q.lv}` : ''})</span>`; }).join(' · ') : '';
-  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${exL}${full}${noZ}</div>`; }
+  /* 아군 전체 臨機応変(짭코코, 2026-10-21): 왼쪽 칸 아군의 무기로 타입이 정해짐 */
+  const WTK = {slash:'참격', pierce:'찌르기', blunt:'타격', magic:'마법'};
+  const adL = ev.adT && !ev.adNone ? ` · <b>${esc(ev.adT.by)}</b> 임기응변: 아군 전체 공격 타입 → <b>${esc(WTK[ev.adT.t]||ev.adT.t)}</b> <span class="hint">(${esc(ev.adT.by)} 바로 왼쪽에 ${esc((ev.adT.from||[]).join('·'))} 중 하나)</span>` : ev.adNone && x.team && x.team.some(c=>c && c.adaptAll) ? ` · <span class="hint">임기응변으로 타입을 바꾸지 않는 쪽이 나음(짭코코를 맨 왼쪽에)</span>` : '';
+  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${exL}${adL}${full}${noZ}</div>`; }
 /* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
 function zlLine(ev){ const L = ev && Array.isArray(ev.zLate) ? ev.zLate.filter(p=>!p.auto || p.from) : []; if(!L.length) return '';
   const z0 = ev.normal && ev.normal.zone ? ev.normal.zone.label : '존 없음';

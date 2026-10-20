@@ -643,6 +643,7 @@ function prepChar(c){
     afAnim: +c.af_anim > 0 ? +c.af_anim : null, // AF 중 스킬 연출 시간(초), 데이터 없으면 설정값
     exD: c.exsp && !c.exsp.off ? {lv: Math.max(1, +c.exsp.lv||1), lvSa: +c.exsp.lv_sa||0, turn: +c.exsp.turn||0, af: +c.exsp.af||0, sb: c.exsp.sb==='max' ? 'max' : +c.exsp.sb||0, zone: +c.exsp.zone||0, ctr: +c.exsp.ctr||0, dur: Math.max(1, +c.exsp.dur||3), max: Math.min(10, +c.exsp.max||10),
       win: Array.isArray(c.exsp.win) && c.exsp.win.length===2 ? c.exsp.win.map(Number) : null, winAdd: +c.exsp.win_add||0, wt: c.exsp.wt && c.exsp.wt.wt ? {wt: c.exsp.wt.wt, n: +c.exsp.wt.n||5, add: +c.exsp.wt.add||1} : null, wtAdd: c.exsp.wt ? +c.exsp.wt.add||1 : 0} : null, // EX必殺技 레벨·지속(data/ex.json)
+    adaptAll: c.adapt_all || null, // 아군 전체 臨機応変(왼쪽 아군 무기 타입, 짭코코)
     afStartR: c.af_start || null, afRefillR: c.af_refill || null, afTurnR: c.af_turn || null, // afTurnR: 행동 밖 AF 게이지(턴 시작·종료 패시브, af_start.json _turn)
     base: c.base || ('jp:'+String(c.name_jp||c.id).replace(/\((AS|ES)\)$/,'')), // 같은 캐릭터의 스타일 묶음 (한 파티에 하나만)
     // 선제: 버프·디버프를 거는 스킬이 속도와 무관하게 먼저 나감
@@ -1557,7 +1558,24 @@ function weakFrac(A, el, sit, zone){ let best = 0;
   return best; }
 /* 臨機応変(2026-10-16): 스킬 adapt 'weak' = 적 약점 타입(없으면 아군 약점 간파 타입)으로(니르야 必殺アビセ蹴り), 'front' = 전열에서 가장 많은 물리 공격 타입(월화의 영애 — 동수면 원래 타입) */
 const PHYS_WT = ['slash','pierce','blunt'];
+/* 아군 전체 臨機応変(2026-10-21, 알테마 고답의 요묘(짭코코) 猫染め御免ニャ: '対象キャラの武器種に応じて、斬・突・打・魔のいずれかの臨機応変を味方全体に永続付与' — 대상 = 전열 왼쪽 아군):
+   플레이어가 왼쪽에 둘 아군(= 타입)을 고른다고 보고, 적 약점 타입 → 아군 약점 간파 타입 → 지금 존의 공격 타입 순으로 아군 무기 타입 중에서(맞는 게 없으면 바꾸지 않음).
+   공격 타입만 바뀌고 스탯·물리/마법 계산은 그대로(딩 계산기 '힘 기반 마법'과 같음). 그 스킬(link 항목)을 장착하지 못하면 없음 */
+function adAllT(team, A, enemy, zone){
+  if(!A || A.adNone || !team || !team.some(c=>c && c.adaptAll)) return null;
+  const j = team.findIndex(c=>c && c.adaptAll), off = !!A.adOff || !!(A.eqOff && A.eqOff[j] && A.eqOff[j].link===0);
+  const zk = (off?'x':'o')+'|'+oidOf(enemy), mm = A._adT || (A._adT = new Map()); if(mm.has(zk)) return mm.get(zk);
+  let T = null;
+  if(j>=0 && !off){ // 존마다 코어를 따로 만들지 않는 곳(평상 턴 존 고르기)이 있어 팀 하나에 타입 하나: 적 약점 → 약점 간파 → 전열이 펼 수 있는 공격 타입 존(원래 그 타입인 멤버가 많은 쪽)
+    const cand = new Set(team.filter((c,k)=>k!==j && c).map(c=>WEAPON_TYPE[c.weapon]).filter(Boolean));
+    T = WTYPES.find(t=>cand.has(t) && enemy && enemyRel(enemy, t)==='weak')
+      || (A.weakInfo||[]).map(x=>x && x.t).find(t=>WTYPES.includes(t) && cand.has(t)) || null;
+    if(!T){ const zt = new Set(); for(const c of team) for(const o of ((c && c.zoneTypes && c.zoneTypes.opts) || [])) if(o.kind==='weap') for(const t of (o.types||[])) if(cand.has(t)) zt.add(t);
+      const nat = t => team.filter(c=>c && ((c.main && c.main.weapon_type) || c.atkWt || c.wt)===t).length;
+      T = [...zt].sort((a,b)=> nat(b)-nat(a) || WTYPES.indexOf(a)-WTYPES.indexOf(b))[0] || null; } }
+  mm.set(zk, T); return T; }
 function adaptWt(sk, wt, kind, team, A, enemy, idx, zone){
+  const aT = adAllT(team, A, enemy, zone); if(aT) return aT;
   if(!sk || !sk.adapt || kind==='mag') return wt;
   if(sk.adapt==='weak'){ const e = enemy && PHYS_WT.find(t=>enemyRel(enemy, t)==='weak'); if(e) return e;
     const w = (A && A.weakInfo || []).map(x=>x.t).filter(t=>PHYS_WT.includes(t)).sort()[0]; return w || wt; }
@@ -2734,6 +2752,16 @@ function zlList(S){ const out = [], bz = S && S.bossZone;
 function swapAff(enemy){ const e = {}; for(const k of Object.keys(enemy||{})){ const v = enemy[k]; e[k] = v==='resist' ? 'weak' : v==='weak' ? 'resist' : v; } return e; }
 function evalTeam(team, progs, enemy, S, cap, ctx){
   if(ctx && ctx._zl) return evalTeamV(team, progs, enemy, S, cap, ctx);
+  /* 아군 전체 臨機応変(짭코코, 2026-10-21): 왼쪽에 둘 아군에 따라 타입이 정해지고 안 바꾸는 배치(짭코코를 맨 왼쪽)도 되니, 바꾼 쪽·안 바꾼 쪽 중 성향 기준이 큰 쪽(탐색 어림도) */
+  if(team.some(c=>c && c.adaptAll) && !(ctx && ctx._adFix) && !(S && S.adaptAll===false)){
+    const fx = v => evalTeamA(team, progs, enemy, S, cap, ({...ctx||{}, ...{_adNone: v, _adFix: true}}));
+    const vv = ctx && ctx.variant && ctx.variant.adNone!=null ? !!ctx.variant.adNone : null;
+    if(vv!=null){ const e = fx(vv); e.adNone = vv; return e; }
+    const e1 = fx(false); if(!e1.adT){ e1.adNone = false; return e1; }
+    const e0 = fx(true), vk = evalKey(ctx); if(vk(e0) > vk(e1)*(1+1e-9)){ e0.adNone = true; return e0; } e1.adNone = false; return e1; }
+  return evalTeamA(team, progs, enemy, S, cap, ctx);
+}
+function evalTeamA(team, progs, enemy, S, cap, ctx){
   const swI = enemy && Object.values(enemy).includes('resist') && S && S.affSwap!==false ? team.findIndex(c=>c && c.affSwap) : -1;
   if(swI<0) return evalTeamX(team, progs, enemy, S, cap, ctx, null);
   const val = evalKey(ctx), sw = {from: Math.max(2, +team[swI].affSwap.from||2), swap: true, by: team[swI].id, name: team[swI].name, t: +team[swI].affSwap.t||99};
@@ -2892,7 +2920,7 @@ const NOAW_C = new WeakMap();
 function evalTeam0(team, progs, enemy, S, cap, ctx){
   if(team.some((c,i)=>c && c.bact && c.bact.noAw && !(progs[i] && (progs[i].sbOK || progs[i].sbAw)))) team = team.map((c,i)=>{ if(!(c && c.bact && c.bact.noAw) || (progs[i] && (progs[i].sbOK || progs[i].sbAw))) return c; let v = NOAW_C.get(c); if(!v){ v = ({...c, ...{bact: c.bact.noAw}}); NOAW_C.set(c, v); } return v; }); // 성도각성 전: aw 행동은 버프 행동
   if(ctx && ctx.maxBack===0 && !progs.noBack){ progs = progs.slice(); progs.noBack = true; } // 후열 없음: VC(교대) 효과·VC 존 없음
-  const A = teamAgg(team); A.azPick = ctx && ctx._azPick || null; A.noBack = !!progs.noBack;
+  const A = teamAgg(team); A.azPick = ctx && ctx._azPick || null; A.noBack = !!progs.noBack; A.adNone = !!(ctx && ctx._adNone); A.adOff = true; // 臨機応変은 평상 턴 시뮬이 그 스킬을 다는지 정한 뒤부터(행동 가치 순서는 예전 그대로)
   A.inf = inflictOf(team, progs, S);
   A.echg = echgOf(team, progs);
   A.bud = ctx && ctx.buddy ? budAgg(ctx.buddy, team, enemy, A) : null;
@@ -2928,7 +2956,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const lkPlan = stepsArr => anySing ? team.map((c,j)=>{ if(!singI[j]) return null; if(c.song.main) return 0; const p = (stepsArr[j]||[]).findIndex(st=>st && st.song); return p>=0 ? p+1 : null; }) : null;
   A.singI = anySing ? singI : null;
   let uptArr = null;
-  A.eqOff = sim && sim.eqOff.some(Boolean) ? sim.eqOff : null;
+  A.eqOff = sim && sim.eqOff.some(Boolean) ? sim.eqOff : null; { const aj = team.findIndex(c=>c && c.adaptAll); A.adOff = aj>=0 && !!(sim && sim.eqOff[aj] && sim.eqOff[aj].link===0); } // 아군 전체 臨機応変 스킬을 못 달면 허수아비·AF 복사본(eqOff 없음)에서도 없음
   const eqArr = sim ? sim.eqOff.map(o=>o ? {mf:o} : 1) : null, eqAny = !!(eqArr && eqArr.some(x=>x!==1)); // AF·SB에서 장착 못 한 버프 끄기
   const simDerive = () => { // 평상 턴 시뮬에서 나오는 값들(AF 턴 지속 감소로 시뮬을 다시 돌리면 다시)
     uptArr = simUse ? sim.upt.map((u,j)=> sim.kup[j] ? {mf: sim.kup[j]} : u) : null;
@@ -3199,6 +3227,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   /* 턴당 타수(보스 타수 기믹 hitgim, 2026-10-19): 멤버마다 평상 턴 타수(hN = 주력 타수 × 쓰는 비율 + 다른 공격·통상 공격 1타), 행동 1번 타수(h — AF 행동 수에 곱함), SB 타수(hS),
      실행 수(x), 실행당 타수(en·es — 연격 경감용), 그 구간 피해 비중(pn·pa·ps). 체인·요격 발동은 1타씩(ch) */
   if(afTickC) out.afTick = afTickC; // 평상 턴 시뮬에 넣은 AF 주기(AF 턴도 버프 지속을 씀)
+  { const aT0 = adAllT(team, A, enemy, null); if(aT0){ const aj = team.findIndex(c=>c && c.adaptAll); out.adT = {t: aT0, by: team[aj].name, from: team.filter((c,k)=>k!==aj && WEAPON_TYPE[c.weapon]===aT0).map(c=>c.name)}; } } // 아군 전체 臨機応変 타입·왼쪽에 둘 아군 후보
   out.redDrop = stepV && stepV.red ? stepV.red.map(r=>({i: r.i, s: r.s, by: team[r.i].name})) : null; // 다른 아군 버프와 겹쳐 안 거는 버프 스킬
   out.afPlN = afPlC ? afPlC.reduce((k,L)=>k + (L ? L.length : 0), 0) : 0; // AF 안에서 걸 수 있는 버프 스킬 수
   out.afCastN = sim && sim.afCast ? +sim.afCast.reduce((x,y)=>x+y, 0).toFixed(3) : 0; // 평상 턴에 그 버프 스킬을 거는 턴 비율(멤버 합)

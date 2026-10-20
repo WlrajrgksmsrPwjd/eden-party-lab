@@ -560,6 +560,7 @@
 },
 {
   "id": "nekoko_ac",
+  "adapt_all": "left",
   "name_kr": "고답의 요묘",
   "name_jp": "高踏の妖猫",
   "style": "AC",
