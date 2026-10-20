@@ -1791,19 +1791,20 @@ const exNeed = L => Math.ceil(1200/Math.max(1, L)/Math.max(1, L));
 /* EX 레벨은 파티 하나(game-info: 시구레(ES) 요격 + 시온(ES) 斬 5회면 턴당 합계 +3, 아나벨(ES) SB로 네코코(ES) EX — 'EXレベル10への強制上昇'), ES가 여럿이면 EX는 하나를 고름(biligame).
    P: ES 멤버 [{d, sbAt, zoneAt, ctrAt, turnAdd, gate}] → 멤버별 켜진 턴. EX를 고를 땐 효과가 있는(gate) 멤버 중 덜 쓴 쪽 */
 function exTimeline(P, H, afAt, actsAt){
-  const mx = Math.min(10, ...P.map(m=>m.d.max||10)), on = P.map(()=>new Set()), first = P.map(()=>0), nF = P.map(()=>0);
+  const mx = Math.min(10, ...P.map(m=>m.d.max||10)), on = P.map(()=>new Set()), first = P.map(()=>0), nF = P.map(()=>0), fires = [];
   let L = Math.min(mx, 1 + P.reduce((a,m)=>a + Math.max(0, m.d.lv - 1), 0)), prog = 0;
   for(let t=1; t<=H; t++){ const a = afAt(t), sbM = P.filter(m=>m.sbAt && m.sbAt(t));
     const sbUp = L0 => sbM.some(m=>m.d.sb==='max') ? mx : Math.min(mx, L0 + sbM.reduce((x,m)=>x + (+m.d.sb||0), 0));
     if(a>=1){ const Lf = Math.min(mx, sbUp(L) + P.reduce((x,m)=>x + (+m.d.af||0), 0)); // SB로 올리는 레벨(아나벨(ES) 최대·뮬루스(ES) +5)은 그 AF 안 — 그 뒤 행동부터지만 AF 전체에 씀(조금 후함)
       prog += actsAt(t)/exNeed(Lf);
       if(prog >= 1 - 1e-9){ prog = 0; const G = P.map((m,k)=>k).filter(k=>P[k].gate);
-        if(G.length){ G.sort((x,y)=> nF[x]-nF[y] || (on[x].has(t+1)?1:0)-(on[y].has(t+1)?1:0) || (P[y].d.dur - P[x].d.dur) || x-y); /* 덜 쓴 쪽 → 효과가 끝난 쪽 → 오래가는 쪽 */ const k = G[0]; nF[k]++; if(!first[k]) first[k] = t; for(let q=t+1; q<=Math.min(H, t+P[k].d.dur); q++) on[k].add(q); } }
+        if(G.length){ G.sort((x,y)=> nF[x]-nF[y] || (on[x].has(t+1)?1:0)-(on[y].has(t+1)?1:0) || (P[y].d.dur - P[x].d.dur) || x-y); /* 덜 쓴 쪽 → 효과가 끝난 쪽 → 오래가는 쪽 */ const k = G[0]; nF[k]++; if(!first[k]) first[k] = t; for(let q=t+1; q<=Math.min(H, t+P[k].d.dur); q++) on[k].add(q); fires.push({t, k}); }
+        else fires.push({t, k: 0}); }
       L = 1; }
     else if(a>0) L = 1; // 50%대 AF도 끝나면 레벨 1(game-info 'AFが終了すると再度EXレベルは1に戻る' — biligame은 100% AF만이라 함), 게이지는 100% AF에서만 참
     else if(sbM.length) L = sbUp(L);
     L = Math.min(mx, L + 1 + P.reduce((x,m)=> x + (+m.d.turn||0) + (m.turnAdd ? m.turnAdd(t) : 0) + (m.zoneAt && m.zoneAt(t) ? +m.d.zone||0 : 0) + (m.ctrAt && m.ctrAt(t) ? +m.d.ctr||0 : 0) + (m.d.win && t>=m.d.win[0] && t<=m.d.win[1] ? +m.d.winAdd||0 : 0), 0)); }
-  return {on, first, n: nF}; }
+  return {on, first, n: nF, fires}; }
 const EX_F = new WeakMap();
 function exFast(c){ if(!c.exD) return 0; const h = EX_F.get(c); if(h!=null) return h; const H = 15; // 어림: AF 1턴째(100%)·그 뒤 3턴마다 100%, AF 1번 40행동, 존·요격 조건은 늘 맞음, SB는 AF마다
   const d = ({...c.exD, ...{lv: Math.min(c.exD.max, c.exD.lv + c.exD.lvSa)}}), afT = t => t===1 || (t-1)%3===0, r = exTimeline([{d, sbAt: afT, zoneAt: () => true, ctrAt: () => true, turnAdd: () => +c.exD.wtAdd||0, gate: true}], H, t => afT(t) ? 1 : 0, () => 40), v = r.on[0].size/H; EX_F.set(c, v); return v; }
@@ -2781,8 +2782,8 @@ function evalTeamA(team, progs, enemy, S, cap, ctx){
    그 뒤 dur턴은 EX를 켠 계산(e1, 같은 변형)의 턴 기록으로 이어 붙이고(게이지가 다르면 e0 기록 × 값 비율), 지속 딜은 긴 전투(S.susHorizon 15턴) 중 켜진 턴 비율로 섞음.
    탐색 어림(stFast)은 어림 가동률(exFast) 한 번 */
 function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
-  const exI = S && S.exModel!==false && !(S && S.exG) ? team.map((c,i)=> c && c.exD && c.bact && c.bact.exOnly ? i : -1).filter(i=>i>=0) : [];
-  if(!exI.length || (ctx && ctx.stFast)) return evalTeamZ(team, progs, enemy, S, cap, ctx, sw);
+  const exOK = S && S.exModel!==false && !(S && S.exG), exI = exOK ? team.map((c,i)=> c && c.exD && c.bact && c.bact.exOnly ? i : -1).filter(i=>i>=0) : [];
+  if(!exOK || !team.some(c=>c && c.exD) || (ctx && ctx.stFast)) return evalTeamZ(team, progs, enemy, S, cap, ctx, sw); // EX 효과 항목이 없는 ES도 EX 피해·시점은 셈
   const gOf = v => Object.fromEntries(exI.map(i=>[team[i].id, v])), S0 = ({...S, ...{exG: gOf(0)}});
   const e0 = evalTeamZ(team, progs, enemy, S0, cap, ctx, sw), recA = (e0.bsim && e0.bsim.turns) || [], N = recA.length, HL = Math.max(N, +S.susHorizon || 15);
   const C = Math.max(1, +e0.afTurns || 4), sbC = Math.max(1, Math.round(+e0.sbTurns || 4)), afOff = !!e0.afOff;
@@ -2799,7 +2800,15 @@ function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
   const TL = exTimeline(P, HL, afAt, actsAt), L = P.map((m,k)=>({...m, on: TL.on[k], first: TL.first[k], n: TL.n[k], f: TL.on[k].size/HL})).filter(m=>m.gate);
   const L1 = Math.min(10, 1 + P.reduce((a,m)=>a + Math.max(0, m.d.lv - 1), 0));
   const info = L.map(x=>({id: x.id, name: x.name, first: x.first || null, dur: x.d.dur, lv: L1, n: x.n, onN: [...x.on].filter(t=>t<=N).sort((a,b)=>a-b), f: +x.f.toFixed(3)}));
-  if(!L.some(x=>x.on.size)){ e0.exInfo = info; return e0; }
+  /* EX 피해(game-info AF まとめ 4-2-2: 'AF必殺技 + AF中の合計ダメージ量の35%', 1타 상한 99.99억 — AF 필살기 몫은 작아 뺌): EX가 나간 AF 턴에 그 AF 피해 × 0.35, 지속 딜은 긴 전투 중 나간 횟수만큼 */
+  const exHit = d => Math.min(9999999999, 0.35*Math.max(0, +d||0));
+  const exDmg = ev => { if(!TL.fires.length) return; const who = f => { const m = P[f.k] || P[0]; return team.indexOf(team[m.i]); };
+    if(ev.bsim && ev.bsim.turns && !ev.score){ const turns = ev.bsim.turns.slice(), per = (ev.bsim.per||[]).slice(); let add = 0;
+      for(const f of TL.fires){ if(f.t>N) continue; const r = turns[f.t-1]; if(!r || !r.af) continue; const x = exHit(r.afD!=null ? r.afD : r.d), sc = (per.reduce((a,v)=>a+(+v||0),0))/Math.max(1, +ev.bsim.total||0); /* per는 total과 단위가 달라 비율로 */
+        turns[f.t-1] = ({...r, ...{d: (+r.d||0) + x, exHit: x}}); add += x; const wi = who(f); if(per[wi]!=null) per[wi] += x*sc; }
+      if(add>0){ ev.bsim = ({...ev.bsim, ...{turns, total: (+ev.bsim.total||0) + add, per}}); ev.burst = (+ev.burst||0) + add; } }
+    const nH = TL.fires.length, aV = ev.afLate ? +ev.afLate.v||0 : +ev.af||0; if(nH && aV>0 && ev.sustain!=null){ ev.sustain = +ev.sustain + nH*exHit(aV)/HL; ev.exSusAdd = nH*exHit(aV)/HL; } };
+  if(!exI.length || !L.some(x=>x.on.size)){ exDmg(e0); e0.exInfo = info; e0.exFires = TL.fires.length; return e0; }
   // 켜진 조합마다 한 번(보통 한 명) — 같은 변형으로
   const vr = {sbOff: e0.sbOff || null, uni: e0.uni || null, songOff: e0.songOff || null, azBy: e0.azBy==null ? null : e0.azBy, redOff: !!e0.redOff, afBuff: +e0.afBuf||0};
   const memo = new Map(), evOn = ids => { const k = ids.join(','); if(memo.has(k)) return memo.get(k); const g = gOf(0); for(const id of ids) g[id] = 1;
@@ -2828,7 +2837,7 @@ function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
   for(const [k, n] of cnt){ const e = evOn(k.split(',')), w = n/HL; fOn += w; for(const q of mixK) acc[q] += w*(+e[q]||0); if(afl0!=null) aflA += w*(e.afLate ? +e.afLate.v||0 : +e.af||0); }
   for(const q of mixK) if(e0[q]!=null) e0[q] = base[q]*(1-fOn) + acc[q];
   if(afl0!=null) e0.afLate = ({...e0.afLate, ...{v: afl0*(1-fOn) + aflA}});
-  e0.exInfo = info; e0.exSus0 = base.sustain; return e0;
+  exDmg(e0); e0.exInfo = info; e0.exSus0 = base.sustain; e0.exFires = TL.fires.length; return e0;
 }
 function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
   const zl = zlList(S).concat(sw ? [sw] : []);
