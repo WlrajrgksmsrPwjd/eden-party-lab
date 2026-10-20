@@ -2674,7 +2674,7 @@ function battleSim(N, o){
     const hit = memo.get(key); if(hit) return hit;
     let best = null;
     const opts = [];
-    if(g >= (o.ss ? 100 : 50) && !o.noAF && !(o.maxAF!=null && (na||0) >= o.maxAF)) opts.push('af'); if(opts.includes('af') && o.hasSB && o.sbHold) opts.push('afH'); // 성해진: 100% 미만이면 AF 못 켬 // noAF: 서가 챌린지 점수 비교용(AF 턴엔 행동 보너스가 없음)
+    if(g >= (o.ss || o.afMin100 ? 100 : 50) && !o.noAF && !(o.maxAF!=null && (na||0) >= o.maxAF)) opts.push('af'); if(opts.includes('af') && o.hasSB && o.sbHold) opts.push('afH'); // 성해진: 100% 미만이면 AF 못 켬 // noAF: 서가 챌린지 점수 비교용(AF 턴엔 행동 보너스가 없음)
     opts.push('none');
     if(R && R.cost && !e && g>=R.cost) opts.push('stack');
     for(const op of opts){ const isAF = op==='af' || op==='afH'; // afH: AF 안에서 SB를 쓰지 않고 다음 평상 턴으로 미룸(서가 챌린지처럼 AF 피해에 상한이 있을 때, 2026-10-19)
@@ -2786,6 +2786,10 @@ function evalTeamA(team, progs, enemy, S, cap, ctx){
 function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
   const exOK = S && S.exModel!==false && !(S && S.exG), exI = exOK ? team.map((c,i)=> c && c.exD && c.bact && c.bact.exOnly ? i : -1).filter(i=>i>=0) : [];
   if(!exOK || !team.some(c=>c && c.exD) || (ctx && ctx.stFast)) return evalTeamZ(team, progs, enemy, S, cap, ctx, sw); // EX 효과 항목이 없는 ES도 EX 피해·시점은 셈
+  /* EX를 노린 계획(2026-10-21): EX는 100%에서 켠 AF에서만 나가니, AF를 100%에서만 켜는 계획도 계산해 성향 기준이 큰 쪽 — 측정해 보니 무작위 ES 조합 45개(실전 3·6턴)에서 나아진 게 거의 없고(최대 +0.1%) 계산만 1.5배라 기본은 끔(S.exPlan=true면 켬) */
+  if(!S.afMin100 && !S.afInj && S.exPlan===true && team.some(c=>c && c.exD && ((c.bact && c.bact.exOnly) || c.exD.afg))){
+    const a = evalTeamX(team, progs, enemy, ({...S, ...{exPlan: false}}), cap, ctx, sw), b = evalTeamX(team, progs, enemy, ({...S, ...{exPlan: false, afMin100: true}}), cap, ctx, sw), vk = evalKey(ctx);
+    if(vk(b) > vk(a)*(1+1e-9)){ b.exPlan100 = true; return b; } return a; }
   const gOf = v => Object.fromEntries(exI.map(i=>[team[i].id, v])), S0 = ({...S, ...{exG: gOf(0)}});
   const e0 = evalTeamZ(team, progs, enemy, S0, cap, ctx, sw), recA = (e0.bsim && e0.bsim.turns) || [], N = recA.length, HL = Math.max(N, +S.susHorizon || 15);
   const C = Math.max(1, +e0.afTurns || 4), sbC = Math.max(1, Math.round(+e0.sbTurns || 4)), afOff = !!e0.afOff;
@@ -3335,7 +3339,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     ss: ssK>1, ssAF: S.starseaAF!==false, afGain, afDrain: dInj ? {turns: dInj.turns, g0: dInj.g0} : null, g0: st.g, s0: Math.min(50, 12.5*team.length), sbAct: S.sbPerAct!=null ? +S.sbPerAct : 2.5, front: team.length, sbW, sbWN, afRun, /* SB 게이지 시작 = 전열 1명당 +25/200(2026-10-19 game-info 星導覚醒 'ステラバーストの細かい仕様' — 예전엔 천·명 중 많은 쪽 수만), sbW: 멤버별 행동 1회 충전 배율(스텔라 보드 天冥 어빌리티 증가(중) = +10/+5) */
     refill: (()=>{ const rc = sbIdx.length ? team.find(c=>c.afRefillR && c.afRefillR.on==='sb') : null; return rc ? {to:+rc.afRefillR.to||100, cost:+rc.afRefillR.cost||0, e0: +rc.afRefillR.start>0 ? 1 : 0, noAF: rc.afRefillR.af===false} : null; })(), // e0: 개전에 축적 1개(히스메나(ES) エスパーダ), noAF: AF 안 SB로는 안 채움
     teSB: teSB0};
-  simIn.afSbG = afSbG; if(S.afInj) simIn.afInj = S.afInj; simIn.afFirst = afFirstOn; // afFirst: 순수 AF 안 버프 운용의 첫 AF는 버프를 다 걸고(afRun f1)
+  simIn.afSbG = afSbG; if(S.afInj) simIn.afInj = S.afInj; if(S.afMin100) simIn.afMin100 = true; // afMin100: AF는 게이지 100%에서만(EX必殺技 계획 비교용) simIn.afFirst = afFirstOn; // afFirst: 순수 AF 안 버프 운용의 첫 AF는 버프를 다 걸고(afRun f1)
   simIn.afTotCap = +S.afTotalCap||0; // AF 한 번 총 피해 상한
   simIn.afOffG = afOffG; out.afOffG = simIn.afOffG>0 ? +simIn.afOffG.toFixed(1) : 0; // AF 턴 뒤 게이지(빅트(AS) AF 턴 종료 공격 포함)
   // 지속 딜의 AF도 극 존이 계속 유지될 때만 극(2026-10-17): 개전 자동·1회 각성(네코코(ES) 颯 첫 사용 등)은 2턴 뒤 일반 존 — 평상 턴(susOf)과 같은 비율(일반 0.6·극 0.4)로 섞음. SB로 다시 각성(sbAw)하면 그대로
