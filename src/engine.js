@@ -2634,7 +2634,7 @@ function battleSim(N, o){
       if(o.cutW || o.turnX){ const m = (o.cutW ? o.cutW.reduce((q,w)=> t<=w.t ? Math.min(q, w.x) : q, 1) : 1)*(o.turnX && o.turnX[t-1]>0 ? o.turnX[t-1] : 1); if(m!==1){ d *= m; rec.nd *= m; if(rec.afD) rec.afD *= m; if(rec.sbD) rec.sbD *= m; rec.fA *= m; rec.fS *= m; rec.cut = +m.toFixed(3); } } // 보스 개시 피해 경감·턴마다 바뀌는 보스 내성 단계(그 턴 피해 전부 ×x — 낮아진 뒤 AF를 쓰는 계획을 고르게)
       /* AF 한 번 총 피해 상한(o.afTotCap = S.afTotalCap 9999억, 사용자 2026-10-19): AF + AF 안 SB(턴 종료 공격 제외)가 넘으면 상한까지 — 딜 비중(fA·fS)도 같은 비율로 */
       if(o.afTotCap>0 && isAF){ const teS = rec.sb==='af' ? (+rec.teSB||0) : 0, inAF = (+rec.afD||0) + (rec.sb==='af' ? Math.max(0, (+rec.sbD||0) - teS) : 0);
-        if(inAF > o.afTotCap){ const k = o.afTotCap/inAF; d -= inAF - o.afTotCap; rec.afD = (+rec.afD||0)*k; if(rec.sb==='af'){ rec.sbD = Math.max(0, (+rec.sbD||0) - teS)*k + teS; rec.fS *= k; } rec.fA *= k; rec.afCap = true; } }
+        if(inAF > o.afTotCap){ const k = o.afTotCap/inAF; d -= inAF - o.afTotCap; rec.afD = (+rec.afD||0)*k; if(rec.sb==='af'){ rec.sbD = Math.max(0, (+rec.sbD||0) - teS)*k + teS; rec.fS *= k; } rec.fA *= k; rec.afCap = true; rec.afRaw = inAF; } }
       /* 서가 챌린지 점수(o.scoreCap, 2026-10-19 알테마 星詠みの書架: 'AF 중에는 10억 이상 줘도 999,999,999까지만 가산'): AF 안에서 준 피해(AF + AF 안 SB)는 한 번에 상한까지만 → 점수를 최대로 하는 계획 */
       if(o.scoreCap>0 && isAF){ const inAF = (+rec.afD||0) + (rec.sb==='af' ? Math.max(0, (+rec.sbD||0) - (+rec.teSB||0)) : 0); /* SB 턴 종료 공격(teSB)은 AF가 끝난 뒤라 상한 밖 */ if(inAF > o.scoreCap){ rec.raw = d; d = d - inAF + o.scoreCap; rec.capped = true; } }
       rec.d = d; rec.g = g; rec.s = s; rec.g1 = g1;
@@ -2762,7 +2762,8 @@ function evalTeamV(team, progs, enemy, S, cap, ctx){
   const bufPick = (ev, pr, c1) => { if(ev) ev.afBuf = 0; if(!ev || !(ev.afPlN>0) || ev.afOff || (ctx && ctx.stFast) || (ctx && (ctx.mode||ctx.keyMode)==='burst') || S.afBuffVar===false) return ev;
     if(!(ev.afCastN >= (S.afBuffMin!=null ? +S.afBuffMin : 0.15))) return ev; // 평상 턴에 버프를 거의 안 거는 조합은 차이가 없어 계산 생략
     const cl = x => Math.max(1.5, Math.min(8, +x||3)), e1 = C => evalTeam0(team, pr, enemy, S, cap, ({...c1, ...{_redOff: !!ev.redOff, _afBuff: C}})), vk = evalKey(ctx);
-    let C = cl(ev.afTurns), e2 = e1(C); if(Math.abs(cl(e2.afTurns) - C) > 0.4){ C = cl(e2.afTurns); e2 = e1(C); } // AF 주기가 바뀌면(평상 턴 공격이 늘어 게이지가 빨리 참) 한 번 더 맞춤
+    let C = cl(ev.afTurns), e2 = e1(C); const k0 = vk(ev), k1 = vk(e2); if(!(k1 > k0*(S.afBuffCut!=null ? +S.afBuffCut : 0.97))) return ev; // 첫 계산이 기본 운용보다 3% 넘게 낮으면 더 안 봄(계산량 — 무작위 120조합 결과 같음, 정밀 평가 약 −20%)
+    if(Math.abs(cl(e2.afTurns) - C) > 0.4){ C = cl(e2.afTurns); e2 = e1(C); } // AF 주기가 바뀌면(평상 턴 공격이 늘어 게이지가 빨리 참) 한 번 더 맞춤
     let cv = C; if(e2.afMinD < C - 1e-9){ const e3 = e1(-C); if(vk(e3) > vk(e2)*(1+1e-9)){ e2 = e3; cv = -C; } } // 다음 AF 전에 버프가 끊기면: 끊긴 턴에 평상 턴에서 다시 거는 쪽도(afRe — 값은 −C)
     if(vk(e2) > vk(ev)*(1+1e-9)){ e2.redOff = !!ev.redOff; if(ev.redSkip) e2.redSkip = ev.redSkip; e2.afBuf = cv; return e2; } return ev; };
   const redPick = (ev, pr, c1) => bufPick(redPick0(ev, pr, c1), pr, c1);

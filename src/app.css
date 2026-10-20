@@ -698,3 +698,4 @@ dialog.guide::backdrop{background:rgba(8,12,30,.62)}
 .aesteps{margin:6px 0 8px 18px;padding:0;font-size:13px;line-height:1.6}
 .aesteps li{margin:0}
 #aeText{width:100%;min-height:64px;box-sizing:border-box}
+.kt .capok{color:var(--good)}

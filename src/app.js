@@ -2581,7 +2581,10 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   const full = T.some(r=>r.afFull>0) ? ' <span class="warn">게이지가 꽉 차면 피해 감소 — 100% 전에</span>' : (x.S||settings()).afFull ? ' <span class="hint">(게이지가 꽉 차면 피해 감소 — 100% 전에 켬)</span>' : '';
   const sbF = ev.sbFull ? ` · <b>${esc(ev.sbFull.by)}</b> ${esc(ev.sbFull.name)}: ${ev.sbFull.from}턴째부터 ${ev.sbFull.dur}턴 동안 매 턴 SB 게이지 가득(약 ${ev.sbFull.per}턴마다)` : ''; // SB 게이지 가득 상태(2026-10-19 유우체리카 星天の力)
   const bf = ev.afBuf && ev.afBufSk && ev.afBufSk.some(L=>L && L.length) ? ` · 버프 스킬은 <b>AF 첫 행동</b>으로(평상 턴엔 공격)` : ''; // AF 안 버프 운용(2026-10-20)
-  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${sbF}${full}</div>`; }
+  /* AF 상한 여유(2026-10-20 사용자 '천명 200 이상에 세팅 좋으면 맥뎀 찍을 파티원 구성이 자유로움'): 실전 AF가 9999억 상한에 닿으면 상한 없을 때 값과 비율 — 화력 대신 생존·유지력 캐릭터를 넣을 여유 */
+  const capR = T.filter(r=>r.afCap && +r.afRaw>0), cTot = +(x.S||settings()).afTotalCap||0;
+  const capT = capR.length && cTot>0 ? (()=>{ const mx = Math.max(...capR.map(r=>+r.afRaw)), sl = 1 - cTot/mx; return ` · <b class="capok">AF가 상한(9999억)에 닿음</b> <span class="hint">— 상한 없으면 약 ${fmtN(mx)}${sl>=0.25 ? `라 화력의 약 ${Math.round(100*sl)}%는 남음: 딜러 하나를 생존·유지력 캐릭터로 바꿔도 AF 피해는 거의 그대로` : ` (여유 약 ${Math.round(100*sl)}% — 화력을 빼면 상한 아래로 내려감)`}</span>`; })() : '';
+  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${full}</div>`; }
 /* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
 function zlLine(ev){ const L = ev && Array.isArray(ev.zLate) ? ev.zLate.filter(p=>!p.auto || p.from) : []; if(!L.length) return '';
   const z0 = ev.normal && ev.normal.zone ? ev.normal.zone.label : '존 없음';
