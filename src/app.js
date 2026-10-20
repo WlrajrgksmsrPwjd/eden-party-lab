@@ -734,6 +734,11 @@ const pglPRows = () => { const has = (x,k) => k==='all' ? E.PGL_ALL.includes(x) 
   const xs = [...E.PGL_ALL].sort((a,b)=>(E.PERS_KR[a]||a).localeCompare(E.PERS_KR[b]||b,'ko')).concat(Object.values(E.PGL_ELEMP));
   return xs.map(x=>({x, kr:E.PERS_KR[x]||x, cols:PGLP_COLS.map(([k])=>has(x,k))})); };
 const pglState = () => (state.pgl = state.pgl || {});
+/* 계산 기준 한 줄(2026-10-20, 사용자 '평가 기준 천명치랑 세팅은 어떻게 되어 있어?'): 결과 위에 천명치·장비·글래스터·셔틀·레벨 가정을 보여 주고 육성 수준으로 바로 가기 */
+function basisLine(){ const S = settings(), own = Object.values(state.owned||{}), ts = own.map(o=>+o.t||0).sort((a,b)=>a-b);
+  const med = ts.length ? ts[Math.floor(ts.length/2)] : 0, gq = +S.gearQ>0 && +S.gearQ<1 ? `${Math.round(100*S.gearQ)}%(최적 빌드 대비)` : '최적 빌드', pn = pglCount();
+  const gd = Object.assign({}, E.DEFAULT_SETTINGS.grastaDefault, S.grastaDefault||{}), gl = S.glLocked ? '미개방' : (gd.mode==='auto' ? '자동 최적' : '기본값 직접') + (gd.ore ? '·잠재 광석' : '');
+  return `<div class="runmeta hint">계산 기준: 천명치 ${state.sample ? '예시 보유값' : '보유 탭 값'}(가운데 ${med}) · 장비 ${esc(gq)} · 공격 글래스터 ${esc(gl)} · 셔틀 P글래 ${pn ? pn+'종 표시' : S.pglAssumeAll ? '대부분 있음' : '없음'} · 아군 전체 P글래 ${S.glLocked || S.auraGl===false ? '없음' : '있음'} · ${S.lvMode==='80' ? '전원 Lv80' : '성도각성은 Lv100'} <button type="button" class="btn small" data-basis="1">바꾸기</button></div>`; }
 function pglCount(){ let n=0; const P=state.pgl||{}; for(const w in P){ if(w==='_p'||w==='_a') continue; for(const k in P[w]) if(P[w][k]>0) n++; } for(const x in (P._p||{})) for(const k in P._p[x]) if(P._p[x][k]>0) n++; for(const k in (P._a||{})) if(P._a[k]>0) n++; return n; }
 /* 아군 전체 P글래(빌더 코어 '아군 전체'): 공명의 힘 천·명, 격진의 힘 <존>(일반 존), 극 격진의 힘 <존>(극 존 4종) */
 const PGLA_ROWS = [['r51_light','공명의 힘 <천>'],['r51_shadow','공명의 힘 <명>']]
@@ -1031,7 +1036,7 @@ function renderResults(r, boss, enemy, mode){
   if(state.sample) h+=`<div class="notice"><b>처음이신가요?</b> 지금 결과는 예시 보유 목록(SS·S 티어 전원, 천명치 80·성도각성 가정)으로 짠 것입니다. 가진 캐릭터를 입력하면 그 기준으로 다시 짭니다. <button type="button" class="btn small primary" data-goto="roster">보유 캐릭터 입력하기</button> <button type="button" class="btn small" data-guide>사용법 보기</button></div>`;
   const enemyTxt = enemy ? Object.entries(enemy).map(([k,v])=>(E.ELEM_KR[k]||E.WT_KR[k])+' '+REL_KR[v]).join(', ') : '중립(약점·내성 없음)';
   const W=r.weights, wTxt = mode==='custom'&&W ? ` (공격성 ${Math.round(W.b*100)}% · 유지력 ${Math.round(W.s*100)}% · 안정성 ${Math.round(W.t*100)}%)` : '';
-  h+=`<div class="runmeta">${esc(MODE_KR[mode])}${esc(wTxt)}${r.pledge?' · 서약: <b>'+esc(pledgeText(r.pledge))+'</b>':''}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''}${!(r.focus && r.focus.kind==='elem') && noConvOf(state.plan, r.focus||null) ? ' · <b>속성 변환 캐릭터 제외</b>' : ''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>`;
+  h+=`<div class="runmeta">${esc(MODE_KR[mode])}${esc(wTxt)}${r.pledge?' · 서약: <b>'+esc(pledgeText(r.pledge))+'</b>':''}${r.focus?' · <b>'+esc(focusLabel(r.focus))+'</b> 화력만':''}${!(r.focus && r.focus.kind==='elem') && noConvOf(state.plan, r.focus||null) ? ' · <b>속성 변환 캐릭터 제외</b>' : ''} · 상대 ${esc(boss?boss.name_kr:'')}${boss?' — ':''}${esc(enemyTxt)} · 적 ${P.enemyCount||1}체${(P.maxDiff||4)<4?` · 난이도 Lv${P.maxDiff} 이하`:''} · 후보 ${r.poolSize}명에서 ${r.evaluated.toLocaleString()}개 조합 평가</div>${basisLine()}`;
   if(!r.results.length) h+=`<div class="empty">조건을 만족하는 조합이 없습니다. 난이도 상한을 올리거나 고정·제외 캐릭터를 줄여 보세요.</div>`;
   // 보스 결과 보기(2026-10-18): 턴 단축·안정성, 턴 제한 보스(서가 챌린지 5턴)는 'N턴 최대 딜'·'안정 클리어' 두 가지(사용자 요청)
   const tlim = boss && +boss.turn_limit>0 && r.results3 && r.results3.length ? +boss.turn_limit : 0, uv = state.ui && state.ui.bossView;
@@ -2856,7 +2861,7 @@ function bind(){
   $('#plCompBox').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const C=plOf().comp; const L = b.dataset.pce ? C.elem : C.weap, v=b.dataset.pce||b.dataset.pcw;
     const i=L.indexOf(v); if(i>=0) L.splice(i,1); else L.push(v); C.on=true; plChanged(); });
   $('#plExample').addEventListener('click',()=>{ const b=BOSSES.find(x=>x.id===state.plan.kesId); if(!b){ flash('보스를 먼저 고르세요'); return; } const d=plExample(b); flash(d?`${d} 서약으로 채웠습니다 — 이번 주 서약과 다르면 고쳐 주세요`:'이 보스 페이지에 서약 예시가 없습니다'); plChanged(); });
-  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); if(e.target.closest('#getRun')) getRun(); if(e.target.closest('#spRun')) surplusRun(); if(e.target.closest('#gauntRun')) gauntRun(); });
+  $('#results').addEventListener('click',e=>{ const b=e.target.closest('button[data-deck]'); if(b) toggleDeck(b); if(e.target.closest('#growRun')) growRun(); if(e.target.closest('#getRun')) getRun(); if(e.target.closest('[data-basis]')){ showTab('roster'); const g = $('#growFold'); if(g){ g.open = true; g.scrollIntoView({block:'center'}); } } if(e.target.closest('#spRun')) surplusRun(); if(e.target.closest('#gauntRun')) gauntRun(); });
   $('#planBossQ').addEventListener('input', ()=>renderPlanControls());
   $('#bossCatSel').addEventListener('change', e=>{ state.plan.bossCat = e.target.value; state.plan.bossSub = ''; save(); renderPlanControls(); });
   $('#bossSubSel').addEventListener('change', e=>{ state.plan.bossSub = e.target.value; save(); renderPlanControls(); }); $('#kesQ').addEventListener('input', ()=>renderPlanControls());
