@@ -1259,6 +1259,12 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const teBase = () => { const p0 = progs[idx]; const s0 = statsAt(c.stats, c.fateTbl, p0 ? (p0.t||0) : 120, c.stellar && p0 && (p0.sbOK || p0.sbAw) ? c.stBoard : null, p0 ? p0.lvB||0 : 0, p0 ? p0.sty : null); return s0 ? (stat==='int' ? s0.spr : s0.end) : 0; };
   let teW = c.teishin ? 1 : 0, cupA = 0;
   if(c.teishin && stat!=='spd') flatP += teBase();
+  /* 오버터프니스(2026-10-21 — 테오도로스 'HP最大値50につき腕力1UP', 스즈네 '魔法オーバータフネス: 最大HPに応じて知性上昇'): over_tough {stat, per}(self 또는 party) → 그 스탯 고정값 = 최대 HP × (1 + 아군 최대 HP UP 중 최대) ÷ per.
+     같은 상태라 여럿이면 가장 큰 것 하나, 파티 몫은 그 아군 고정값 항목(FK)의 켜진 비율만큼 */
+  const otHp = (() => { let hu = 0; for(const m of team){ const q = m && m.party; if(q && q.scope!=='none' && +q.hp_up>0) hu = Math.max(hu, +q.hp_up/100); } if(+me.hp_up>0) hu = Math.max(hu, +me.hp_up/100);
+    const p0 = progs[idx], s0 = statsAt(c.stats, c.fateTbl, p0 ? (p0.t||0) : 120, c.stellar && p0 && (p0.sbOK || p0.sbAw) ? c.stBoard : null, p0 ? p0.lvB||0 : 0, p0 ? p0.sty : null); return s0 && +s0.hp>0 ? +s0.hp*(1+hu) : 0; });
+  let otBest = 0; const otAdd = (o, w) => { if(!o || o.stat!==stat || !(w>0)) return; const v = otHp()/Math.max(1, +o.per||50)*Math.min(1, w); if(v>otBest){ flatP += v - otBest; otBest = v; } };
+  if(me.over_tough) otAdd(me.over_tough, 1);
   const frac = v => v===true ? 1 : Math.max(0, Math.min(1, +v||0)); // 스킬 불리언 필드(self_on으로 비율이 될 수 있음)
   let ocW = me.over_crit?1:0, mhW = me.multihit?1:0, xW = me.extra_hit?1:0, pierceW = Math.max(frac(sk.barrier_pierce), me.barrier_pierce?1:0);
   let chW = typeof me.charge==='number' ? Math.max(0, Math.min(1, me.charge)) : me.charge ? 1 : 0; // 帯電 가동률(버프 행동 유지율·상태 가동률)
@@ -1293,6 +1299,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     if(p.weapon_atk && !(own && has('weapon_atk'))){ const fw=F(j,'weapon_atk'); wv.push(pct(p.weapon_atk.all)*fw, pct(p.weapon_atk[c.weapon])*fw, pct(p.weapon_atk[wt])*fw); }
     if(!(own && has('crit_rate'))){ const v = pct(p.crit_rate); if(v) critA += v*F(j,'crit_rate'); }
     if(p[FK]) flatP += (+p[FK]||0)*F(j,FK);
+    if(p.over_tough && p.over_tough.stat===stat) otAdd(p.over_tough, F(j,FK)); // 아군 오버터프니스(받는 사람 자기 최대 HP로)
     if(p.shinan) shinW = Math.max(shinW, F(j,'shinan'));
     if(p.kesshi) kessW = Math.max(kessW, F(j,'kesshi'));
     if(p.combo_up) cupA += pct(p.combo_up)*F(j,'combo_up');
