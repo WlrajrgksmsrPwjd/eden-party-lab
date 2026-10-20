@@ -174,7 +174,7 @@ function workerMain(){
   /* 이 함수는 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
   const E = self.AEOpt;
   let byId = new Map(), SP = null;
-  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
+  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null, redOff: !!ev.redOff} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})),
@@ -1899,7 +1899,8 @@ function setupHtml(x, i){
   if(c.main) S2.push(`<li>평상 주력: ${skillLine(c.main)}</li>`);
   { const es = ev.sim && ev.sim.eqSk && ev.sim.eqSk[i], ZK = {deploy:'존 전개', awaken:'존 각성'};
     if(es && es.L.length) S2.push(`<li>스킬 칸 <span class="hint">(${es.tot}칸 중 주력·성도 스킬 빼고 ${es.n}칸, 위부터 우선)</span><ol class="sklist">${es.L.map(z=>`<li><b>${esc(z.n)}</b>${z.z?` <span class="hint">${ZK[z.z]||'존'}</span>`:z.k==='attack'?' <span class="hint">공격 버프기</span>':''}</li>`).join('')}</ol>${es.L.length<es.n?`<span class="hint">남는 ${es.n-es.L.length}칸은 자유 (회복·생존 스킬 권장)</span>`:''}</li>`);
-    else if(es && es.n>0) S2.push(`<li class="hint">남는 스킬 칸 ${es.n}개는 자유 — 계산에 쓰는 버프 스킬이 없음 (회복·생존 스킬 권장)</li>`); }
+    else if(es && es.n>0) S2.push(`<li class="hint">남는 스킬 칸 ${es.n}개는 자유 — 계산에 쓰는 버프 스킬이 없음 (회복·생존 스킬 권장)</li>`);
+    const rd = !ev.redOff && ev.redDrop ? ev.redDrop.filter(q=>q.i===i) : []; if(rd.length) S2.push(`<li class="hint">안 거는 버프: ${rd.map(q=>esc(q.s)).join(' · ')} — 다른 아군 버프와 겹쳐(속도·능력치 +100% 상한, 같은 상태) 걸어도 그대로</li>`); }
   if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req_ko||r.req)}</span></li>`);
   const O = (c.cxWhy||[]).map(w=>`<li>${esc(w)}</li>`);
   return `<div class="shead"><b>${esc(c.name)}</b> ${elChips(c)} ${esc(E.WEAPON_KR[c.weapon]||'')} ${alDot(c.align)} <span class="tier ${c.tier}">${esc(c.tier||'-')}</span> <span class="hint">${esc(STYLE_KR[r.style]||'')}${c.stellar?' · 성도':''}${(r.ex&&r.ex.pers_ko&&r.ex.pers_ko.length)?' · 퍼스널리티 '+esc(r.ex.pers_ko.join('·')):''}</span><button type="button" class="btn small sclose" data-sclose="1">닫기</button></div>

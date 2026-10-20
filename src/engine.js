@@ -1701,8 +1701,8 @@ const ALT_R = 0.3, ALT_MP = 40; // MP가 모자랄 때 쓰는 값싼 보조 스�
 /* 버프 행동 순서(2026-10-16): 그 캐릭터의 행동을 하나씩 더해 가며 AF 1회 팀 대미지가 가장 많이 느는 것부터(탐욕 순서, 가장 높은 존·다른 아군 버프는 다 깔린 상태).
    스킬 칸 장착·AF 사용 순서를 '항목 수 점수' 대신 이 순서로 — 같은 디버프를 주는 행동이 둘이면 하나만 세고, 자기 버프 항목이 많아도 실제 이득이 작으면 뒤로.
    반환: 캐릭터마다 행동별 순위 값(클수록 먼저) */
-function stepValues(team, progs, A, enemy, S, cx, cap, posSets){
-  const idx = team.map((c,j)=>c.bact && c.bact.steps.length>=2 ? j : -1).filter(j=>j>=0); if(!idx.length) return null;
+function stepValues(team, progs, A, enemy, S, cx, cap, posSets, noRed){ // noRed: 겹치는 버프 빼기 안 함(evalTeamV가 둘 다 계산해 나은 쪽)
+  const idx = team.map((c,j)=>c.bact && c.bact.steps.length>=2 ? j : -1).filter(j=>j>=0); if(!idx.length && (S.dropRedundantBuff===false || noRed || !team.some(c=>c.bact && c.bact.steps.length))) return null;
   const zs = zoneCandidates(team, progs, 'af'); let z = null; for(const q of zs) if(q && q.level>0 && (!z || zBetter(q, z))) z = q;
   const out = team.map(()=>null);
   for(const j of idx){ const b = team[j].bact, L = b.steps.slice(0, 7), cur = new Set(b.auto); for(const x of b.main) cur.add(x);
@@ -1717,7 +1717,31 @@ function stepValues(team, progs, A, enemy, S, cx, cap, posSets){
         if(g > bg + 1e-9*Math.max(1,dCur) || (Math.abs(g-bg) <= 1e-9*Math.max(1,dCur) && (st.sc||0) > (left[bi].sc||0))){ bg = g; bi = q; bm = m; bInf = i2; bd = d; } }
       const st = left.splice(bi, 1)[0]; rank.set(st, r--); for(const x of bm) cur.add(x); inf = bInf; dCur = bd; }
     out[j] = b.steps.map(st=>rank.has(st) ? rank.get(st) : 0); }
-  return out;
+  /* 겹치는 버프 행동(2026-10-20, 사용자 '속도 버프 이미 100%면 더 걸 필요가 있나'): 다른 아군 버프로 이미 상한(능력치 +100% — dimin 상한 1)이거나 같은 상태(심기일체 등)라
+     빼도 AF·평상 턴 대미지와 속도(AF 대기)가 그대로인 버프 행동은 순위 −1 → 평상 턴에 안 걸고 스킬 칸도 안 씀(예: 다르니스(AS) ギャラントリー 속도 100% 옆 번개술사(AS) オグメントパッチ).
+     버프 스킬(k buff)만 보고 독·디버프·존·연계·속성 변환이 붙은 행동은 그대로(서로 미루다 둘 다 빠지는 것 방지), id 순으로 빼 가며 앞에서 뺀 효과는 뒤 캐릭터 계산에서 꺼짐. S.dropRedundantBuff=false면 끔 */
+  const red = []; if(S.dropRedundantBuff!==false && !noRed){ const BADK = x => x.indexOf('d_')===0 || x==='brk' || x==='link' || x==='echg' || x.indexOf('weak')===0;
+    const idR = team.map((c,j)=>c.bact && c.bact.steps.length ? j : -1).filter(j=>j>=0).sort((a,b)=>team[a].id<team[b].id?-1:team[a].id>team[b].id?1:a-b);
+    // 다른 아군은 스킬 칸에 달 행동만(평상 턴 시뮬과 같은 순서: 존 전개 → 순위, 2026-10-20 — 칸이 모자라 안 다는 아나벨(ES) 聖騎士の軌跡를 '이미 있음'으로 봐서 백자의 마인 기도 버프를 빼던 문제)
+    const eqIdx = k => { const c = team[k], b = c.bact, rk = out[k], ord = b.steps.map((st,q)=>q).filter(q=>!b.steps[q].na && !(rk && rk[q]<0)).sort((x,y)=>((b.steps[y].z?1:0)-(b.steps[x].z?1:0)) || (rk ? rk[y]-rk[x] : 0) || x-y);
+      return new Set(slotPick(b.steps, ord, skillSlots(c, progs[k]), freeSk(c, progs[k])).concat(b.steps.map((st,q)=>st.na?q:-1).filter(q=>q>=0))); };
+    const fullM = k => { const b = team[k].bact, m = new Set(b.auto), E = eqIdx(k); for(const x of b.main) m.add(x); b.steps.forEach((st,q)=>{ if(E.has(q) && st.g) for(const x of st.g) m.add(x); }); return m; };
+    // 존마다(평상 턴 존은 이 뒤에 고르므로 후보 전부 + 존 없음): 버프 규칙이 존 조건이라 어떤 존에선 겹쳐도 다른 존에선 필요(벨벳(AS) エクソシア는 招雷陣에서만 100% — 각음진이면 백자의 마인 버프가 필요)
+    const ZL = [null]; for(const q of zoneCandidates(team, progs, 'normal').concat(zs)) if(q && q.level>0 && !ZL.some(y=>y && y.key===q.key && y.level===q.level)) ZL.push(q);
+    const fx = (sit, zz, k, m) => bfOne(team, progs, sit, zz, A, posSets, m ? {m} : team[k].bact ? {m: fullM(k)} : 1, true, k); // 다른 아군 버프는 다 건 상태(받는 사람·조건 규칙 그대로)
+    const FXo = ZL.map(zz=>team.map((c,k)=>fx('af', zz, k))), FXn = ZL.map(zz=>team.map((c,k)=>fx('normal', zz, k)));
+    const D2 = (j, m) => ZL.map((zz, q)=>{ const Fa = FXo[q].slice(), Fn = FXn[q].slice(); Fa[j] = fx('af', zz, j, m); Fn[j] = fx('normal', zz, j, m); let v = 0, w = 0, sp = 0;
+      team.forEach((c,i)=>{ const co = attackerCore(team, i, progs, A, enemy, S, 'af', cx, Fa, zz); if(co){ v += applyZoneCap(co, zz, S, cap, 1); sp += +co.spdBuf||0; }
+        const cn = attackerCore(team, i, progs, A, enemy, S, 'normal', cx, Fn, zz); if(cn) w += applyZoneCap(cn, zz, S, cap, 1); }); return {v, w, s: sp}; });
+    for(const j of idR){ const b = team[j].bact, cur = fullM(j), Ej = eqIdx(j);
+      let base = null, drop = false;
+      b.steps.forEach((st,q)=>{ if(q>=7 || !Ej.has(q) || st.k!=='buff' || !st.g || !st.g.size || st.z || st.na || st.song || st.once || [...st.g].some(BADK)) return; // 버프 스킬만(공격 버프기는 평상 턴 공격·AF 게이지·성도 스킬 칸 몫이 있음 — 테오도로스 残夢燃ゆ를 빼면 AF가 반토막)
+        const own = new Set(b.auto); for(const x of b.main) own.add(x); b.steps.forEach((s2,q2)=>{ if(q2!==q && Ej.has(q2) && s2.g && !(out[j] && out[j][q2]<0)) for(const x of s2.g) own.add(x); });
+        const uq = [...st.g].filter(x=>!own.has(x)); if(!uq.length) return; // 자기 다른 행동과 같은 효과뿐이면 그대로(어느 쪽을 쓸지는 순위가 정함)
+        base = base || D2(j, cur); const m = new Set(cur); for(const x of uq) m.delete(x); const d = D2(j, m), e = 1e-6;
+        if(d.every((r,k)=> r.v >= base[k].v*(1-e) && r.w >= base[k].w*(1-e) && r.s >= base[k].s - e)){ out[j] = out[j] || b.steps.map(()=>1); out[j][q] = -1; for(const x of uq) cur.delete(x); base = d; drop = true; red.push({i: j, s: st.sko || skN(st.s) || st.s}); } });
+      if(drop) ZL.forEach((zz,q)=>{ FXo[q][j] = fx('af', zz, j, cur); FXn[q][j] = fx('normal', zz, j, cur); }); } }
+  if(!out.some(v=>v)) return null; if(red.length) out.red = red; return out;
 }
 function simTeam(team, progs, S, stepV){
   const H = Math.max(1, Math.round(S.simTurns||6)), mul = S.mpCostMul||1, n=team.length;
@@ -1753,7 +1777,7 @@ function simTeam(team, progs, S, stepV){
     // 다른 아군의 개전 자동 존이 있으면 이 캐릭터의 존 전개 행동은 효과 없는 버프 행동(g 없으면 뺌)
     const zUse = !(c.bact && steps0.some(st=>st.z) && zoneStepUseless(team, progs, i, zcN));
     const sv = stepV && stepV[i], vq = q => sv ? sv[q] : 0;
-    const nSlot = skillSlots(c, progs[i]), zp = q => zUse && steps0[q].z && !(autoGoku && steps0[q].z==='awaken') ? 1 : 0, ep = q => steps0[q].g && steps0[q].g.has('echg') ? 1 : 0, ord0 = steps0.map((st,q)=>q).filter(q=>!steps0[q].na && ((zUse && !(autoGoku && steps0[q].z==='awaken')) || !steps0[q].z || (steps0[q].g && steps0[q].g.size))).sort((a,b)=>zp(b)-zp(a) || (sv ? vq(b)-vq(a) : ep(b)-ep(a)) || a-b), frS = freeSk(c, progs[i]), pk = slotPick(steps0, ord0, nSlot, frS), eq = new Set(pk.concat(steps0.map((st,q)=>st.na?q:-1).filter(q=>q>=0)));
+    const nSlot = skillSlots(c, progs[i]), zp = q => zUse && steps0[q].z && !(autoGoku && steps0[q].z==='awaken') ? 1 : 0, ep = q => steps0[q].g && steps0[q].g.has('echg') ? 1 : 0, ord0 = steps0.map((st,q)=>q).filter(q=>!steps0[q].na && !(sv && sv[q] < 0) && ((zUse && !(autoGoku && steps0[q].z==='awaken')) || !steps0[q].z || (steps0[q].g && steps0[q].g.size))).sort((a,b)=>zp(b)-zp(a) || (sv ? vq(b)-vq(a) : ep(b)-ep(a)) || a-b), frS = freeSk(c, progs[i]), pk = slotPick(steps0, ord0, nSlot, frS), eq = new Set(pk.concat(steps0.map((st,q)=>st.na?q:-1).filter(q=>q>=0)));
     { // 추천 스킬 칸(2026-10-17, 사용자 '추천 스킬셋도'): 주력·성도 스킬 말고 칸을 쓰는 버프·공격 스킬(같은 이름은 한 칸, 존 전개 먼저 → 이득 순)
       const nm = new Set(), L = []; for(const q of pk){ const st = steps0[q], k = skN(st.s); if(!k || nm.has(k) || frS.has(k)) continue; nm.add(k); L.push({n: st.sko || k, k: st.k, z: st.z || null, use: useStep(st)}); }
       R.eqSk.push({L, n: nSlot, tot: (progs[i] && (progs[i].t||0) >= 80) ? 4 : 3}); }
@@ -2658,7 +2682,7 @@ function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
   if(!zl.length) return evalTeamV(team, progs, enemy, S, cap, ctx);
   const S0 = ({...S, ...{bossZoneLate:null}}), ev = evalTeamV(team, progs, enemy, S0, cap, ctx);
   if(ctx && ctx.stFast) return ev;
-  const vr = {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy==null ? null : ev.azBy}, HL = Math.max(4, +S.susHorizon || 15), NB = (ev.bsim && ev.bsim.N) || 3;
+  const vr = {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy==null ? null : ev.azBy, redOff: !!ev.redOff}, HL = Math.max(4, +S.susHorizon || 15), NB = (ev.bsim && ev.bsim.N) || 3;
   const posOf = q => +q.from>1 ? (+q.from-1)/HL : Math.min(1, ((+q.after||0) + (q.hp!=null ? 1 - (+q.hp)/100 : 0))/Math.max(1, +q.bars||1)) + (q.delay ? q.delay/HL : 0);
   const L = zl.map(q=>({q, p: posOf(q)})).sort((a,b)=>a.p - b.p), memo = new Map(), ph = [];
   let curZ = S0.bossZone || null, curA = null, curS = false; // 단계마다 그때까지 바뀐 상태(보스 존·상성·내성↔약점 교환)
@@ -2706,7 +2730,7 @@ function evalTeamV(team, progs, enemy, S, cap, ctx){
   if(ctx && ctx.variant){ // 계산(워커)이 이미 고른 변형으로 한 번만(화면 재계산, 2026-10-17 렉 줄이기): {sbOff:[bool], uni:[bool|null], azBy}
     const vr = ctx.variant, c2 = ({...ctx, ...{variant:null}}), by = autoZoneBy(team, progs) || [null];
     const pr = progs.map((p,i)=>{ const d = vr.sbOff && vr.sbOff[i], u = vr.uni && vr.uni[i]===false, so = vr.songOff && vr.songOff[i]; return d || u || so ? ({...p, ...d ? {sbOK:false, sbAw:true, sbOff:true} : null, ...u ? {uniOff:true} : null, ...so ? {songOff:true} : null}) : p; });
-    const ev = evalTeam0(team, pr, enemy, S, cap, ({...c2, ...{_azPick: by.includes(vr.azBy) ? vr.azBy : by[0]}}));
+    const ev = evalTeam0(team, pr, enemy, S, cap, ({...c2, ...{_azPick: by.includes(vr.azBy) ? vr.azBy : by[0], _redOff: !!vr.redOff}})); ev.redOff = !!vr.redOff;
     ev.sbOff = team.map((c,i)=>!!(vr.sbOff && vr.sbOff[i])); ev.uni = vr.uni || null; ev.songOff = vr.songOff || null; ev.azBy = by.includes(vr.azBy) ? vr.azBy : by[0]; if(by.length>1){ ev.azAlt = by.length; ev.azBys = by.slice(); }
     return ev; }
   const by = autoZoneBy(team, progs) || [null], cand = S && S.sbDrop===false ? [] : sbDropCands(team, progs), uc = uniCands(team, progs);
@@ -2716,7 +2740,10 @@ function evalTeamV(team, progs, enemy, S, cap, ctx){
   const sings = (i, pr) => { const c = team[i]; return !!(c.song && !(pr[i] && pr[i].songOff) && (c.song.main || (songOn(c, team, pr[i]) && c.bact && c.bact.steps.some(st=>st.song)))); };
   const sgF = ctx && ctx.stFast ? (()=>{ const ns = sgc.filter(i=>!(team[i].roles||[]).includes('dps')).sort((a,b)=>team[a].id<team[b].id?-1:1), keep = team.some(c=>c.song && c.song.main) ? -1 : (ns[0]!=null ? ns[0] : -1); return sgc.filter(i=>i!==keep); })() : null; // 탐색 어림: 딜러 아닌 가창 캐릭터 한 명만 가창(id 순), 나머지는 가창 안 함 — 한 가지만
   const sv = !sgc.length ? [[]] : sgF ? [sgF] : [[], sgc].concat(sgc.length>1 ? sgc.map(i=>sgc.filter(j=>j!==i)) : []);
-  if(by.length<2 && !cand.length && !uc.length && sv.length===1 && !sv[0].length) return evalTeam0(team, progs, enemy, S, cap, ({...ctx||{}, ...{_azPick:null}}));
+  /* 겹치는 버프 빼기(stepValues red)는 평상 턴 일정·존 고르기까지 바꿔서 어림으로는 손해일 때가 있음 → 정밀 계산은 뺀 쪽·안 뺀 쪽 둘 다 보고 성향 기준이 큰 쪽(ev.redOff = 안 뺌) */
+  const redPick = (ev, pr, c1) => { if(!ev || !ev.redDrop || (ctx && ctx.stFast)) { if(ev) ev.redOff = false; return ev; } const e2 = evalTeam0(team, pr, enemy, S, cap, ({...c1, ...{_redOff:true}})), vk = evalKey(ctx);
+    if(vk(e2) > vk(ev)*(1+1e-9)){ e2.redOff = true; e2.redSkip = ev.redDrop; return e2; } ev.redOff = false; return ev; };
+  if(by.length<2 && !cand.length && !uc.length && sv.length===1 && !sv[0].length){ const c1 = ({...ctx||{}, ...{_azPick:null}}); return redPick(evalTeam0(team, progs, enemy, S, cap, c1), progs, c1); }
   const drops = [[]];
   if(cand.length){ const sup = cand.filter(i=>!(team[i].roles||[]).includes('dps'));
     if(ctx && ctx.stFast){ if(sup.length) drops.push(sup); } // 탐색 1단계(계산량): 딜러가 아닌 캐릭터만 빼 보는 한 가지
@@ -2726,7 +2753,7 @@ function evalTeamV(team, progs, enemy, S, cap, ctx){
   for(const b of by) for(const d of drops) for(const u of uv) for(const g of sv){
     const pr = d.length || u.length || g.length ? progs.map((p,i)=>d.includes(i) || u.includes(i) || g.includes(i) ? ({...p, ...d.includes(i) ? {sbOK:false, sbAw:true, sbOff:true} : null, ...u.includes(i) ? {uniOff:true} : null, ...g.includes(i) ? {songOff:true} : null}) : p) : progs;
     if(sgc.length + team.filter(c=>c.song && c.song.main).length > 1 && team.reduce((k,c,i)=>k + (sings(i, pr) ? 1 : 0), 0) > 1 && !(team.filter(c=>c.song && c.song.main).length > 1)) continue; // 가창 둘 이상 동시 X
-    const ev = evalTeam0(team, pr, enemy, S, cap, ({...ctx||{}, ...{_azPick:b}}));
+    const c1 = ({...ctx||{}, ...{_azPick:b}}), ev = redPick(evalTeam0(team, pr, enemy, S, cap, c1), pr, c1); // 변형마다 겹치는 버프 빼기·안 빼기 둘 다
     const v = val(ev); if(v > bv*(1+1e-9)){ bv = v; best = ev; best.sbOff = team.map((c,i)=>d.includes(i)); best.uni = uc.length ? team.map((c,i)=>uc.includes(i) ? !u.includes(i) : null) : null; best.songOff = sgc.length ? team.map((c,i)=>g.includes(i)) : null; best.azBy = b; }
   }
   if(!best){ best = evalTeam0(team, progs.map((p,i)=> sgc.includes(i) ? ({...p, ...{songOff:true}}) : p), enemy, S, cap, ({...ctx||{}, ...{_azPick:by[0]}})); best.sbOff = team.map(()=>false); best.uni = null; best.songOff = team.map((c,i)=>sgc.includes(i)); best.azBy = by[0]; }
@@ -2761,7 +2788,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   if(A.allyOf) A.allyOf = allyOfPos(team, posSets);
   // 같은 상황에서 규칙 발동 상태가 같으면 계산을 재사용 (존 후보가 버프 조건을 바꾸지 않는 경우가 대부분)
   const memo = new Map();
-  const stepV = ctx && ctx.stFast ? null : stepValues(team, progs, A, enemy, S, cx, cap, posSets); // 탐색 1단계는 점수 순서(계산량)
+  const stepV = ctx && ctx.stFast ? null : stepValues(team, progs, A, enemy, S, cx, cap, posSets, !!(ctx && ctx._redOff)); // 탐색 1단계는 점수 순서(계산량)
   A.stepV = stepV;
   const sim = S.simOn!==false ? simTeam(team, progs, S, stepV) : null, simUse = !!(sim && sim.any);
   const uptLow = simUse && (sim.upt.some(u=>u<1) || sim.kupAny);
@@ -3008,6 +3035,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       return {n: +(nN + ch + ct).toFixed(1), cap: +cap.toFixed(1), af: +(afN + ct).toFixed(1)}; })()};
   /* 턴당 타수(보스 타수 기믹 hitgim, 2026-10-19): 멤버마다 평상 턴 타수(hN = 주력 타수 × 쓰는 비율 + 다른 공격·통상 공격 1타), 행동 1번 타수(h — AF 행동 수에 곱함), SB 타수(hS),
      실행 수(x), 실행당 타수(en·es — 연격 경감용), 그 구간 피해 비중(pn·pa·ps). 체인·요격 발동은 1타씩(ch) */
+  out.redDrop = stepV && stepV.red ? stepV.red.map(r=>({i: r.i, s: r.s, by: team[r.i].name})) : null; // 다른 아군 버프와 겹쳐 안 거는 버프 스킬
   out.hitN = (()=>{ const cs = res.normal.cores || [], sc = (res.sb && res.sb.cores) || [], aN = (R3.afA && R3.afA.n) || [], sm = a => (a||[]).reduce((x,y)=>x+(+y||0), 0);
     const m = team.map((c,i)=>{ const co = cs[i] || {}, so = sc[i] || {}, h = Math.max(1, +co.totHits||1) + (+co.linkHits||0), x = Math.max(1, +co.execs||1), sbU = !!(c.stellar && progs[i] && progs[i].sbOK);
       const hN = simUse ? (sim.act[i]||0)*h + (sim.alt[i]||0) + (sim.na[i]||0) : h, aN0 = simUse ? (sim.act[i]||0)*x + (sim.alt[i]||0) + (sim.na[i]||0) : x;
