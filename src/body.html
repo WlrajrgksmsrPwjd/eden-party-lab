@@ -222,6 +222,8 @@
       <div class="growgrid">
         <label class="lbl" for="gLv">레벨</label>
         <select id="gLv"><option value="auto">성도각성 캐릭터는 천명치에 따라 Lv100까지 (기본)</option><option value="80">전원 Lv80 · 성도각성 없음</option></select>
+        <label class="lbl" for="gGear">장비 세팅</label>
+        <select id="gGear"><option value="">최적 빌드 (딩 빌더 최적 장비, 기본)</option><option value="0.85">좋음 (최적의 약 85%)</option><option value="0.7">보통 (약 70%)</option><option value="0.55">갖추는 중 (약 55%)</option></select>
         <label class="lbl" for="gGl">글래스터</label>
         <label class="checkrow" style="align-items:center"><input type="checkbox" id="gGl"> 아직 미개방 (공격·전용 글래스터, 셔틀 P글래 모두 없음)</label>
         <label class="lbl" for="gAura">아군 전체 P글래</label>
@@ -229,7 +231,7 @@
         <span class="lbl">전용 글래 일괄</span>
         <span class="btnrow" id="gSpecial"><button type="button" class="btn small" data-gs="none">전원 없음</button> <button type="button" class="btn small" data-gs="sh">수호성의 증표</button> <button type="button" class="btn small" data-gs="shin">진</button> <button type="button" class="btn small" data-gs="goku">극</button></span>
       </div>
-      <p class="hint">레벨: 성도각성하면 스텔라 보드의 최대 레벨 +5 네 칸(천명치 15·30·50·80)으로 Lv100까지 오르고, 레벨당 힘·지성·속도·내구·정신·운 +1, MP는 약 +1.9%입니다. 전용 글래 일괄은 보유한 캐릭터 전원을 한 번에 바꾸고, 캐릭터마다 아래 목록에서 따로 바꿀 수 있습니다. 수호성의 증표는 6스탯 +5입니다.</p>
+      <p class="hint">레벨: 성도각성하면 스텔라 보드의 최대 레벨 +5 네 칸(천명치 15·30·50·80)으로 Lv100까지 오르고, 레벨당 힘·지성·속도·내구·정신·운 +1, MP는 약 +1.9%입니다. 전용 글래 일괄은 보유한 캐릭터 전원을 한 번에 바꾸고, 캐릭터마다 아래 목록에서 따로 바꿀 수 있습니다. 수호성의 증표는 6스탯 +5입니다. 장비 세팅: 장비는 무기종마다 딩 님 빌더로 찾은 최적 빌드(천명치에 따라 80 → 255로 강해짐)로 계산하고, 여기서 낮추면 빌드 코드를 넣지 않은 캐릭터의 대미지를 그 비율로 줄입니다(1타 상한 전 대미지라, 이미 상한에 닿는 덱은 덜 줄어듦). 세팅이 좋으면 상위 AF 덱은 AF 한 번 9999억 상한에 닿아 남는 화력으로 다른 캐릭터를 넣을 여유가 생기고, 세팅이 약하면 AF 화력이 센 덱이 위로 갑니다.</p>
     </details>
     <details class="fold" id="advRoster">
       <summary>고급 설정 <span class="hint">버디 · 연성 P글래 · 공격 글래스터 기본값 (몰라도 계산됩니다)</span></summary>

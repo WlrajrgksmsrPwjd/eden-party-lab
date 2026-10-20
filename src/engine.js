@@ -51,6 +51,7 @@ const DEFAULT_SETTINGS = {
   afFastDefault: false, // 빌드 코드가 없는 캐릭터를 속도 249 이상으로 볼지
   useStats: true,    // 캐릭터 기본 스탯(위키 Stats Index)으로 주 스탯 대미지·운 크리율·속도 반영
   gearSpd: null,     // 빌드 코드가 없는 캐릭터의 장비 속도. null이면 무기종별 자동값(GEAR_SPD_AUTO)
+  gearQ: 1,          // 장비 세팅(2026-10-20 사용자 '천명 200 이상에 세팅 좋으면 맥뎀 — 아니면 AF딜 위주'): 빌드 코드가 없는 캐릭터의 대미지 = 무기종 최적 빌드(GEAR_STD·GEAR_FX) × 이 값(보유 탭 육성 수준 '장비 세팅')
   pglAssumeAll: false, // 연성 P글래 보유를 하나도 표시하지 않았을 때 전부 있다고 볼지 (기본: 없다고 봄 → 셔틀 공유 없음)
   afStart: 50,       // 전투 시작 AF 게이지 % (이월 최대 50%). 캐릭터·버디 조건(af_start.json)이면 100%
   burstTurns: 3,     // 최고점 = 개전부터 N턴 동안 넣는 총 대미지 (AF·SB 발동 시점은 게이지로 계산)
@@ -1480,6 +1481,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     if(zk && AURA_Z.has(zk) && auraCap(au, 'r50_'+auraZK(zk))>0) r50 = 0.15; else if(au.nMin>0 && auraCap(au, 'r51_'+mn)>0) r51 += 0.05*au.nMin;
     auraF = (1+r50)*(1+r51); auraR = {r50, r51, nb:au.nb}; dmg *= auraF; }
   if(pr.gear) dmg *= pr.gear.q; // 빌드 코드: 장비 완성도
+  else if(+S.gearQ>0 && +S.gearQ<1) dmg *= +S.gearQ; // 장비 세팅(최적 빌드 대비, 상한 전 대미지에 — 상한에 닿는 덱은 덜 줄어듦)
 
   // 방어 무시/배리어
   const pierce = pierceW>=0.5;

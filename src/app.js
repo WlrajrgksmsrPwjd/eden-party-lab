@@ -765,7 +765,8 @@ function renderPglTbl(){
 function renderGrow(){
   const S=settings(); if(!$('#gLv')) return;
   $('#gLv').value = S.lvMode==='80' ? '80' : 'auto'; $('#gGl').checked = !!S.glLocked; $('#gAura').checked = S.auraGl===false;
-  const t=[]; if(S.lvMode==='80') t.push('Lv80'); if(S.glLocked) t.push('글래 미개방'); else if(S.auraGl===false) t.push('아군 전체 P글래 없음');
+  { const gg=$('#gGear'); if(gg) gg.value = +S.gearQ>0 && +S.gearQ<1 ? String(+S.gearQ) : ''; }
+  const t=[]; if(+S.gearQ>0 && +S.gearQ<1) t.push('장비 '+Math.round(100*S.gearQ)+'%'); if(S.lvMode==='80') t.push('Lv80'); if(S.glLocked) t.push('글래 미개방'); else if(S.auraGl===false) t.push('아군 전체 P글래 없음');
   $('#growN').textContent = t.length ? t.join(' · ') : '기본';
 }
 
@@ -2785,6 +2786,7 @@ function bind(){
   const growSet = (k, v) => { if(v===undefined) delete state.settings[k]; else state.settings[k]=v; cap=E.computeCap(prepped, settings()); touchRoster(); renderGrow(); renderRoster(); };
   $('#gLv').addEventListener('change',e=>growSet('lvMode', e.target.value==='80' ? '80' : undefined));
   $('#gGl').addEventListener('change',e=>growSet('glLocked', e.target.checked || undefined));
+  { const gg=$('#gGear'); if(gg) gg.addEventListener('change',e=>growSet('gearQ', +e.target.value>0 ? +e.target.value : undefined)); }
   $('#gAura').addEventListener('change',e=>growSet('auraGl', e.target.checked ? false : undefined));
   $('#gSpecial').addEventListener('click',e=>{ const b=e.target.closest('[data-gs]'); if(!b) return; const g=b.dataset.gs; let n=0;
     for(const id in state.owned){ const o=state.owned[id]; if(!o) continue; o.g=g; n++; }
