@@ -1904,7 +1904,7 @@ function setupHtml(x, i){
   { const es = ev.sim && ev.sim.eqSk && ev.sim.eqSk[i], ZK = {deploy:'존 전개', awaken:'존 각성'};
     if(es && es.L.length) S2.push(`<li>스킬 칸 <span class="hint">(${es.tot}칸 중 주력·성도 스킬 빼고 ${es.n}칸, 위부터 우선)</span><ol class="sklist">${es.L.map(z=>`<li><b>${esc(z.n)}</b>${z.z?` <span class="hint">${ZK[z.z]||'존'}</span>`:z.k==='attack'?' <span class="hint">공격 버프기</span>':''}</li>`).join('')}</ol>${es.L.length<es.n?`<span class="hint">남는 ${es.n-es.L.length}칸은 자유 (회복·생존 스킬 권장)</span>`:''}</li>`);
     else if(es && es.n>0) S2.push(`<li class="hint">남는 스킬 칸 ${es.n}개는 자유 — 계산에 쓰는 버프 스킬이 없음 (회복·생존 스킬 권장)</li>`);
-    const ab = ev.afBuf && ev.afBufSk && ev.afBufSk[i] && ev.afBufSk[i].length ? ev.afBufSk[i] : null; if(ab) S2.push(`<li>AF 안에서 거는 버프: <b>${ab.map(esc).join(' · ')}</b> <span class="hint">— 평상 턴엔 공격하고, AF를 켜면 첫 행동으로 걸기(버프 행동은 AF 게이지가 안 참)${ev.afBufW!=null && ev.afBufW<0.99 ? ` · 지속 턴이 길어 AF ${Math.round(100*ev.afBufW)}%에서만 다시` : ''}</span></li>`);
+    const ab = ev.afBuf && ev.afBufSk && ev.afBufSk[i] && ev.afBufSk[i].length ? ev.afBufSk[i] : null; if(ab) S2.push(`<li>AF 안에서 거는 버프: <b>${ab.map(esc).join(' · ')}</b> <span class="hint">— 평상 턴엔 공격하고, AF를 켜면 첫 행동으로 걸기(버프 행동은 AF 게이지가 안 참)${ev.afBufW!=null && ev.afBufW<0.99 ? ` · 지속 턴이 길어 AF ${Math.round(100*ev.afBufW)}%에서만 다시` : ''}${ev.afBuf<0 ? ' · 다음 AF 전에 끊기면 그 턴엔 평상 턴에서 다시' : ''}</span></li>`);
     const rd = !ev.redOff && ev.redDrop ? ev.redDrop.filter(q=>q.i===i) : []; if(rd.length) S2.push(`<li class="hint">안 거는 버프: ${rd.map(q=>esc(q.s)).join(' · ')} — 다른 아군 버프와 겹쳐(속도·능력치 +100% 상한, 같은 상태) 걸어도 그대로</li>`); }
   if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req_ko||r.req)}</span></li>`);
   const O = (c.cxWhy||[]).map(w=>`<li>${esc(w)}</li>`);
