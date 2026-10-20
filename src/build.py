@@ -98,6 +98,9 @@ for c in chars:
 sng=json.load(open(P('data','song.json'),encoding='utf-8')) # 가창 스킬(가창 중 행동 불가, 2026-10-18 사용자 확인)
 for c in chars:
     if c['id'] in sng and not c['id'].startswith('_'): c['song']=sng[c['id']]
+exd=json.load(open(P('data','ex.json'),encoding='utf-8')) # EX必殺技 레벨 오르는 조건·효과 지속(2026-10-20, game-info AF まとめ·알테마)
+for c in chars:
+    if c['id'] in exd and not c['id'].startswith('_'): c['exsp']={k:v for k,v in exd[c['id']].items() if k in ('lv','lv_sa','turn','af','sb','zone','ctr','dur','max','off','win','win_add','wt')} # ex(보강 데이터)와 다른 칸
 rvv=json.load(open(P('data','revive.json'),encoding='utf-8'))
 for c in chars:
     if c['id'] in rvv and not c['id'].startswith('_'): c['revive']={'g':rvv[c['id']]['g'],'fx':[{k:v for k,v in e.items() if k in ('k','t','w','s')} for e in rvv[c['id']]['fx']]}

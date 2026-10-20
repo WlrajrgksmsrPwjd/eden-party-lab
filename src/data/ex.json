@@ -1,0 +1,21 @@
+{
+  "_doc": "EX必殺技(ES 캐릭터, 2026-10-20 — game-info AF まとめ 4-2·biligame ES 설명·알테마·딩 DB): EX 레벨은 개전 1(최대 10)·전열에 있으면 턴 종료마다 +1·캐릭터 조건이면 더, AF가 끝나면 다시 1. 게이지 100%(200)에서 켠 AF의 행동(비공격 포함)마다 EX 게이지가 1 ÷ ⌈1200 ÷ 레벨²⌉씩(Lv4 75·Lv5 48·Lv10 12행동) 차고, 다 차면 그 AF 필살기 뒤에 나가고 0, 아니면 다음 100% AF로 이어짐. 필드: lv 시작 레벨(1 + 개전 조건), lv_sa 성도각성(스텔라 보드 어빌리티 강화)이면 더함, turn 기본 +1 말고 턴마다 더 오르는 기대값, af 그 AF를 켤 때, sb SB를 쓸 때(\"max\" = 10), zone 극 존(ANOTHER ZONE) 턴마다, ctr 요격 턴마다(1턴 1회), win [from, to] + win_add 그 턴 구간(루나틱 3턴 등)마다, wt {wt, n, add} 그 턴 아군 ○ 공격 행동이 n번 이상이면, dur 효과 턴(다음 턴부터), max. 효과는 buff_acts.json의 'EX必殺技' 행동 항목만 EX 게이트(없으면 계산 영향 없음 — 회복·AF 게이지 회복·EX 피해는 아직 안 넣음).",
+  "hismena_es": {"lv": 1, "lv_sa": 3, "dur": 5, "note": "ステラボード アビリティ獲得(강화): 前衛で戦闘開始時 EXレベル3上昇 — 첫 AF 전에만 도움. EX: 味方全体 デバフリバーサル・心技一体 5ターン", "src": "https://altema.jp/anaden/chara/1193", "conf": "high"},
+  "shion_es": {"wt": {"wt": "slash", "n": 5, "add": 1}, "dur": 3, "note": "턴 종료 시 아군 斬 공격 5회 이상이면 +1(시구레(ES) 요격과 함께면 턴당 3 — game-info). EX: 敵全体 弱点看破(斬) 3ターン", "src": "https://altema.jp/anaden/chara/1144", "conf": "high"},
+  "nekoko_es": {"dur": 99, "note": "EX 레벨을 올리는 조건이 없음(game-info: 'EXレベル上昇のためのギミックが存在しない') — 아나벨(ES) ジャスティス(EX 레벨 10)로만. EX: 자신 외 아군 猫神ミラクル加護(전 스탯 +100·크리율 100%, 네코코가 쓰러질 때까지)", "src": "https://altema.jp/anaden/chara/1128", "conf": "high"},
+  "anabel_es": {"sb": "max", "dur": 1, "note": "星導スキル ジャスティス【ステラバースト時追加】 EXレベル最大(10 → AF 행동 12회). EX: 敵 物理·全属性耐性 100%DOWN 1ターン, ミグランス王宮 아군 連撃数 +1 1ターン", "src": "https://altema.jp/anaden/chara/1077", "conf": "high"},
+  "tuva_es": {"turn": 1, "dur": 1, "note": "ルナティック時 EXレベル+1(game-info, 알테마는 +2) — 스킬 조합으로 늘 루나틱이라 턴마다 +1로 봄. EX: 아군 전후위 배리어 관통(1회 행동)·전투불능 회복·턴 종료 AF 게이지 회복", "src": "https://altema.jp/anaden/chara/1014", "conf": "med"},
+  "felmina_es": {"zone": 1, "dur": 5, "note": "ANOTHER ZONE(극 존) 때 EXレベル+1(game-info·biligame, 시점 미기재 — 턴마다로 봄). EX: 氷爆符 50 축적, 자신 MP 100%·腕力/知性/速度 100%·弱点時ダメージUP 5ターン", "src": "https://altema.jp/anaden/chara/1025", "conf": "med"},
+  "suzette_es": {"af": 2, "dur": 5, "note": "AF時 EXレベル+2(game-info 패시브 목록 — 알테마엔 없음). EX: 자신 HP 최대 +5000·HP/MP 100%·腕力·速度 100% 5ターン", "src": "https://altema.jp/anaden/chara/918", "conf": "high"},
+  "tilril_es": {"win": [1, 3], "win_add": 1, "dur": 1, "note": "ルナティック時 EXレベル+1(game-info, 3턴·전투 1회 — 개전 3턴으로 가정). EX: 敵 弱点看破(晶) 1ターン·버프 해제, 아군 디버프 해제(약점 간파는 데이터에 아직 없음)", "src": "https://altema.jp/anaden/chara/1061", "conf": "med"},
+  "shigure_es": {"ctr": 1, "dur": 3, "note": "1턴 1회 자신이 요격하면 EXレベル+1(다음 턴 반영). EX: 敵 臨機応変(斬) 3ターン, 아군 HP·MP 100%·踏ん張る", "src": "https://altema.jp/anaden/chara/1108", "conf": "high"},
+  "myrus_es": {"sb": 5, "dur": 1, "note": "星導スキル ミュルスインパクト【SB時追加】 EXレベル+5(1번의 AF에서 Lv6 → 34행동). EX: 턴 종료 AF 게이지 50%(쓸 때마다 30·10%) — 아직 안 넣음", "src": "https://altema.jp/anaden/chara/1167", "conf": "high"},
+  "claude_es": {"zone": 1, "dur": 1, "note": "ANOTHER ZONE 때 EXレベル+1. EX: 아군 HP 100%·상태이상·전투불능 회복", "src": "https://altema.jp/anaden/chara/964", "conf": "med"},
+  "mariel_es": {"win": [1, 3], "win_add": 2, "dur": 1, "note": "ルナティック時 EXレベル+2(game-info·biligame, 루나틱 3턴·전투 1회 — 개전 3턴으로 가정). EX: 아군 治癒·MP 治癒 4회·踏ん張る", "src": "https://altema.jp/anaden/chara/990", "conf": "med"},
+  "tsukiha_es": {"win": [2, 2], "win_add": 3, "dur": 1, "note": "鬼心 5축적으로 턴 종료 시 逆境 → EXレベル+3(2턴째로 가정). EX: 아군 治癒 10회·踏ん張る", "src": "https://altema.jp/anaden/chara/873", "conf": "med"},
+  "miyu_es": {"lv": 2, "dur": 10, "note": "개전 루나틱(獅子奮迅) → ルナティック時 EXレベル+1. EX: 아군 HP 100%·상태이상 회복·소비 MP 80% 경감 10ターン", "src": "https://altema.jp/anaden/chara/938", "conf": "med"},
+  "m2_isuka_es": {"win": [1, 3], "win_add": 1, "dur": 3, "note": "ルナティック時 EXレベル+1(game-info·biligame, 알테마 +2). EX: 아군 100% 경감 배리어(1회·3턴)·治癒 3회", "src": "https://altema.jp/anaden/chara/896", "conf": "med"},
+  "m2_nagi_es": {"dur": 1, "note": "캐릭터 조건 없음(기본 +1만). EX: 턴 종료 AF 게이지 50% — 아직 안 넣음", "src": "https://altema.jp/anaden/chara/883", "conf": "med"},
+  "m3_melina_es": {"dur": 1, "note": "캐릭터 조건 없음. EX: 아군 전후위 HP·MP 100%", "src": "https://altema.jp/anaden/chara/857", "conf": "med"},
+  "flammelapis_es": {"dur": 1, "note": "캐릭터 조건 없음(딩 DB에 EX 레벨 항목 없음). EX: 턴 종료 AF 게이지 25%·踏ん張る·상태이상 회복 — 아직 안 넣음", "src": "https://altema.jp/anaden/chara/1212", "conf": "med"}
+}
