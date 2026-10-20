@@ -1796,6 +1796,9 @@ function simTeam(team, progs, S, stepV, opt){ // opt.afBuff = AF 주기(턴): �
        opt.afRe(AF 주기가 지속보다 길 때): 다음 AF 전에 끊기면 그때만 평상 턴에 다시 검(AF는 평상 턴 (C−1)턴마다, 1턴째 AF로 시작). 아니면 끊긴 턴은 버프 없이(유지율 min(1, (d−1)/(C−1))) */
     const afRe = !!(afMv && opt.afRe), steps = afMv && !afRe ? stepsAll.filter(st=>!afMv.includes(st)) : stepsAll, K = steps.length;
     const afIdx = afRe ? steps.map((st,q)=>afMv.includes(st) ? q : -1).filter(q=>q>=0) : [], afGap = afMv ? Math.max(1, (+opt.afBuff||2.5) - 1) : 0; let afAcc = 0;
+    /* AF 턴도 버프 지속을 씀(2026-10-20): AF 주기 C면 평상 턴 C−1턴마다 AF 턴 1턴 — 평상 행동·MP 소비는 없고 버프·가창 지속 1턴 감소·MP 회복. AF 안 버프 운용은 그 주기(afGap), 기본 운용은 opt.afTick(evalTeam0이 첫 계산의 주기로 다시) */
+    const tkOn = S.afTurnTick!==false, tkGap = !tkOn ? 0 : afMv ? afGap : opt && +opt.afTick>1 ? Math.max(1, +opt.afTick - 1) : 0;
+    const afTick = (skip) => { for(let q=0;q<K;q++) if(rem[q]>0 && !(skip && skip.includes(q))) rem[q]--; if(lock>0) lock--; mp = Math.min(mpMax, mp + regI); };
     const rem = steps.map(()=>0), act = steps.map(()=>0);
     const dur = steps.map(st=>st.song && sOn ? (st.song>=99 ? H+1 : st.song) : st.dur>0 ? st.dur : durOf(st));
     let mp=mpMax, mainN=0, altN=0, naN=0, buffN=0, out=0, altWs=0;
@@ -1814,7 +1817,8 @@ function simTeam(team, progs, S, stepV, opt){ // opt.afBuff = AF 주기(턴): �
       else { if(!out) out=t; if(mp>=costAlt){ mp-=costAlt; altN++; altWs+=aW; if(t===1) a1 = 'a'; } else { naN++; if(t===1) a1 = 'n'; } }
       for(let q=0;q<K;q++) if(rem[q]>0){ act[q]++; rem[q]--; }
       mp=Math.min(mpMax, mp+regI);
-      if(afRe){ afAcc += 1; if(afAcc >= afGap - 1e-9){ afAcc -= afGap; afRef(); } } // 평상 턴 (C−1)턴 뒤 AF: 버프를 AF 안에서 다시
+      if(afRe){ afAcc += 1; if(afAcc >= afGap - 1e-9){ afAcc -= afGap; if(tkGap) afTick(afIdx); afRef(); } } // 평상 턴 (C−1)턴 뒤 AF: 버프를 AF 안에서 다시(AF에서 거는 버프는 afRef가 d−1로)
+      else if(tkGap){ afAcc += 1; if(afAcc >= tkGap - 1e-9){ afAcc -= tkGap; afTick(null); } }
     }
     const upt = K ? act.reduce((x,y)=>x+y,0)/(K*H) : 1;
     // 항목별 유지율(버프 행동이 있는 캐릭터): 쓴 행동의 켜진 턴 비율, 안 쓰는 행동만 주는 항목은 0, 자동·주력은 1, SB 전용은 0
@@ -2823,21 +2827,24 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const stepV = ctx && ctx.stFast ? null : stepValues(team, progs, A, enemy, S, cx, cap, posSets, !!(ctx && ctx._redOff)); // 탐색 1단계는 점수 순서(계산량)
   A.stepV = stepV;
   const afBufC = ctx && ctx._afBuff ? Math.abs(+ctx._afBuff)||0 : 0; // AF 안에서 버프 걸기 변형(AF 주기 어림, evalTeamV가 정함)
-  const sim = S.simOn!==false ? simTeam(team, progs, S, stepV, afBufC ? {afBuff: afBufC, afRe: ctx._afBuff < 0} : null) : null, simUse = !!(sim && sim.any);
-  const uptLow = simUse && (sim.upt.some(u=>u<1) || sim.kupAny);
+  const sim = S.simOn!==false ? simTeam(team, progs, S, stepV, afBufC ? {afBuff: afBufC, afRe: ctx._afBuff < 0} : null) : null; let simUse = !!(sim && sim.any);
+  let uptLow = simUse && (sim.upt.some(u=>u<1) || sim.kupAny);
   /* 가창(2026-10-18 사용자 확인): 평상 턴에 가창을 유지하는 캐릭터는 AF에서 행동 못 함 — 1턴째 AF(전투 시작부터 AF)는 가창을 거는 행동 1번 뒤 막힘, 2턴째부터는 처음부터 막힘.
      허수아비(1턴 AF)는 행동 계획에 가창이 들어 있으면 그 행동 뒤 막힘. 주력이 가창 턴 종료 공격인 캐릭터(미스트레아(AS) 등)도 AF 행동은 없음 */
   const singI = team.map((c,i)=> !!(c.song && !(progs[i] && progs[i].songOff) && (c.song.main || (songOn(c, team, progs[i]) && (!sim || (sim.songUp[i]||0) >= 0.5)))));
   const anySing = singI.some(Boolean), lkAt = rt => anySing ? team.map((c,i)=> singI[i] ? (rt>=2 || A.lateAF || c.song.main ? 0 : 1) : null) : null;
   const lkPlan = stepsArr => anySing ? team.map((c,j)=>{ if(!singI[j]) return null; if(c.song.main) return 0; const p = (stepsArr[j]||[]).findIndex(st=>st && st.song); return p>=0 ? p+1 : null; }) : null;
   A.singI = anySing ? singI : null;
-  let uptArr = simUse ? sim.upt.map((u,j)=> sim.kup[j] ? {mf: sim.kup[j]} : u) : null;
+  let uptArr = null;
   A.eqOff = sim && sim.eqOff.some(Boolean) ? sim.eqOff : null;
-  A.stkMR = simUse ? sim.act.map(x=>Math.max(0.5, Math.min(1, +x||0))) : null; // 누적 예열: 주력으로 쌓는 누적은 주력을 쓰는 턴 비율만큼(누적을 쌓는 캐릭터는 주력을 우선 쓴다고 보고 0.5 이상)
   const eqArr = sim ? sim.eqOff.map(o=>o ? {mf:o} : 1) : null, eqAny = !!(eqArr && eqArr.some(x=>x!==1)); // AF·SB에서 장착 못 한 버프 끄기
-  A.ctrU = team.some(c=>c.counter && c.counter.skill) ? team.map((c,j)=>{ const k = sim && sim.kup && sim.kup[j]; return k && k.ctr!=null ? k.ctr : 1; }) : null; // 요격 스킬 유지율(평상 턴)
-  A.teU = team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.act)) ? team.map((c,j)=>{ const k = sim && sim.kup && sim.kup[j]; if(!k) return null; const o = {}; for(const x in k) if(x.indexOf('te')===0 && /^te\d+$/.test(x)) o[x] = k[x]; return o; }) : null; // 턴 종료 공격을 거는 스킬 유지율
-  if(A.echg) A.ecU = team.map((c,j)=>{ const k = sim && sim.kup && sim.kup[j]; return k && k.echg!=null ? k.echg : 1; }); // 속성 변환 유지율(ecGate) // 버프 행동이 있으면 항목별 유지율
+  const simDerive = () => { // 평상 턴 시뮬에서 나오는 값들(AF 턴 지속 감소로 시뮬을 다시 돌리면 다시)
+    uptArr = simUse ? sim.upt.map((u,j)=> sim.kup[j] ? {mf: sim.kup[j]} : u) : null;
+    A.stkMR = simUse ? sim.act.map(x=>Math.max(0.5, Math.min(1, +x||0))) : null; // 누적 예열: 주력으로 쌓는 누적은 주력을 쓰는 턴 비율만큼(누적을 쌓는 캐릭터는 주력을 우선 쓴다고 보고 0.5 이상)
+    A.ctrU = team.some(c=>c.counter && c.counter.skill) ? team.map((c,j)=>{ const k = sim && sim.kup && sim.kup[j]; return k && k.ctr!=null ? k.ctr : 1; }) : null; // 요격 스킬 유지율(평상 턴)
+    A.teU = team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.act)) ? team.map((c,j)=>{ const k = sim && sim.kup && sim.kup[j]; if(!k) return null; const o = {}; for(const x in k) if(x.indexOf('te')===0 && /^te\d+$/.test(x)) o[x] = k[x]; return o; }) : null; // 턴 종료 공격을 거는 스킬 유지율
+    if(A.echg) A.ecU = team.map((c,j)=>{ const k = sim && sim.kup && sim.kup[j]; return k && k.echg!=null ? k.echg : 1; }); }; // 속성 변환 유지율(ecGate) // 버프 행동이 있으면 항목별 유지율
+  simDerive();
   const coresFor = (sit, z, useSim)=>{
     const upt = useSim && uptLow ? uptArr : sit!=='normal' && eqAny ? eqArr : null;
     if(!zdep){ const FX = (anyR||upt) ? buildBF(team,progs,sit,z,A,posSets,upt) : null; const cs = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,sit,cx,FX,z)); cs.FX = FX; cs.upt = upt; return cs; }
@@ -2861,7 +2868,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const fw = focusW(ctx&&ctx.focus);
   const hasChain = team.some(c=>c.chain), hasCtr = team.some(c=>c.counter), hasTE = team.some(c=>c.turnEnd), hasOnce = team.some(c=>c.once);
   // 일반 턴 행동 비중: 주력기 턴 + 통상 공격 턴(주력기 대비 약한 위력)
-  const wN = simUse ? team.map((c,i)=>sim.act[i] + sim.alt[i]*(sim.altW ? sim.altW[i] : Math.max(ALT_R, c.naR)) + sim.na[i]*c.naR) : null;
+  const wNof = () => simUse ? team.map((c,i)=>sim.act[i] + sim.alt[i]*(sim.altW ? sim.altW[i] : Math.max(ALT_R, c.naR)) + sim.na[i]*c.naR) : null; let wN = wNof();
   const sumZ = (cores,z,combo,w)=>{ let v=0; const per=cores.map((co,i)=>{ const d=applyZoneCap(co,z,S,cap,combo)*fw(co)*(w?w[i]:1); v+=d; return d; }); return {v,per}; };
   const res = {};
   A.tm = {S0:2, H:Math.max(1, Math.round(S.simTurns||6))};
@@ -3009,6 +3016,16 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     return (sumZ(cores1, z1, null, wN).v + xN)*(1-w2) + res.normal.total*w2; };
   let sustain = susOf();
   let afGain = (S.afBan || S.afDrain) ? 0 : afGainOf(nz, res.normal.cores); // S.afBan: AF 금지, S.afDrain: 보스 흉성 3(AF 게이지 매 턴 소비) → 평상 턴 충전 없음
+  /* AF 턴도 버프 지속을 씀(2026-10-20 점검): 기본 운용의 평상 턴 시뮬은 처음엔 AF 주기를 몰라 AF 턴 없이 돌림(버프 3턴 = 평상 턴 3턴) →
+     이 주기로 시뮬을 한 번 더(AF 턴마다 버프·가창 지속 1턴 감소, simTeam opt.afTick) 돌려 유지율이 바뀌면 같은 존으로 평상 턴·AF 게이지를 다시. 탐색 어림 단계(stFast)는 생략 */
+  let afTickC = 0;
+  if(!afBufC && sim && S.afTurnTick!==false && !(S.afBan || S.afDrain) && S.afCycle!==false && !(ctx && ctx.stFast) && afGain>0 && sim.buffN.some(n=>n>0)){
+    const C0 = afCyc1(afGain, afOffOf(nz));
+    if(C0 < 12){ const s2 = simTeam(team, progs, S, stepV, {afTick: C0}), ch = (a,b)=> a.some((v,i)=>Math.abs((+v||0) - (+b[i]||0)) > 1e-9);
+      const kch = s2.kup.some((k,j)=>{ const k0 = sim.kup[j]; if(!k !== !k0) return true; if(!k) return false; for(const x in k) if(Math.abs((k[x]||0) - (k0[x]||0)) > 1e-9) return true; return false; });
+      if(kch || ch(s2.act, sim.act) || ch(s2.alt, sim.alt) || ch(s2.upt, sim.upt) || ch(s2.na, sim.na)){
+        Object.assign(sim, s2); simUse = !!sim.any; uptLow = simUse && (sim.upt.some(u=>u<1) || sim.kupAny); simDerive(); wN = wNof(); memo.clear();
+        runSit('normal', nz); afGain = afGainOf(nz, res.normal.cores); sustain = susOf(); afTickC = +C0.toFixed(2); } } }
   const dInj = S.afDrain && !S.afBan ? afDrainInj(A.bud, nz, team) : null; // 흉성 3에서도 버디 차지 AF 게이지(건스(AS)·코로보)를 모아 그 턴에 쓰면 AF
   const afOff = !!(S.afBan || (S.afDrain && !dInj)), afCyc = S.afCycle!==false && !afOff; // AF를 못 쓰면 지속 딜에 AF 주기 없음(예전엔 afBan이어도 AF ÷ 20턴을 더했음)
   const offOK = !(S.afOffGain===false || S.afBan || S.afDrain);
@@ -3088,6 +3105,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       return {n: +(nN + ch + ct).toFixed(1), cap: +cap.toFixed(1), af: +(afN + ct).toFixed(1)}; })()};
   /* 턴당 타수(보스 타수 기믹 hitgim, 2026-10-19): 멤버마다 평상 턴 타수(hN = 주력 타수 × 쓰는 비율 + 다른 공격·통상 공격 1타), 행동 1번 타수(h — AF 행동 수에 곱함), SB 타수(hS),
      실행 수(x), 실행당 타수(en·es — 연격 경감용), 그 구간 피해 비중(pn·pa·ps). 체인·요격 발동은 1타씩(ch) */
+  if(afTickC) out.afTick = afTickC; // 평상 턴 시뮬에 넣은 AF 주기(AF 턴도 버프 지속을 씀)
   out.redDrop = stepV && stepV.red ? stepV.red.map(r=>({i: r.i, s: r.s, by: team[r.i].name})) : null; // 다른 아군 버프와 겹쳐 안 거는 버프 스킬
   out.afPlN = afPlC ? afPlC.reduce((k,L)=>k + (L ? L.length : 0), 0) : 0; // AF 안에서 걸 수 있는 버프 스킬 수
   out.afCastN = sim && sim.afCast ? +sim.afCast.reduce((x,y)=>x+y, 0).toFixed(3) : 0; // 평상 턴에 그 버프 스킬을 거는 턴 비율(멤버 합)
