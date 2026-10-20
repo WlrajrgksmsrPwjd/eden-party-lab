@@ -2895,8 +2895,8 @@ function bind(){
     if(!n){ flash('표시된 캐릭터 중 보유한 캐릭터가 없습니다.'); return; }
     touchRoster(); renderRoster(); flash(`보유 ${n}명 천명치 ${v}${st?' · 성도각성':''}으로 바꿨습니다`);
   });
-  $('#defGl').addEventListener('change',e=>{ const p=GL_PRESETS[e.target.value]; state.settings.grastaDefault=Object.assign({}, p.v, {ore:$('#defOre').checked}); save(); });
-  $('#defOre').addEventListener('change',e=>{ const g=Object.assign({}, E.DEFAULT_SETTINGS.grastaDefault, state.settings.grastaDefault||{}); g.ore=e.target.checked; state.settings.grastaDefault=g; save(); });
+  $('#defGl').addEventListener('change',e=>{ const p=GL_PRESETS[e.target.value]; state.settings.grastaDefault=Object.assign({}, p.v, {ore:$('#defOre').checked}); planDirty=true; shareDirty=true; save(); }); // 바꾸면 편성 결과도 다시(2026-10-20: 저장만 하고 결과는 예전 값이던 것)
+  $('#defOre').addEventListener('change',e=>{ const g=Object.assign({}, E.DEFAULT_SETTINGS.grastaDefault, state.settings.grastaDefault||{}); g.ore=e.target.checked; state.settings.grastaDefault=g; planDirty=true; shareDirty=true; save(); });
   $('#customForm').addEventListener('submit',addCustom);
   $('#customList').addEventListener('click',e=>{ const b=e.target.closest('button[data-delc]'); if(!b) return; const id=b.dataset.delc; state.custom=state.custom.filter(c=>c.id!==id); delete state.owned[id]; save(); rebuildChars(); renderRoster(); renderCustomList(); });
   $('#ioExport').addEventListener('click',exportState);
