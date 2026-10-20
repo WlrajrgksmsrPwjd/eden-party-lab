@@ -2627,7 +2627,7 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   if(kl){ const N = T.length, A = kl.filter(l=>l.t>N && l.af).map(l=>l.t), H = kl.some(l=>l.t>N && l.hold); if(A.length) late = ` → 그 뒤 ${A.slice(0,4).join('·')}${A.length>4?'…':''}턴${H?' (스토퍼·목숨 직전엔 아껴 둠)':''}`; }
   const full = T.some(r=>r.afFull>0) ? ' <span class="warn">게이지가 꽉 차면 피해 감소 — 100% 전에</span>' : (x.S||settings()).afFull ? ' <span class="hint">(게이지가 꽉 차면 피해 감소 — 100% 전에 켬)</span>' : '';
   const sbF = ev.sbFull ? ` · <b>${esc(ev.sbFull.by)}</b> ${esc(ev.sbFull.name)}: ${ev.sbFull.from}턴째부터 ${ev.sbFull.dur}턴 동안 매 턴 SB 게이지 가득(약 ${ev.sbFull.per}턴마다)` : ''; // SB 게이지 가득 상태(2026-10-19 유우체리카 星天の力)
-  const bf = ev.afBuf && ev.afBufSk && ev.afBufSk.some(L=>L && L.length) ? ` · 버프 스킬은 <b>AF 첫 행동</b>으로(평상 턴엔 공격)` : ''; // AF 안 버프 운용(2026-10-20)
+  const bf = ev.afBuf && ev.afBufSk && ev.afBufSk.some(L=>L && L.length) ? ` · 버프 스킬은 <b>AF 첫 행동</b>으로(평상 턴엔 공격${ev.afBuf>0 && +ev.afPreR>0 && +ev.afPreR<0.95 && T.length && !T[0].af ? ` — 첫 AF 전 평상 턴은 그 버프 없이 약 ${Math.round(100*ev.afPreR)}%` : ''})` : ''; // AF 안 버프 운용(2026-10-20), afPreR: 첫 AF 전 평상 턴 비율
   /* AF 상한 여유(2026-10-20 사용자 '천명 200 이상에 세팅 좋으면 맥뎀 찍을 파티원 구성이 자유로움'): 실전 AF가 9999억 상한에 닿으면 상한 없을 때 값과 비율 — 화력 대신 생존·유지력 캐릭터를 넣을 여유 */
   const capR = ev.score ? [] : T.filter(r=>r.afCap && +r.afRaw>0), cTot = +(x.S||settings()).afTotalCap||0;
   const capT = capR.length && cTot>0 ? (()=>{ const mx = Math.max(...capR.map(r=>+r.afRaw)), sl = 1 - cTot/mx; return ` · <b class="capok">AF가 상한(9999억)에 닿음</b> <span class="hint">— 상한 없으면 약 ${fmtN(mx)}${sl>=0.25 ? `라 화력의 약 ${Math.round(100*sl)}%는 남음: 딜러 하나를 생존·유지력 캐릭터로 바꿔도 AF 피해는 거의 그대로` : ` (여유 약 ${Math.round(100*sl)}% — 화력을 빼면 상한 아래로 내려감)`}</span>`; })() : '';

@@ -1752,7 +1752,7 @@ function simTeam(team, progs, S, stepV, opt){ // opt.afBuff = AF 주기(턴): �
   const mpTo = (j, i) => { const to = team[j].supTo && team[j].supTo.mp_recover; if(!to) return true; if(to.pos) return to.pos==='self' ? i===j : true; return toFilterOK(to, team[i]); };
   const regenOf = i => MP_REGEN[Math.min(3, Math.max(0, ...team.map((c,j)=>mpTo(j,i) ? +((c.sup||{}).mp_recover||0) : 0)))]||0; // MP 회복은 받는 사람 조건(본인만·속성 등)대로
   const regen = Math.max(0, ...team.map((c,i)=>regenOf(i)));
-  const R = {H, regen, upt:[], kup:[], eqOff:[], eqSk:[], afSt:[], afCast:[], kupAny:false, act:[], alt:[], altW:[], na:[], out:[], mainN:[], buffN:[], mpMax:[], costMain:[], lock:[], songUp:[], any:false};
+  const R = {H, regen, upt:[], kup:[], kupPre:[], t1a:[], eqOff:[], eqSk:[], afSt:[], afCast:[], kupAny:false, act:[], alt:[], altW:[], na:[], out:[], mainN:[], buffN:[], mpMax:[], costMain:[], lock:[], songUp:[], any:false};
   const zcN = team.some(c=>c.bact && c.bact.steps.some(st=>st.z)) ? zoneCandidates(team, progs, 'normal') : null;
   const autoGoku = !!(zcN && zcN.some(q=>q && q.how==='개전 자동' && q.level>=2)); // 개전부터 극 존이면 각성 행동은 쓸모없음(엘레노아 セイクリッドベール, 2026-10-16)
   const cMP = team.some(c=>c.counter && c.counter.heal) ? Math.min(100, counterMP(team, S)) : 0; R.ctrMP = cMP; // 요격 회복 MP(알마(AS) 요격 1번에 아군 전체 MP 10%, アルケミーハイ 2배): 보스가 때린 만큼
@@ -1805,28 +1805,32 @@ function simTeam(team, progs, S, stepV, opt){ // opt.afBuff = AF 주기(턴): �
     const zOnce = steps.map(st=>(zUse && !!st.z) || !!st.once), zDone = steps.map(()=>false); // 존 전개·각성·전투 중 1회(루나틱 등)는 한 번만(존은 깔린 채로 감)
     let lock = 0, lockN = 0, afCn = 0; const afSet = new Set(afCand);
     const afRef = () => { for(const q of afIdx) rem[q] = Math.max(rem[q], dur[q] - 1); }; if(afRe) afRef(); // AF에서 건 버프(평상 턴 몫)
+    let a1 = null; // 1턴째 행동(m 주력·a 공격 버프기·대체 공격·b 버프·l 가창 잠김·n 통상 공격) — turnTimeline 1턴 딜(AF 안 버프 운용)
     for(let t=1;t<=H;t++){
       const k = lock>0 ? -2 : rem.findIndex((r,q)=>r<=0 && !(zOnce[q] && zDone[q])), cB = k>=0 ? (steps[k].mp0 ? 0 : Math.round((+steps[k].mp||c.mpBuff||50)*mul)) : 0;
-      if(k===-2){ lock--; lockN++; } // 가창 중: 행동 없음(효과는 그대로)
-      else if(k>=0 && mp>=cB){ mp-=cB; rem[k]=dur[k]; buffN++; if(afSet.has(steps[k])) afCn++; if(zOnce[k]) zDone[k]=true; if(steps[k].k==='attack'){ altN++; altWs+=stW[k]; } if(sOn && steps[k].song) lock = Math.min(H, steps[k].song) - 1; }
-      else if(mp>=costMain){ mp-=costMain; mainN++; }
-      else { if(!out) out=t; if(mp>=costAlt){ mp-=costAlt; altN++; altWs+=aW; } else naN++; }
+      if(k===-2){ lock--; lockN++; if(t===1) a1 = 'l'; } // 가창 중: 행동 없음(효과는 그대로)
+      else if(k>=0 && mp>=cB){ mp-=cB; rem[k]=dur[k]; buffN++; if(afSet.has(steps[k])) afCn++; if(zOnce[k]) zDone[k]=true; if(steps[k].k==='attack'){ altN++; altWs+=stW[k]; } if(sOn && steps[k].song) lock = Math.min(H, steps[k].song) - 1; if(t===1) a1 = steps[k].k==='attack' ? 'a' : 'b'; }
+      else if(mp>=costMain){ mp-=costMain; mainN++; if(t===1) a1 = 'm'; }
+      else { if(!out) out=t; if(mp>=costAlt){ mp-=costAlt; altN++; altWs+=aW; if(t===1) a1 = 'a'; } else { naN++; if(t===1) a1 = 'n'; } }
       for(let q=0;q<K;q++) if(rem[q]>0){ act[q]++; rem[q]--; }
       mp=Math.min(mpMax, mp+regI);
       if(afRe){ afAcc += 1; if(afAcc >= afGap - 1e-9){ afAcc -= afGap; afRef(); } } // 평상 턴 (C−1)턴 뒤 AF: 버프를 AF 안에서 다시
     }
     const upt = K ? act.reduce((x,y)=>x+y,0)/(K*H) : 1;
     // 항목별 유지율(버프 행동이 있는 캐릭터): 쓴 행동의 켜진 턴 비율, 안 쓰는 행동만 주는 항목은 0, 자동·주력은 1, SB 전용은 0
-    let kup = null;
+    let kup = null, kpP = null; // kpP: AF 안 버프 운용(순수)에서 첫 AF 전 평상 턴 — AF로 거는 버프가 아직 없음
     if(c.bact){ kup = {}; const b = c.bact;
       for(const st of steps0) if(st.g) for(const x of st.g) kup[x] = 0;
       for(const x of b.sb) kup[x] = 0;
       steps.forEach((st,q)=>{ if(st.g) for(const x of st.g) kup[x] = Math.max(kup[x]||0, act[q]/H); });
+      if(afMv && !afRe && afMv.length) kpP = {...kup};
       if(afMv && !afRe){ const C = Math.max(1, +opt.afBuff||2.5); for(const st of afMv){ const d = st.dur>0 ? st.dur : durOf(st), U = C<=1 ? 1 : Math.min(1, Math.max(0, d-1)/(C-1)); for(const x of st.g) kup[x] = Math.max(kup[x]||0, U); } } // AF에서 건 버프가 다음 AF까지 평상 턴에 남는 비율
       for(const x of b.main) kup[x] = 1; for(const x of b.auto) kup[x] = 1;
       for(const x of (b.vcOnly||[])) kup[x] = Math.max(kup[x]||0, progs.noBack ? 0 : vcUp(b, x)); // VC로만 거는 항목: 평상 턴 1/6(후열이 없으면 교대가 없어 0)
+      if(kpP){ for(const x of b.main) kpP[x] = 1; for(const x of b.auto) kpP[x] = 1; for(const x of (b.vcOnly||[])) kpP[x] = Math.max(kpP[x]||0, progs.noBack ? 0 : vcUp(b, x));
+        if(!Object.keys(kup).some(x=>(kpP[x]||0) < (kup[x]||0) - 1e-9)) kpP = null; }
       if(Object.values(kup).some(v=>v<1)) R.kupAny = true; else kup = null; }
-    R.kup.push(kup);
+    R.kup.push(kup); R.kupPre.push(kpP); R.t1a.push(a1 || 'm');
     { // 장착 못 한 버프 행동만 주는 항목(2026-10-16): 실전·지속 계산의 AF·SB에서도 끔(예전엔 평상 턴에서만 뺐음 — 엑코코 神鏡·騎猫之勢가 칸이 없어도 AF에 들어가던 문제)
       let off = null; if(c.bact){ const b = c.bact, has = new Set([...b.auto, ...b.main, ...b.sb]); stepsAll.forEach(st=>{ if(st.g) for(const x of st.g) has.add(x); });
         for(const st of steps0) if(st.g) for(const x of st.g) if(!has.has(x)) (off = off || {})[x] = 0;
@@ -2296,7 +2300,9 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
   const autoZ = zs.filter(z=>!z.level || z.how==='개전 자동').concat(z1);
   const anyR = team.some(c=>c.rules), posSets = ev.posSets || null;
   const cx = ({...ctx, ...{flux:ev.flux}});
-  const actT1 = team.map(c=>!c.buffAct); // 1턴에 공격하는 캐릭터
+  /* AF 안 버프 운용(순수, ctx._afBuff > 0 — 2026-10-20 점검): 그 버프는 AF에서만 걸어 1턴째(첫 AF 전)엔 없고 버퍼도 공격 → 공격하는 사람은 평상 턴 시뮬의 1턴째 행동, 버프 켜진 몫(u)에선 AF로 거는 버프를 끔(kupPre) */
+  const sim = ev.sim, pre = ctx && +ctx._afBuff > 0 && sim && sim.kupPre && sim.kupPre.some(Boolean) ? team.map((c,j)=> sim.kupPre[j] ? {mf: sim.kupPre[j]} : 1) : null;
+  const actT1 = pre && sim.t1a ? team.map((c,j)=> sim.t1a[j]==='m' || sim.t1a[j]==='a') : team.map(c=>!c.buffAct); // 1턴에 공격하는 캐릭터
   const stk0 = A.stkT, stkOn = S.stkRamp!==false && !(ctx && ctx.stFast) && team.some(c=>c.stk || c.stkAny); if(stkOn) A.stkT = 1; // 누적 효과 예열: 1턴째는 1턴만큼 쌓인 값, 2턴은 2턴만큼
   const sumCores = (cores, z, mask)=>cores.reduce((v,co,i)=>v + (mask&&!mask[i] ? 0 : applyZoneCap(co, z, S, cap, null)*fw(co)), 0);
   // 보장: 스킬 버프·디버프 제거
@@ -2306,13 +2312,13 @@ function turnTimeline(team, progs, enemy, S, cap, ctx, ev){
     const cores = strip.map((c,i)=>attackerCore(strip,i,progs,A,enemy,S,'normal',cx,FX,z)); const v=sumCores(cores, z, actT1); if(v>g){ g=v; gz=z; } }
   // 속도 맞춤: 평상 턴 버프 전부, 존은 평상 턴 존
   const nz = ev.normal.zone;
-  const FXn = anyR ? buildBF(team,progs,'normal',nz,A,posSets,null) : null;
+  const FXn = anyR || pre ? buildBF(team,progs,'normal',nz,A,posSets,pre) : null;
   const coresN = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FXn,nz));
   let u = sumCores(coresN, nz, actT1);
-  for(const z of z1){ const FXz = anyR ? buildBF(team,progs,'normal',z,A,posSets,null) : null;
+  for(const z of z1){ const FXz = anyR || pre ? buildBF(team,progs,'normal',z,A,posSets,pre) : null;
     const cz = team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FXz,z)); u = Math.max(u, sumCores(cz, z, actT1)); }
   let t2 = sumCores(coresN, nz, null);
-  if(stkOn){ A.stkT = 2; const FX2 = anyR && team.some(c=>c.stkRule) ? buildBF(team,progs,'normal',nz,A,posSets,null) : FXn; t2 = sumCores(team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FX2,nz)), nz, null); }
+  if(stkOn){ A.stkT = 2; const FX2 = anyR && team.some(c=>c.stkRule) ? buildBF(team,progs,'normal',nz,A,posSets,pre) : FXn; t2 = sumCores(team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FX2,nz)), nz, null); }
   A.stkT = stk0;
   // 속도 순서 확률: (버프를 주는 캐릭터 → 공격하는 캐릭터) 쌍 중 버퍼가 빠른 비율
   const spd = progs.map(p=>p&&p.spd ? p.spd : 0); // 장비 포함 속도(빌드 코드) 또는 기본 스탯
@@ -2593,7 +2599,7 @@ function battleSim(N, o){
     if(t>N) return {v: (o.cutW || o.turnX) && o.afTailV>0 && g>=50 ? 0.8*o.afTailV*Math.min(1, g/100) : 0, plan:[]}; // 개시 피해 경감이 있으면 N턴 끝에 남은 AF 게이지도 값(경감 중에 AF를 써 버리지 않게)
     if(o.sbFull && o.hasSB && o.sbFull.has(t)) s = 100; // SB 게이지 가득(sb_full 턴 시작 — 유우체리카 星天の力)
     if(o.afDrain) g = o.afDrain.turns.has(t) ? o.afDrain.g0 : 0; // 흉성 3(2026-10-18): 게이지는 매 턴 행동 뒤 소비 → 그 턴 버디 차지로 채운 만큼만(알테마: 건스(AS) 차지 2회 60% → AF)
-    const key = t+'|'+Math.round(g*10)+'|'+Math.round(s*10)+'|'+e+'|'+aw+'|'+(ou||0)+(hs ? '|'+hs.map(v=>v==null ? 'x' : Math.round(v*10)).join(',') : '')+(o.maxAF!=null ? '|a'+(na||0) : '');
+    const key = t+'|'+Math.round(g*10)+'|'+Math.round(s*10)+'|'+e+'|'+aw+'|'+(ou||0)+(hs ? '|'+hs.map(v=>v==null ? 'x' : Math.round(v*10)).join(',') : '')+(o.maxAF!=null ? '|a'+(na||0) : o.preR ? '|p'+((na||0)>0 ? 1 : 0) : '');
     let hs0 = hs; if(o.hg && hs){ hs0 = hs.slice(); hgStart(o.hg.G, hs0, o.hg.at, t); }
     const hit = memo.get(key); if(hit) return hit;
     let best = null;
@@ -2618,7 +2624,7 @@ function battleSim(N, o){
       if(op==='stack'){ g1-=R.cost; e1=1; rec.stack=true; }
       if(!isAF && o.hasSB && !rec.sb && s1>=100){ const dq = d; useSB(false); dS = d - dq; }
       if(dS>0) rec.sbD = dS;
-      let nd = isAF ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1)*(o.rmp ? o.rmp(t) : 1)*(o.ndOn ? o.ndOn(t) : 1);
+      let nd = isAF ? 0 : t===1 ? o.t1 : (L()>=2 ? o.normal : o.normal1)*(o.rmp ? o.rmp(t) : 1)*(o.ndOn ? o.ndOn(t) : 1)*(o.preR && !(na>0) ? o.preR : 1); // preR: AF 안 버프 운용의 첫 AF 전 평상 턴
       if(o.afFull && !isAF){ const gn = o.afGain>0 ? o.afGain : 1, full = g1>=100 ? 1 : Math.max(0, Math.min(1, (g1 + gn - 100)/gn)); // 게이지가 100%에 닿은 뒤 몫(평상 행동 중 차는 것은 고르게)
         if(full>0){ const k = 1 - full*(1 - o.afFull); nd *= k; if(rec.sb==='turn' && g1>=100){ d *= o.afFull; dS *= o.afFull; if(rec.sbD) rec.sbD = dS; rec.fS *= o.afFull; } rec.afFull = +full.toFixed(2); } }
       if(o.ss && !isAF && g>=100-1e-9){ nd *= 2; if(dS>0){ d += dS; dS *= 2; rec.sbD = dS; } rec.ss = true; } // 성해진: 게이지 100%인 평상 턴은 모든 공격 ×2
@@ -2935,7 +2941,9 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
      AF 안 버프 운용 변형(ctx._afBuff)이면 3턴째 이후 AF도 mix. af_timing이 그 AF에서 0으로 둔 항목뿐인 스킬(AF에선 쓸 이유가 없는 스킬)은 안 검 */
   const afPlC = sim && sim.afSt && sim.afSt.some(L=>L && L.length) ? sim.afSt : null; let afMd = afBufC && afPlC ? 'mix' : 'none', afBW = 1;
   const afZero = (c, x, rt) => { const at = c.afT; if(!at) return false; const self = x.indexOf('s.')===0, deb = x.indexOf('d_')===0, k = self ? x.slice(2) : deb ? x.slice(2) : x;
-    const tb = deb ? at.deb : null, m = deb ? null : afTMerge(at), v = deb ? (rt && at.real && at.real.deb && at.real.deb[k]!==undefined ? at.real.deb[k] : tb && tb[k]) : (rt && m.rt && m.rt[k]!==undefined ? m.rt[k] : m.t[k]); return v===0; };
+    /* 아군이 받는 파티 버프는 party 표만(F와 같게), 자기 몫은 party+self 합친 표(afAdj와 같게), 디버프는 deb 표(2026-10-20 점검: 파티 항목도 합친 표로 봐서 self 값이 덮어쓰던 것) */
+    if(!self){ const q = deb ? 'deb' : 'party', tb = at[q], tr = rt && at.real ? at.real[q] : null, v = tr && tr[k]!==undefined ? tr[k] : tb ? tb[k] : undefined; return v===0; }
+    const m = afTMerge(at), v = rt && m.rt && m.rt[k]!==undefined ? m.rt[k] : m.t[k]; return v===0; };
   const afPlFor = () => { if(!afPlC) return null; const rt = (A.realT||0)>=2, P = team.map((c,i)=>(afPlC[i]||[]).filter(e=>![...e.g].every(x=>afZero(c, x, rt))).map(()=>'buff')); return P.some(L=>L.length) ? P : null; };
   const afEval1 = (cs, pl) => { const lk = lkAt(A.realT||0), p2 = pl ? team.map((c,i)=> lk && lk[i]!=null ? Array(lk[i]).fill('buff') : pl[i]) : undefined;
     const a0 = afActionsOf(team, progs, cs, zA, enemy, S, undefined, undefined, p2, lk), n = p2 ? a0.n.map((v,i)=>Math.max(0, v - p2[i].length)) : a0.n, a = p2 ? ({...a0, ...{n, nAll: a0.n, pl: p2}}) : a0, g = afG(cs, n);
@@ -3020,14 +3028,16 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const afCores = P1.cs, afA = P1.afA, gain = P1.g, avgCombo = P1.avg, afS = P1.afS;
   // 실전 N턴의 AF·SB(2026-10-16): 1턴째는 허수아비와 같은 상태(af_timing·축적 0), 3턴째부터는 세팅 2턴 뒤 —
   // af_timing real·skill_cond af_r·상태 구간(개전·사용)·축적(stackFill S0 2). 2턴째는 둘의 중간. 지속 딜의 AF는 3턴째 이후 값
-  const R3 = (()=>{ const sv = res.sb; A.realT = 3; A.tm.S0 = 2;
+  const mkR3 = () => { const sv = res.sb; A.realT = 3; A.tm.S0 = 2;
     const p3 = afPick(coresFor('af', nz, false)); runSit('sb', sv.zone || null); const sb3 = ({...res.sb, ...{zones: sv.zones}}); res.sb = sv; A.realT = 0; A.tm.S0 = 0;
-    return {cores:p3.cs, afA:p3.afA, avg:p3.avg, afS:p3.afS, sb:sb3, pick:p3.pick, pl:p3.pl, w:p3.w}; })();
+    return {cores:p3.cs, afA:p3.afA, avg:p3.avg, afS:p3.afS, sb:sb3, pick:p3.pick, pl:p3.pl, w:p3.w}; };
+  let R3 = mkR3();
   /* SB 턴 종료 추격의 AF 게이지(afSbG)는 SB를 쓴 턴마다 — 턴당 평균(SB 주기로)을 평상 턴 충전·AF 턴 뒤 게이지에 더해 AF 주기를 다시(2026-10-19 점검: 실전 시뮬과 지속 딜·처치 턴이 다르던 것) */
   const teSB0 = (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.sb_only))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, res.sb.zone || nz, cap, fw, 'sb'); return r && r.total>0 ? r : null; })(); // SB를 쓴 턴의 종료 공격
   if(offOK && teSB0) afSbG += +teSB0.afg||0; // 그 AF 게이지도 SB 턴 끝에(피네(AS) 残響)
   if(afSbG>0 && afCyc && !dInj && S.sbCycle!==false){ const sa = S.sbPerAct!=null ? +S.sbPerAct : 2.5, aA = (R3.afA.nAll || R3.afA.n).reduce((x,y,i)=>x+y*sbW[i],0), gT = sa*sbWN.reduce((x,v)=>x+v,0)*susNW + sa*aA/afTurns, sbR = Math.min(1, gT/100);
-    afTurns = afCyc1(afGain + afSbG*sbR, Math.min(100, afOffG + afSbG*sbR)); susNW = (afTurns-1)/afTurns; }
+    afTurns = afCyc1(afGain + afSbG*sbR, Math.min(100, afOffG + afSbG*sbR)); susNW = (afTurns-1)/afTurns;
+    if(afBufC){ const w2 = afBWof(afTurns); if(Math.abs(w2 - afBW) > 0.01){ afBW = w2; R3 = mkR3(); } } } // AF 안 버프 운용: 주기가 바뀌면 다시 거는 AF 비율(afBW)·3턴째 AF도 다시(2026-10-20 점검)
   const capAF = v => +S.afTotalCap>0 ? Math.min(v, +S.afTotalCap) : v; // AF 한 번 총 피해 상한(9999억)
   const ssK = S.starseaZone!==false && isSS(nz) ? 2 : 1; let af = capAF(R3.afS.v); // ssK: 평상 존이 성해진(AF 공격 ×2는 applyZoneCap이 — 코어 sit 'af')
   /* 긴 전투의 AF(2026-10-18, 사용자 '빅트 고평가 — 단기전이라?'): 개전·한 번 쓰는 상태(歴戦 5턴·개전 3턴 등)는 지속 딜의 AF에서도 늘 켜져 있었음 →
@@ -3221,6 +3231,13 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       rmp = {r: [1,2,3,4,5,6].map(R), sus: rS, sat: Ts};
       if(Math.abs(rS-1)>1e-6){ out.sustain += out.sustainNoAF*susNW*(rS-1); out.sustainNoAF *= rS; }
       if(!out.tl) simIn.t1 *= R(1); simIn.rmp = R; out.stkRamp = rmp; } } // 턴 화력 줄(turnTimeline)이 있으면 1턴째는 이미 1턴만큼
+  /* AF 안 버프 운용(순수, 2026-10-20 점검): 첫 AF 전 평상 턴엔 AF로 거는 버프가 아직 없음(예전엔 평균 유지율로 켜 둬 실전 N턴 1·2턴이 과대 — 그 운용 14조합 중 12조합이 1턴째 평상 턴) →
+     그 버프를 끈 평상 턴(sim.kupPre)과 지금 평상 턴의 비율(preR)을 실전 N턴의 첫 AF 전 2턴째 이후에 곱함(1턴째는 turnTimeline이 따로), 체인·요격·턴 종료 몫은 그대로 */
+  if(afBufC && !(ctx && ctx._afBuff < 0) && sim && sim.kupPre && sim.kupPre.some(Boolean) && !(ctx && ctx.stFast)){ const zR = res.normal.zone;
+    const csOf = mf => { const FX = buildBF(team,progs,'normal',zR,A,posSets,mf); return team.map((c,i)=>attackerCore(team,i,progs,A,enemy,S,'normal',cx,FX,zR)); };
+    const uC = team.map((c,j)=> sim.kup[j] ? {mf: sim.kup[j]} : simUse ? sim.upt[j] : 1), uP = team.map((c,j)=> sim.kupPre[j] ? {mf: sim.kupPre[j]} : uC[j]);
+    const b = sumZ(csOf(uC), zR, null, wN).v, a = sumZ(csOf(uP), zR, null, wN).v, ex = xNof();
+    if(b>0){ const r = Math.max(0, (a + ex)/(b + ex)); if(r < 0.999){ simIn.preR = r; out.afPreR = +r.toFixed(3); } } }
   const NB = Math.max(1, Math.min(10, (ctx && ctx.burstN) || +S.burstTurns || 3));
   /* 공격 행동 수로 내려가는 보스 내성 단계(S.protect = hp_model.protect, 마크바브): 전원이 주력을 쓰는 턴 행동 수(out.actN.cap)가 down 이상이면 매 턴 −1 → 실전 N턴 t턴째 × rel[Lv]
      (모자라면 AF 턴에만 내려가 계획에 따라 달라짐 → 실전 N턴엔 안 넣고 처치 턴 계산에서만) */
@@ -3261,8 +3278,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     out.opener = NB===1 ? out.bsim.total : battleSim(1, simIn).total;
   } else { out.bsim = {total:0, turns:[], N:NB, afStart:st, s0:simIn.s0}; }
   if(needDummy && ctx && ctx.dummyFast){ // 탐색 1단계: 허수아비를 빠르게 어림(버프 다 깔린 AF + AF 끝 콤보 SB), 상위 후보만 2단계에서 정밀 계산
-    const totA = Math.max(1, afA.n.reduce((x,y)=>x+y,0)), sb0 = Math.min(50, 12.5*team.length), sa = S.sbPerAct!=null ? +S.sbPerAct : 2.5;
-    const rateAvg = team.reduce((x,c,i)=>x + afA.n[i]*sa*(sbFillOK(team, i, progs, S) ? 2 : 1), 0)/totA;
+    const nAct = afA.nAll || afA.n, totA = Math.max(1, nAct.reduce((x,y)=>x+y,0)), sb0 = Math.min(50, 12.5*team.length), sa = S.sbPerAct!=null ? +S.sbPerAct : 2.5; // SB 게이지는 AF 안 버프 행동도(nAll, 2026-10-20 점검)
+    const rateAvg = team.reduce((x,c,i)=>x + nAct[i]*sa*(sbFillOK(team, i, progs, S) ? 2 : 1), 0)/totA;
     const needA = (100 - sb0)/Math.max(0.1, rateAvg), sbOK = sbIdx.length>0 && needA <= totA + 1e-9;
     const cAt = Math.min(0.75 + gain*Math.min(1, needA/totA), S.comboCap>0?S.comboCap:Infinity);
     // 버프 행동(buff_acts): 버프 스킬을 다 쓰면 AF 행동·시간이 그만큼 빠짐 — 어림에도 반영(정밀 계산은 2단계)
