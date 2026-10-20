@@ -59,8 +59,12 @@ const GL_PRESETS = {
   pa3:{label:'페인 3',v:{mode:'preset',e:0,pa:3,po:0}}, po3:{label:'독 3',v:{mode:'preset',e:0,pa:0,po:3}},
   mix:{label:'속성1·페1·독1',v:{mode:'preset',e:1,pa:1,po:1}}, none:{label:'없음/미각성',v:{mode:'none'}}
 };
-function glKey(gl){ if(!gl) return 'def'; if(gl.mode==='auto') return 'auto'; if(gl.mode==='none') return 'none';
+function glKey(gl){ if(!gl || !gl.mode) return 'def'; // {ore}만 있으면 기본값 따름 + 잠재 광석만 따로(2026-10-20) if(gl.mode==='auto') return 'auto'; if(gl.mode==='none') return 'none';
   for(const [k,p] of Object.entries(GL_PRESETS)) if(p.v&&p.v.mode==='preset'&&p.v.e===gl.e&&p.v.pa===gl.pa&&p.v.po===gl.po) return k; return 'e3'; }
+const defGlS = () => Object.assign({}, E.DEFAULT_SETTINGS.grastaDefault, state.settings.grastaDefault||{});
+/* 잠재 광석 칸: 공격 글래를 따로 정했으면 그 값, 아니면 {ore}만 있는 개별 값, 그것도 없으면 일괄 기본값(2026-10-20 사용자 '켜면 보유 목록에도 체크 표시') */
+const oreOn = gl => gl && gl.ore!=null ? !!gl.ore : !!defGlS().ore;
+const oreSet = (gl, on) => gl && gl.mode ? Object.assign(gl, {ore: on}) : (on === !!defGlS().ore ? null : {ore: on});
 function glText(g){ if(!g) return ''; if(g.mode==='none') return '글래 없음'; const p=[]; if(g.e) p.push(g.rebel ? '반역·HP저하'+(g.e>2?'·속성'+(g.e-2):'') : '속성'+g.e); if(g.pa) p.push('페인'+g.pa); if(g.po) p.push('독'+g.po); if(g.z) p.push('각성의 힘'); return p.join('·')||'—'; }
 
 /* ---------- 상태 ---------- */
@@ -2122,7 +2126,7 @@ async function goalHtml(g){
       ${c.stellar?`<div class="grow"><span>성도각성</span><span>${cu.s?'완료':'안 함'}</span><span>→</span><label><input type="checkbox" data-gf="s" ${tg.s?'checked':''}> 목표</label>${st(!tg.s||cu.s)}</div>`:''}
       <div class="grow"><span>현현</span><span>${M_KR[+cu.m||0]}</span><span>→</span>${c.manifestMax===0?'<span class="hint">현현 무기 없음</span>':`<select data-gf="m">${M_KR.slice(0,(c.manifestMax||2)+1).map((l,k)=>`<option value="${k}"${(+tg.m||0)===k?' selected':''}>${l}</option>`).join('')}</select>`}${st((+cu.m||0)>=(+tg.m||0))}</div>
       <div class="grow"><span>전용 글래</span><span>${G_KR[cu.g||'none']}</span><span>→</span><select data-gf="g">${Object.entries(G_KR).map(([k,l])=>`<option value="${k}"${(tg.g||'none')===k?' selected':''}>${l}</option>`).join('')}</select>${st(G_RANK[cu.g||'none']>=G_RANK[tg.g||'none'])}</div>
-      <div class="grow"><span>공격 글래</span><span>${esc({def:'기본',auto:'자동',none:'없음'}[glKey(cu.gl)]||GL_PRESETS[glKey(cu.gl)].label)}</span><span>→</span><select data-gf="gl">${Object.entries(GL_PRESETS).map(([k,p])=>`<option value="${k}"${gk===k?' selected':''}>${p.label}</option>`).join('')}</select><label title="잠재 광석"><input type="checkbox" data-gf="ore" ${tg.gl&&tg.gl.ore?'checked':''} ${tg.gl?'':'disabled'}> 광석</label></div>
+      <div class="grow"><span>공격 글래</span><span>${esc({def:'기본',auto:'자동',none:'없음'}[glKey(cu.gl)]||GL_PRESETS[glKey(cu.gl)].label)}</span><span>→</span><select data-gf="gl">${Object.entries(GL_PRESETS).map(([k,p])=>`<option value="${k}"${gk===k?' selected':''}>${p.label}</option>`).join('')}</select><label title="잠재 광석"><input type="checkbox" data-gf="ore" ${oreOn(tg.gl)?'checked':''}> 광석</label></div>
     </div>`;
   }).join('');
   const list = items.length ? `<ol class="gitems">${items.map(x=>`<li><b>${esc(team[x.i].name)}</b> · ${esc(x.label)}${x.extra?` <span class="hint">(${esc(x.extra)})</span>`:''} ${x.need?'<span class="ng">편성 필수</span>':`<span class="gain">${pctS(x.gain)}</span>`}</li>`).join('')}</ol>`
@@ -2154,8 +2158,8 @@ function onGoalInput(e){
   else if(f==='s') tg.s=t.checked;
   else if(f==='m') tg.m=+t.value;
   else if(f==='g') tg.g=t.value;
-  else if(f==='gl'){ const p=GL_PRESETS[t.value]; tg.gl = p.v ? Object.assign({}, p.v, {ore: tg.gl?!!tg.gl.ore:false}) : null; }
-  else if(f==='ore'){ if(tg.gl) tg.gl.ore=t.checked; }
+  else if(f==='gl'){ const p=GL_PRESETS[t.value]; tg.gl = p.v ? Object.assign({}, p.v, {ore: oreOn(tg.gl)}) : null; }
+  else if(f==='ore'){ tg.gl = oreSet(tg.gl, t.checked); }
   save();
   clearTimeout(onGoalInput._t);
   onGoalInput._t = setTimeout(async ()=>{ const h = await goalHtml(g); const sec=$(`#goalList .goal[data-goal="${g.id}"]`); if(sec) sec.outerHTML=h; }, 0);
@@ -2248,7 +2252,7 @@ function rowHtml(c){
       <label class="xa">현현 <select data-f="m"><option value="0"${!o.m?' selected':''}>없음</option><option value="1"${o.m==1?' selected':''}>현현</option><option value="2"${o.m==2?' selected':''}>진현현</option></select></label>
       <label class="xa">전용 글래 <select data-f="g">${[['none','없음'],['sh','수호성의 증표'],['vc','상급(VC)'],['shin','진'],['goku','극']].map(([v,l])=>`<option value="${v}"${(o.g||'none')===v?' selected':''}>${l}</option>`).join('')}</select></label>
       <label class="xa">공격 글래 <select data-f="gl">${Object.entries(GL_PRESETS).map(([k,p])=>`<option value="${k}"${gk===k?' selected':''}>${p.label}</option>`).join('')}</select></label>
-      <label class="xa" title="잠재 광석: 장착 캐릭터가 공격으로 독·페인을 직접 부여"><input type="checkbox" data-f="ore" ${o.gl&&o.gl.ore?'checked':''} ${o.gl?'':'disabled'}> 잠재 광석</label>
+      <label class="xa" title="잠재 광석: 장착 캐릭터가 공격으로 독·페인을 직접 부여"><input type="checkbox" data-f="ore" ${oreOn(o.gl)?'checked':''}> 잠재 광석${!(o.gl&&o.gl.ore!=null)?' <span class="hint">(일괄)</span>':''}</label>
       <span class="badge xa">${t>=200?'글래 4칸':'글래 3칸'}</span>${warn}
       <span class="xa">${buildCtlHtml(c, o)}</span> ${stBtn}
     </div><div class="stwrap" hidden></div></div>`;
@@ -2271,10 +2275,10 @@ function onRosterChange(e){
   else if(f==='s') o.s=t.checked;
   else if(f==='m') o.m=+t.value;
   else if(f==='g') o.g=t.value;
-  else if(f==='gl'){ const p=GL_PRESETS[t.value]; o.gl = p.v ? Object.assign({}, p.v, {ore: o.gl?!!o.gl.ore:false}) : null; }
-  else if(f==='ore'){ if(o.gl) o.gl.ore=t.checked; }
+  else if(f==='gl'){ const p=GL_PRESETS[t.value]; o.gl = p.v ? Object.assign({}, p.v, {ore: oreOn(o.gl)}) : null; } // 보이던 잠재 광석 체크 그대로
+  else if(f==='ore'){ o.gl = oreSet(o.gl, t.checked); }
   touchRoster();
-  if(f==='t'||f==='gl'||f==='s'){ row.outerHTML=rowHtml(byId.get(id)); }
+  if(f==='t'||f==='gl'||f==='s'||f==='ore'){ row.outerHTML=rowHtml(byId.get(id)); }
 }
 function renderDefGl(){
   const g=Object.assign({}, E.DEFAULT_SETTINGS.grastaDefault, state.settings.grastaDefault||{});
@@ -2896,7 +2900,7 @@ function bind(){
     touchRoster(); renderRoster(); flash(`보유 ${n}명 천명치 ${v}${st?' · 성도각성':''}으로 바꿨습니다`);
   });
   $('#defGl').addEventListener('change',e=>{ const p=GL_PRESETS[e.target.value]; state.settings.grastaDefault=Object.assign({}, p.v, {ore:$('#defOre').checked}); planDirty=true; shareDirty=true; save(); }); // 바꾸면 편성 결과도 다시(2026-10-20: 저장만 하고 결과는 예전 값이던 것)
-  $('#defOre').addEventListener('change',e=>{ const g=Object.assign({}, E.DEFAULT_SETTINGS.grastaDefault, state.settings.grastaDefault||{}); g.ore=e.target.checked; state.settings.grastaDefault=g; planDirty=true; shareDirty=true; save(); });
+  $('#defOre').addEventListener('change',e=>{ const g=Object.assign({}, E.DEFAULT_SETTINGS.grastaDefault, state.settings.grastaDefault||{}); g.ore=e.target.checked; state.settings.grastaDefault=g; planDirty=true; shareDirty=true; save(); renderRoster(); });
   $('#customForm').addEventListener('submit',addCustom);
   $('#customList').addEventListener('click',e=>{ const b=e.target.closest('button[data-delc]'); if(!b) return; const id=b.dataset.delc; state.custom=state.custom.filter(c=>c.id!==id); delete state.owned[id]; save(); rebuildChars(); renderRoster(); renderCustomList(); });
   $('#ioExport').addEventListener('click',exportState);
