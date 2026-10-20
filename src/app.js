@@ -178,7 +178,7 @@ function workerMain(){
   /* 이 함수는 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
   const E = self.AEOpt;
   let byId = new Map(), SP = null;
-  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null, redOff: !!ev.redOff} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
+  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null, redOff: !!ev.redOff, afBuff: +ev.afBuf||0} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})),
@@ -1904,6 +1904,7 @@ function setupHtml(x, i){
   { const es = ev.sim && ev.sim.eqSk && ev.sim.eqSk[i], ZK = {deploy:'존 전개', awaken:'존 각성'};
     if(es && es.L.length) S2.push(`<li>스킬 칸 <span class="hint">(${es.tot}칸 중 주력·성도 스킬 빼고 ${es.n}칸, 위부터 우선)</span><ol class="sklist">${es.L.map(z=>`<li><b>${esc(z.n)}</b>${z.z?` <span class="hint">${ZK[z.z]||'존'}</span>`:z.k==='attack'?' <span class="hint">공격 버프기</span>':''}</li>`).join('')}</ol>${es.L.length<es.n?`<span class="hint">남는 ${es.n-es.L.length}칸은 자유 (회복·생존 스킬 권장)</span>`:''}</li>`);
     else if(es && es.n>0) S2.push(`<li class="hint">남는 스킬 칸 ${es.n}개는 자유 — 계산에 쓰는 버프 스킬이 없음 (회복·생존 스킬 권장)</li>`);
+    const ab = ev.afBuf && ev.afBufSk && ev.afBufSk[i] && ev.afBufSk[i].length ? ev.afBufSk[i] : null; if(ab) S2.push(`<li>AF 안에서 거는 버프: <b>${ab.map(esc).join(' · ')}</b> <span class="hint">— 평상 턴엔 공격하고, AF를 켜면 첫 행동으로 걸기(버프 행동은 AF 게이지가 안 참)${ev.afBufW!=null && ev.afBufW<0.99 ? ` · 지속 턴이 길어 AF ${Math.round(100*ev.afBufW)}%에서만 다시` : ''}</span></li>`);
     const rd = !ev.redOff && ev.redDrop ? ev.redDrop.filter(q=>q.i===i) : []; if(rd.length) S2.push(`<li class="hint">안 거는 버프: ${rd.map(q=>esc(q.s)).join(' · ')} — 다른 아군 버프와 겹쳐(속도·능력치 +100% 상한, 같은 상태) 걸어도 그대로</li>`); }
   if(r.req) S2.push(`<li>본령 조건: <span class="hint">${esc(r.req_ko||r.req)}</span></li>`);
   const O = (c.cxWhy||[]).map(w=>`<li>${esc(w)}</li>`);
@@ -2578,7 +2579,8 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   if(kl){ const N = T.length, A = kl.filter(l=>l.t>N && l.af).map(l=>l.t), H = kl.some(l=>l.t>N && l.hold); if(A.length) late = ` → 그 뒤 ${A.slice(0,4).join('·')}${A.length>4?'…':''}턴${H?' (스토퍼·목숨 직전엔 아껴 둠)':''}`; }
   const full = T.some(r=>r.afFull>0) ? ' <span class="warn">게이지가 꽉 차면 피해 감소 — 100% 전에</span>' : (x.S||settings()).afFull ? ' <span class="hint">(게이지가 꽉 차면 피해 감소 — 100% 전에 켬)</span>' : '';
   const sbF = ev.sbFull ? ` · <b>${esc(ev.sbFull.by)}</b> ${esc(ev.sbFull.name)}: ${ev.sbFull.from}턴째부터 ${ev.sbFull.dur}턴 동안 매 턴 SB 게이지 가득(약 ${ev.sbFull.per}턴마다)` : ''; // SB 게이지 가득 상태(2026-10-19 유우체리카 星天の力)
-  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${sbF}${full}</div>`; }
+  const bf = ev.afBuf && ev.afBufSk && ev.afBufSk.some(L=>L && L.length) ? ` · 버프 스킬은 <b>AF 첫 행동</b>으로(평상 턴엔 공격)` : ''; // AF 안 버프 운용(2026-10-20)
+  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${sbF}${full}</div>`; }
 /* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
 function zlLine(ev){ const L = ev && Array.isArray(ev.zLate) ? ev.zLate.filter(p=>!p.auto || p.from) : []; if(!L.length) return '';
   const z0 = ev.normal && ev.normal.zone ? ev.normal.zone.label : '존 없음';
