@@ -1375,7 +1375,9 @@ function cardHtml(x, key, o){
       <div class="card-head">
         <div class="rank">${shared?'<span class="rk-s">공유</span>':`${x.rank}<small>위</small>`}</div>
         <span class="diff lv${x.diff.lv}" title="운용 난이도 점수 ${x.diff.v.toFixed(1)}">Lv${x.diff.lv} ${esc(x.diff.kr)}</span>
-        <span class="zonebadge" title="스텔라 버스트 턴 기준 존">${esc(sbz&&sbz.level?sbz.label:'존 없음')}${sbz&&sbz.byName&&sbz.level?` <span class="hint">· ${esc(sbz.byName)}</span>`:''}</span>
+        ${(()=>{ /* 존 배지(2026-10-20 사용자 '속성존이 풍왕진인데 베르단타가?'): 예전엔 SB 턴 존만 보여 평상 턴·AF를 존 없이 돌리는 조합도 'SB 때 존'으로 보였음 → 평상 턴·AF 존, SB 때 다르면 따로(최고점은 허수아비 AF 존) */
+          const dz = o.mode==='burst' && ev.dummy && ev.dummy.zFull ? ev.dummy.zFull : null, zM = dz || nz, zS = !dz && sbz && sbz.level>0 && !(zM && zM.level>0 && zM.label===sbz.label) ? sbz : null;
+          return `<span class="zonebadge" title="${dz ? '허수아비 AF 존' : '평상 턴·AF 존'}">${esc(zM&&zM.level?zM.label:'존 없음')}${zM&&zM.byName&&zM.level?` <span class="hint">· ${esc(zM.byName)}</span>`:''}${zS?` <span class="hint">· SB 때 ${esc(zS.label)}</span>`:''}</span>`; })()}
         ${shared?'':`<div class="scorebar"><span>${esc(MODE_KR[o.mode]||'종합')} ${(x.rel*100).toFixed(0)}</span><div class="bar"><i style="width:${(x.rel*100).toFixed(0)}%"></i></div></div>`}
         <span class="cbtns"><button type="button" class="btn small" data-goalsave="${key}">${shared?'내 목표로 저장':'목표로 저장'}</button>${shared || (o && o.noShare)?'':`<button type="button" class="btn small" data-share="${key}">링크 복사</button><button type="button" class="btn small" data-report="${key}" title="결과가 이상할 때: 보유·조건·조합·수치를 한 번에 복사해 디스코드 등에 붙여 넣기">제보용 복사</button>`}</span>
       </div>
@@ -2632,7 +2634,10 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   /* AF 상한 여유(2026-10-20 사용자 '천명 200 이상에 세팅 좋으면 맥뎀 찍을 파티원 구성이 자유로움'): 실전 AF가 9999억 상한에 닿으면 상한 없을 때 값과 비율 — 화력 대신 생존·유지력 캐릭터를 넣을 여유 */
   const capR = ev.score ? [] : T.filter(r=>r.afCap && +r.afRaw>0), cTot = +(x.S||settings()).afTotalCap||0;
   const capT = capR.length && cTot>0 ? (()=>{ const mx = Math.max(...capR.map(r=>+r.afRaw)), sl = 1 - cTot/mx; return ` · <b class="capok">AF가 상한(9999억)에 닿음</b> <span class="hint">— 상한 없으면 약 ${fmtN(mx)}${sl>=0.25 ? `라 화력의 약 ${Math.round(100*sl)}%는 남음: 딜러 하나를 생존·유지력 캐릭터로 바꿔도 AF 피해는 거의 그대로` : ` (여유 약 ${Math.round(100*sl)}% — 화력을 빼면 상한 아래로 내려감)`}</span>`; })() : '';
-  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${full}</div>`; }
+  /* 존을 펼 수 있는데 안 까는 조합(2026-10-20): 존이 없으면 AF 게이지가 타격마다(1.5%, 약점 3.5% — 위키) 차서, 약점을 다단으로 치는 조합은 존(행동마다 맞는 속성 7.5%)보다 빨리 참 */
+  const nz = ev.normal && ev.normal.zone, zc = !(nz && nz.level>0) && x.team && x.progs ? E.zoneCandidates(x.team, x.progs, 'normal').filter(z=>z && z.level>0) : [];
+  const wkH = (ev.normal.cores||[]).some(c=>c && c.rel==='weak'), noZ = zc.length ? ` · <span class="hint">존 안 깖(${esc([...new Set(zc.map(z=>z.label))].slice(0,2).join('·'))} 가능) — 이 조합은 존 없이 쓰는 쪽이 평상 턴 + AF가 더 큼(존이 없으면 AF 게이지가 타격마다 1.5%${wkH ? '·약점 3.5%' : ''}씩 차서 다단 히트가 유리)${ev.sb && ev.sb.zone && ev.sb.zone.level>0 ? ` · SB는 그 직전에 ${esc(ev.sb.zone.label)} 펴고 쓰는 계산` : ''}</span>` : '';
+  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${full}${noZ}</div>`; }
 /* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
 function zlLine(ev){ const L = ev && Array.isArray(ev.zLate) ? ev.zLate.filter(p=>!p.auto || p.from) : []; if(!L.length) return '';
   const z0 = ev.normal && ev.normal.zone ? ev.normal.zone.label : '존 없음';
