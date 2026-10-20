@@ -642,7 +642,8 @@ function prepChar(c){
     counter: c.counter || null,
     afAnim: +c.af_anim > 0 ? +c.af_anim : null, // AF 중 스킬 연출 시간(초), 데이터 없으면 설정값
     exD: c.exsp && !c.exsp.off ? {lv: Math.max(1, +c.exsp.lv||1), lvSa: +c.exsp.lv_sa||0, turn: +c.exsp.turn||0, af: +c.exsp.af||0, sb: c.exsp.sb==='max' ? 'max' : +c.exsp.sb||0, zone: +c.exsp.zone||0, ctr: +c.exsp.ctr||0, dur: Math.max(1, +c.exsp.dur||3), max: Math.min(10, +c.exsp.max||10),
-      win: Array.isArray(c.exsp.win) && c.exsp.win.length===2 ? c.exsp.win.map(Number) : null, winAdd: +c.exsp.win_add||0, wt: c.exsp.wt && c.exsp.wt.wt ? {wt: c.exsp.wt.wt, n: +c.exsp.wt.n||5, add: +c.exsp.wt.add||1} : null, wtAdd: c.exsp.wt ? +c.exsp.wt.add||1 : 0} : null, // EX必殺技 레벨·지속(data/ex.json)
+      win: Array.isArray(c.exsp.win) && c.exsp.win.length===2 ? c.exsp.win.map(Number) : null, winAdd: +c.exsp.win_add||0, wt: c.exsp.wt && c.exsp.wt.wt ? {wt: c.exsp.wt.wt, n: +c.exsp.wt.n||5, add: +c.exsp.wt.add||1} : null, wtAdd: c.exsp.wt ? +c.exsp.wt.add||1 : 0,
+      afg: Array.isArray(c.exsp.afg) ? c.exsp.afg.map(Number).filter(v=>v>0) : (+c.exsp.afg>0 ? [+c.exsp.afg] : null)} : null, // EX必殺技 레벨·지속(data/ex.json), afg: EX가 주는 AF 게이지(쓸 때마다 다음 값)
     adaptAll: c.adapt_all || null, // 아군 전체 臨機応変(왼쪽 아군 무기 타입, 짭코코)
     afStartR: c.af_start || null, afRefillR: c.af_refill || null, afTurnR: c.af_turn || null, // afTurnR: 행동 밖 AF 게이지(턴 시작·종료 패시브, af_start.json _turn)
     base: c.base || ('jp:'+String(c.name_jp||c.id).replace(/\((AS|ES)\)$/,'')), // 같은 캐릭터의 스타일 묶음 (한 파티에 하나만)
@@ -2700,6 +2701,7 @@ function battleSim(N, o){
       d += nd; rec.nd = nd; rec.L = L(); // 누적 효과 예열(rmp). 2026-10-18 버그: 이 두 줄이 주석 안에 들어가 실전 딜 비중(bsim.per)에서 평상 턴이 빠졌었음
       if(!isAF){ s1 = Math.min(100, s1 + o.sbAct*((o.sbWN || o.sbW) ? (o.sbWN || o.sbW).reduce((x,v)=>x+v, 0) : o.front)); g1 = Math.min(100, g1 + o.afGain); } else s1 = Math.min(100, s1); aw1 = Math.max(0, aw1-1);
       if(rec.gSb) g1 = Math.min(100, g1 + rec.gSb); // SB 턴 종료 추격(메리나)
+      if(o.afInj && o.afInj[t]){ g1 = Math.min(100, g1 + o.afInj[t]); rec.gEx = o.afInj[t]; } // EX必殺技 AF 게이지(뮬루스(ES) 등, evalTeamX)
       let hs1 = hs0;
       if(o.hg && hs0){ const M = o.hg.M, segs = []; // 보스 타수 기믹(2026-10-19): AF(또는 평상) → SB 순으로 벗기며 그 구간 피해 ×배율
         if(isAF && rA) segs.push({k:'a', d:dA, w: (rA.n||[]).map((v,i)=>(+v||0)*M[i].h), u: (rA.n||[]).map((v,i)=>(+v||0)*M[i].x), p: rA.per, e: M.map(q=>q.en)});
@@ -2796,10 +2798,15 @@ function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
     const ctrAt = () => !!c.counter; // 요격(1턴 1회, 시구레(ES)): 보스가 때리는 턴마다(AF 턴도 AF 뒤 요격)
     const wq = d.wt, wN = wq ? team.reduce((a,m)=>{ const mm = m.main || {}; return a + (mm.weapon_type===wq.wt ? Math.max(1, +mm.execs||1)*(1 + Math.max(0, +mm.repeat||0)) + (m.counter ? 2 : 0) : 0); }, 0) : 0; // 그 턴 아군 ○ 공격 행동 수(평상 턴 주력 + 요격 약 2번 — 시구레(ES) 요격이면 턴당 +3, game-info)
     const turnAdd = wq ? (t => { const r = t<=N ? recA[t-1] : null, af = r ? !!r.af : afAt(t)>0; return (af ? wN>0 : wN >= wq.n) ? wq.add : 0; }) : null; // AF 턴은 맞는 공격이 많아 채움
-    return {i, id: c.id, name: c.name, d, sbAt, zoneAt, ctrAt, turnAdd, gate: exI.includes(i)}; }).filter(Boolean);
-  const TL = exTimeline(P, HL, afAt, actsAt), L = P.map((m,k)=>({...m, on: TL.on[k], first: TL.first[k], n: TL.n[k], f: TL.on[k].size/HL})).filter(m=>m.gate);
+    return {i, id: c.id, name: c.name, d, sbAt, zoneAt, ctrAt, turnAdd, gate: exI.includes(i) || !!(d.afg && d.afg.length)}; }).filter(Boolean);
+  const TL = exTimeline(P, HL, afAt, actsAt), LA = P.map((m,k)=>({...m, on: TL.on[k], first: TL.first[k], n: TL.n[k], f: TL.on[k].size/HL})).filter(m=>m.gate), L = LA.filter(m=>exI.includes(m.i));
+  /* EX의 AF 게이지(2026-10-21 — 뮬루스(ES) 턴 종료 50%(쓸 때마다 30·10%)·나기(ES) 50%·플람라피스(ES) 25%, 딩 DB '발동한 턴으로부터 1턴 경과하는 턴' 종료): EX가 나간 다음 턴 끝에 그만큼 →
+     실전 계획에 넣어(S.afInj {턴: %}) 한 번 더 계산, 지속 딜은 긴 전투 평균만큼 평상 턴 충전에(S.exAfgAvg) */
+  if(!S.afInj && S.exAfg!==false && P.some(m=>m.d.afg)){ const inj = {}, used = P.map(()=>0); let tot = 0;
+    for(const f of TL.fires){ const m = P[f.k]; if(!m || !m.d.afg) continue; const v = m.d.afg[Math.min(used[f.k], m.d.afg.length-1)]; used[f.k]++; if(f.t+1 <= HL){ inj[f.t+1] = (inj[f.t+1]||0) + v; tot += v; } }
+    if(tot>0) return evalTeamX(team, progs, enemy, ({...S, ...{afInj: inj, exAfgAvg: tot/HL}}), cap, ctx, sw); }
   const L1 = Math.min(10, 1 + P.reduce((a,m)=>a + Math.max(0, m.d.lv - 1), 0));
-  const info = L.map(x=>({id: x.id, name: x.name, first: x.first || null, dur: x.d.dur, lv: L1, n: x.n, onN: [...x.on].filter(t=>t<=N).sort((a,b)=>a-b), f: +x.f.toFixed(3)}));
+  const info = LA.map(x=>({id: x.id, name: x.name, first: x.first || null, dur: x.d.dur, lv: L1, n: x.n, onN: [...x.on].filter(t=>t<=N).sort((a,b)=>a-b), f: +x.f.toFixed(3), afg: x.d.afg ? x.d.afg[0] : 0}));
   /* EX 피해(game-info AF まとめ 4-2-2: 'AF必殺技 + AF中の合計ダメージ量の35%', 1타 상한 99.99억 — AF 필살기 몫은 작아 뺌): EX가 나간 AF 턴에 그 AF 피해 × 0.35, 지속 딜은 긴 전투 중 나간 횟수만큼 */
   const exHit = d => Math.min(9999999999, 0.35*Math.max(0, +d||0));
   const exDmg = ev => { if(!TL.fires.length) return; const who = f => { const m = P[f.k] || P[0]; return team.indexOf(team[m.i]); };
@@ -3167,7 +3174,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const offOK = !(S.afOffGain===false || S.afBan || S.afDrain);
   const teAF0 = (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.when && e.when.af))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, nz, cap, fw, 'af'); return r && r.total>0 ? r : null; })(); // AF 턴 종료 공격(콤보 최대 기준 위력, 그 스킬 칸·AF 행동 1번은 따로 안 셈)
   const afOffG = offOK ? Math.min(100, afOffOf(nz) + ((teAF0 && +teAF0.afg)||0)) : 0; // AF 턴 뒤(AF가 끝난 다음) 행동 밖에서 차는 게이지(빅트(AS) AF 턴 종료 공격 포함)
-  let afTurns = dInj ? dInj.per : afCyc1(afGain, afOffG); // AF 주기 = 게이지를 채우는 평상 턴 + AF 턴(AF 턴엔 평상 행동·게이지 충전 없음, 2026-10-16 — 행동 밖 충전 afOffG만, 2026-10-19)
+  const exAfg = +S.exAfgAvg>0 ? +S.exAfgAvg : 0; // EX必殺技 AF 게이지 긴 전투 평균(턴당)
+  let afTurns = dInj ? dInj.per : afCyc1(afGain + exAfg, afOffG); // AF 주기 = 게이지를 채우는 평상 턴 + AF 턴(AF 턴엔 평상 행동·게이지 충전 없음, 2026-10-16 — 행동 밖 충전 afOffG만, 2026-10-19)
   let susNW = afCyc ? (afTurns-1)/afTurns : 1; // 지속 딜에서 평상 턴 비율
   const sbIdx = team.map((c,i)=>i).filter(i=>team[i].stellar && progs[i].sbOK);
   const sbW = team.map((c,i)=> sbFillOK(team, i, progs, S) ? 2 : 1); // SB 게이지 행동 1회 충전 배율(허수아비 dummySim과 같게)
@@ -3189,7 +3197,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const teSB0 = (()=>{ if(!team.some(c=>c.turnEnd && c.turnEnd.some(e=>e.sb_only))) return null; const r = turnEndCalc(team, progs, A, enemy, S, cx, null, res.sb.zone || nz, cap, fw, 'sb'); return r && r.total>0 ? r : null; })(); // SB를 쓴 턴의 종료 공격
   if(offOK && teSB0) afSbG += +teSB0.afg||0; // 그 AF 게이지도 SB 턴 끝에(피네(AS) 残響)
   if(afSbG>0 && afCyc && !dInj && S.sbCycle!==false){ const sa = S.sbPerAct!=null ? +S.sbPerAct : 2.5, aA = (R3.afA.nAll || R3.afA.n).reduce((x,y,i)=>x+y*sbW[i],0), gT = sa*sbWN.reduce((x,v)=>x+v,0)*susNW + sa*aA/afTurns, sbR = Math.min(1, gT/100);
-    afTurns = afCyc1(afGain + afSbG*sbR, Math.min(100, afOffG + afSbG*sbR)); susNW = (afTurns-1)/afTurns;
+    afTurns = afCyc1(afGain + exAfg + afSbG*sbR, Math.min(100, afOffG + afSbG*sbR)); susNW = (afTurns-1)/afTurns;
     if(afBufC){ const w2 = afBWof(afTurns); if(Math.abs(w2 - afBW) > 0.01){ afBW = w2; R3 = mkR3(); } } } // AF 안 버프 운용: 주기가 바뀌면 다시 거는 AF 비율(afBW)·3턴째 AF도 다시(2026-10-20 점검)
   const capAF = v => +S.afTotalCap>0 ? Math.min(v, +S.afTotalCap) : v; // AF 한 번 총 피해 상한(9999억)
   const ssK = S.starseaZone!==false && isSS(nz) ? 2 : 1; let af = capAF(R3.afS.v); // ssK: 평상 존이 성해진(AF 공격 ×2는 applyZoneCap이 — 코어 sit 'af')
@@ -3327,7 +3335,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     ss: ssK>1, ssAF: S.starseaAF!==false, afGain, afDrain: dInj ? {turns: dInj.turns, g0: dInj.g0} : null, g0: st.g, s0: Math.min(50, 12.5*team.length), sbAct: S.sbPerAct!=null ? +S.sbPerAct : 2.5, front: team.length, sbW, sbWN, afRun, /* SB 게이지 시작 = 전열 1명당 +25/200(2026-10-19 game-info 星導覚醒 'ステラバーストの細かい仕様' — 예전엔 천·명 중 많은 쪽 수만), sbW: 멤버별 행동 1회 충전 배율(스텔라 보드 天冥 어빌리티 증가(중) = +10/+5) */
     refill: (()=>{ const rc = sbIdx.length ? team.find(c=>c.afRefillR && c.afRefillR.on==='sb') : null; return rc ? {to:+rc.afRefillR.to||100, cost:+rc.afRefillR.cost||0, e0: +rc.afRefillR.start>0 ? 1 : 0, noAF: rc.afRefillR.af===false} : null; })(), // e0: 개전에 축적 1개(히스메나(ES) エスパーダ), noAF: AF 안 SB로는 안 채움
     teSB: teSB0};
-  simIn.afSbG = afSbG; simIn.afFirst = afFirstOn; // afFirst: 순수 AF 안 버프 운용의 첫 AF는 버프를 다 걸고(afRun f1)
+  simIn.afSbG = afSbG; if(S.afInj) simIn.afInj = S.afInj; simIn.afFirst = afFirstOn; // afFirst: 순수 AF 안 버프 운용의 첫 AF는 버프를 다 걸고(afRun f1)
   simIn.afTotCap = +S.afTotalCap||0; // AF 한 번 총 피해 상한
   simIn.afOffG = afOffG; out.afOffG = simIn.afOffG>0 ? +simIn.afOffG.toFixed(1) : 0; // AF 턴 뒤 게이지(빅트(AS) AF 턴 종료 공격 포함)
   // 지속 딜의 AF도 극 존이 계속 유지될 때만 극(2026-10-17): 개전 자동·1회 각성(네코코(ES) 颯 첫 사용 등)은 2턴 뒤 일반 존 — 평상 턴(susOf)과 같은 비율(일반 0.6·극 0.4)로 섞음. SB로 다시 각성(sbAw)하면 그대로
