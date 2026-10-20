@@ -1694,7 +1694,8 @@ function reviveTxt(team){
 function turnRecTxt(r, ev, team, mainI){
   const g = Math.round(+r.g||0), bz = r.bz && r.bz!==true ? ` <span class="hint">(보스 존 ${esc(r.bz)})</span>` : '';
   if(r.af){ const sb = r.sb==='af' ? ` → AF 안에서 <b>SB</b>${r.combo ? ` (콤보 ${Math.round(r.combo*100)}%)` : ''}` : r.sbHold && +r.s>=0 ? ' → <b>SB는 다음 턴에</b> <span class="hint">(AF 점수 상한 밖에서)</span>' : '';
-    return `<b>${r.t}턴</b>: <b class="afk">AF 발동</b> (게이지 ${Math.round(+r.af||g)}%${r.afL>=2?' · 극 존':''})${sb} · ${fmtN(r.d)}${r.capped ? ` <span class="hint">(점수 상한 — 실제 ${fmtN(r.raw)})</span>` : ''}${r.ctrAF?' · AF 뒤 요격':''}${hgT(r)}${bz}`; }
+    const bfH = +ev.afPlN>0 && (r.t===1 || r.af1st || (ev.afBuf && !(ev.afBufW!=null && ev.afBufW<0.99))) ? ' <span class="hint">· 버프 스킬부터</span>' : ''; // 1턴째 AF·AF 안 버프 운용: 버프 스킬을 AF 첫 행동으로
+    return `<b>${r.t}턴</b>: <b class="afk">AF 발동</b> (게이지 ${Math.round(+r.af||g)}%${r.afL>=2?' · 극 존':''})${bfH}${sb} · ${fmtN(r.d)}${r.capped ? ` <span class="hint">(점수 상한 — 실제 ${fmtN(r.raw)})</span>` : ''}${r.ctrAF?' · AF 뒤 요격':''}${hgT(r)}${bz}`; }
   const sb = r.sb==='turn' ? `<b>SB</b>${r.sbOn ? ' <span class="hint">(SB 게이지 가득 상태)</span>' : ''} + ` : '', st = r.stack ? '게이지 축적 소비 · ' : '';
   const full = r.afFull>0 ? ` <span class="warn">AF 게이지가 꽉 차 피해 감소</span>` : '';
   return `<b>${r.t}턴</b>: ${st}${sb}평상 공격 (AF 게이지 ${g}%${g>=50 && !ev.afOff ? ' — 켤 수 있지만 모아 둠' : ''}${r.ss ? ' · 성해진 100% ×2' : ''}) · ${fmtN(r.d)}${hgT(r)}${full}${bz}`;
