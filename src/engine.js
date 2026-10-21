@@ -258,13 +258,14 @@ function reqCount(req, team, self){
 }
 /* 'ZONE 중 ○ 공격 수만큼 전체 강화'(15/30/45/60% 등, 2026-10-16 K2): 그 턴 아군의 ○ 공격 수(전열 4명 → 최대 4)로 턴 종료에 강화(같은 계열 'ZONE 중 ○ 공격 수만큼 전체 회복'이 턴 종료 효과)
    → 1턴째(허수아비 AF·실전 1턴째 AF)엔 없고, 평상 턴은 2턴째부터, 실전 2턴째 이후 AF는 앞 턴 공격 수. q: {wt:[…]} | {el:[…]} | {kind:'mag'|'phys'} | req 형식({kind:'elem', vals}), n: 최대가 되는 공격 수(기본 4) */
-function frontCount(q, team){
+function frontCount(q, team, A){
   if(q.vals) return reqCount(q, team, null);
-  return team.slice(0,4).filter(m=>{ const sk = m.main||{}, el = sk.element||m.elem, wt = sk.weapon_type||m.wt, kind = sk.kind||'phys';
+  const aT = A && A._en!==undefined && (q.wt || q.kind) ? adAllT(team, A, A._en, null) : null; // 아군 전체 臨機応変(짭코코)이면 바뀐 타입으로(2026-10-21)
+  return team.slice(0,4).filter(m=>{ const sk = m.main||{}, el = sk.element||m.elem, wt = aT || sk.weapon_type||m.wt, kind = aT && !A.adaptPhysOnly ? (aT==='magic' ? 'mag' : 'phys') : (sk.kind||'phys');
     if(q.wt) return [].concat(q.wt).includes(wt); if(q.el) return [].concat(q.el).includes(el); if(q.kind) return kind===q.kind; return true; }).length;
 }
 function cntFill(q, team, sit, A){
-  const n = Math.max(1, +q.n||4), f = Math.min(n, frontCount(q, team))/n;
+  const n = Math.max(1, +q.n||4), f = Math.min(n, frontCount(q, team, A))/n;
   if(sit==='normal'){ if(A.stkT>0) return A.stkT>1 ? f : 0; const H = Math.max(1, (A.tm && A.tm.H) || 6); return f*(H-1)/H; } // 누적 예열(A.stkT): 그 턴 값 — 1턴째는 아직 없음
   return A.realT>1 ? f : 0;
 }
@@ -353,7 +354,7 @@ function ruleAct(r, j, team, progs, sit, z, A){
   const w=r.w; let a=1;
   if(w.zone && !zoneMatch(w.zone, z)) return 0;
   if(w.zlv && !(z && z.kind!=='none' && z.level>=w.zlv)) return 0;
-  if(w.sb && !((sit==='sb' || (sit==='af' && A.postSB)) && progs[j] && progs[j].sbOK)){ if(sit==='normal' && !w.sb1 && A.sbUpN && A.sbUpN[j]>0) a*=A.sbUpN[j]; else return 0; } // SB로 건 효과는 그 AF의 남은 행동에도, 평상 턴은 SB 뒤 남는 비율
+  if(w.sb && !((sit==='sb' || (sit==='af' && A.postSB)) && sbUse(A, progs, j))){ if(sit==='normal' && !w.sb1 && A.sbUpN && A.sbUpN[j]>0) a*=A.sbUpN[j]; else return 0; } // SB로 건 효과는 그 AF의 남은 행동에도, 평상 턴은 SB 뒤 남는 비율
   if(w.af && sit!=='af') return 0;
   if(w.noaf && sit!=='normal') return 0; // AF·SB 땐 못 거는 효과: 허수아비·시뮬의 AF(와 그 안의 SB)는 세팅 턴 없이(축적 0) 시작하므로, 긴 축적이 필요한 스킬(예: 니나 理の再縫 = 코디네이트 40)
   if(w.req && !reqMet(w.req, team, team[j])) return 0;
@@ -965,6 +966,8 @@ function teamAgg(team){
    v: 숫자 = AF·SB 계산 때 그 비율(평상 턴은 그대로), 'sb' = SB를 쓴 뒤(SB 턴·그 AF의 남은 행동)에만, 평상 턴엔 없음 */
 // rv: 실전 N턴의 AF(2026-10-16, 세팅 2턴 뒤인 3턴째 AF) 값 — af_timing real. A.realT(그 AF가 몇 턴째인지)가 있으면 1턴째 값에서 real 쪽으로(3턴째에 다 감)
 // sbu: 평상 턴에 SB 뒤 효과가 남아 있는 비율(2026-10-16, 사용자 확인: SB 효과는 그 뒤 행동에도 — 체인 어빌리티만 빼고)
+/* SB를 실제로 쓰는지(성도 스킬 열림 + 파괴 순서 모델이 'SB 안 씀'으로 본 파괴 캐릭터 A.sbNo가 아님, 2026-10-21) — SB 전용 효과의 문 */
+const sbUse = (A, progs, j) => !!(progs && progs[j] && progs[j].sbOK) && !(A && A.sbNo && A.sbNo.has(j));
 function afTV(v, situation, A, sbOK, rv, sbu){
   if(v==null) return 1;
   const cl = x => Math.max(0, Math.min(1, +x||0));
@@ -1179,13 +1182,13 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const c = team[idx], pr = progs[idx];
   const sit = situation==='af' ? 'normal' : situation; // AF는 스킬 선택이 평상과 같음
   // SB로 거는 항목(buff_acts sb): 행동 단위 마스크가 없는 AF(실전 N턴의 AF)에선 SB 뒤(postSB)만 — af_timing 'sb'와 같은 규칙(2026-10-16)
-  const sbG = situation==='af' && !A.postSB ? (j,k)=> team[j].bact && team[j].bact.sbOnly.has(k) && !(FX && FX[j] && FX[j].sm) ? 0 : 1 : ()=>1;
+  const sbG = situation==='af' && !A.postSB ? (j,k)=> team[j].bact && team[j].bact.sbOnly.has(k) && !(FX && FX[j] && FX[j].sm) ? 0 : 1 : A.sbNo && (situation==='sb' || (situation==='af' && A.postSB)) ? (j,k)=> A.sbNo.has(j) && team[j].bact && team[j].bact.sbOnly.has(k) ? 0 : 1 : ()=>1; // SB 안 쓰는 파괴 캐릭터의 SB 항목은 SB 때도 없음
   const sbU = j => situation==='normal' && A.sbUpN && !(team[idx] && team[idx]._chain) ? (A.sbUpN[j]||0) : 0; // 평상 턴: SB 뒤 남는 효과 비율(체인 어빌리티 공격은 0)
   const chX = c && c._chain && situation==='normal' && A.sbUpN ? (j,k)=> team[j].bact && team[j].bact.sbOnly.has(k) ? 0 : 1 : ()=>1; // 체인 어빌리티 공격은 SB 뒤 효과를 안 받음
   const stkT = situation==='normal' && A.stkT>0 ? A.stkT : 0; // 누적 효과 예열: 평상 턴 t에 쌓인 만큼(prepStk)
   const stkMR = j => A.stkMR ? A.stkMR[j] : null;
   const stkP = stkT ? (j,k0)=>{ const s = team[j].stk, L = s && s.party[k0]; return L ? stkFac(L, stkT, stkMR(j)) : 1; } : ()=>1;
-  let row=null; const F = (j,k)=>{ const t=team[j].afT, k0 = k.indexOf(':')<0 ? k : kBase(k), a = (t && t.party ? afTV(t.party[k0], situation, A, progs[j]&&progs[j].sbOK, t.real && t.real.party ? t.real.party[k0] : null, sbU(j)) : 1)*sbG(j, k0)*chX(j, k0)*stkP(j, k0); if(!row) return a; const v=rowV(row, idx, k); return (v==null?1:v)*a; };
+  let row=null; const F = (j,k)=>{ const t=team[j].afT, k0 = k.indexOf(':')<0 ? k : kBase(k), a = (t && t.party ? afTV(t.party[k0], situation, A, sbUse(A, progs, j), t.real && t.real.party ? t.real.party[k0] : null, sbU(j)) : 1)*sbG(j, k0)*chX(j, k0)*stkP(j, k0); if(!row) return a; const v=rowV(row, idx, k); return (v==null?1:v)*a; };
   let sk = c.main, usingSB=false;
   // 그 존이어야 연속 실행되는 주력(zone_need, 2026-10-16: 세스타 二刀神狼은 極・風王陣 중 神狼이 쌓여야 — 다른 존 편성에선 餓狼断 단독인데 5실행으로 AF 게이지를 채우던 문제)
   if(sk && sk.zone_need && !(zoneMatch(sk.zone_need.zone, zone) && (!sk.zone_need.zlv || (zone && zone.level>=sk.zone_need.zlv))))
@@ -1377,11 +1380,11 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const tv=[], phv=[], mgv=[], dfv=[]; let sideDn = 0, sideRes = 0;
   const nTg = sk.target==='st' ? 1 : Math.max(1, S.enemyCount||1);
   for(let j=0;j<team.length;j++){
-    const m=team[j]; let d = m.afT && m.afT.deb ? afAdj(m.deb, m.afT.deb, situation, A, !!(progs[j]&&progs[j].sbOK), m.afT.real && m.afT.real.deb, sbU(j)) : m.deb; if(!d) continue;
+    const m=team[j]; let d = m.afT && m.afT.deb ? afAdj(m.deb, m.afT.deb, situation, A, sbUse(A, progs, j), m.afT.real && m.afT.real.deb, sbU(j)) : m.deb; if(!d) continue;
     if(stkT && m.stk){ const sD = m.stk.deb, ks = Object.keys(sD); if(ks.length) d = stkScale(d, ks, k => stkFac(sD[k], stkT, stkMR(j))); }
     const fr = FX&&FX[j] ? FX[j] : null, st = m.rules && m.rules.debSt && nTg>1 ? m.rules.debSt : null, fe = d.elem_res ? folEls(team, j, A) : null;
     const erV = el==='none' || !d.elem_res ? 0 : fe ? folV(d.elem_res, fe, el) : d.elem_res[el]; // 내성 다운 속성이 변환 대상 아군을 따라감(이벨라(AS))
-    const sbD = situation==='af' && !A.postSB && m.bact && m.bact.sbOnly.size && !(FX && FX[j] && FX[j].sm);
+    const sbD = (situation==='af' && !A.postSB && m.bact && m.bact.sbOnly.size && !(FX && FX[j] && FX[j].sm)) || !!(A.sbNo && A.sbNo.has(j) && m.bact && m.bact.sbOnly.size && (situation==='sb' || (situation==='af' && A.postSB)));
     const off = A.eqOff && A.eqOff[j] && !(FX && FX[j] && FX[j].sm) ? A.eqOff[j] : null; // 장착 못 한 버프 행동만 거는 디버프는 끔(허수아비는 자기 마스크)
     // 디버프 스킬의 부작용(debuff.side, 2026-10-17 딩 DB: 셴화 ブレイクダウン은 '적과 아군 전체'에 힘 50% DOWN·물리 저항 50% UP도) — 그 디버프가 켜진 만큼
     if(m.deb && m.deb.side) for(const sd of m.deb.side){ const k0 = sd.src, b0 = +m.deb[k0]||0; if(!(b0>0)) continue; const dk = 'd_'+k0;
@@ -1432,7 +1435,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 브레이크
   let brk = 1; const bkG = {};
   for(let bi=0; bi<A.breaks.length; bi++){ const b=A.breaks[bi], bj = A.breakJ ? A.breakJ[bi] : -1, bt = bj>=0 && team[bj] && team[bj].afT && team[bj].afT.deb;
-    if(bt && afTV(bt.break, situation, A, !!(progs[bj]&&progs[bj].sbOK), team[bj].afT.real && team[bj].afT.real.deb ? team[bj].afT.real.deb.break : null, sbU(bj)) < 0.5) continue; // 체인·턴 종료 등으로만 거는 브레이크는 AF 땐 없음
+    if(bt && afTV(bt.break, situation, A, sbUse(A, progs, bj), team[bj].afT.real && team[bj].afT.real.deb ? team[bj].afT.real.deb.break : null, sbU(bj)) < 0.5) continue; // 체인·턴 종료 등으로만 거는 브레이크는 AF 땐 없음
     if(bj>=0 && FX && FX[bj] && (b => b!=null && b<0.5)(rowV(FX[bj], idx, 'brk_x'))) continue; // 허수아비: 건 사람이 그 스킬을 쓰기 전
     // 존 조건·켜진 비율(debuff.break_zone {zone, zlv}·break_up {n, af, real}, 2026-10-16 점검3: 오를레아 招雷陣 때만, 오보로 ライジンモード Lv2 뒤 등)
     const bd = bj>=0 && team[bj].raw && team[bj].raw.debuff || {}, bz = bd.break_zone;
@@ -1460,7 +1463,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const wkF = t => { let best = 0; for(const w of (A.weakInfo||[])){ if(!wkHit(w, t, zone)) continue; let f = 1;
       if(wkGone(w, A)) continue; // 개전 n턴 한정 약점 간파(베르단타 3턴): 긴 전투의 그 뒤 AF(A.lateAF·realT)엔 없음
       if(w.noaf && situation!=='normal' && !wR(w)) f = 0;
-      if(f>0 && (w.sb || (w.sbOnly && !wR(w)))) f = situation==='sb' || (situation==='af' && A.postSB) ? 1 : situation==='normal' && !w.sb1 ? c01(sbU(w.j)) : 0;
+      if(f>0 && (w.sb || (w.sbOnly && !wR(w)))) f = (situation==='sb' || (situation==='af' && A.postSB)) ? (A.sbNo && A.sbNo.has(w.j) ? 0 : 1) : situation==='normal' && !w.sb1 ? c01(sbU(w.j)) : 0;
       if(f>0 && !w.start){ const rf = FX && FX[w.j]; if(rf){ const wx = rowV(rf, idx, 'weak_x'); if(wx!=null) f *= c01(wx); } }
       if(f>0 && w.up){ const u = situation==='normal' ? w.up.n : (A.realT>1 && w.up.real!=null ? w.up.real : w.up.af); if(u!=null) f *= c01(u); }
       if(f>best) best = f; } return best; };
@@ -1579,7 +1582,7 @@ function weakFrac(A, el, sit, zone){ let best = 0;
   for(const w of (A.weakInfo||[])){ if(!(w.t===el || wkHit(w, el, zone))) continue; let f = 1; if(wkGone(w, A)) continue;
     if(w.up) f = sit==='normal' ? +w.up.n||0 : (A.realT>1 && w.up.real!=null ? +w.up.real||0 : (w.up.af!=null ? +w.up.af||0 : 1));
     if(w.noaf && sit!=='normal' && !(A.realT>1)) f = 0;
-    if(w.sbOnly || w.sb) f *= sit==='normal' ? (w.sb1 ? 0 : 0.3) : (sit==='sb' || A.postSB) ? 1 : 0;
+    if(w.sbOnly || w.sb) f *= sit==='normal' ? (w.sb1 || (A.sbNo && A.sbNo.has(w.j)) ? 0 : 0.3) : (sit==='sb' || A.postSB) && !(A.sbNo && A.sbNo.has(w.j)) ? 1 : 0;
     best = Math.max(best, Math.max(0, Math.min(1, f))); }
   return best; }
 /* 臨機応変(2026-10-16): 스킬 adapt 'weak' = 적 약점 타입(없으면 아군 약점 간파 타입)으로(니르야 必殺アビセ蹴り), 'front' = 전열에서 가장 많은 물리 공격 타입(월화의 영애 — 동수면 원래 타입) */
@@ -3108,7 +3111,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const zk = z && z.level>0 ? String(z.key||z.kind||'') : '', pl = !!(A.mule && A.mule.plan), invA = !!(A.aura && A.aura.inv && A.aura.inv._a && Object.values(A.aura.inv._a).some(v=>+v>0));
       const zid = pl ? zk+':'+(z?z.level:0) : (A.aura && zk && AURA_Z.has(zk) ? (invA ? zk : 'Z') : ''); // 아군 전체 글래 보유 표시가 없으면 격진의 힘은 '그 존에 있나'만 갈림
       let h = z && z.level>=2 ? 7 : 3; for(let q=0;q<zid.length;q++) h = (h*31 + zid.charCodeAt(q)) % 1000003; key = (key*1000003 + h) % 2147483629; }
-    if(A.stOn) key = (key*7 + 5) % 2147483629; // 상태를 켠 계산(sb_full 턴) // 존 각성(극·절) 여부도: 각성의 힘 글래스터(×1.25)
+    if(A.stOn) key = (key*7 + 5) % 2147483629; // 상태를 켠 계산(sb_full 턴)
+    if(A.sbNo) for(const i of A.sbNo) key = (key*11 + 3 + i) % 2147483629; // SB 안 쓰는 파괴 캐릭터(SB 전용 효과 없음) // 존 각성(극·절) 여부도: 각성의 힘 글래스터(×1.25)
     if(mz){ let b=1; for(const c of team) if(c.mzone) for(const cd of c.mzone){ b = b*2 + (zoneMatch(cd.zone, z) && (!cd.zlv || (z&&z.level>=cd.zlv)) ? 1 : 0); }
       if(ez) b = b*17 + (z && z.kind==='elem' && z.level>0 ? ELEMS.indexOf(z.types[0])+2 : 1);
       key = (key*131 + b) % 2147483629; } // 스킬 위력이 존에 따라 바뀌는 캐릭터
@@ -3322,7 +3326,9 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   A.tm.S0 = 0;
   sbFld = nz || null; sbFZ = null;
   if(S.sbZoneRule!==false && team.some(c=>c.zoneSbForce)){ const zc0 = zoneCandidates(team, progs, 'sb'); const L = team.map(c=> c.zoneSbForce ? (zc0.filter(q=>q && q.by===c.id && q.level>0).sort((a,b)=>b.level-a.level)[0] || null) : null); if(L.some(Boolean)) sbFZ = L; }
-  A.fieldZ = nz || null; runSit('sb'); A.fieldZ = null;
+  A.fieldZ = nz || null; runSit('sb');
+  if(res.sb.skip && S.sbSkipFx!==false){ const zs0 = res.sb.zones; A.sbNo = new Set(res.sb.skip); runSit('sb', res.sb.zone || null); res.sb.zones = zs0; } // 순서 모델이 SB를 안 쓴다고 본 파괴 캐릭터: 그 SB 전용 버프·디버프도 없이 다시(2026-10-21 점검)
+  A.fieldZ = null;
   if(afBufC) afBW = afBWof(afTurns);
   const P1 = afWith('cast', ()=>afPick(coresFor('af', nz, false))); // AF 상황(AF 전용 스킬·AF 조건)으로 — 1턴째 AF라 버프 스킬은 AF 행동으로 걸며(afMd cast, 2026-10-20)
   const afCores = P1.cs, afA = P1.afA, gain = P1.g, avgCombo = P1.avg, afS = P1.afS;
@@ -3739,7 +3745,7 @@ function dummySim(o){
       afA.seq.forEach((a,q)=>{ const i=a.i, bo = isStepOf(i, c2), isInf = i===kAct && !ia[i] && !bo;
         if(!bo && !isInf){ const st=infAt(at, ia), wq = 1 + q/Math.max(1,L); w+=wq; sp+=wq*st.poison; sa+=wq*st.pain; }
         c2[i]++; if(isInf) ia[i]=true; else if(!bo) at[i]=true; });
-      var Av = ({...A, ...{_ecFix:true, dummy:true, eqOff:null, infPick:{poison: w>0?sp/w:0, pain: w>0?sa/w:0}, postSB:false, afN: afA.n.map((v,j)=>Math.max(1, v - (plan[j]||[]).length))}}); } // afN: 공격 행동 수(자원 소비형 상태)
+      var Av = ({...A, ...{_ecFix:true, dummy:true, eqOff:null, sbNo: o.sbSkip && o.sbSkip.size ? new Set([...(A.sbNo||[]), ...o.sbSkip]) : (A.sbNo || null), infPick:{poison: w>0?sp/w:0, pain: w>0?sa/w:0}, postSB:false, afN: afA.n.map((v,j)=>Math.max(1, v - (plan[j]||[]).length))}}); } // afN: 공격 행동 수(자원 소비형 상태)
     const pk = '|p'+Math.round(Av.infPick.poison*20)+'_'+Math.round(Av.infPick.pain*20); // 글래 배치가 같으면 행동 계획이 달라도 같은 상태의 계산은 재사용
     const coreAt = (st, z, sit, i, inow) => { // 그 순간 깔린 버프·독페인으로 i의 공격 1회 (필요한 것만 계산). st = {acted, stepDone, atk}
       sit = sit || 'af';
