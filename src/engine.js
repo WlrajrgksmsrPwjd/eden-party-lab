@@ -2238,7 +2238,7 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // pl
   if(g>0) t += g/10;
   // 가창자의 공격 행동 수: 계획(plan) 없이 막힌 경우 가창을 거는 행동뿐이라 0(계획이 있으면 부르는 쪽이 계획 길이를 뺌)
   const nOut = lk && !plan ? cnt.map((v,k)=> lk[k]!=null ? 0 : v) : cnt;
-  return {n:nOut, dur:t, fast, known, spd:team.map((c,i)=>spdOf(i)), spdE: spdE.map(v=>Math.round(v)), auto:true, seq, lk: lk||null, tok: tok>1 ? tok : null};
+  return {n:nOut, dur:t, fast, known, spd:team.map((c,i)=>spdOf(i)), spdE: spdE.map(v=>Math.round(v)), auto:true, seq, lk: lk||null, tok: tok>1 ? tok : null, gAct: refill.map(v=>Math.round((+v||0)*10)/10)}; // gAct: 행동 한 번의 AF 게이지(%) — 카드 'AF 게이지 기여'(2026-10-21)
 }
 /* ---------- 체인 어빌리티: 다른 아군의 행동에 반응하는 추격 ----------
    턴당 발동 수 = min(최대, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치 */
