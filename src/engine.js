@@ -419,13 +419,13 @@ function linkTo(to, team, j, i){
     return others.slice(0, to.adj ? 2 : 1).includes(i); }
   return false;
 }
-function toFilterOK(to, m){
-  if(to.any && !to.any.some(q=>toFilterOK(q, m))) return false; // OR 조건(2026-10-16 로키드 夜叉鬼神拳: 天 또는 魔獣 퍼스널리티)
+function toFilterOK(to, m, ad){ // ad: 아군 전체 臨機応変으로 바뀐 공격 타입 {t, kind}(짭코코, 2026-10-21 — '마법 크리' 같은 kind·wt 대상 버프도 바뀐 공격으로)
+  if(to.any && !to.any.some(q=>toFilterOK(q, m, ad))) return false; // OR 조건(2026-10-16 로키드 夜叉鬼神拳: 天 또는 魔獣 퍼스널리티)
   if(to.elem && !m.elems.some(e=>to.elem.includes(e))) return false;
   if(to.weap && !to.weap.includes(m.weapon)) return false;
-  if(to.wt && !to.wt.includes(m.atkWt)) return false;
+  if(to.wt && !to.wt.includes(ad ? ad.t : m.atkWt)) return false;
   if(to.align && ![].concat(to.align).includes(m.align)) return false;
-  if(to.kind && m.atkKind!==to.kind) return false;
+  if(to.kind && (ad && ad.kind ? ad.kind : m.atkKind)!==to.kind) return false;
   if(to.kof && !(KOF_JP.includes((m.raw||{}).name_jp) || m.pers.has('KOF'))) return false;
   if(to.pers && !to.pers.some(v=>m.pers.has(v))) return false;
   return true;
@@ -495,7 +495,8 @@ function bfOne(team, progs, sit, z, A, posSets, u0in, debToo, j){
     any=true;
     const L=R.list, acts = new Array(L.length);
     let ck = ''; for(const c of team) ck += c.id+',';
-    ck += j+'|'+sit+'|'+(A.postSB?1:0)+'|'+(um ? oidOf(um) : mf ? oidOf(mf) : u)+'|'+(debToo?1:0)+'|'+oidOf(posSets && posSets[j]);
+    const adE = adEffOf(team, A, z);
+    ck += j+'|'+sit+'|'+(A.postSB?1:0)+'|'+(um ? oidOf(um) : mf ? oidOf(mf) : u)+'|'+(debToo?1:0)+'|'+oidOf(posSets && posSets[j])+'|'+(adE ? adE.t+(adE.kind||'') : '');
     for(let ri=0;ri<L.length;ri++){ acts[ri] = ruleAct(L[ri],j,team,progs,sit,z,A); ck += '|'+acts[ri]; }
     const hit = BF_R.get(ck); if(hit) return hit;
     const rows=[]; for(let i=0;i<n;i++) rows.push({});
@@ -508,7 +509,7 @@ function bfOne(team, progs, sit, z, A, posSets, u0in, debToo, j){
         if(r.me && i===j) v=r.x;
         else {
           let t=0;
-          if(a>0){ t = r.pos ? ((ps&&ps.has(i)) || (r.sbAll && (sit==='sb' || (sit==='af' && A.postSB))) ? 1 : 0) : 1; if(t && !r.pos && !toFilterOK(r.to, team[i])) t=0; if(t && r.to.p!=null) t*=r.to.p; } // sb_all: 위치 규칙(1명)이 SB 때(그 AF의 남은 행동 포함)는 전원(알마(AS) カレイドスコープ)
+          if(a>0){ t = r.pos ? ((ps&&ps.has(i)) || (r.sbAll && (sit==='sb' || (sit==='af' && A.postSB))) ? 1 : 0) : 1; if(t && !r.pos && !toFilterOK(r.to, team[i], adE)) t=0; if(t && r.to.p!=null) t*=r.to.p; } // sb_all: 위치 규칙(1명)이 SB 때(그 AF의 남은 행동 포함)는 전원(알마(AS) カレイドスコープ)
           const e0 = (sit==='normal' && r.en!=null) ? r.en : r.e; // en: 평상 턴에만 쓰는 미충족 배율 (지속 턴이 짧은 경우)
           v = e0 + a*t*(r.x-e0);
         }
@@ -1600,6 +1601,7 @@ function adAllT(team, A, enemy, zone){
       const nat = t => team.filter(c=>c && ((c.main && c.main.weapon_type) || c.atkWt || c.wt)===t).length;
       T = [...zt].sort((a,b)=> nat(b)-nat(a) || WTYPES.indexOf(a)-WTYPES.indexOf(b))[0] || null; } }
   mm.set(zk, T); return T; }
+function adEffOf(team, A, z){ const t = A && A._en!==undefined ? adAllT(team, A, A._en, z) : null; return t ? {t, kind: A.adaptPhysOnly ? null : (t==='magic' ? 'mag' : 'phys')} : null; }
 function adaptWt(sk, wt, kind, team, A, enemy, idx, zone){
   const aT = adAllT(team, A, enemy, zone); if(aT) return aT;
   if(!sk || !sk.adapt || kind==='mag') return wt;
@@ -3028,7 +3030,7 @@ const NOAW_C = new WeakMap();
 function evalTeam0(team, progs, enemy, S, cap, ctx){
   if(team.some((c,i)=>c && c.bact && c.bact.noAw && !(progs[i] && (progs[i].sbOK || progs[i].sbAw)))) team = team.map((c,i)=>{ if(!(c && c.bact && c.bact.noAw) || (progs[i] && (progs[i].sbOK || progs[i].sbAw))) return c; let v = NOAW_C.get(c); if(!v){ v = ({...c, ...{bact: c.bact.noAw}}); NOAW_C.set(c, v); } return v; }); // 성도각성 전: aw 행동은 버프 행동
   if(ctx && ctx.maxBack===0 && !progs.noBack){ progs = progs.slice(); progs.noBack = true; } // 후열 없음: VC(교대) 효과·VC 존 없음
-  const A = teamAgg(team); A.azPick = ctx && ctx._azPick || null; A.noBack = !!progs.noBack; A.adNone = !!(ctx && ctx._adNone) || !!(S && S.adaptAll===false); A.adForce = ctx && ctx._adT || null; A.adaptPhysOnly = !!(S && S.adaptStat===false); A.adOff = true; // 臨機応変은 평상 턴 시뮬이 그 스킬을 다는지 정한 뒤부터(행동 가치 순서는 예전 그대로)
+  const A = teamAgg(team); A.azPick = ctx && ctx._azPick || null; A.noBack = !!progs.noBack; A.adNone = !!(ctx && ctx._adNone) || !!(S && S.adaptAll===false); A.adForce = ctx && ctx._adT || null; A.adaptPhysOnly = !!(S && S.adaptStat===false); A._en = enemy || null; A.adOff = true; // 臨機応変은 평상 턴 시뮬이 그 스킬을 다는지 정한 뒤부터(행동 가치 순서는 예전 그대로)
   A.inf = inflictOf(team, progs, S);
   A.echg = echgOf(team, progs);
   A.bud = ctx && ctx.buddy ? budAgg(ctx.buddy, team, enemy, A) : null;
@@ -3886,7 +3888,7 @@ function explainTeam(team, progs, ev, S, ctx){
       for(const i of rs){
         let v;
         if(r.me && i===j) v=r.x;
-        else { let t=0; if(a>0){ t = r.pos ? (ps&&ps.has(i)?1:0) : 1; if(t && !r.pos && !toFilterOK(r.to, team[i])) t=0; if(t && r.to.p!=null) t*=r.to.p; } v=r.e+a*t*(r.x-r.e); }
+        else { let t=0; if(a>0){ t = r.pos ? (ps&&ps.has(i)?1:0) : 1; if(t && !r.pos && !toFilterOK(r.to, team[i], adEffOf(team, A, sbz))) t=0; if(t && r.to.p!=null) t*=r.to.p; } v=r.e+a*t*(r.x-r.e); }
         dv.set(i, Math.min(dv.get(i), v/Math.max(r.x,1e-9)));
         if(v/Math.max(r.x,1e-9) < 0.95 && r.note && !badN.includes(r.note)) badN.push(r.note);
       }
