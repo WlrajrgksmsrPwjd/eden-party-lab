@@ -1193,7 +1193,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   if(situation==='af' && c.afSk) sk = c.afSk; // AF 중에만 쓰는 공격(플람라피스(ES) ドゥーイル・スラマ 등)
   if(!sk) return null;
   if(situation==='normal' && sk.n_over && !usingSB) sk = ({...sk, ...sk.n_over, ...{n_over:null, hit_w:null}}); // 평상 턴만 바뀌는 필드(유인 ラーヴァインパクト: HP가 깎인 채라 1회 실행·4타, 2026-10-16)
-  let el = sk.element||c.elem; const kind = sk.kind==='mag'?'mag':'phys';
+  let el = sk.element||c.elem; const kind0 = sk.kind==='mag'?'mag':'phys';
   const swc = ELEM_SWITCH[c.id];
   if(swc && (el===swc.yes || el===swc.no)) el = (swc.zone ? zoneMatch(swc.zone, zone) : reqMet(swc.need, team, c)) ? swc.yes : swc.no;
   const elNat = el; // 속성 변환 전 원래 공격 속성
@@ -1201,9 +1201,14 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const elOwn = A.echg && A.echg.some(x=>x.i===idx && x.to==='self') ? echgElem(A.echg.filter(x=>x.i===idx && x.to==='self'), team, idx, el, situation, zone, enemy, A) : el;
   if(A.echg) el = echgElem(A.echg, team, idx, el, situation, zone, enemy, A);
   const conv = el!==elNat && elNat!=='none'; // 남이 바꿔 준 속성(変幻自在 등): 자기 속성 공격 버프(self elem_atk, 보통 '자신의 ○속성 공격')는 원래 속성 몫이라 안 받음
-  const wt = adaptWt(sk, sk.weapon_type || (kind==='mag'?'magic':c.wt), kind, team, A, enemy, idx, zone);
+  const wt0 = sk.weapon_type || (kind0==='mag'?'magic':c.wt), wt = adaptWt(sk, wt0, kind0, team, A, enemy, idx, zone);
+  /* 臨機応変으로 물리 ↔ 마법을 넘으면 대미지 계산도 그쪽으로(2026-10-21 사용자: '테오도로스 공격이 마법으로 바뀌면 지성 기반이라 확 낮아짐' — 니르야 ホライズンチョップ이 완력·지성을 같이 올리는 것과 맞음):
+     마법(魔)이 되면 지성·정신·마법 내성, 斬突打가 되면 완력·내구·물리 내성. 스킬이 따로 정한 의존 스탯(완력 의존 마법·지성 의존 물리·속도 의존)은 그대로. 스킬 위력(크기 표)은 원래 스킬 것. S.adaptStat=false면 예전(타입만) */
+  const adX = wt!==wt0 && S.adaptStat!==false && ((wt==='magic') !== (kind0==='mag'));
+  const kind = adX ? (wt==='magic' ? 'mag' : 'phys') : kind0;
+  const statEx = (kind0==='phys' && sk.stat && sk.stat!=='pwr') || (kind0==='mag' && sk.stat && sk.stat!=='int') || /의존|依存/.test(String(sk.condition||''));
   const tgt = sk.target==='st'?'st':'aoe';
-  const key = tgt+'_'+kind+'_'+(el==='none'?'no':'el');
+  const key = tgt+'_'+kind0+'_'+(el==='none'?'no':'el');
   const sizeV = (SIZE_TABLE[key]||SIZE_TABLE.aoe_phys_el)[SIZE_IDX[sk.size]??3]/100;
   let mult = Math.max(sk.mult||1, 1);
   if(sk.mcond) mult = condMult(sk, sk.mcond, situation, team, c, progs, idx, A, zone, enemy, el);
@@ -1216,7 +1221,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   let dmg = sizeV*mult*(tgt==='st'?1.1:1);
 
   // 스탯 버프 (완력/지성/속도)
-  const stat = sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
+  const stat = adX && !statEx ? (kind==='mag' ? 'int' : 'pwr') : sk.stat==='int'?'int':sk.stat==='spd'?'spd':'pwr';
   const sbOKi = !!(progs[idx] && progs[idx].sbOK);
   let me = c.afT ? (m0 => afAdj(c.self, m0.t, situation, A, sbOKi, m0.rt, sbU(idx)))(afTMerge(c.afT)) : c.self; // 자기 파티 버프 보정은 자기 몫에도
   if(c.selfStk){ me = ({...me}); for(const k in c.selfStk){ if(me[k]==null) continue; const e0 = Math.max(0, Math.min(1, +c.selfStk[k].e||0)), f = e0 + (1-e0)*condP(({...c.selfStk[k]}), situation, team, c, A, zone, enemy, el, progs); // 축적 수에 비례하는 자기 버프(闘魂 완력 등), e = 조건 밖에서 남는 비율(招雷陣·杖 2명이면 2배인 자기 버프는 e 0.5)
@@ -1582,11 +1587,12 @@ const PHYS_WT = ['slash','pierce','blunt'];
 function adAllT(team, A, enemy, zone){
   if(!A || A.adNone || !team || !team.some(c=>c && c.adaptAll)) return null;
   const j = team.findIndex(c=>c && c.adaptAll), off = !!A.adOff || !!(A.eqOff && A.eqOff[j] && A.eqOff[j].link===0);
-  const zk = (off?'x':'o')+'|'+oidOf(enemy), mm = A._adT || (A._adT = new Map()); if(mm.has(zk)) return mm.get(zk);
+  const zk = (off?'x':'o')+'|'+oidOf(enemy)+'|'+(A.adForce||''), mm = A._adT || (A._adT = new Map()); if(mm.has(zk)) return mm.get(zk);
   let T = null;
   if(j>=0 && !off){ // 존마다 코어를 따로 만들지 않는 곳(평상 턴 존 고르기)이 있어 팀 하나에 타입 하나: 적 약점 → 약점 간파 → 전열이 펼 수 있는 공격 타입 존(원래 그 타입인 멤버가 많은 쪽)
     const cand = new Set(team.filter((c,k)=>k!==j && c).map(c=>WEAPON_TYPE[c.weapon]).filter(Boolean));
-    T = WTYPES.find(t=>cand.has(t) && enemy && enemyRel(enemy, t)==='weak')
+    if(A.adForce && cand.has(A.adForce)) T = A.adForce; /* 왼쪽에 둘 아군을 정한 변형(evalTeam이 타입마다 계산, 2026-10-21 — 물리↔마법을 넘으면 스탯이 바뀌어 약점·존만으론 못 고름) */
+    if(!T) T = WTYPES.find(t=>cand.has(t) && enemy && enemyRel(enemy, t)==='weak')
       || (A.weakInfo||[]).map(x=>x && x.t).find(t=>WTYPES.includes(t) && cand.has(t)) || null;
     if(!T){ const zt = new Set(); for(const c of team) for(const o of ((c && c.zoneTypes && c.zoneTypes.opts) || [])) if(o.kind==='weap') for(const t of (o.types||[])) if(cand.has(t)) zt.add(t);
       const nat = t => team.filter(c=>c && ((c.main && c.main.weapon_type) || c.atkWt || c.wt)===t).length;
@@ -2780,11 +2786,15 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
   if(ctx && ctx._zl) return evalTeamV(team, progs, enemy, S, cap, ctx);
   /* 아군 전체 臨機応変(짭코코, 2026-10-21): 왼쪽에 둘 아군에 따라 타입이 정해지고 안 바꾸는 배치(짭코코를 맨 왼쪽)도 되니, 바꾼 쪽·안 바꾼 쪽 중 성향 기준이 큰 쪽(탐색 어림도) */
   if(team.some(c=>c && c.adaptAll) && !(ctx && ctx._adFix) && !(S && S.adaptAll===false)){
-    const fx = v => evalTeamA(team, progs, enemy, S, cap, ({...ctx||{}, ...{_adNone: v, _adFix: true}}));
-    const vv = ctx && ctx.variant && ctx.variant.adNone!=null ? !!ctx.variant.adNone : null;
-    if(vv!=null){ const e = fx(vv); e.adNone = vv; return e; }
+    const fx = (v, t) => evalTeamA(team, progs, enemy, S, cap, ({...ctx||{}, ...{_adNone: v, _adT: t || null, _adFix: true}}));
+    const vv = ctx && ctx.variant && ctx.variant.adNone!=null ? !!ctx.variant.adNone : null, vt = ctx && ctx.variant && ctx.variant.adT || null;
+    if(vv!=null){ const e = fx(vv, vv ? null : vt); e.adNone = vv; e.adPick = vv ? null : vt; return e; }
     const e1 = fx(false); if(!e1.adT){ e1.adNone = false; return e1; }
-    const e0 = fx(true), vk = evalKey(ctx); if(vk(e0) > vk(e1)*(1+1e-9)){ e0.adNone = true; return e0; } e1.adNone = false; return e1; }
+    const vk = evalKey(ctx); let best = e1, bv = vk(e1), bt = null;
+    /* 타입 후보: 왼쪽에 둘 수 있는 아군의 무기 타입 전부(자동 고르기는 약점·존만 봐서 물리 딜러를 마법으로 바꾸기도 함 — 2026-10-21) */
+    const j = team.findIndex(c=>c && c.adaptAll), ts = [...new Set(team.filter((c,k)=>k!==j && c).map(c=>WEAPON_TYPE[c.weapon]).filter(t=>t && t!==e1.adT.t))].sort((a,b)=>WTYPES.indexOf(a)-WTYPES.indexOf(b));
+    if(S.adaptStat!==false) for(const t of ts){ const e = fx(false, t), v = vk(e); if(v > bv*(1+1e-9)){ best = e; bv = v; bt = t; } }
+    const e0 = fx(true); if(vk(e0) > bv*(1+1e-9)){ e0.adNone = true; e0.adPick = null; return e0; } best.adNone = false; best.adPick = bt; return best; }
   return evalTeamA(team, progs, enemy, S, cap, ctx);
 }
 function evalTeamA(team, progs, enemy, S, cap, ctx){
@@ -3013,7 +3023,7 @@ const NOAW_C = new WeakMap();
 function evalTeam0(team, progs, enemy, S, cap, ctx){
   if(team.some((c,i)=>c && c.bact && c.bact.noAw && !(progs[i] && (progs[i].sbOK || progs[i].sbAw)))) team = team.map((c,i)=>{ if(!(c && c.bact && c.bact.noAw) || (progs[i] && (progs[i].sbOK || progs[i].sbAw))) return c; let v = NOAW_C.get(c); if(!v){ v = ({...c, ...{bact: c.bact.noAw}}); NOAW_C.set(c, v); } return v; }); // 성도각성 전: aw 행동은 버프 행동
   if(ctx && ctx.maxBack===0 && !progs.noBack){ progs = progs.slice(); progs.noBack = true; } // 후열 없음: VC(교대) 효과·VC 존 없음
-  const A = teamAgg(team); A.azPick = ctx && ctx._azPick || null; A.noBack = !!progs.noBack; A.adNone = !!(ctx && ctx._adNone) || !!(S && S.adaptAll===false); A.adOff = true; // 臨機応変은 평상 턴 시뮬이 그 스킬을 다는지 정한 뒤부터(행동 가치 순서는 예전 그대로)
+  const A = teamAgg(team); A.azPick = ctx && ctx._azPick || null; A.noBack = !!progs.noBack; A.adNone = !!(ctx && ctx._adNone) || !!(S && S.adaptAll===false); A.adForce = ctx && ctx._adT || null; A.adOff = true; // 臨機応変은 평상 턴 시뮬이 그 스킬을 다는지 정한 뒤부터(행동 가치 순서는 예전 그대로)
   A.inf = inflictOf(team, progs, S);
   A.echg = echgOf(team, progs);
   A.bud = ctx && ctx.buddy ? budAgg(ctx.buddy, team, enemy, A) : null;
