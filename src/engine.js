@@ -935,10 +935,11 @@ function zoneFactorEff(z, el, wt, S, rel){
 const BRK_ONCE = new Set(['all','any','generic','break','weapon','once']), BRK_N = 3, BRK_AF_R = 5;
 const brkHits = c => { const m = (c.raw && c.raw.main) || c.main || {}; return Math.max(1, +m.hits||1) * (1 + Math.max(0, +m.repeat||0)); }; // 원래 주력 타수 × (1 + 재공격)
 function brkGain(A, team, bi, b, sit){
-  const C = A.brkG || (A.brkG = Object.create(null)), key = bi + ':' + b + ':' + sit; if(C[key]!==undefined) return C[key];
+  const aT = A._en!==undefined ? adAllT(team, A, A._en, null) : null; /* 아군 전체 臨機応変(짭코코)이면 모든 공격이 그 타입(2026-10-21 점검: 원래 무기 타입으로 세어 웨폰 브레이크 이득 과대) */
+  const C = A.brkG || (A.brkG = Object.create(null)), key = bi + ':' + b + ':' + sit + ':' + (aT||''); if(C[key]!==undefined) return C[key];
   const j = A.breakJ ? A.breakJ[bi] : -1, br = j>=0 ? team[j] : null, once = b==='once';
   const hitsOf = brkHits; // 원래 주력 타수 — 상태 변형 복사본과 무관하게(캐시가 넣은 순서에 안 흔들리게)
-  const H = team.reduce((t,c)=> t + (once || c.elem===b || c.wt===b || (b.indexOf('_')>0 && b.split('_').includes(c.wt)) ? hitsOf(c) : 0), 0) || 1;
+  const H = team.reduce((t,c)=>{ const w = aT || c.wt; return t + (once || c.elem===b || w===b || (b.indexOf('_')>0 && b.split('_').includes(w)) ? hitsOf(c) : 0); }, 0) || 1;
   const ba = br && br.bact, perAct = !ba || ba.main.has('brk') || !(ba.auto.has('brk') || ba.sb.has('brk') || ba.steps.some(st=>st.g && st.g.has('brk')));
   const k = sit==='normal' || perAct ? 1 : 1/BRK_AF_R;
   return (C[key] = Math.min(1, (once ? 1 : BRK_N)*k/H));
@@ -1595,11 +1596,12 @@ function adAllT(team, A, enemy, zone){
   if(j>=0 && !off){ // 존마다 코어를 따로 만들지 않는 곳(평상 턴 존 고르기)이 있어 팀 하나에 타입 하나: 적 약점 → 약점 간파 → 전열이 펼 수 있는 공격 타입 존(원래 그 타입인 멤버가 많은 쪽)
     const cand = new Set(team.filter((c,k)=>k!==j && c).map(c=>WEAPON_TYPE[c.weapon]).filter(Boolean));
     if(A.adForce && cand.has(A.adForce)) T = A.adForce; /* 왼쪽에 둘 아군을 정한 변형(evalTeam이 타입마다 계산, 2026-10-21 — 물리↔마법을 넘으면 스탯이 바뀌어 약점·존만으론 못 고름) */
-    if(!T) T = WTYPES.find(t=>cand.has(t) && enemy && enemyRel(enemy, t)==='weak')
-      || (A.weakInfo||[]).map(x=>x && x.t).find(t=>WTYPES.includes(t) && cand.has(t)) || null;
-    if(!T){ const zt = new Set(); for(const c of team) for(const o of ((c && c.zoneTypes && c.zoneTypes.opts) || [])) if(o.kind==='weap') for(const t of (o.types||[])) if(cand.has(t)) zt.add(t);
-      const nat = t => team.filter(c=>c && ((c.main && c.main.weapon_type) || c.atkWt || c.wt)===t).length;
-      T = [...zt].sort((a,b)=> nat(b)-nat(a) || WTYPES.indexOf(a)-WTYPES.indexOf(b))[0] || null; } }
+    const nat = t => team.filter(c=>c && ((c.main && c.main.weapon_type) || c.atkWt || c.wt)===t).length;
+    const zt = new Set(); for(const c of team) for(const o of ((c && c.zoneTypes && c.zoneTypes.opts) || [])) if(o.kind==='weap') for(const t of (o.types||[])) if(cand.has(t)) zt.add(t);
+    const ord = L => L.sort((a,b)=> (zt.has(b)?1:0)-(zt.has(a)?1:0) || nat(b)-nat(a) || WTYPES.indexOf(a)-WTYPES.indexOf(b))[0] || null; // 존을 펼 수 있는 타입 → 원래 그 타입인 멤버 수 → 타입 순
+    if(!T) T = ord(WTYPES.filter(t=>cand.has(t) && enemy && enemyRel(enemy, t)==='weak'))
+      || ord([...new Set((A.weakInfo||[]).map(x=>x && x.t).filter(t=>WTYPES.includes(t) && cand.has(t)))]) /* 약점 간파가 여럿이면 넣은 순서 말고 위 순서(2026-10-21 점검: 탐색 어림 값이 배치 순서로 2배 갈림) */
+      || ord([...zt]); }
   mm.set(zk, T); return T; }
 function adEffOf(team, A, z){ const t = A && A._en!==undefined ? adAllT(team, A, A._en, z) : null; return t ? {t, kind: A.adaptPhysOnly ? null : (t==='magic' ? 'mag' : 'phys')} : null; }
 function adaptWt(sk, wt, kind, team, A, enemy, idx, zone){
@@ -2809,7 +2811,7 @@ function evalTeam(team, progs, enemy, S, cap, ctx){
     const fx = (v, t) => evalTeamA(team, progs, enemy, S, cap, ({...ctx||{}, ...{_adNone: v, _adT: t || null, _adFix: true}}));
     const vv = ctx && ctx.variant && ctx.variant.adNone!=null ? !!ctx.variant.adNone : null, vt = ctx && ctx.variant && ctx.variant.adT || null;
     if(vv!=null){ const e = fx(vv, vv ? null : vt); e.adNone = vv; e.adPick = vv ? null : vt; return e; }
-    const e1 = fx(false); if(!e1.adT && (ctx && ctx.stFast)){ e1.adNone = false; return e1; }
+    const e1 = fx(false); // 탐색 어림도 안 바꾸는 쪽과 비교(2026-10-21 점검: 고른 변형이 연계 스킬을 안 달면 adT가 없어 비교를 건너뛰었음)
     const vk = evalKey(ctx); let best = e1, bv = vk(e1), bt = null;
     /* 타입 후보: 왼쪽에 둘 수 있는 아군의 무기 타입 전부(자동 고르기는 약점·존만 봐서 물리 딜러를 마법으로 바꾸기도 함 — 2026-10-21) */
     const j = team.findIndex(c=>c && c.adaptAll), ts = [...new Set(team.filter((c,k)=>k!==j && c).map(c=>WEAPON_TYPE[c.weapon]).filter(t=>t && t!==(e1.adT && e1.adT.t)))].sort((a,b)=>WTYPES.indexOf(a)-WTYPES.indexOf(b));
@@ -2942,12 +2944,22 @@ function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
   if(ctx && ctx.stFast) return ev0;
   const swq = sbSwPhase(ev0, S);
   if(!swq) return zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, ev0) : ev0;
-  const a = evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0.concat([swq]), ev0);
-  const vr = ctx && ctx.variant ? ctx.variant : {sbOff: ev0.sbOff || null, uni: ev0.uni || null, songOff: ev0.songOff || null, azBy: ev0.azBy==null ? null : ev0.azBy, redOff: !!ev0.redOff, afBuff: +ev0.afBuf||0};
-  const evK = evalTeamV(team, progs, enemy, ({...S0, ...{sbKeepZone: true}}), cap, ({...ctx||{}, ...{variant: vr}}));
-  if(evK && !sbSwPhase(evK, S)){ const b = zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, evK) : evK, vk = evalKey(ctx);
-    if(vk(b) > vk(a)*(1+1e-9)){ b.sbKeep = {z: ev0.sb && ev0.sb.zone ? ev0.sb.zone.label : null}; return b; } }
-  return a;
+  const vk = evalKey(ctx), vOfE = e => ({sbOff: e.sbOff || null, uni: e.uni || null, songOff: e.songOff || null, azBy: e.azBy==null ? null : e.azBy, redOff: !!e.redOff, afBuff: +e.afBuf||0});
+  const SK = ({...S0, ...{sbKeepZone: true}});
+  /* 한 변형(vr)에서 SB로 존이 바뀌는 계획·깔린 존 그대로 두는 SB 중 성향 기준이 큰 쪽(evK: 이미 계산한 그대로 두기 값) */
+  const bestOf = (e0v, vr, evK) => { const sq = sbSwPhase(e0v, S); if(!sq) return zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, e0v) : e0v;
+    const a = evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0.concat([sq]), e0v);
+    const eK = evK || evalTeamV(team, progs, enemy, SK, cap, ({...ctx||{}, ...{variant: vr}}));
+    if(eK && !sbSwPhase(eK, S)){ const b = zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, eK) : eK;
+      if(vk(b) > vk(a)*(1+1e-9)){ b.sbKeep = {z: e0v.sb && e0v.sb.zone ? e0v.sb.zone.label : null}; return b; } }
+    return a; };
+  const vr = ctx && ctx.variant ? ctx.variant : vOfE(ev0), r1 = bestOf(ev0, vr, null);
+  if(ctx && ctx.variant) return r1;
+  /* 변형(성도 스킬 빼기 등)은 존이 안 바뀐다고 보고 골라서, 그대로 두는 SB로는 다른 변형이 나을 수 있음(2026-10-21 점검: 라디카·AC츠바메·플람라피스(ES)·질바 +8%) → 그대로 두기를 변형까지 다시 골라 그 변형으로도 비교(화면 재계산은 고른 변형으로 같은 비교) */
+  const evK2 = evalTeamV(team, progs, enemy, SK, cap, ctx), v2 = evK2 ? vOfE(evK2) : null;
+  if(!v2 || JSON.stringify(v2)===JSON.stringify(vOfE(ev0))) return r1;
+  const ev0b = evalTeamV(team, progs, enemy, S0, cap, ({...ctx||{}, ...{variant: v2}})), r2 = bestOf(ev0b, v2, sbSwPhase(evK2, S) ? null : evK2);
+  return vk(r2) > vk(r1)*(1+1e-9) ? r2 : r1;
 }
 function evalTeamZ1(team, progs, enemy, S, cap, ctx, zl, ev){
   const S0 = ({...S, ...{bossZoneLate:null}});
@@ -3116,7 +3128,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const res = {};
   let sbFld = null, sbFZ = null; /* SB 때 깔린 존(평상 턴 존)·SB에 존을 강제로 파괴·전개하는 캐릭터(zone.sb_force)의 SB 존 — runSit('sb')의 순서 모델용(2026-10-21) */
   const NOZ = {kind:'none', types:[], level:0, by:null, label:'존 없음'};
-  const fcOf = () => (S.sbZoneRule!==false && sbFZ) ? team.map((c,i)=>i).filter(i=>sbFZ[i] && progs[i] && progs[i].sbOK!==false) : [];
+  const fcOf = () => (S.sbZoneRule!==false && sbFZ && !S.zoneBanAll) ? team.map((c,i)=>i).filter(i=>sbFZ[i] && progs[i] && progs[i].sbOK!==false) : []; /* 존 전개 금지(서약)면 파괴·전개 없이 SB만(2026-10-21 점검: 파괴 캐릭터 SB가 0이 됐음) */
   /* 파괴 뒤 그 턴에 다시 깔 수 있는 존: 파괴 캐릭터(SB 씀) 또는 스킬 전개·각성 조건을 채운 캐릭터·SB 극(SB 씀)·극 글래스터. 개전 자동으로만 까는 존은 다시 못 깜(2026-10-21 점검) */
   const canRelay = (z, fcI) => { const k = team.findIndex(m=>m && m.id===z.by); if(k<0) return false; if(fcI.includes(k)) return true; const m = team[k], sp = m.zspec, pr = progs[k]||{}; if(!sp) return false;
     if(z.level>=2) return (sp.skillGoku.length>0 && sp.skillGoku.some(q=>reqMet(q.req, team, m))) || (sp.sbGoku && pr.sbOK!==false) || (!!pr.goku && !!sp.base);
@@ -3493,7 +3505,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     if(simIn.teSB){ out.sustain += simIn.teSB.total/sbTurns; out.teSB = simIn.teSB; } // SB 턴 종료 공격도 SB 주기마다
     // SB 뒤 효과(SB로만 거는 버프·디버프, af_timing 'sb')는 평상 턴에도 남음(사용자 확인 2026-10-16, 체인 어빌리티 공격만 빼고):
     // 남는 비율 = 지속 턴(turns.buff) ÷ SB 주기. 평상 턴을 그 비율로 다시 계산하고 지속 딜·실전 시뮬의 평상 턴 값을 바꿈
-    const u = team.map((c,j)=> sbIdx.includes(j) ? Math.min(1, Math.max(1, c.buffTurns>=99 ? sbTurns : (c.buffTurns||3))/sbTurns) : 0);
+    const u = team.map((c,j)=> sbIdx.includes(j) && !(res.sb.skip && res.sb.skip.includes(j)) ? Math.min(1, Math.max(1, c.buffTurns>=99 ? sbTurns : (c.buffTurns||3))/sbTurns) : 0);
     const has = team.some((c,j)=> u[j]>0 && ((c.afT && ['party','self','deb'].some(q=>c.afT[q] && Object.values(c.afT[q]).includes('sb'))) || (c.bact && c.bact.sbOnly.size) || (c.rules && c.rules.list.some(r=>r.w && r.w.sb))));
     if(has){ A.sbUpN = u;
       if(simUse){ sim.kup = sim.kup.map((kp,j)=> kp && team[j].bact && u[j]>0 ? ({...kp, ...Object.fromEntries([...team[j].bact.sbOnly].filter(x=>!team[j].bact.sb1.has(x)).map(x=>[x, Math.max(kp[x]||0, u[j])]))}) : kp); sim.kupAny = sim.kupAny || sim.kup.some(Boolean);
@@ -3611,6 +3623,9 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     const o = {team:teamD, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw:sbAw0, sbFresh:sbFr, sbIdx, sbCores:res.sb.cores, sbSkip: res.sb.skip ? new Set(res.sb.skip) : null, /* 강제 파괴 순서 모델에서 SB를 안 쓰는 파괴 캐릭터는 허수아비 SB에서도 뺌(2026-10-21 점검) */ light, shadow, zcs:(res.normal.zones||[]).map(zAF), quick:true, deep:!(ctx && ctx.stFast), lkPlan: anySing ? lkPlan : null};
     const dd = dummySim(o); qz.push({dd, o});
     if(!bestD || dd.total > bestD.total*1.0005){ bestD = dd; bestO = o; }
+    /* SB 존 강제 파괴 캐릭터(sbz를 까는 사람)가 SB를 쓰면 남은 AF가 그 존 — 허수아비 1턴에선 그 캐릭터 SB를 빼는 쪽이 나을 수 있어 둘 다(2026-10-21: 뮬루스(ES) 성해진이 남은 AF의 절·각음진을 덮음) */
+    const bj = sbz && sbz.by ? team.findIndex((c,j)=>c && c.id===sbz.by && c.zoneSbForce && sbIdx.includes(j) && !(o.sbSkip && o.sbSkip.has(j))) : -1;
+    if(bj>=0){ const o2 = ({...o, ...{sbSkip: new Set([...(o.sbSkip||[]), bj]), memo: null}}), d2 = dummySim(o2); qz.push({dd: d2, o: o2}); if(d2.total > bestD.total*1.0005){ bestD = d2; bestO = o2; } }
   }
   if(bestO){ // 정밀 계산(버프 행동 개수 바꿔 보기): 가장 높은 존 + 어림이 85% 이상인 둘째 존까지(2026-10-17 점검: 어림 1위 존만 정밀하게 재서 성도각성을 더하면 최고점이 떨어지던 문제)
     const sec = qz.filter(q=>q.o!==bestO && q.dd.total >= bestD.total*0.85).sort((a,b)=>b.dd.total-a.dd.total)[0];
@@ -3711,8 +3726,9 @@ function dummySim(o){
   const awI = nz && nz.awBy ? team.findIndex(m=>m.id===nz.awBy) : -1, awStep = awI>=0 && B[awI] ? B[awI].steps.findIndex(st=>st.z==='awaken' || (nz.awSkill && sName(st.s)===sName(nz.awSkill))) : -1;
   const nz1 = zStaged ? ({...nz, ...{level:1, label:String(nz.label||'').replace(/^(극|절)·/,'')}}) : nz;
   const maskOf = (j, stepDone, atk, postSB) => { const b=B[j], m=new Set(b.auto); if(atk[j]) for(const x of b.main) m.add(x);
-    for(let k=0;k<stepDone[j];k++) for(const x of b.steps[k].g) m.add(x); if(postSB && sbIdx.includes(j)) for(const x of b.sb) m.add(x); return m; };
+    for(let k=0;k<stepDone[j];k++) for(const x of b.steps[k].g) m.add(x); if(postSB && sbIdx.includes(j) && !(o.sbSkip && o.sbSkip.has(j))) for(const x of b.sb) m.add(x); return m; }; // SB를 안 쓰는 파괴 캐릭터(o.sbSkip)는 SB 항목도 없음
   const mm = o.memo || (o.memo = {fx:new Map(), co:new Map(), bf:new Map()}), fxMemo = mm.fx, coMemo = mm.co, bfMemo = mm.bf; // 여러 행동 계획(run)·같은 존의 다시 계산이 같이 씀
+  const adJd = team.findIndex(c=>c && c.adaptAll && B[team.indexOf(c)] && B[team.indexOf(c)].steps.some(st=>st.g && st.g.has('link'))); // 아군 전체 臨機応変 담당(연계 스킬로 바꿈)
   const stKey = (acted, stepDone, atk) => team.map((c,j)=> B[j] ? stepDone[j]+(atk[j]?'a':'') : (acted[j]||passive[j]?'1':'0')).join(',');
   const run = (kAct, castN, late) => { // late: SB를 게이지가 찬 순간이 아니라 그 행동(1부터) 뒤부터 — 플레이어가 고르는 시점(2026-10-19), kAct: 주력이 아닌 독·페인 스킬에 첫 공격 행동을 쓰는 캐릭터(없으면 null), castN: 캐릭터마다 쓰는 버프 행동 수(앞에서부터)
     const plan = team.map((c,j)=> B[j] ? B[j].steps.slice(0, castN[j]).map(st=>st.k) : (c.buffAct ? ['buff'] : []));
@@ -3730,9 +3746,10 @@ function dummySim(o){
       const key = sit+'|'+stKey(st.acted, st.stepDone, st.atk)+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow)+pk;
       const ck = key+'|'+i; if(coMemo.has(ck)) return coMemo.get(ck);
       Av.infNow = inow; Av.echg = A.echg ? A.echg.filter((e,k)=>(inow.eg||'')[k]==='1') : null; if(Av.echg && !Av.echg.length) Av.echg = null; // 속성 변환(変幻自在 등)도 건 뒤부터
+      if(adJd>=0) Av.adOff = !!A.adOff || !maskOf(adJd, st.stepDone, st.atk, Av.postSB).has('link'); /* 아군 전체 臨機応変(짭코코)도 그 스킬(연계 항목)을 쓴 뒤부터(2026-10-21 점검: AF 첫 행동부터 켜졌음) */
       let FX = fxMemo.get(key);
       if(FX===undefined){ // 주는 사람마다 따로 기억(그 사람 상태·상황·존이 같으면 재사용)
-        const base = '|'+sit+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow)+pk; let any=false;
+        const base = '|'+sit+'|'+(z?z.key+':'+z.level:'-')+(Av.postSB?'|P':'')+infK(inow)+pk+(adJd>=0 ? '|ad'+(Av.adOff?0:1) : ''); let any=false;
         FX = team.map((c,j)=>{ const kj = j+'|'+(B[j] ? st.stepDone[j]+(st.atk[j]?'a':'') : (st.acted[j]||passive[j] ? '1' : '0'))+base;
           let f = bfMemo.get(kj); if(f===undefined){ const u = B[j] ? {m: maskOf(j, st.stepDone, st.atk, Av.postSB)} : (st.acted[j]||passive[j] ? 1 : 0); f = bfOne(team, progs, sit, z, Av, posSets, u, true, j); bfMemo.set(kj, f); }
           if(f) any=true; return f; });
@@ -3792,9 +3809,11 @@ function dummySim(o){
       if(!buffOnly && !isInf && c.zoneSet){ const zc = zcs.find(q=>q && q.by===c.id && q.level>0); if(zoneOK(zCur, zc)) zCur = zc; }
       if(sbAt==null && sbIdx.length && sbG >= 100 - 1e-9 && (!late || afA.seq.indexOf(a)+1 >= late)){ // AF 도중 SB: 지금 콤보, 지금까지 깔린 버프
         sbAt = afA.seq.indexOf(a)+1;
-        const sbZOK = !!(sbAw && sbz) && !(sbFresh && zCur && zCur.key===sbz.key) && (zoneOK(zCur, sbz) || (zCur && zCur.key===sbz.key)); // 극 존은 다른 존으로 못 바꿈, sb_fresh면 같은 존이 깔려 있으면 극 안 됨
+        const sbBrkZ = !!(sbz && sbz.by) && team.some((c,j)=>c && c.id===sbz.by && c.zoneSbForce && sbIdx.includes(j) && !(o.sbSkip && o.sbSkip.has(j))) && !(zCur && zCur.key===sbz.key && zCur.level>=sbz.level); // SB 존 강제 파괴 캐릭터의 존(극 위에서도 — 본 계산의 순서 모델과 같게, 2026-10-21 점검)
+        const sbZOK = sbBrkZ || (!!(sbAw && sbz) && !(sbFresh && zCur && zCur.key===sbz.key) && (zoneOK(zCur, sbz) || (zCur && zCur.key===sbz.key))); // 극 존은 다른 존으로 못 바꿈, sb_fresh면 같은 존이 깔려 있으면 극 안 됨
         const zSB = sbZOK ? sbz : zCur, inow2 = Object.assign(infAt(atk, ia), {eg: egOf()});
-        for(const j of sbIdx){ if(o.sbSkip && o.sbSkip.has(j)) continue; const co = coreAt(st, zSB, 'sb', j, inow2); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co)*ssF(zSB); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
+        for(const j of sbIdx){ if(o.sbSkip && o.sbSkip.has(j)) continue; let co = coreAt(st, zSB, 'sb', j, inow2); if(!co) continue; let d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co)*ssF(zSB), zj = zSB;
+          if(sbBrkZ && team[j].id!==sbz.by && zCur){ const c0 = coreAt(st, zCur, 'sb', j, inow2), d0 = c0 ? applyZoneCap(c0, zCur, S, cap, Math.min(combo, cmax))*fw(c0)*ssF(zCur) : 0; if(d0 > d){ d = d0; co = c0; zj = zCur; } } /* 다른 아군은 파괴 전(깔린 존)·뒤 중 나은 쪽에 SB(순서 모델) */ sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zj, combo:Math.min(combo, cmax)}; }
         if(sbZOK) zCur = sbz; // SB로 각성한 존은 남은 AF 동안
         Av.postSB = true; // SB로 건 버프(연격수+1·심안·크리 대미지 등)는 남은 AF 행동에도
       }
@@ -3926,11 +3945,15 @@ function explainTeam(team, progs, ev, S, ctx){
   let order=[0,1,2,3].slice(0,team.length), okN=-1;
   // 개전 자동 존(같은 등급 여럿): 고른 전개자가 나머지보다 왼쪽이어야 그 존이 깔림 — 배치에서 가장 먼저 지킴
   const azI = ev.azBy && Array.isArray(ev.azBys) ? team.findIndex(c=>c.id===ev.azBy) : -1, azO = azI>=0 ? ev.azBys.filter(id=>id!==ev.azBy).map(id=>team.findIndex(c=>c.id===id)).filter(i=>i>=0) : [];
-  const azOK = pm => { if(azI<0) return 1; const p0 = pm.indexOf(azI); return azO.every(i=>pm.indexOf(i) > p0) ? 1 : 0; };
-  if(!rel.length && azI>=0){ const perms=[]; const permute=(a,l)=>{ if(l===a.length){ perms.push(a.slice()); return; } for(let k=l;k<a.length;k++){ [a[l],a[k]]=[a[k],a[l]]; permute(a,l+1); [a[l],a[k]]=[a[k],a[l]]; } };
+  const azOK0 = pm => { if(azI<0) return 1; const p0 = pm.indexOf(azI); return azO.every(i=>pm.indexOf(i) > p0) ? 1 : 0; };
+  /* 아군 전체 臨機応変(짭코코): 바로 왼쪽 아군의 무기 타입으로 바뀜 → 계산한 타입의 아군을 바로 왼쪽에, 안 바꾸는 계산이면 짭코코를 맨 왼쪽(2026-10-21 점검: 13조합 중 7조합 배치가 다른 타입을 만들었음) */
+  const adJ = team.findIndex(c=>c && c.adaptAll), adTt = ev.adT && ev.adT.t, adChk = adJ>=0 && ev.adNone!=null; // adNone이 없으면(임기응변 계산 끔) 배치 조건 없음
+  const adOK = pm => { if(!adChk) return 1; const p = pm.indexOf(adJ); if(ev.adNone===true || !adTt) return p===0 ? 1 : 0; return p>0 && WEAPON_TYPE[team[pm[p-1]].weapon]===adTt ? 1 : 0; };
+  const azOK = pm => azOK0(pm)*2 + adOK(pm); // 개전 자동 존 먼저, 그다음 임기응변
+  if(!rel.length && (azI>=0 || adChk)){ const perms=[]; const permute=(a,l)=>{ if(l===a.length){ perms.push(a.slice()); return; } for(let k=l;k<a.length;k++){ [a[l],a[k]]=[a[k],a[l]]; permute(a,l+1); [a[l],a[k]]=[a[k],a[l]]; } };
     permute(team.map((_,i)=>i),0); let bz=-1, bl=-1;
     for(const pm of perms){ const z = azOK(pm), L = leftScore(pm); if(z>bz || (z===bz && L>bl+1e-9)){ bz=z; bl=L; order=pm; } }
-    return {notes, order, posOk:0, posTotal:0, rel:[], giveW, az:{by:azI, others:azO}}; }
+    return {notes, order, posOk:0, posTotal:0, rel:[], giveW, az: azI>=0 ? {by:azI, others:azO} : null, ad: adChk ? {j: adJ, t: adTt || null, ok: !!adOK(order)} : null}; }
   if(rel.length){
     const perms=[]; const permute=(a,l)=>{ if(l===a.length){ perms.push(a.slice()); return; } for(let k=l;k<a.length;k++){ [a[l],a[k]]=[a[k],a[l]]; permute(a,l+1); [a[l],a[k]]=[a[k],a[l]]; } };
     permute(team.map((_,i)=>i),0);
@@ -3943,7 +3966,7 @@ function explainTeam(team, progs, ev, S, ctx){
       const L=leftScore(pm), z=azOK(pm); if(ok>okFree) okFree=ok;
       if(z>bestZ || (z===bestZ && (ok>okN || (ok===okN && L>bestL+1e-9)))){ bestZ=z; okN=ok; order=pm; bestL=L; }
     }
-    return {notes, order, posOk:okN, posTotal:R2.length, rel:R2, giveW, az: azI>=0 ? {by:azI, others:azO, posLost: okFree - okN} : null};
+    return {notes, order, posOk:okN, posTotal:R2.length, rel:R2, giveW, az: azI>=0 ? {by:azI, others:azO, posLost: okFree - okN} : null, ad: adChk ? {j: adJ, t: adTt || null, ok: !!adOK(order)} : null};
   }
   order = team.map((_,i)=>i).sort((a,b)=>giveW[b]-giveW[a]);
   return {notes, order, posOk:0, posTotal:0, rel:[], giveW};
