@@ -1810,6 +1810,11 @@ const EX_F = new WeakMap();
 function exFast(c){ if(!c.exD) return 0; const h = EX_F.get(c); if(h!=null) return h; const H = 15; // 어림: AF 1턴째(100%)·그 뒤 3턴마다 100%, AF 1번 40행동, 존·요격 조건은 늘 맞음, SB는 AF마다
   const d = ({...c.exD, ...{lv: Math.min(c.exD.max, c.exD.lv + c.exD.lvSa)}}), afT = t => t===1 || (t-1)%3===0, r = exTimeline([{d, sbAt: afT, zoneAt: () => true, ctrAt: () => true, turnAdd: () => +c.exD.wtAdd||0, gate: true}], H, t => afT(t) ? 1 : 0, () => 40), v = r.on[0].size/H; EX_F.set(c, v); return v; }
 function exGate(S, c){ const m = S && S.exG; if(m && m[c.id]!=null) return Math.max(0, Math.min(1, +m[c.id]||0)); return exFast(c); }
+/* 평상 턴 시뮬 여러 개의 비율 값 평균(base = 기준 시뮬 번호 — 스킬 칸·순서 같은 나머지 값은 그 시뮬) */
+function simAvg(L, b){ const B = L[b], o = ({...B}), mean = a => a.reduce((x,v)=>x+(+v||0),0)/a.length;
+  for(const f of ['upt','act','alt','altW','na','out','afCast','mainN','buffN','lock','songUp']) if(Array.isArray(B[f]) && L.every(s=>Array.isArray(s[f]))) o[f] = B[f].map((_,j)=>mean(L.map(s=>s[f][j])));
+  if(Array.isArray(B.kup)) o.kup = B.kup.map((k,j)=> k ? Object.fromEntries(Object.keys(k).map(x=>[x, L.every(s=>s.kup && s.kup[j] && s.kup[j][x]!=null) ? mean(L.map(s=>s.kup[j][x])) : k[x]])) : k);
+  o.kupAny = L.some(s=>s.kupAny); return o; }
 function simTeam(team, progs, S, stepV, opt){ // opt.afBuff = AF 주기(턴): 버프 스킬을 AF 안에서 걸고 평상 턴엔 안 거는 운용(2026-10-20)
   const H = Math.max(1, Math.round(S.simTurns||6)), mul = S.mpCostMul||1, n=team.length;
   const mpTo = (j, i) => { const to = team[j].supTo && team[j].supTo.mp_recover; if(!to) return true; if(to.pos) return to.pos==='self' ? i===j : true; return toFilterOK(to, team[i]); };
@@ -3198,7 +3203,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   let afTickC = 0;
   if(!afBufC && sim && S.afTurnTick!==false && !(S.afBan || S.afDrain) && S.afCycle!==false && !(ctx && ctx.stFast) && afGain>0 && sim.buffN.some(n=>n>0)){
     const C0 = afCyc1(afGain + (+S.exAfgAvg>0 ? +S.exAfgAvg : 0), afOffOf(nz)); /* EX AF 게이지(긴 전투 평균)도 주기에(2026-10-21 점검) */
-    if(C0 < 12){ const s2 = simTeam(team, progs, S, stepV, {afTick: C0}), ch = (a,b)=> a.some((v,i)=>Math.abs((+v||0) - (+b[i]||0)) > 1e-9);
+    /* 주기를 C0±0.5로도 돌려 평균(2026-10-21): 평상 턴 시뮬이 6턴이라 주기가 조금만 바뀌어도 주력 쓰는 턴이 1↔0으로 튀어(뮬루스(ES) 덱 평상 턴 16→9억) 실제(3·4턴 주기가 섞임)에 가깝게 고르게. S.afTickAvg=false면 C0 하나 */
+    if(C0 < 12){ const s2 = S.afTickAvg===false ? simTeam(team, progs, S, stepV, {afTick: C0}) : simAvg([Math.max(1.6, C0-0.5), C0, C0+0.5].map(c=>simTeam(team, progs, S, stepV, {afTick: c})), 1), ch = (a,b)=> a.some((v,i)=>Math.abs((+v||0) - (+b[i]||0)) > 1e-9);
       const kch = s2.kup.some((k,j)=>{ const k0 = sim.kup[j]; if(!k !== !k0) return true; if(!k) return false; for(const x in k) if(Math.abs((k[x]||0) - (k0[x]||0)) > 1e-9) return true; return false; });
       if(kch || ch(s2.act, sim.act) || ch(s2.alt, sim.alt) || ch(s2.upt, sim.upt) || ch(s2.na, sim.na)){
         Object.assign(sim, s2); simUse = !!sim.any; uptLow = simUse && (sim.upt.some(u=>u<1) || sim.kupAny); simDerive(); wN = wNof(); memo.clear();
