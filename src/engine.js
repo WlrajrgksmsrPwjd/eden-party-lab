@@ -1763,11 +1763,20 @@ const ALT_R = 0.3, ALT_MP = 40; // MP가 모자랄 때 쓰는 값싼 보조 스�
 /* 버프 행동 순서(2026-10-16): 그 캐릭터의 행동을 하나씩 더해 가며 AF 1회 팀 대미지가 가장 많이 느는 것부터(탐욕 순서, 가장 높은 존·다른 아군 버프는 다 깔린 상태).
    스킬 칸 장착·AF 사용 순서를 '항목 수 점수' 대신 이 순서로 — 같은 디버프를 주는 행동이 둘이면 하나만 세고, 자기 버프 항목이 많아도 실제 이득이 작으면 뒤로.
    반환: 캐릭터마다 행동별 순위 값(클수록 먼저) */
+/* 같은 조합·변형(evalTeamV 한 변형 안의 겹침 빼기·AF 안 버프 계산)은 입력이 같아 결과를 다시 씀(cx._svM, 2026-10-21 속도 — 순위 부분은 겹침 빼기 여부와 무관) */
+/* evalTeam 한 번 안의 바깥 변형(EX 게이트·SB 존 그대로 두기·바뀌는 보스 존 단계·내성 교환 등)도 이 계산에 안 쓰는 설정만 다르면 다시 씀(cx._svG — evalTeam이 호출마다 새로 만듦) */
+const SV_SX = new Set(['exG','bossZone','bossZoneLate','sbKeepZone','afInj','exAfgAvg','afInjR','_exSeed','exPlan','afMin100']); /* stepValues가 안 읽는 설정(평상 턴 시뮬·runSit·battleSim·바깥 변형만) */
+const svKeyOf = (team, progs, A, enemy, S) => team.map(c=>c.id).join(',')+'|'+progs.map(p=>p ? (p.sbOK?1:0)+''+(p.sbAw?1:0)+(p.sbOff?1:0)+(p.uniOff?1:0)+(p.songOff?1:0) : '-').join('/')+'|'+(progs.noBack?1:0)+'|'+oidOf(enemy)+'|'+(A.azPick==null ? '' : typeof A.azPick==='object' ? oidOf(A.azPick) : A.azPick)+'|'+(A.adNone?1:0)+'|'+(A.adForce||'')+'|'
+  + JSON.stringify(Object.keys(S).filter(k=>!SV_SX.has(k)).sort().map(k=>[k, S[k]]));
 function stepValues(team, progs, A, enemy, S, cx, cap, posSets, noRed){ // noRed: 겹치는 버프 빼기 안 함(evalTeamV가 둘 다 계산해 나은 쪽)
+  let M = cx && cx._svM; const G = cx && cx._svG; if(G){ const gk = svKeyOf(team, progs, A, enemy, S); M = G.get(gk); if(!M){ M = new Map(); G.set(gk, M); } }
+  const mk = noRed ? 'n' : 'r'; if(M && M.has(mk)) return M.get(mk);
+  const r = stepValues1(team, progs, A, enemy, S, cx, cap, posSets, noRed, M); if(M) M.set(mk, r); return r; }
+function stepValues1(team, progs, A, enemy, S, cx, cap, posSets, noRed, M){
   const idx = team.map((c,j)=>c.bact && c.bact.steps.length>=2 ? j : -1).filter(j=>j>=0); if(!idx.length && (S.dropRedundantBuff===false || noRed || !team.some(c=>c.bact && c.bact.steps.length))) return null;
   const zs = zoneCandidates(team, progs, 'af'); let z = null; for(const q of zs) if(q && q.level>0 && (!z || zBetter(q, z))) z = q;
-  const out = team.map(()=>null);
-  for(const j of idx){ const b = team[j].bact, L = b.steps.slice(0, 7), cur = new Set(b.auto); for(const x of b.main) cur.add(x);
+  const rk0 = M && M.get('rk'), out = rk0 ? rk0.map(a=>a ? a.slice() : null) : team.map(()=>null);
+  if(!rk0) for(const j of idx){ const b = team[j].bact, L = b.steps.slice(0, 7), cur = new Set(b.auto); for(const x of b.main) cur.add(x);
     const noInf = team[j].inflict ? (()=>{ const t2 = team.map((c,k)=>k===j ? ({...c, ...{inflict:null}}) : c), i0 = inflictOf(t2, progs, S), bi = A.bud && A.bud.inf, Ax = ({...A, ...{inf: bi ? budInf(i0, bi) : i0, infNoBud: bi ? i0 : null}}); Ax.painAny = Ax.inf.poison>0 || Ax.inf.pain>0; return Ax; })() : null;
     const ecJ = !!(A.echg && A.echg.some(e=>e.i===j) && b.steps.some(st=>st.g.has('echg')));
     const D = (m, inf) => { const FX = team.map(()=>null); FX[j] = bfOne(team, progs, 'af', z, A, posSets, {m}, true, j); const Ax0 = inf || !noInf ? A : noInf;
@@ -1779,6 +1788,7 @@ function stepValues(team, progs, A, enemy, S, cx, cap, posSets, noRed){ // noRed
         if(g > bg + 1e-9*Math.max(1,dCur) || (Math.abs(g-bg) <= 1e-9*Math.max(1,dCur) && (st.sc||0) > (left[bi].sc||0))){ bg = g; bi = q; bm = m; bInf = i2; bd = d; } }
       const st = left.splice(bi, 1)[0]; rank.set(st, r--); for(const x of bm) cur.add(x); inf = bInf; dCur = bd; }
     out[j] = b.steps.map(st=>rank.has(st) ? rank.get(st) : 0); }
+  if(M && !rk0) M.set('rk', out.map(a=>a ? a.slice() : null));
   /* 겹치는 버프 행동(2026-10-20, 사용자 '속도 버프 이미 100%면 더 걸 필요가 있나'): 다른 아군 버프로 이미 상한(능력치 +100% — dimin 상한 1)이거나 같은 상태(심기일체 등)라
      빼도 AF·평상 턴 대미지와 속도(AF 대기)가 그대로인 버프 행동은 순위 −1 → 평상 턴에 안 걸고 스킬 칸도 안 씀(예: 다르니스(AS) ギャラントリー 속도 100% 옆 번개술사(AS) オグメントパッチ).
      버프 스킬(k buff)만 보고 독·디버프·존·연계·속성 변환이 붙은 행동은 그대로(서로 미루다 둘 다 빠지는 것 방지), id 순으로 빼 가며 앞에서 뺀 효과는 뒤 캐릭터 계산에서 꺼짐. S.dropRedundantBuff=false면 끔 */
@@ -1793,18 +1803,20 @@ function stepValues(team, progs, A, enemy, S, cx, cap, posSets, noRed){ // noRed
     // 존마다(평상 턴 존은 이 뒤에 고르므로 후보 전부 + 존 없음): 버프 규칙이 존 조건이라 어떤 존에선 겹쳐도 다른 존에선 필요(벨벳(AS) エクソシア는 招雷陣에서만 100% — 각음진이면 백자의 마인 버프가 필요)
     const ZL = [null]; for(const q of zoneCandidates(team, progs, 'normal').concat(zs)) if(q && q.level>0 && !ZL.some(y=>y && y.key===q.key && y.level===q.level)) ZL.push(q);
     const fx = (sit, zz, k, m) => bfOne(team, progs, sit, zz, A, posSets, m ? {m} : team[k].bact ? {m: fullM(k)} : 1, true, k); // 다른 아군 버프는 다 건 상태(받는 사람·조건 규칙 그대로)
-    const FXo = ZL.map(zz=>team.map((c,k)=>fx('af', zz, k))), FXn = ZL.map(zz=>team.map((c,k)=>fx('normal', zz, k)));
-    const D2 = (j, m) => ZL.map((zz, q)=>{ const Fa = FXo[q].slice(), Fn = FXn[q].slice(); Fa[j] = fx('af', zz, j, m); Fn[j] = fx('normal', zz, j, m); let v = 0, w = 0, sp = 0;
+    /* 존별 FX·비교는 필요할 때만(2026-10-21 속도: 후보 행동이 없으면 안 만들고, 한 존에서 줄면 나머지 존은 안 봄 — 결과 같음) */
+    const mOv = new Map(), FXc = [], FXz = q => FXc[q] || (FXc[q] = {a: team.map((c,k)=>fx('af', ZL[q], k, mOv.get(k))), n: team.map((c,k)=>fx('normal', ZL[q], k, mOv.get(k)))});
+    const D2z = (j, m, q) => { const zz = ZL[q], F = FXz(q), Fa = F.a.slice(), Fn = F.n.slice(); Fa[j] = fx('af', zz, j, m); Fn[j] = fx('normal', zz, j, m); let v = 0, w = 0, sp = 0;
       team.forEach((c,i)=>{ const co = attackerCore(team, i, progs, A, enemy, S, 'af', cx, Fa, zz); if(co){ v += applyZoneCap(co, zz, S, cap, 1); sp += +co.spdBuf||0; }
-        const cn = attackerCore(team, i, progs, A, enemy, S, 'normal', cx, Fn, zz); if(cn) w += applyZoneCap(cn, zz, S, cap, 1); }); return {v, w, s: sp}; });
+        const cn = attackerCore(team, i, progs, A, enemy, S, 'normal', cx, Fn, zz); if(cn) w += applyZoneCap(cn, zz, S, cap, 1); }); return {v, w, s: sp}; };
     for(const j of idR){ const b = team[j].bact, cur = fullM(j), Ej = eqIdx(j);
-      let base = null, drop = false;
+      const baseZ = [], bOf = q => baseZ[q] || (baseZ[q] = D2z(j, cur, q)); let drop = false;
       b.steps.forEach((st,q)=>{ if(q>=7 || !Ej.has(q) || st.k!=='buff' || !st.g || !st.g.size || st.z || st.na || st.song || st.once || [...st.g].some(BADK)) return; // 버프 스킬만(공격 버프기는 평상 턴 공격·AF 게이지·성도 스킬 칸 몫이 있음 — 테오도로스 残夢燃ゆ를 빼면 AF가 반토막)
         const own = new Set(b.auto); for(const x of b.main) own.add(x); b.steps.forEach((s2,q2)=>{ if(q2!==q && Ej.has(q2) && s2.g && !(out[j] && out[j][q2]<0)) for(const x of s2.g) own.add(x); });
         const uq = [...st.g].filter(x=>!own.has(x)); if(!uq.length) return; // 자기 다른 행동과 같은 효과뿐이면 그대로(어느 쪽을 쓸지는 순위가 정함)
-        base = base || D2(j, cur); const m = new Set(cur); for(const x of uq) m.delete(x); const d = D2(j, m), e = 1e-6;
-        if(d.every((r,k)=> r.v >= base[k].v*(1-e) && r.w >= base[k].w*(1-e) && r.s >= base[k].s - e)){ out[j] = out[j] || b.steps.map(()=>1); out[j][q] = -1; for(const x of uq) cur.delete(x); base = d; drop = true; red.push({i: j, s: st.sko || skN(st.s) || st.s}); } });
-      if(drop) ZL.forEach((zz,q)=>{ FXo[q][j] = fx('af', zz, j, cur); FXn[q][j] = fx('normal', zz, j, cur); }); } }
+        const m = new Set(cur); for(const x of uq) m.delete(x); const e = 1e-6, d = []; let ok = true;
+        for(let k=0;k<ZL.length;k++){ const bk = bOf(k), r = D2z(j, m, k); d.push(r); if(!(r.v >= bk.v*(1-e) && r.w >= bk.w*(1-e) && r.s >= bk.s - e)){ ok = false; break; } }
+        if(ok){ out[j] = out[j] || b.steps.map(()=>1); out[j][q] = -1; for(const x of uq) cur.delete(x); d.forEach((r,k)=>{ baseZ[k] = r; }); drop = true; red.push({i: j, s: st.sko || skN(st.s) || st.s}); } });
+      if(drop){ mOv.set(j, new Set(cur)); FXc.forEach((F,q)=>{ if(!F) return; F.a[j] = fx('af', ZL[q], j, cur); F.n[j] = fx('normal', ZL[q], j, cur); }); } } }
   if(!out.some(v=>v)) return null; if(red.length) out.red = red; return out;
 }
 /* EX必殺技(2026-10-20, game-info AF まとめ 4-2·biligame ES 설명·알테마, 사용자 '어포게이지 5레벨'):
@@ -2791,6 +2803,7 @@ function zlList(S){ const out = [], bz = S && S.bossZone;
 function swapAff(enemy){ const e = {}; for(const k of Object.keys(enemy||{})){ const v = enemy[k]; e[k] = v==='resist' ? 'weak' : v==='weak' ? 'resist' : v; } return e; }
 function evalTeam(team, progs, enemy, S, cap, ctx){
   if(ctx && ctx._zl) return evalTeamV(team, progs, enemy, S, cap, ctx);
+  ctx = ({...ctx||{}, ...{_svG: new Map()}}); // 행동 순위(stepValues) 다시 쓰기 — 호출마다 새로(다른 조합·육성 값과 섞이지 않게)
   /* 아군 전체 臨機応変(짭코코, 2026-10-21): 왼쪽에 둘 아군에 따라 타입이 정해지고 안 바꾸는 배치(짭코코를 맨 왼쪽)도 되니, 바꾼 쪽·안 바꾼 쪽 중 성향 기준이 큰 쪽(탐색 어림도) */
   if(team.some(c=>c && c.adaptAll) && !(ctx && ctx._adFix) && !(S && S.adaptAll===false)){
     const fx = (v, t) => evalTeamA(team, progs, enemy, S, cap, ({...ctx||{}, ...{_adNone: v, _adT: t || null, _adFix: true}}));
@@ -3009,7 +3022,7 @@ function evalTeamV(team, progs, enemy, S, cap, ctx){
     let cv = C; if(e2.afMinD < C - 1e-9){ const e3 = e1(-C); if(vk(e3) > vk(e2)*(1+1e-9)){ e2 = e3; cv = -C; } } // 다음 AF 전에 버프가 끊기면: 끊긴 턴에 평상 턴에서 다시 거는 쪽도(afRe — 값은 −C)
     if(vk(e2) > vk(ev)*(1+1e-9)){ e2.redOff = !!ev.redOff; if(ev.redSkip) e2.redSkip = ev.redSkip; e2.afBuf = cv; return e2; } return ev; };
   const redPick = (ev, pr, c1) => bufPick(redPick0(ev, pr, c1), pr, c1);
-  if(by.length<2 && !cand.length && !uc.length && sv.length===1 && !sv[0].length){ const c1 = ({...ctx||{}, ...{_azPick:null}}); return redPick(evalTeam0(team, progs, enemy, S, cap, c1), progs, c1); }
+  if(by.length<2 && !cand.length && !uc.length && sv.length===1 && !sv[0].length){ const c1 = ({...ctx||{}, ...{_azPick:null, _svM: new Map()}}); return redPick(evalTeam0(team, progs, enemy, S, cap, c1), progs, c1); }
   const drops = [[]];
   if(cand.length){ const sup = cand.filter(i=>!(team[i].roles||[]).includes('dps'));
     if(ctx && ctx.stFast){ if(sup.length) drops.push(sup); } // 탐색 1단계(계산량): 딜러가 아닌 캐릭터만 빼 보는 한 가지
@@ -3019,7 +3032,7 @@ function evalTeamV(team, progs, enemy, S, cap, ctx){
   for(const b of by) for(const d of drops) for(const u of uv) for(const g of sv){
     const pr = d.length || u.length || g.length ? progs.map((p,i)=>d.includes(i) || u.includes(i) || g.includes(i) ? ({...p, ...d.includes(i) ? {sbOK:false, sbAw:true, sbOff:true} : null, ...u.includes(i) ? {uniOff:true} : null, ...g.includes(i) ? {songOff:true} : null}) : p) : progs;
     if(sgc.length + team.filter(c=>c.song && c.song.main).length > 1 && team.reduce((k,c,i)=>k + (sings(i, pr) ? 1 : 0), 0) > 1 && !(team.filter(c=>c.song && c.song.main).length > 1)) continue; // 가창 둘 이상 동시 X
-    const c1 = ({...ctx||{}, ...{_azPick:b}}), ev = redPick(evalTeam0(team, pr, enemy, S, cap, c1), pr, c1); // 변형마다 겹치는 버프 빼기·안 빼기 둘 다
+    const c1 = ({...ctx||{}, ...{_azPick:b, _svM: new Map()}}), ev = redPick(evalTeam0(team, pr, enemy, S, cap, c1), pr, c1); // 변형마다 겹치는 버프 빼기·안 빼기 둘 다
     const v = val(ev); if(v > bv*(1+1e-9)){ bv = v; best = ev; best.sbOff = team.map((c,i)=>d.includes(i)); best.uni = uc.length ? team.map((c,i)=>uc.includes(i) ? !u.includes(i) : null) : null; best.songOff = sgc.length ? team.map((c,i)=>g.includes(i)) : null; best.azBy = b; }
   }
   if(!best){ best = evalTeam0(team, progs.map((p,i)=> sgc.includes(i) ? ({...p, ...{songOff:true}}) : p), enemy, S, cap, ({...ctx||{}, ...{_azPick:by[0]}})); best.sbOff = team.map(()=>false); best.uni = null; best.songOff = team.map((c,i)=>sgc.includes(i)); best.azBy = by[0]; }
