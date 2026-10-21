@@ -1711,7 +1711,7 @@ const hgT = r => r && r.hg!=null && +r.hg<0.995 ? ` <span class="hint">(타수 �
 function killPlanTxt(kt, N){
   const out = [], L = kt.log; let run = null;
   const flush = () => { if(run){ out.push(`${run.a===run.b ? run.a+'턴' : run.a+'~'+run.b+'턴'}: 평상 공격${run.hold?' <span class="hint">(AF는 모아 둠 — 평상 턴으로 이 구간을 끊을 수 있음)</span>':''}`); run = null; } };
-  const evTxt = e => e.k==='stop' ? `HP ${e.hp}% 스토퍼` : e.k==='kill' ? (e.last ? '<b>처치</b>' : `목숨 ${e.n} 깸 → 부활`) : e.k==='phase' ? `보스 존·상성 바뀜${e.z?' → '+esc(e.z):''}` : '';
+  const evTxt = e => e.k==='stop' ? `HP ${e.hp}% 스토퍼` : e.k==='kill' ? (e.last ? '<b>처치</b>' : `목숨 ${e.n} 깸 → 부활`) : e.k==='phase' ? `${e.sb ? 'SB로 존 바뀜' : '보스 존·상성 바뀜'}${e.z?' → '+esc(e.z):''}` : '';
   for(const l of L){ const evs = l.ev.filter(e=>e.k!=='phase'), ph = l.ev.find(e=>e.k==='phase');
     if(ph){ flush(); out.push(`<span class="hint">${l.t}턴부터 ${evTxt(ph)}</span>`); }
     if(!l.af && !evs.length && !l.sb && !(+l.hg<0.9)){ if(run && run.b===l.t-1) { run.b = l.t; run.hold = run.hold || !!l.hold; } else { flush(); run = {a:l.t, b:l.t, hold: !!l.hold}; } continue; }
@@ -2636,20 +2636,21 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   const capT = capR.length && cTot>0 ? (()=>{ const mx = Math.max(...capR.map(r=>+r.afRaw)), sl = 1 - cTot/mx; return ` · <b class="capok">AF가 상한(9999억)에 닿음</b> <span class="hint">— 상한 없으면 약 ${fmtN(mx)}${sl>=0.25 ? `라 화력의 약 ${Math.round(100*sl)}%는 남음: 딜러 하나를 생존·유지력 캐릭터로 바꿔도 AF 피해는 거의 그대로` : ` (여유 약 ${Math.round(100*sl)}% — 화력을 빼면 상한 아래로 내려감)`}</span>`; })() : '';
   /* 존을 펼 수 있는데 안 까는 조합(2026-10-20): 존이 없으면 AF 게이지가 타격마다(1.5%, 약점 3.5% — 위키) 차서, 약점을 다단으로 치는 조합은 존(행동마다 맞는 속성 7.5%)보다 빨리 참 */
   const nz = ev.normal && ev.normal.zone, zc = !(nz && nz.level>0) && x.team && x.progs ? E.zoneCandidates(x.team, x.progs, 'normal').filter(z=>z && z.level>0) : [];
-  const wkH = (ev.normal.cores||[]).some(c=>c && c.rel==='weak'), noZ = zc.length ? ` · <span class="hint">존 안 깖(${esc([...new Set(zc.map(z=>z.label))].slice(0,2).join('·'))} 가능) — 이 조합은 존 없이 쓰는 쪽이 평상 턴 + AF가 더 큼(존이 없으면 AF 게이지가 타격마다 1.5%${wkH ? '·약점 3.5%' : ''}씩 차서 다단 히트가 유리)${ev.sb && ev.sb.zone && ev.sb.zone.level>0 ? ` · SB는 그 직전에 ${esc(ev.sb.zone.label)} 펴고 쓰는 계산` : ''}</span>` : '';
+  const wkH = (ev.normal.cores||[]).some(c=>c && c.rel==='weak'), noZ = zc.length ? ` · <span class="hint">존 안 깖(${esc([...new Set(zc.map(z=>z.label))].slice(0,2).join('·'))} 가능) — 이 조합은 존 없이 쓰는 쪽이 평상 턴 + AF가 더 큼(존이 없으면 AF 게이지가 타격마다 1.5%${wkH ? '·약점 3.5%' : ''}씩 차서 다단 히트가 유리)${ev.sb && ev.sb.zone && ev.sb.zone.level>0 ? ` · SB는 그 직전에 ${esc(ev.sb.zone.label)} 펴고 쓰는 계산${(ev.zLate||[]).some(p=>p.sbSw) ? '(그 뒤 턴은 그 존이 남음 — 아래 존 변화)' : ''}` : ''}</span>` : '';
+  const skL = ev.sbKeep ? ` · <span class="hint">SB 때 ${esc(ev.sbKeep.z||'다른 존')}을(를) 펴면 그 뒤 턴도 그 존이 남아 손해 — 깔린 존을 그대로 두는 SB로 계산(존 파괴·극 존을 펴는 캐릭터는 SB 순서·속도를 맞춤)</span>` : '';
   /* EX必殺技(2026-10-20): 게이지 100%에서 켠 AF가 끝날 때 누적 AF 행동이 EX 레벨 기준(⌈1200 ÷ 레벨²⌉)을 넘으면 자동 — 엔진 ev.exInfo */
   const exL = Array.isArray(ev.exInfo) && ev.exInfo.length ? ' · ' + ev.exInfo.map(q=>{ const on = q.onN || [];
     return `<b>${esc(q.name)}</b> EX必殺技: ${q.first ? (q.afg ? `처음 ${q.first}턴째 AF 뒤 → 다음 턴 끝 AF 게이지 +${q.afg}%${q.n>1 ? ` (긴 전투 ${q.n}번)` : ''}` : `처음 ${q.first}턴째 AF 뒤 ${q.dur>=99 ? '끝까지' : q.dur+'턴'}${on.length ? ` (실전 ${on[0]}~${on[on.length-1]}턴)` : ` (실전 ${T.length}턴 뒤)`} · 긴 전투 ${Math.round(100*q.f)}% 켜짐`) : '긴 전투에서도 거의 안 나감'} <span class="hint">(게이지 100%에서 켠 AF가 끝날 때 — EX 레벨은 턴마다 +1·AF 뒤 1, AF 행동 ⌈1200÷레벨²⌉회 누적${q.lv>1 ? `, 시작 Lv${q.lv}` : ''})</span>`; }).join(' · ') : '';
   /* 아군 전체 臨機応変(짭코코, 2026-10-21): 왼쪽 칸 아군의 무기로 타입이 정해짐 */
   const WTK = {slash:'참격', pierce:'찌르기', blunt:'타격', magic:'마법'};
   const adL = ev.adT && !ev.adNone ? ` · <b>${esc(ev.adT.by)}</b> 임기응변: 아군 전체 공격 타입 → <b>${esc(WTK[ev.adT.t]||ev.adT.t)}</b> <span class="hint">(${esc(ev.adT.by)} 바로 왼쪽에 ${esc((ev.adT.from||[]).join('·'))} 중 하나)</span>` : ev.adNone && x.team && x.team.some(c=>c && c.adaptAll) ? ` · <span class="hint">임기응변으로 타입을 바꾸지 않는 쪽이 나음(짭코코를 맨 왼쪽에)</span>` : '';
-  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${exL}${adL}${full}${noZ}</div>`; }
+  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${exL}${adL}${full}${noZ}${skL}</div>`; }
 /* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
 function zlLine(ev){ const L = ev && Array.isArray(ev.zLate) ? ev.zLate.filter(p=>!p.auto || p.from) : []; if(!L.length) return '';
   const z0 = ev.normal && ev.normal.zone ? ev.normal.zone.label : '존 없음';
-  const bits = L.map(p=> p.swap ? `${esc(zlWhen(p))} <b>${esc(p.swBy||'')} 내성↔약점 교환</b> · 지속 ${fmtN(p.sustain)}` : `${esc(zlWhen(p) + (p.delay ? ' 2턴 뒤' : ''))} <b>${esc(p.zone||'존 없음')}</b>${p.aff ? ' (상성 바뀜)' : ''} · 지속 ${fmtN(p.sustain)}`);
-  const onlySw = L.every(p=>p.swap);
-  return `<div class="kt hint">${onlySw ? '상성 변화' : '보스 존 변화'}: 처음 ${esc(z0)} → ${bits.join(' → ')}</div>`; }
+  const bits = L.map(p=> p.swap ? `${esc(zlWhen(p))} <b>${esc(p.swBy||'')} 내성↔약점 교환</b> · 지속 ${fmtN(p.sustain)}` : `${esc(zlWhen(p) + (p.delay ? ' 2턴 뒤' : ''))} <b>${esc(p.zone||'존 없음')}</b>${p.sbSw ? ' (첫 SB로 바뀐 존)' : ''}${p.aff ? ' (상성 바뀜)' : ''} · 지속 ${fmtN(p.sustain)}`);
+  const onlySw = L.every(p=>p.swap), onlySb = L.every(p=>p.sbSw);
+  return `<div class="kt hint">${onlySw ? '상성 변화' : onlySb ? 'SB 뒤 존' : '존 변화'}: 처음 ${esc(z0)} → ${bits.join(' → ')}${onlySb ? ' — SB가 편 존은 존 파괴 없이는 안 바뀜' : ''}</div>`; }
 const zoneLbl = q => `${+q.lv>=2?'극·':''}${E.ZONE_KR ? (E.ZONE_KR[q.key]||q.key) : q.key}`;
 const zlWhen = q => +q.from>1 ? `${q.from}턴째부터` : q.after!=null ? (q.hp!=null ? `${+q.after>0 ? q.after+'회 부활 뒤 ' : ''}HP ${q.hp}%부터` : `${q.after}회 부활부터`) : '';
 function zoneBossHtml(b){ const z = b.zone_boss, zb = b.zone_bonus, zL = Array.isArray(b.zone_late) ? b.zone_late : []; if(!z && !zb && !zL.length) return '';

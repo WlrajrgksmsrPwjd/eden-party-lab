@@ -789,6 +789,14 @@ function zoneForce(zs, pick){ // pick: 개전 자동 존이 둘 이상이면 고
   const au = (pick && aus.find(q=>q.by===pick && q.level===aus[0].level)) || aus[0];
   if(!au) return zs; return zs.filter(q=>q===au || (q && q.level>0 && ((au.level<2 && q.level>=2) || q.brk || (q.level===3 && au.level===2 && q.key===au.key)))); // 같은 존의 絶 각성(ZONE覚醒強化 — 紫装の槍使い(AS) リチュアルクォーツ '地裂陣/極・地裂陣' 때)은 極 위에도(2026-10-19 알테마)
 }
+/* SB 때 깔릴 수 있는 존(2026-10-21 사용자 확인: 'SB 존은 존 파괴가 없으면 기존 존 유지, 성해진은 SB 존으로 바뀜, 파괴 캐릭이 여럿이면 시전 속도에 따라 갈림'):
+   그때 깔린 존(평상 턴 존 f) 위에 덮을 수 있는 것만 — 같은 존(같은 등급 이상), 일반 존 위의 극, 존 파괴 후 전개(zone.breaks 'sb' 또는 스킬 파괴 brk). 존이 깔려 있으면 '존 없음'은 안 됨.
+   파괴 캐릭터가 여럿이면 순서(속도)를 맞출 수 있다고 보고 그중 나은 쪽 */
+function sbOver(zs, f, team){ if(!f || !(f.level>0)) return zs;
+  const brk = q => { if(q.brk) return true; const c = q.by ? team.find(m=>m && m.id===q.by) : null; return !!(c && c.zoneBreaks==='sb'); };
+  const L = (zs||[]).filter(q=> q && q.level>0 && (q.key===f.key ? q.level>=f.level : ((q.level>=2 && f.level<2) || brk(q))));
+  if(!L.some(q=>q.key===f.key)) L.push(f);
+  return L; }
 /* ---------- 존 후보 계산 ---------- */
 function zoneCandidates(team, progs, situation){
   const cands = [{kind:'none', types:[], level:0, by:null, label:'존 없음'}];
@@ -2885,11 +2893,32 @@ function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
   if(afl0!=null) e0.afLate = ({...e0.afLate, ...{v: afl0*(1-fA) + aflA}});
   exDmg(e0); e0.exInfo = info; e0.exSus0 = base.sustain; e0.exFires = TL.fires.length; if(injOK) e0.exInjOK = true; return e0;
 }
+/* SB가 깔린 존과 다른 존을 펴면(2026-10-21 사용자 확인 — 성해진은 SB 존으로 바뀜) 그 뒤 턴은 그 존 — 첫 SB 다음 턴부터 그 존이 깔린 단계(evalTeamZ 단계, bossZone every)로.
+   깔린 존 그대로 두는 SB(같은 존 SB·전개 없는 SB, sbKeepZone)도 계산해 성향 기준이 큰 쪽(SB 순서·속도로 고를 수 있다고 봄). S.sbZoneSwitch=false면 끔 */
+function sbSwPhase(ev, S){
+  if(!ev || S.sbZoneSwitch===false || S.sbZoneRule===false || ev.score) return null;
+  const nz = ev.normal && ev.normal.zone, z = ev.sb && ev.sb.zone; if(!z || !(z.level>0)) return null;
+  if(nz && nz.level>0 && nz.key===z.key) return null;
+  const T = (ev.bsim && ev.bsim.turns) || [], N = T.length || 3; let t1 = 0; T.forEach((r,i)=>{ if(!t1 && r && r.sb) t1 = i+1; });
+  const from = t1 ? t1 + 1 : N + Math.max(1, Math.round(+ev.sbTurns||4));
+  const zn = (ev.normal && ev.normal.zones) || [], lv = z.level>=3 ? 3 : zn.some(q=>q && q.key===z.key && q.level>=2 && q.how!=='개전 자동') ? 2 : 1; // 스킬로 다시 각성할 수 있으면 극
+  return {key: z.key, lv, every: true, from: Math.max(2, from), sbSw: true, name: z.byName || null}; }
 function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
-  const zl = zlList(S).concat(sw ? [sw] : []);
-  if(!zl.length) return evalTeamV(team, progs, enemy, S, cap, ctx);
-  const S0 = ({...S, ...{bossZoneLate:null}}), ev = evalTeamV(team, progs, enemy, S0, cap, ctx);
-  if(ctx && ctx.stFast) return ev;
+  const zl0 = zlList(S).concat(sw ? [sw] : []);
+  if(!zl0.length && (S.sbZoneSwitch===false || (ctx && ctx.stFast))) return evalTeamV(team, progs, enemy, S, cap, ctx);
+  const S0 = zl0.length ? ({...S, ...{bossZoneLate:null}}) : S, ev0 = evalTeamV(team, progs, enemy, S0, cap, ctx);
+  if(ctx && ctx.stFast) return ev0;
+  const swq = sbSwPhase(ev0, S);
+  if(!swq) return zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, ev0) : ev0;
+  const a = evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0.concat([swq]), ev0);
+  const vr = ctx && ctx.variant ? ctx.variant : {sbOff: ev0.sbOff || null, uni: ev0.uni || null, songOff: ev0.songOff || null, azBy: ev0.azBy==null ? null : ev0.azBy, redOff: !!ev0.redOff, afBuff: +ev0.afBuf||0};
+  const evK = evalTeamV(team, progs, enemy, ({...S0, ...{sbKeepZone: true}}), cap, ({...ctx||{}, ...{variant: vr}}));
+  if(evK && !sbSwPhase(evK, S)){ const b = zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, evK) : evK, vk = evalKey(ctx);
+    if(vk(b) > vk(a)*(1+1e-9)){ b.sbKeep = {z: ev0.sb && ev0.sb.zone ? ev0.sb.zone.label : null}; return b; } }
+  return a;
+}
+function evalTeamZ1(team, progs, enemy, S, cap, ctx, zl, ev){
+  const S0 = ({...S, ...{bossZoneLate:null}});
   const vr = {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy==null ? null : ev.azBy, redOff: !!ev.redOff, afBuff: +ev.afBuf||0}, HL = Math.max(4, +S.susHorizon || 15), NB = (ev.bsim && ev.bsim.N) || 3;
   const posOf = q => +q.from>1 ? (+q.from-1)/HL : Math.min(1, ((+q.after||0) + (q.hp!=null ? 1 - (+q.hp)/100 : 0))/Math.max(1, +q.bars||1)) + (q.delay ? q.delay/HL : 0);
   const L = zl.map(q=>({q, p: posOf(q)})).sort((a,b)=>a.p - b.p), memo = new Map(), ph = [];
@@ -2899,7 +2928,7 @@ function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
     const bzq = curZ, mk = JSON.stringify([bzq, curA, curS]);
     let e2 = memo.get(mk); if(!e2){ const en0 = curA ? affOver(enemy, curA) : enemy; e2 = evalTeamV(team, progs, curS ? swapAff(en0) : en0, ({...S0, ...{bossZone: bzq}}), cap, ({...ctx||{}, ...{variant: vr, _zl: true}})); memo.set(mk, e2); }
     const z2 = e2.normal && e2.normal.zone;
-    ph.push({from: +q.from>1 ? +q.from : null, after: q.after!=null && !(+q.from>1) ? +q.after : null, hp: q.hp!=null ? +q.hp : null, delay: +q.delay||0, auto: !!q.auto, swap: !!q.swap, swBy: q.swap ? q.name||null : null, pos: p, key: q.key||null, lv: +q.lv||1, aff: q.aff||null, bar: +q.bar>0 ? +q.bar : 0,
+    ph.push({from: +q.from>1 ? +q.from : null, after: q.after!=null && !(+q.from>1) ? +q.after : null, hp: q.hp!=null ? +q.hp : null, delay: +q.delay||0, auto: !!q.auto, swap: !!q.swap, swBy: q.swap ? q.name||null : null, sbSw: !!q.sbSw, pos: p, key: q.key||null, lv: +q.lv||1, aff: q.aff||null, bar: +q.bar>0 ? +q.bar : 0,
       zone: z2 ? z2.label : null, sustain: +e2.sustain||0, sustainNoAF: +e2.sustainNoAF||0, sustainSB: +e2.sustainSB||0, af: +e2.af||0, afLate: e2.afLate ? {v: +e2.afLate.v||0} : null,
       afTurns: +e2.afTurns||4, afOff: !!e2.afOff, afDrain: e2.afDrain ? {first: e2.afDrain.first, per: e2.afDrain.per, af: e2.afDrain.af} : null,
       turns: e2.bsim ? e2.bsim.turns : [], btot: e2.bsim ? +e2.bsim.total||0 : 0, per: e2.bsim ? e2.bsim.per : null, nT: e2.normal ? +e2.normal.total||0 : 0 }); }
@@ -3062,6 +3091,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
        깔린 존은 더 높은 등급만 덮어씀 → 아군 존은 보스 존보다 등급이 높을 때만 후보, 매 턴 다시 까는 보스(every)는 평상 턴엔 보스 존 고정 */
     if(S.bossZone && !zOnly){ const bq = S.bossZone, zo = zoneOpt(bq.key); if(zo){ const lv = Math.max(1, Math.min(2, +bq.lv||1)), bzz = ({...zo, ...{level:lv, by:null, how:'보스 전개', label:(lv>=2?'극·':'')+(ZONE_KR[bq.key]||bq.key), unmet:[], brk:false}});
       zs = bq.every && sit==='normal' ? [bzz] : zs.filter(z=>z && z.level>lv).concat([bzz]); } }
+    if(sit==='sb' && !zOnly && A.fieldZ && S.sbZoneRule!==false){ const f = A.fieldZ; if(f.level>0) zs = sbOver(zs, f, team); if(S.sbKeepZone){ const k = zs.filter(z=>z && (f.level>0 ? z.key===f.key : !(z.level>0))); if(k.length) zs = k; } } // SB 존은 깔린 존 위에 덮을 수 있는 것만(sbKeepZone: 깔린 존 그대로 — SB 뒤 존이 바뀌는 쪽과 비교용)
     if(S.zoneBanAll && !zOnly){ zs = [{kind:'none', types:[], level:0, by:null, label:'존 없음'}]; } // 보스 서약 등: 아군 ZONE 전개 금지
     else if(sit==='normal' && !zOnly && Array.isArray(S.zoneBan) && S.zoneBan.length){ const ban = z => z && z.level>0 && ((z.kind==='elem' && S.zoneBan.includes('elem')) || (z.kind!=='elem' && S.zoneBan.includes('nonelem')));
       const z2 = zs.filter(z=>!ban(z)); zs = z2.length ? z2 : [{kind:'none', types:[], level:0, by:null, label:'존 없음'}]; } // 보스 흉성 등: 턴 종료에 존 파괴 → 평상 턴엔 그 종류 존 없음
@@ -3223,7 +3253,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   let afSbG = offOK ? sbIdx.reduce((v,i)=>{ const q = team[i].afTurnR; if(!q || !q.sb) return v; const n = Math.max(1, +q.acts||1), za = zoneAF(nz, {el:q.el||'none', wt:q.wt||null}, false); return v + (za!=null ? za*n : n*1.5); }, 0) : 0; // SB 턴 종료 추격(메리나 星導スキル)
   // 허수아비는 1턴만, AF 100%로 시작(사용자 확인) → 세팅 턴 없음: 축적은 AF 중 행동 횟수만큼
   A.tm.S0 = 0;
-  runSit('sb');
+  A.fieldZ = nz || null; runSit('sb'); A.fieldZ = null;
   if(afBufC) afBW = afBWof(afTurns);
   const P1 = afWith('cast', ()=>afPick(coresFor('af', nz, false))); // AF 상황(AF 전용 스킬·AF 조건)으로 — 1턴째 AF라 버프 스킬은 AF 행동으로 걸며(afMd cast, 2026-10-20)
   const afCores = P1.cs, afA = P1.afA, gain = P1.g, avgCombo = P1.avg, afS = P1.afS;
@@ -4023,7 +4053,7 @@ function killTurnsM(ev, boss, hm){
   let lastT = lastAF || (N && +rec[N-1].g>=30 ? N+1-per : Math.min(N, 2)), lastK = -1; const log = []; // 실전 N턴에 AF를 안 썼고 게이지가 차 있으면 바로 다음 턴부터
   while(t < 99 && done < bars){ t++; prog = done + Math.max(0, 1 - rem/barK(Math.floor(done)));
     const k = phaseAt(t), M = k>=0 ? MZ[k] : M0, cx = cutAt(t), L = {t, af:false, sb:null, ev:[]};
-    if(k!==lastK && k>=0){ L.ev.push({k:'phase', z: ZL[k].zone || null, aff: !!ZL[k].aff}); } lastK = k;
+    if(k!==lastK && k>=0){ L.ev.push({k:'phase', z: ZL[k].zone || null, aff: !!ZL[k].aff, sb: !!ZL[k].sbSw}); } lastK = k;
     let d0;
     if(t<=N && !(k>=0 && !ZL[k].from)){ const r = rec[t-1]; d0 = Math.max(0, +r.d||0); L.af = !!r.af; L.sb = r.sb || null; if(r.af) L.g = r.af; }
     else if(M.dr){ const f0 = +M.dr.first||0, p0 = +M.dr.per||M.per; L.af = M.aD>0 && t>=f0 && (t-f0)%p0===0; d0 = L.af ? M.aD : M.nD; }
