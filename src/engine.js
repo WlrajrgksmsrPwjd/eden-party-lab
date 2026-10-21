@@ -3110,12 +3110,12 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     return !!(sp.base || (sp.baseReq && reqMet(sp.baseReq, team, m)) || (sp.baseSB && pr.sbOK!==false)); };
   const canFollow = (z, zb, fcI) => { if(!z || !(z.level>0) || !canRelay(z, fcI)) return false; if(z.by && fcI.some(k=>team[k].id===z.by)) return true; return z.key===zb.key ? z.level>=zb.level : (z.level>=2 && zb.level<2); };
   /* 순서 모델(위 설명): per0 = 존 z에서의 SB 값, perAt(존) = 그 존에서의 SB 값. lvAny: 극이 풀린 턴의 SB(sbPer1) — 파괴 캐릭터 존은 등급 상관없이 같은 존으로 */
-  const sbMixP = (z, per0, perAt, fcI, fld, lvAny) => { if(!fcI.length || !z) return null; let per = per0.slice(), used = false;
+  const sbMixP = (z, per0, perAt, fcI, fld, lvAny) => { if(!fcI.length || !z) return null; let per = per0.slice(), used = false; const skip = [];
     for(const i of fcI){ const zb = sbFZ[i]; if(zb.key===fld.key && (lvAny || (zb.level||0)<=(fld.level||0))) continue; // 이미 그 존이면 파괴해도 같음
       if(z.key===zb.key && (lvAny || (z.level||0)>=(zb.level||0))){ const pf = perAt(fld); per = per.map((v,k)=> fcI.includes(k) ? v : Math.max(v, pf[k]||0)); used = true; }
       else if(canFollow(z, zb, fcI) && !(z.by===team[i].id)){ const pf = perAt(fld), pb = perAt(zb); per = per.map((v,k)=> k===i ? (pb[k]||0) : fcI.includes(k) ? v : Math.max(v, pf[k]||0, pb[k]||0)); used = true; }
-      else { per[i] = 0; used = true; } }
-    return used ? {v: per.reduce((x,y)=>x+y,0), per} : null; };
+      else { per[i] = 0; used = true; skip.push(i); } }
+    return used ? {v: per.reduce((x,y)=>x+y,0), per, skip} : null; };
   A.tm = {S0:2, H:Math.max(1, Math.round(S.simTurns||6))};
   const runSit = (sit, zOnly) => { // zOnly: 이 존만(실전 3턴째 SB — 1턴째에 고른 존으로, 계산량)
     const s2 = (sit==='sb'&&!hasSB)?'normal':sit;
@@ -3147,7 +3147,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       if(z && z._once && hasOnce && sit==='normal'){ const on1 = onceCalc(team, progs, A, enemy, S, cx, fxN(), z, cap, fw, cores); if(on1) te = te ? {per: te.per.map((v,i)=>v+on1.per[i]), total: te.total+on1.total, afg: te.afg||0} : {...on1, afg: 0}; }
       return {ctr, ch, te, afPost, v:(ctr?ctr.total:0)+(ch?ch.total:0)+(te?te.total:0)}; };
     const withX = (hasCtr && sit==='normal') || hasChain || (hasTE && sit==='normal');
-    let best=null, bestV=-1, bestPer=null, bestCores=shared, bestX=null; const cands = [];
+    let best=null, bestV=-1, bestPer=null, bestCores=shared, bestX=null, bestSkip=null; const cands = [];
     /* SB 존 강제 파괴(zone.sb_force — 스즈네 SB: 존 파괴 후 幻魔陣, 2026-10-21 사용자): 그 캐릭터가 SB를 쓰면 반드시 그 존으로 바뀜. 한 SB 턴 안의 순서는 맞출 수 있다고 보고(AF 안은 누르는 순서, 평상 턴은 속도)
        후보 존 z마다 ① z가 그 캐릭터 존이면: 다른 아군 SB는 깔린 존·그 존 중 나은 쪽(먼저/나중에 씀), 그 캐릭터는 자기 존 ② z가 그 뒤에 덮을 수 있는 존(다른 SB 파괴 캐릭터·일반 위의 극·같은 존 상위)이면
        다른 아군은 깔린 존·그 존·z 중 나은 쪽 ③ 그 밖(깔린 존 그대로 등)이면 그 캐릭터는 SB를 안 씀(0). 마지막에 깔린 z가 SB 뒤 존(sbSwPhase) */
@@ -3159,11 +3159,11 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const cores = zdep ? coresFor(s2, z, useSim) : shared;
       const r = sbMix(z, sumZ(cores, z, null, w)), x = withX ? extra(z, cores) : null, v = r.v + (x ? x.v : 0);
       if(sit==='normal' && !zOnly) cands.push({z, v, cores});
-      if(v>bestV || (fcI.length && best && v>=bestV*(1-1e-9) && best.key===fld.key && z.key!==fld.key && fcI.some(k=>sbFZ[k] && sbFZ[k].key===z.key))){ bestV=v; best=z; bestPer=r.per; bestCores=cores; bestX=x; } // 강제 파괴 순서 모델에서 값이 같으면 파괴 캐릭터 존 쪽(그래야 evalTeamZ가 'SB 뒤 존 바뀜'과 '깔린 존 다시'를 비교 — 2026-10-21 점검)
+      if(v>bestV || (fcI.length && best && v>=bestV*(1-1e-9) && best.key===fld.key && z.key!==fld.key && fcI.some(k=>sbFZ[k] && sbFZ[k].key===z.key))){ bestV=v; best=z; bestPer=r.per; bestCores=cores; bestX=x; bestSkip = r.skip || null; } // 강제 파괴 순서 모델에서 값이 같으면 파괴 캐릭터 존 쪽(그래야 evalTeamZ가 'SB 뒤 존 바뀜'과 '깔린 존 다시'를 비교 — 2026-10-21 점검)
     }
     if(hasOnce && sit==='normal' && best){ // 1회 공격: 고른 존에서 한 번
       const x2 = extra(({...best, ...{_once:true}}), bestCores); bestV += (x2.v - (bestX ? bestX.v : 0)); bestX = x2; }
-    res[sit] = {total:bestV, zone:best, per:bestPer, cores:bestCores, zones:zs, sit:s2};
+    res[sit] = {total:bestV, zone:best, per:bestPer, cores:bestCores, zones:zs, sit:s2, skip: bestSkip && bestSkip.length ? bestSkip : null};
     if(bestX && bestX.ctr){ const ct=bestX.ctr; res[sit].counter=ct; res[sit].per=res[sit].per.map((v,i)=>v+ct.per[i]); }
     if(bestX && bestX.ch){ const ch=bestX.ch; res[sit].chain=ch; res[sit].per=res[sit].per.map((v,i)=>v+ch.per[i]); }
     if(bestX && bestX.te){ const te=bestX.te; res[sit].turnEnd=te; res[sit].per=res[sit].per.map((v,i)=>v+te.per[i]); }
@@ -3595,7 +3595,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   for(const zq of zc.slice(0, 4)){
     const zs2 = sameZ(res.normal.zones, zq), awC = zs2.some(q=>q.how!=='개전 자동' && q.how!=='SB 시' && q.how!=='1회 각성' && !q.once), awS = !awC && zs2.some(q=>q.how==='개전 자동');
     const teamD = Object.keys(P1.pick).length ? team.map((c,i)=> P1.pick[i]===undefined ? c : P1.pick[i] ? ({...c, ...{afSk:c.sbN, _sbN:true}}) : ({...c, ...{sbN:null}})) : team; // AF 스킬 고르기(위)를 허수아비에도
-    const o = {team:teamD, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw:sbAw0, sbFresh:sbFr, sbIdx, sbCores:res.sb.cores, light, shadow, zcs:(res.normal.zones||[]).map(zAF), quick:true, deep:!(ctx && ctx.stFast), lkPlan: anySing ? lkPlan : null};
+    const o = {team:teamD, progs, A:Ad, enemy, S, cx, posSets, cap, fw, nz:zq, awStart:awS, awConst:awC, sbz, sbAw:sbAw0, sbFresh:sbFr, sbIdx, sbCores:res.sb.cores, sbSkip: res.sb.skip ? new Set(res.sb.skip) : null, /* 강제 파괴 순서 모델에서 SB를 안 쓰는 파괴 캐릭터는 허수아비 SB에서도 뺌(2026-10-21 점검) */ light, shadow, zcs:(res.normal.zones||[]).map(zAF), quick:true, deep:!(ctx && ctx.stFast), lkPlan: anySing ? lkPlan : null};
     const dd = dummySim(o); qz.push({dd, o});
     if(!bestD || dd.total > bestD.total*1.0005){ bestD = dd; bestO = o; }
   }
@@ -3781,7 +3781,7 @@ function dummySim(o){
         sbAt = afA.seq.indexOf(a)+1;
         const sbZOK = !!(sbAw && sbz) && !(sbFresh && zCur && zCur.key===sbz.key) && (zoneOK(zCur, sbz) || (zCur && zCur.key===sbz.key)); // 극 존은 다른 존으로 못 바꿈, sb_fresh면 같은 존이 깔려 있으면 극 안 됨
         const zSB = sbZOK ? sbz : zCur, inow2 = Object.assign(infAt(atk, ia), {eg: egOf()});
-        for(const j of sbIdx){ const co = coreAt(st, zSB, 'sb', j, inow2); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co)*ssF(zSB); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
+        for(const j of sbIdx){ if(o.sbSkip && o.sbSkip.has(j)) continue; const co = coreAt(st, zSB, 'sb', j, inow2); if(!co) continue; const d = applyZoneCap(co, zSB, S, cap, Math.min(combo, cmax))*fw(co)*ssF(zSB); sb += d; per[j] += d; sbPer.push([j, d]); sbCo[j] = {co, z:zSB, combo:Math.min(combo, cmax)}; }
         if(sbZOK) zCur = sbz; // SB로 각성한 존은 남은 AF 동안
         Av.postSB = true; // SB로 건 버프(연격수+1·심안·크리 대미지 등)는 남은 AF 행동에도
       }
