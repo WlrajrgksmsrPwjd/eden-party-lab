@@ -259,7 +259,7 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - `alts.json`: 주력 후보(스킬 형식 + `when`·`normal`·`af`·`cycle`·`attack:false`). 상황마다 가장 센 것.
 - `once.json`: 전투 중 1회·첫 사용·N턴마다 강공격(`atk`, `per`: battle | every:N, `af`, `first`).
 - 스킬 필드 `combo_scale: {lo, hi, full, when?}`(AF 콤보 0.75→full에서 lo→hi배), `combo_add: k`(위력 += k×콤보). party_buff `combo_up`(타수당 콤보 증가 +%p, 규칙 묶음 combo).
-- chars `zone.vc_only`(VC로만 전개 → 1턴 AF 존 없음), `zone.breaks`(존 파괴 후 전개, "sb"면 SB만), `zone.awaken_any: {kinds, skill}`(남이 편 일반 존을 극으로).
+- chars `zone.vc_only`(VC로만 전개 → 1턴 AF 존 없음), `zone.breaks`(존 파괴 후 전개, "sb"면 SB만), `zone.sb_force`(true: SB를 쓰면 반드시 존 파괴 후 그 존 전개 — `breaks: "sb"`도 같은 뜻으로 봄(9명 문구 전부 'SB 시 (미전개면) 파괴 후 전개'). 엔진은 한 SB 턴 안의 순서를 맞출 수 있다고 보고, 그 존이 남거나·뒤에 다른 SB가 덮어쓰거나(다른 파괴 캐릭터·일반 위의 극)·그 캐릭터가 SB를 안 쓰는 쪽 중 나은 쪽. 다른 아군 SB는 깔린 존·그 존 중 나은 때에 씀), `zone.awaken_any: {kinds, skill}`(남이 편 일반 존을 극으로).
 - 스킬 칸(사용자 확인): 천명치 80 미만 3칸, 이상 4칸. 주력(통상 공격 변화 제외)·AF 전용·비SB 성도 스킬이 먼저 쓰고 남는 칸에 buff/attack 행동(앞쪽부터).
 - `style_bonus.json`: 다른 스타일 5성 보드 완성 보너스 `[{from: 스타일 id, add: {스탯: 고정값}}]` — 그 스타일을 보유하면 완성으로 봄(설정 styleBonus=false로 끔, app settings의 ownedIds).
 - `stellar.json` `stats`(2026-10-16 위키 시트: 6스탯은 모든 능력 +20 포함, all 없음)·`lv100`(Lv80→100 성장분 HP·MP·6스탯). `fate.json` 255 단계에 공통 +10 포함(엔진 규칙 삭제).

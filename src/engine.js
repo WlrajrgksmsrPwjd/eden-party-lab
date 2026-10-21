@@ -625,7 +625,7 @@ function prepChar(c){
     states: Array.isArray(c.states) && c.states.length ? c.states : null, alts: Array.isArray(c.alts) && c.alts.length ? c.alts : null,
     once: Array.isArray(c.once) ? (c.once.filter(e=>e && e.atk && !e.buddy).length ? c.once.filter(e=>e && e.atk && !e.buddy) : null) : null, // 전투 중 1회·첫 사용 강공격(once.json)
     styleB: Array.isArray(c.style_bonus) && c.style_bonus.length ? c.style_bonus : null,
-    zoneVC: !!(c.zone && c.zone.vc_only), zoneBreaks: c.zone && c.zone.breaks ? c.zone.breaks : null, zoneAwAny: c.zone && c.zone.awaken_any ? c.zone.awaken_any : null,
+    zoneVC: !!(c.zone && c.zone.vc_only), zoneBreaks: c.zone && c.zone.breaks ? c.zone.breaks : null, zoneSbForce: !!(c.zone && (c.zone.sb_force || c.zone.breaks==='sb')), /* SB 존 파괴는 SB를 쓰면 늘 일어남('미전개면 파괴'도 이미 그 존이면 같음) — 2026-10-21 9명 문구 대조 */ zoneAwAny: c.zone && c.zone.awaken_any ? c.zone.awaken_any : null,
     zone, zoneTypes, zspec, zoneAwak: !!(zone&&zone.awakened),
     breakT: (d.break||'').toLowerCase(),
     weakExpose: (d.weak_expose||'').split(/[(\s]/)[0],
@@ -784,16 +784,18 @@ function zoneStepUseless(team, progs, i, zc){
 }
 /* 개전 자동 존이 있으면 '존 없음'이나 그 존을 덮어쓰지 못하는 존은 고를 수 없음(존은 하나, 극은 존 파괴 없이 못 바꿈 — 2026-10-16:
    帯電으로 타수가 늘면 존 없는 쪽이 AF 게이지(타당 충전)로 유리해 보여 '존 없음'을 고르던 문제) */
-function zoneForce(zs, pick){ // pick: 개전 자동 존이 둘 이상이면 고른 전개자 id(evalTeam이 둘 다 계산해 나은 쪽, 2026-10-16: 넣은 순서에 따라 결과가 6배까지 달라지던 문제)
+function zoneForce(zs, pick, sbTeam){ // pick: 개전 자동 존이 둘 이상이면 고른 전개자 id(evalTeam이 둘 다 계산해 나은 쪽, 2026-10-16: 넣은 순서에 따라 결과가 6배까지 달라지던 문제)
   const aus = (zs||[]).filter(q=>q && q.level>0 && q.how==='개전 자동').sort((a,b)=>b.level-a.level);
   const au = (pick && aus.find(q=>q.by===pick && q.level===aus[0].level)) || aus[0];
-  if(!au) return zs; return zs.filter(q=>q===au || (q && q.level>0 && ((au.level<2 && q.level>=2) || q.brk || (q.level===3 && au.level===2 && q.key===au.key)))); // 같은 존의 絶 각성(ZONE覚醒強化 — 紫装の槍使い(AS) リチュアルクォーツ '地裂陣/極・地裂陣' 때)은 極 위에도(2026-10-19 알테마)
+  /* sbTeam(SB 때): SB에 존 파괴가 붙은 캐릭터(zone.breaks 'sb')의 존도 남김 — 개전 자동 極 위에도 파괴 후 전개(2026-10-21: 예전엔 여기서 빠져 sbOver까지 못 감, 스즈네·플람라피스(ES) 점검) */
+  const sbB = q => !!(sbTeam && q && q.by && sbTeam.some(m=>m && m.id===q.by && (m.zoneBreaks==='sb' || m.zoneSbForce)));
+  if(!au) return zs; return zs.filter(q=>q===au || (q && q.level>0 && ((au.level<2 && q.level>=2) || q.brk || sbB(q) || (q.level===3 && au.level===2 && q.key===au.key)))); // 같은 존의 絶 각성(ZONE覚醒強化 — 紫装の槍使い(AS) リチュアルクォーツ '地裂陣/極・地裂陣' 때)은 極 위에도(2026-10-19 알테마)
 }
 /* SB 때 깔릴 수 있는 존(2026-10-21 사용자 확인: 'SB 존은 존 파괴가 없으면 기존 존 유지, 성해진은 SB 존으로 바뀜, 파괴 캐릭이 여럿이면 시전 속도에 따라 갈림'):
    그때 깔린 존(평상 턴 존 f) 위에 덮을 수 있는 것만 — 같은 존(같은 등급 이상), 일반 존 위의 극, 존 파괴 후 전개(zone.breaks 'sb' 또는 스킬 파괴 brk). 존이 깔려 있으면 '존 없음'은 안 됨.
    파괴 캐릭터가 여럿이면 순서(속도)를 맞출 수 있다고 보고 그중 나은 쪽 */
 function sbOver(zs, f, team){ if(!f || !(f.level>0)) return zs;
-  const brk = q => { if(q.brk) return true; const c = q.by ? team.find(m=>m && m.id===q.by) : null; return !!(c && c.zoneBreaks==='sb'); };
+  const brk = q => { if(q.brk) return true; const c = q.by ? team.find(m=>m && m.id===q.by) : null; return !!(c && (c.zoneBreaks==='sb' || c.zoneSbForce)); };
   const L = (zs||[]).filter(q=> q && q.level>0 && (q.key===f.key ? q.level>=f.level : ((q.level>=2 && f.level<2) || brk(q))));
   if(!L.some(q=>q.key===f.key)) L.push(f);
   return L; }
@@ -3082,11 +3084,12 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const wNof = () => simUse ? team.map((c,i)=>sim.act[i] + sim.alt[i]*(sim.altW ? sim.altW[i] : Math.max(ALT_R, c.naR)) + sim.na[i]*c.naR) : null; let wN = wNof();
   const sumZ = (cores,z,combo,w)=>{ let v=0; const per=cores.map((co,i)=>{ const d=applyZoneCap(co,z,S,cap,combo)*fw(co)*(w?w[i]:1); v+=d; return d; }); return {v,per}; };
   const res = {};
+  let sbFld = null, sbFZ = null; /* SB 때 깔린 존(평상 턴 존)·SB에 존을 강제로 파괴·전개하는 캐릭터(zone.sb_force)의 SB 존 — runSit('sb')의 순서 모델용(2026-10-21) */
   A.tm = {S0:2, H:Math.max(1, Math.round(S.simTurns||6))};
   const runSit = (sit, zOnly) => { // zOnly: 이 존만(실전 3턴째 SB — 1턴째에 고른 존으로, 계산량)
     const s2 = (sit==='sb'&&!hasSB)?'normal':sit;
     const useSim = sit==='normal' && simUse, w = sit==='normal' ? wN : null;
-    let zs = zOnly ? [zOnly] : zoneForce(zoneCandidates(team, progs, sit), A.azPick);
+    let zs = zOnly ? [zOnly] : zoneForce(zoneCandidates(team, progs, sit), A.azPick, sit==='sb' && S.sbZoneRule!==false ? team : null);
     /* 보스가 까는 존(S.bossZone {key, lv, every}, 2026-10-18 보스 기믹 조사: 진·현현 유인 매 턴 굉타진, 결실 가리유 매 턴 극·열화진, 개시 월광진·쌍격진 등):
        깔린 존은 더 높은 등급만 덮어씀 → 아군 존은 보스 존보다 등급이 높을 때만 후보, 매 턴 다시 까는 보스(every)는 평상 턴엔 보스 존 고정 */
     if(S.bossZone && !zOnly){ const bq = S.bossZone, zo = zoneOpt(bq.key); if(zo){ const lv = Math.max(1, Math.min(2, +bq.lv||1)), bzz = ({...zo, ...{level:lv, by:null, how:'보스 전개', label:(lv>=2?'극·':'')+(ZONE_KR[bq.key]||bq.key), unmet:[], brk:false}});
@@ -3113,11 +3116,24 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       return {ctr, ch, te, afPost, v:(ctr?ctr.total:0)+(ch?ch.total:0)+(te?te.total:0)}; };
     const withX = (hasCtr && sit==='normal') || hasChain || (hasTE && sit==='normal');
     let best=null, bestV=-1, bestPer=null, bestCores=shared, bestX=null; const cands = [];
+    /* SB 존 강제 파괴(zone.sb_force — 스즈네 SB: 존 파괴 후 幻魔陣, 2026-10-21 사용자): 그 캐릭터가 SB를 쓰면 반드시 그 존으로 바뀜. 한 SB 턴 안의 순서는 맞출 수 있다고 보고(AF 안은 누르는 순서, 평상 턴은 속도)
+       후보 존 z마다 ① z가 그 캐릭터 존이면: 다른 아군 SB는 깔린 존·그 존 중 나은 쪽(먼저/나중에 씀), 그 캐릭터는 자기 존 ② z가 그 뒤에 덮을 수 있는 존(다른 SB 파괴 캐릭터·일반 위의 극·같은 존 상위)이면
+       다른 아군은 깔린 존·그 존·z 중 나은 쪽 ③ 그 밖(깔린 존 그대로 등)이면 그 캐릭터는 SB를 안 씀(0). 마지막에 깔린 z가 SB 뒤 존(sbSwPhase) */
+    const fcI = (sit==='sb' && S.sbZoneRule!==false && sbFZ) ? team.map((c,i)=>i).filter(i=>sbFZ[i] && progs[i] && progs[i].sbOK!==false) : [];
+    const fld = sbFld && sbFld.level>0 ? sbFld : {kind:'none', types:[], level:0, by:null, label:'존 없음'};
+    const zPer = {}; const perAt = zz => { const k = (zz.key||'none')+'|'+(zz.level||0)+'|'+(zz.by||''); if(zPer[k]) return zPer[k]; const cz = zdep ? coresFor(s2, zz, useSim) : shared; return (zPer[k] = sumZ(cz, zz, null, w).per); };
+    const canFollow = (z, zb) => !!z && z.level>0 && (z.key===zb.key ? z.level>=zb.level : ((z.level>=2 && zb.level<2) || (z.by && team.some(m=>m && m.id===z.by && (m.zoneBreaks==='sb' || m.zoneSbForce)))));
+    const sbMix = (z, r) => { if(!fcI.length || !z) return r; let per = r.per.slice(), used = false;
+      for(const i of fcI){ const zb = sbFZ[i]; if(zb.key===fld.key && (zb.level||0)<=(fld.level||0)) continue; // 이미 그 존이면 파괴해도 같음
+        if(z.key===zb.key && (z.level||0)>=(zb.level||0)){ const pf = perAt(fld); per = per.map((v,k)=> fcI.includes(k) ? v : Math.max(v, pf[k]||0)); used = true; }
+        else if(canFollow(z, zb) && !(z.by===team[i].id)){ const pf = perAt(fld), pb = perAt(zb); per = per.map((v,k)=> k===i ? (pb[k]||0) : fcI.includes(k) ? v : Math.max(v, pf[k]||0, pb[k]||0)); used = true; }
+        else { per[i] = 0; used = true; } }
+      return used ? {v: per.reduce((x,y)=>x+y,0), per} : r; };
     for(const z of zSort(zs)){ // 같은 값이면 존 등급·이름·까는 사람 id 순(2026-10-16: 같은 極・風王陣을 멜피피아(AS)·네코코(ES)가 둘 다 펴면 넣은 순서로 갈리던 문제)
       const cores = zdep ? coresFor(s2, z, useSim) : shared;
-      const r = sumZ(cores, z, null, w), x = withX ? extra(z, cores) : null, v = r.v + (x ? x.v : 0);
+      const r = sbMix(z, sumZ(cores, z, null, w)), x = withX ? extra(z, cores) : null, v = r.v + (x ? x.v : 0);
       if(sit==='normal' && !zOnly) cands.push({z, v, cores});
-      if(v>bestV){ bestV=v; best=z; bestPer=r.per; bestCores=cores; bestX=x; }
+      if(v>bestV || (fcI.length && best && v>=bestV*(1-1e-9) && z.key===fld.key && best.key!==fld.key)){ bestV=v; best=z; bestPer=r.per; bestCores=cores; bestX=x; } // 강제 파괴 순서 모델에서 값이 같으면 깔린 존 그대로(SB 뒤 존 바뀜 계산 아낌)
     }
     if(hasOnce && sit==='normal' && best){ // 1회 공격: 고른 존에서 한 번
       const x2 = extra(({...best, ...{_once:true}}), bestCores); bestV += (x2.v - (bestX ? bestX.v : 0)); bestX = x2; }
@@ -3253,6 +3269,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   let afSbG = offOK ? sbIdx.reduce((v,i)=>{ const q = team[i].afTurnR; if(!q || !q.sb) return v; const n = Math.max(1, +q.acts||1), za = zoneAF(nz, {el:q.el||'none', wt:q.wt||null}, false); return v + (za!=null ? za*n : n*1.5); }, 0) : 0; // SB 턴 종료 추격(메리나 星導スキル)
   // 허수아비는 1턴만, AF 100%로 시작(사용자 확인) → 세팅 턴 없음: 축적은 AF 중 행동 횟수만큼
   A.tm.S0 = 0;
+  sbFld = nz || null; sbFZ = null;
+  if(S.sbZoneRule!==false && team.some(c=>c.zoneSbForce)){ const zc0 = zoneCandidates(team, progs, 'sb'); const L = team.map(c=> c.zoneSbForce ? (zc0.filter(q=>q && q.by===c.id && q.level>0).sort((a,b)=>b.level-a.level)[0] || null) : null); if(L.some(Boolean)) sbFZ = L; }
   A.fieldZ = nz || null; runSit('sb'); A.fieldZ = null;
   if(afBufC) afBW = afBWof(afTurns);
   const P1 = afWith('cast', ()=>afPick(coresFor('af', nz, false))); // AF 상황(AF 전용 스킬·AF 조건)으로 — 1턴째 AF라 버프 스킬은 AF 행동으로 걸며(afMd cast, 2026-10-20)
