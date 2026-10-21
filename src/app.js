@@ -2643,13 +2643,22 @@ function afTimingLine(x, o){ const ev = x.ev, T = (ev && ev.score && ev.score.tu
   /* SB 존 강제 파괴 캐릭터인데 순서 모델이 SB를 안 쓴다고 본 경우(엔진 ev.sb.skip, 2026-10-21): 쓰면 깔린 존이 깨지고 되돌릴 수 없어 손해 */
   const skp = ev.sb && Array.isArray(ev.sb.skip) && ev.sb.skip.length && x.team ? ev.sb.skip.map(i=>x.team[i]).filter(Boolean) : [];
   const skpL = skp.length ? ` · <span class="hint"><b>${esc(skp.map(c=>c.name).join('·'))}</b> SB 안 씀 — SB에 존 파괴가 붙어 ${esc((ev.sb.zone && ev.sb.zone.label) || '깔린 존')}이 깨지는데 뒤에 다시 깔 사람이 없음(성도 스킬은 평소 사용·AF에서만)</span>` : '';
+  /* SB 순서(엔진 ev.sb.ord, 2026-10-21): 존 파괴 캐릭터가 있으면 깔린 존에서 먼저 쓸 사람 → 파괴 캐릭터 → 바뀐 존에서 쓸 사람(AF 안은 누르는 순서, 평상 턴은 속도) */
+  const sbo = ev.sb && ev.sb.ord && x.team ? ev.sb.ord : null, sper = (ev.sb && ev.sb.per) || [];
+  const ordL = sbo ? (()=>{ const on = k => (sper[k]||0) > 0, nm = k => x.team[k] ? x.team[k].name : '';
+    const bk = sbo.brk.filter(on), reLay = sbo.fin && sbo.finBy>=0 && !bk.includes(sbo.finBy) && sbo.fin===sbo.fld && bk.some(k=>sbo.oz[k]!==sbo.fld); // 파괴 뒤 깔린 존을 SB로 다시 까는 사람은 맨 뒤
+    const pre = x.team.map((c,k)=>k).filter(k=>on(k) && !sbo.brk.includes(k) && sbo.oz[k]===sbo.fld && !(reLay && k===sbo.finBy)), post = x.team.map((c,k)=>k).filter(k=>on(k) && !sbo.brk.includes(k) && sbo.oz[k] && sbo.oz[k]!==sbo.fld);
+    if(!bk.length || !(pre.length || post.length || reLay)) return '';
+    const grp = L => [...new Set(L.map(k=>sbo.oz[k]))].map(z=>`${esc(L.filter(k=>sbo.oz[k]===z).map(nm).join('·'))}(${esc(z)})`).join(' · ');
+    const fb = reLay ? `${esc(nm(sbo.finBy))}(SB로 ${esc(sbo.fin)} 다시)` : ''; // 파괴 뒤 깔린 존을 SB로 다시 까는 사람(플람라피스(ES) 등)
+    return ` · <b>SB 순서</b> ${[grp(pre), bk.map(k=>`${esc(nm(k))}(존 파괴 → ${esc(sbo.oz[k]||'')})`).join(' → '), grp(post), fb].filter(Boolean).join(' → ')} <span class="hint">(AF 안은 누르는 순서, 평상 턴은 속도 순)</span>`; })() : '';
   /* EX必殺技(2026-10-20): 게이지 100%에서 켠 AF가 끝날 때 누적 AF 행동이 EX 레벨 기준(⌈1200 ÷ 레벨²⌉)을 넘으면 자동 — 엔진 ev.exInfo */
   const exL = Array.isArray(ev.exInfo) && ev.exInfo.length ? ' · ' + ev.exInfo.map(q=>{ const on = q.onN || [];
     return `<b>${esc(q.name)}</b> EX必殺技: ${q.first ? (q.afg ? `처음 ${q.first}턴째 AF 뒤 → 다음 턴 끝 AF 게이지 +${q.afg}%${q.n>1 ? ` (긴 전투 ${q.n}번)` : ''}` : `처음 ${q.first}턴째 AF 뒤 ${q.dur>=99 ? '끝까지' : q.dur+'턴'}${on.length ? ` (실전 ${on[0]}~${on[on.length-1]}턴)` : ` (실전 ${T.length}턴 뒤)`} · 긴 전투 ${Math.round(100*q.f)}% 켜짐`) : '긴 전투에서도 거의 안 나감'} <span class="hint">(게이지 100%에서 켠 AF가 끝날 때 — EX 레벨은 턴마다 +1·AF 뒤 1, AF 행동 ⌈1200÷레벨²⌉회 누적${q.lv>1 ? `, 시작 Lv${q.lv}` : ''})</span>`; }).join(' · ') : '';
   /* 아군 전체 臨機応変(짭코코, 2026-10-21): 왼쪽 칸 아군의 무기로 타입이 정해짐 */
   const WTK = {slash:'참격', pierce:'찌르기', blunt:'타격', magic:'마법'};
   const adL = ev.adT && !ev.adNone ? ` · <b>${esc(ev.adT.by)}</b> 임기응변: 아군 전체 공격 타입 → <b>${esc(WTK[ev.adT.t]||ev.adT.t)}</b> <span class="hint">(${esc(ev.adT.by)} 바로 왼쪽에 ${esc((ev.adT.from||[]).join('·'))} 중 하나)</span>` : ev.adNone && x.team && x.team.some(c=>c && c.adaptAll) ? ` · <span class="hint">임기응변으로 타입을 바꾸지 않는 쪽이 나음(짭코코를 맨 왼쪽에)</span>` : '';
-  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${exL}${adL}${full}${noZ}${skL}${skpL}</div>`; }
+  return `<div class="kt">AF 켜는 턴: ${af.length ? af.join(' · ') : `실전 ${T.length}턴 안엔 안 씀`}${late}${sbT.length ? ` · 평상 턴 SB ${sbT.join('·')}` : ''}${bf}${capT}${sbF}${exL}${adL}${full}${noZ}${skL}${skpL}${ordL}</div>`; }
 /* 전투 중에 바뀌는 보스 존(엔진 ev.zLate): 단계마다 이 조합이 쓰는 존·지속 딜 */
 function zlLine(ev){ const L = ev && Array.isArray(ev.zLate) ? ev.zLate.filter(p=>!p.auto || p.from) : []; if(!L.length) return '';
   const z0 = ev.normal && ev.normal.zone ? ev.normal.zone.label : '존 없음';
