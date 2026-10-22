@@ -308,7 +308,8 @@ const FG = {
   mpatk:['mp_atk'],  // MP消費攻撃(주는 대미지 %UP): 장비의 MP 소비 공격과 같은 종류라 하나만(최댓값, 사용자 확인)
   flat:['pwr_flat','int_flat','spd_flat'], // 스탯 고정값 UP (딩 계산기 14~16행)
   combo:['combo_up'], // AF 콤보 배율 증가량 +%p(타수당, 2026-10-16)
-  charge:['charge'] // 帯電(루나틱): 자기 공격 1타마다 雷 추격(小) 1회 (2026-10-16)
+  charge:['charge'], // 帯電(루나틱): 자기 공격 1타마다 雷 추격(小) 1회 (2026-10-16)
+  hp:['hp_up'] // 최대 HP %UP(오버터프니스 계산, 2026-10-22: 스즈누이 실종의 동요 — 가창을 거는 행동에 묶음)
 };
 const ALLF = [...new Set(Object.values(FG).flat())];
 const KB0 = new Map(), kBase = k => { let b = KB0.get(k); if(b===undefined){ const i = k.indexOf(':'); b = i>0 ? k.slice(0, i) : k; KB0.set(k, b); } return b; }; // 'elem_atk:fire' → 'elem_atk' (split 반복 할당 없이, 2026-10-17 계산 속도)
@@ -627,7 +628,7 @@ function prepChar(c){
     states: Array.isArray(c.states) && c.states.length ? c.states : null, alts: Array.isArray(c.alts) && c.alts.length ? c.alts : null,
     once: Array.isArray(c.once) ? (c.once.filter(e=>e && e.atk && !e.buddy).length ? c.once.filter(e=>e && e.atk && !e.buddy) : null) : null, // 전투 중 1회·첫 사용 강공격(once.json)
     styleB: Array.isArray(c.style_bonus) && c.style_bonus.length ? c.style_bonus : null,
-    zoneVC: !!(c.zone && c.zone.vc_only), zoneBreaks: c.zone && c.zone.breaks ? c.zone.breaks : null, zoneSbForce: !!(c.zone && (c.zone.sb_force || c.zone.breaks==='sb')), /* SB 존 파괴는 SB를 쓰면 늘 일어남('미전개면 파괴'도 이미 그 존이면 같음) — 2026-10-21 9명 문구 대조 */ zoneAwAny: c.zone && c.zone.awaken_any ? c.zone.awaken_any : null,
+    zoneVC: !!(c.zone && c.zone.vc_only), zoneBreaks: c.zone && c.zone.breaks ? c.zone.breaks : null, zoneSbForce: !!(c.zone && (c.zone.sb_force || c.zone.breaks==='sb')), sbRev: !!c.sb_rev, /* SB로 아군 디버프 리버설(1턴) — 스즈누이 영장 고별의 꽃, 2026-10-22 */ /* SB 존 파괴는 SB를 쓰면 늘 일어남('미전개면 파괴'도 이미 그 존이면 같음) — 2026-10-21 9명 문구 대조 */ zoneAwAny: c.zone && c.zone.awaken_any ? c.zone.awaken_any : null,
     zone, zoneTypes, zspec, zoneAwak: !!(zone&&zone.awakened),
     breakT: (d.break||'').toLowerCase(),
     weakExpose: (d.weak_expose||'').split(/[(\s]/)[0],
@@ -1077,7 +1078,7 @@ function stateVariant(c, sts, onMask){ // 상태 목록(sts)·켜짐·대리 여
   const r1 = stateVariantB(c, sts, onMask, px, ck); mc.set(ck, r1); return r1;
 }
 function stateVariantB(c, sts, onMask, px, ck){
-  let nf = ST_NF.get(sts); if(!nf){ const sk = sts.some(s=>s.main_off||s.sb_off||s.copy||(s.pow&&+s.pow!==1)), pt = sts.some(s=>(s.party_off&&s.party_off.length)||s.party_off_x), chp = sts.some(s=>+s.chain_pow>0 && +s.chain_pow!==1);
+  let nf = ST_NF.get(sts); if(!nf){ const sk = sts.some(s=>s.main_off||s.sb_off||s.sbN_off||s.copy||(s.pow&&+s.pow!==1)), pt = sts.some(s=>(s.party_off&&s.party_off.length)||s.party_off_x), chp = sts.some(s=>+s.chain_pow>0 && +s.chain_pow!==1);
     nf = {a:['self','teishin'].concat(pt?['party']:[], chp?['main']:[]), b:['self','teishin'].concat(pt?['party']:[], sk?['main','sb','afSk','sbN']:[])}; ST_NF.set(sts, nf); }
   const F = px ? nf.a : nf.b; // 대리 스킬은 스킬 칸을 안 바꾸니 비교도 안 함
   let m1 = ST_V.get(sts); if(!m1){ m1 = new Map(); ST_V.set(sts, m1); }
@@ -1105,6 +1106,7 @@ function stateVariant0(c, sts, onMask){
       if(s.teishin_off) teishin = false;
       if(!px && s.main_off){ const mo = ({...s.main_off}), hasM = 'mcond' in mo; const mc = mo.mcond; delete mo.mcond; main = cp(main, mo); if(main && hasM){ if(mc) main.mcond = JSON.parse(JSON.stringify(mc)); else delete main.mcond; } }
       if(!px && s.sb_off){ const so = ({...s.sb_off}), hasM = 'mcond' in so; const mc = so.mcond; delete so.mcond; sb = cp(sb, so); if(sb && hasM){ if(mc) sb.mcond = JSON.parse(JSON.stringify(mc)); else delete sb.mcond; } }
+      if(!px && s.sbN_off) sbN = cp(sbN, s.sbN_off); /* sbN_off: OFF 때 바뀌는 비SB 성도 스킬 필드(스즈누이 영장 고별의 꽃 영소 10배, 2026-10-22) */
       if(s.party_off && s.party_off.length && party){ party = ({...party}); for(const q of s.party_off) party[q] = typeof party[q]==='number' ? 0 : false; }
       if(s.party_off_x && party){ party = ({...party}); for(const q in s.party_off_x){ const f = Math.max(0, +s.party_off_x[q]||0); if(typeof party[q]==='number') party[q] *= f; else if(party[q] && typeof party[q]==='object'){ const o = {}; for(const k in party[q]) o[k] = typeof party[q][k]==='number' ? party[q][k]*f : party[q][k]; party[q] = o; } } }
     } });
@@ -1278,14 +1280,16 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     const pr0 = progs[idx], pw = pr0 && (pr0.sbOK || pr0.sbAw) ? +q.pow : +(q.pow0||q.pow); dmg *= 1 + w*(pw-1); }
   let critA=0, critD = pct(me.crit_dmg), shinW = selfOn(me.shinan)?1:0;
   const FK = stat==='int'?'int_flat':stat==='spd'?'spd_flat':'pwr_flat';
-  let flatP = +me[FK]||0;
+  /* 디버프 리버설(2026-10-22, 스즈누이 SB 영장 고별의 꽃 '아군 전체 디버프 리버설(1턴)'): SB 턴과 그 AF의 SB 뒤엔 아군 스탯 고정값 DOWN(음수 *_flat)·부작용 스탯 DOWN(debuff side ally)이 같은 양의 UP으로 */
+  const revOn = S.debRev!==false && (situation==='sb' || (situation==='af' && A.postSB)) && team.some((m,k)=>m && m.sbRev && sbUse(A, progs, k)), rvF = x => revOn && x<0 ? -x : x;
+  let flatP = rvF(+me[FK]||0);
   // 루나틱<솔선(挺身)>: 처음 내구만큼 힘, 처음 정신만큼 지성(상태 효과 고정값, 딩 계산기 14·15행). 표준 장비엔 내구·정신이 없어 캐릭터 기본값(천명·스텔라 보드 포함)만
   const teBase = () => { const p0 = progs[idx]; const s0 = statsAt(c.stats, c.fateTbl, p0 ? (p0.t||0) : 120, c.stellar && p0 && (p0.sbOK || p0.sbAw) ? c.stBoard : null, p0 ? p0.lvB||0 : 0, p0 ? p0.sty : null); return s0 ? (stat==='int' ? s0.spr : s0.end) : 0; };
   let teW = c.teishin ? 1 : 0, cupA = 0;
   if(c.teishin && stat!=='spd') flatP += teBase();
   /* 오버터프니스(2026-10-21 — 테오도로스 'HP最大値50につき腕力1UP', 스즈네 '魔法オーバータフネス: 最大HPに応じて知性上昇'): over_tough {stat, per}(self 또는 party) → 그 스탯 고정값 = 최대 HP × (1 + 아군 최대 HP UP 중 최대) ÷ per.
      같은 상태라 여럿이면 가장 큰 것 하나, 파티 몫은 그 아군 고정값 항목(FK)의 켜진 비율만큼 */
-  const otHp = (() => { let hu = 0; for(const m of team){ const q = m && m.party; if(q && q.scope!=='none' && +q.hp_up>0) hu = Math.max(hu, +q.hp_up/100); } if(+me.hp_up>0) hu = Math.max(hu, +me.hp_up/100);
+  const otHp = (() => { let hu = 0; for(let j=0;j<team.length;j++){ const q = team[j] && team[j].party; if(q && q.scope!=='none' && +q.hp_up>0){ const r0 = row; row = FX&&FX[j] ? FX[j] : null; const g = Math.max(0, Math.min(1, F(j,'hp_up'))); row = r0; hu = Math.max(hu, +q.hp_up/100*g); } } if(+me.hp_up>0) hu = Math.max(hu, +me.hp_up/100); /* 아군 최대 HP UP은 그 버프 행동 유지율만큼(2026-10-22) */
     const p0 = progs[idx], s0 = statsAt(c.stats, c.fateTbl, p0 ? (p0.t||0) : 120, c.stellar && p0 && (p0.sbOK || p0.sbAw) ? c.stBoard : null, p0 ? p0.lvB||0 : 0, p0 ? p0.sty : null); return s0 && +s0.hp>0 ? +s0.hp*(1+hu) : 0; });
   let otBest = 0; const otAdd = (o, w) => { if(!o || o.stat!==stat || !(w>0)) return; const v = otHp()/Math.max(1, +o.per||50)*Math.min(1, w); if(v>otBest){ flatP += v - otBest; otBest = v; } };
   if(me.over_tough) otAdd(me.over_tough, 1);
@@ -1298,6 +1302,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const dmgS = {}; // 주는 대미지 UP: 출처 종류(prayer 기도·song 가창·other·self)마다 최댓값
   if(me.dmg_up && selfOn(me.dmg_on==null ? true : me.dmg_on)) dmgS[me.dmg_src||'self'] = pct(me.dmg_up);
   const weakD = [pct(me.weak_dmg)]; let elDn = 0;
+  let spdFl = FK==='spd_flat' ? 0 : rvF(+me.spd_flat||0); /* 속도 고정값(AF 대기 시간용, 2026-10-22: 스즈누이 실종의 동요 아군 속도 150 DOWN) — 공격 스탯이 속도면 flatP 그대로 */
   const zElem = zone && zone.kind==='elem' && zone.level>0 ? zone.types : null;
   for(let j=0;j<team.length;j++){
     const p = team[j].party; if(!p || p.scope==='none') continue;
@@ -1305,6 +1310,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     const own = j===idx;
     if(!(own && has(stat))){ const v = pct(p[stat]); sv.push(v ? v*F(j,stat) : 0); }
     if(p.spd && !(own && has('spd'))){ const v = pct(p.spd); if(v) spdv.push(stat==='spd' ? sv[sv.length-1] : v*F(j,'spd')); }
+    if(p.spd_flat && FK!=='spd_flat' && !(own && has('spd_flat'))) spdFl += rvF(+p.spd_flat||0)*F(j,'spd_flat');
     if(!(own && has('elem_atk') && !conv)){ // 바뀐 속성이면 자기 파티 버프 중 전속성·그 속성 몫만
       if(el!=='none'){
         { const v = pct(p.all_elem_atk); ev.push(v ? v*F(j,'all_elem_atk') : 0); }
@@ -1322,7 +1328,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     }
     if(p.weapon_atk && !(own && has('weapon_atk'))){ const fw=F(j,'weapon_atk'); wv.push(pct(p.weapon_atk.all)*fw, pct(p.weapon_atk[c.weapon])*fw, pct(p.weapon_atk[wt])*fw); }
     if(!(own && has('crit_rate'))){ const v = pct(p.crit_rate); if(v) critA += v*F(j,'crit_rate'); }
-    if(p[FK]) flatP += (+p[FK]||0)*F(j,FK);
+    if(p[FK]) flatP += rvF(+p[FK]||0)*F(j,FK);
     if(p.over_tough && p.over_tough.stat===stat) otAdd(p.over_tough, F(j,FK)); // 아군 오버터프니스(받는 사람 자기 최대 HP로)
     if(p.shinan) shinW = Math.max(shinW, F(j,'shinan'));
     if(p.kesshi) kessW = Math.max(kessW, F(j,'kesshi'));
@@ -1416,6 +1422,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   // 딩 계산기 기본 대미지: 스탯·장비 공격력·속성 보정·스탯 버프·방어(방어 무시면 0). 크리는 따로(일반타/크리타 나눠 25억 경감)
   const D = pr.D || {str:230, int:230, spd:220, lck:156, mp:450, atk:457, mag:457};
   const fsObj = stat==='int' ? {i:flatP} : stat==='spd' ? {s:flatP} : {p:flatP};
+  if(revOn && sideDn>0) sideDn = -sideDn; /* 디버프 리버설: 부작용 스탯 DOWN이 UP으로 */
   const diW = frac(sk.def_ignore), bh = dingHit(D, G5_OF(kind, stat), el!=='none', Math.max(-0.9, statB - sideDn), diW>=1 ? 1 : diW>0 ? defR + (1-defR)*diW : defR, fsObj); // 아군 스탯 DOWN 부작용은 버프에서 빼기
   /* 버프 적용 스탯 비례 위력(skill_cond need stat + live, 2026-10-18): 그 순간 공격 스탯(기본·장비 + 고정값) × (1 + 스탯 버프)로 충족 비율 — 셴화 ホライゾン 640%+지성(상한 2000)·베네딕트 220%+3×힘(상한 999)·키쿄 속도(상한 600).
      예전엔 기본 스탯 × (1+buff) 어림과 AF 비율(af_p) 고정이라 허수아비 AF에선 버프가 다 걸려도 30%만 셈 */
@@ -1570,7 +1577,7 @@ function attackerCore0(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   const hw = Array.isArray(sk.hit_w) && sk.hit_w.length ? (g => { const H = g.reduce((a,x)=>a+x[0],0), W = g.reduce((a,x)=>a+x[1],0); return H===Math.max(1, sk.hits||1) && W>0 ? {H, g: g.map(x=>[x[0], x[1]/W])} : null; })(sk.hit_w.map(x=>[+x[0]||0, +x[1]||0]).filter(x=>x[0]>0 && x[1]>0)) : null;
   return {cs: csOK ? sk.combo_scale : null, ca: +sk.combo_add||0, cup: cupA, perHit: pN*critX, pN, cR, p, oc:ocP, totHits, hw, links, linkHits, nT, el, elN: elOwn, wt, kind, tgt, usingSB, skill:sk.skill, rel, critR, ocP, statB, elB, wB, specB, typeR, physR, brk,
     afx: (ax => totHits+linkHits>0 ? (totHits*ax + linkHits)/(totHits+linkHits) : ax)(sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : sk.af_combo_x||1) /* afx_zone: 그 존일 때만 AF 콤보 증가량 배율(질퍼니(AS) 輝晶陣). 스킬의 AF 콤보 증가량 배율은 그 스킬 타격에만 — 연계·帯電 추격 타수는 1배(2026-10-16, 빅트 과대평가) */, hitsPerAct: totHits + linkHits, afxS: sk.afx_zone && !zoneMatch(sk.afx_zone, zone) ? 1 : (+sk.af_combo_x||1), rep, cpy: !!sk.copy, execs: Math.max(1, +sk.execs||1)*(1+rep) /* 실행 수(연속 실행·재공격 포함): AF 게이지는 실행마다 */, afSeq: Array.isArray(sk.af_seq) && sk.af_seq.length && sk.af_seq.length<=Math.max(1, +sk.execs||1) ? sk.af_seq : null /* 게이지가 차는 공격 실행(zoneAFAct) */, gq, pierce:!!pierce, pw: Math.min(1, pierceW), sizeV, mult, stat, critD, baseHits: Math.max(1, sk.hits||1),
-    bh, defR, flatP, lunaF, auraF, auraR, chW, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpAtkSk, weakSk: weakUp, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st', spdBuf: dimin(spdv, 1), sit: situation, viaAlt:null, viaSbN:false, cycMain:0, mixL:null, mix:null}; // 뒤에 붙는 칸도 처음부터(같은 모양)
+    bh, defR, flatP, lunaF, auraF, auraR, chW, kess: kessW>=0.5, shin: shinW>=0.5, dmgUp, dmgS, mpB, mpAtkSk, weakSk: weakUp, mpF: focW>0 ? mpF : 0, mpTot: mpBase*(1+mpB), relF, gearF: pr.f*(pr.gear?pr.gear.q:1), budDmg, mhW, xh, st1: tgt==='st', spdBuf: dimin(spdv, 1), spdFl: FK==='spd_flat' ? flatP : spdFl, sit: situation, viaAlt:null, viaSbN:false, cycMain:0, mixL:null, mix:null}; // 뒤에 붙는 칸도 처음부터(같은 모양)
 }
 
 /* 스킬 위력 조건(skill_cond.json): 조건이 맞을 확률로 base~mult 사이 기대 배율 */
@@ -2226,7 +2233,7 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // pl
   // 속도: 빌드 코드(장비 포함) 그대로, 아니면 기본 스탯(+장비 속도 설정). '빌드 없는 캐릭터도 249 이상'을 켜면 빌드 없는 캐릭터는 빠른 쪽
   const spdOf = i=>{ const p=progs[i]; return p && p.spd ? p.spd : 0; };
   const fromBuild = i=>{ const p=progs[i]; return !!(p && (p.spdSrc==='build'||p.spdSrc==='build-st')); };
-  const wTbl = S.afWaitTbl!==false, spd0 = team.map((c,i)=> !fromBuild(i) && S.afFastDefault ? Math.max(260, spdOf(i)) : (spdOf(i) || 200)), spdE = team.map((c,i)=>{ const co = cores[i]; return spd0[i]*(1 + (co && co.spdBuf>0 ? co.spdBuf : 0)); }); // 버프 포함 속도(모르면 200) — 첫 행동의 대기는 버프 전 속도(리캐스트는 스킬을 쓰는 순간의 속도, 위키)
+  const wTbl = S.afWaitTbl!==false, spd0 = team.map((c,i)=>{ const b = !fromBuild(i) && S.afFastDefault ? Math.max(260, spdOf(i)) : (spdOf(i) || 200), co = cores[i], fl = co && co.spdFl ? +co.spdFl : 0; return fl && S.spdFlatAF!==false ? Math.max(50, b + fl) : b; }), spdE = team.map((c,i)=>{ const co = cores[i]; return spd0[i]*(1 + (co && co.spdBuf>0 ? co.spdBuf : 0)); }); /* 속도 고정값(spdFl)은 버프 곱 전에 더함(딩 계산기 14~16행과 같은 순서) */ // 버프 포함 속도(모르면 200) — 첫 행동의 대기는 버프 전 속도(리캐스트는 스킬을 쓰는 순간의 속도, 위키)
   const rw0 = wTbl ? spd0.map(afRow) : null, rwE = wTbl ? spdE.map(afRow) : null; // 대기 표 행은 호출마다 한 번(2026-10-19 속도: 행동마다 표를 훑던 것)
   const fast = team.map((c,i)=> wTbl ? spdE[i]>=249 : (!fromBuild(i) && S.afFastDefault ? true : (spdOf(i) ? spdOf(i)>=249 : false)));
   const known = team.map((c,i)=> progs[i] && progs[i].spdSrc ? progs[i].spdSrc : null);
