@@ -3149,6 +3149,20 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     return !!(sp.base || (sp.baseReq && reqMet(sp.baseReq, team, m)) || (sp.baseSB && pr.sbOK!==false)); };
   const canFollow = (z, zb, fcI) => { if(!z || !(z.level>0) || !canRelay(z, fcI)) return false; if(z.by && fcI.some(k=>team[k].id===z.by)) return true; return z.key===zb.key ? z.level>=zb.level : (z.level>=2 && zb.level<2); };
   /* 순서 모델(위 설명): per0 = 존 z에서의 SB 값, perAt(존) = 그 존에서의 SB 값. lvAny: 극이 풀린 턴의 SB(sbPer1) — 파괴 캐릭터 존은 등급 상관없이 같은 존으로 */
+  /* SB 시전 순서 = 속도 순(2026-10-22 사용자 확인: 'SB는 엑플람이 무조건 먼저 시전' — 예전엔 순서를 맞출 수 있다고 봄, S.sbOrderSpd=false면 예전 모델).
+     빠른 사람부터: 존 파괴 캐릭터가 SB를 쓰면 그 순간 그 존으로, 그 뒤 사람은 그 존에서 SB. 파괴 캐릭터마다 SB를 쓸지(안 쓰면 0)는 고를 수 있다고 보고, 마지막에 남는 존이 z인 조합 중 큰 값 */
+  let sbSpdM = null; const sbSpd = () => { if(sbSpdM) return sbSpdM; const cs = coresFor('sb', null, false) || []; return (sbSpdM = team.map((c,i)=>{ const co = cs[i], b = (progs[i] && progs[i].spd) || 200, fl = co && co.spdFl && S.spdFlatAF!==false ? +co.spdFl : 0; return Math.max(50, b + fl)*(1 + (co && co.spdBuf>0 ? co.spdBuf : 0)); })); };
+  const sbMixSpd = (z, per0, perAt, fcI, fld, lvAny) => {
+    const B = fcI.filter(i=>{ const zb = sbFZ[i]; return !(zb.key===fld.key && (lvAny || (zb.level||0)<=(fld.level||0))); }); if(!B.length) return null;
+    const sp = sbSpd(), ordI = team.map((c,i)=>i).sort((a,b)=>(sp[b]-sp[a]) || String(team[a].id).localeCompare(String(team[b].id)));
+    const zEq = (a, b) => (a.key||'none')===(b.key||'none') && (lvAny || (a.level||0)>=(b.level||0) || !(b.level>0));
+    let best = null;
+    for(let m=0; m<(1<<B.length); m++){ const useB = B.filter((x,k)=>m & (1<<k)); let cur = fld; const per = team.map(()=>0), oz = team.map(()=>null), brk = [];
+      for(const k of ordI){ if(B.includes(k)){ if(useB.includes(k)){ const zb = sbFZ[k]; per[k] = perAt(zb)[k]||0; oz[k] = zb; cur = zb; brk.push(k); } continue; } per[k] = perAt(cur)[k]||0; oz[k] = cur; }
+      if(!zEq(cur, z)) continue;
+      const v = per.reduce((x,y)=>x+y,0); if(!best || v>best.v+1e-9) best = {v, per, skip: B.filter(i=>!useB.includes(i)), ord: brk.length ? {fld: fld.label || '존 없음', brk, oz: oz.map(q=>q ? q.label : null), fin: cur.label || null, finBy: cur.by ? team.findIndex(mm=>mm && mm.id===cur.by) : -1, spd: true} : null}; }
+    if(best) return best;
+    return {v: 0, per: team.map(()=>0), skip: B.slice(), ord: null, none: true}; }; /* 이 순서로는 z가 마지막에 남을 수 없음 → 후보에서 사실상 빠짐 */
   const sbMixP = (z, per0, perAt, fcI, fld, lvAny) => { if(!fcI.length || !z) return null; let per = per0.slice(), used = false; const skip = [], oz = team.map(()=>z), brk = [];
     /* oz: 멤버마다 SB를 쓴 존(화면 'SB 순서' — 깔린 존에서 먼저 / 파괴 캐릭터 / 바뀐 존에서 나중, 2026-10-21) */
     for(const i of fcI){ const zb = sbFZ[i]; if(zb.key===fld.key && (lvAny || (zb.level||0)<=(fld.level||0))) continue; // 이미 그 존이면 파괴해도 같음
@@ -3194,7 +3208,8 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     const fcI = sit==='sb' ? fcOf() : [];
     const fld = sbFld && sbFld.level>0 ? sbFld : NOZ;
     const zPer = {}; const perAt = zz => { const k = (zz.key||'none')+'|'+(zz.level||0)+'|'+(zz.by||''); if(zPer[k]) return zPer[k]; const cz = zdep ? coresFor(s2, zz, useSim) : shared; return (zPer[k] = sumZ(cz, zz, null, w).per); };
-    const sbMix = (z, r) => sbMixP(z, r.per, perAt, fcI, fld) || r;
+    const spdOK = z => S.sbOrderSpd!==false && fcI.length && ((z.key||'none')===(fld.key||'none') || fcI.some(k=>sbFZ[k] && sbFZ[k].key===z.key)); /* 깔린 존이나 파괴 캐릭터 존이면 속도 순, 그 밖(남이 SB 극으로 덮는 존 등)은 예전 모델 */
+    const sbMix = (z, r) => (spdOK(z) ? sbMixSpd(z, r.per, perAt, fcI, fld) : null) || sbMixP(z, r.per, perAt, fcI, fld) || r;
     for(const z of zSort(zs)){ // 같은 값이면 존 등급·이름·까는 사람 id 순(2026-10-16: 같은 極・風王陣을 멜피피아(AS)·네코코(ES)가 둘 다 펴면 넣은 순서로 갈리던 문제)
       const cores = zdep ? coresFor(s2, z, useSim) : shared;
       const r = sbMix(z, sumZ(cores, z, null, w)), x = withX ? extra(z, cores) : null, v = r.v + (x ? x.v : 0);
@@ -3470,7 +3485,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const extra = (res.normal.chain?res.normal.chain.total:0) + (res.normal.counter?res.normal.counter.total:0) + (res.normal.turnEnd?res.normal.turnEnd.total:0);
   const normal2 = res.normal.total, normal1 = nz && nz.level>=2 ? sumZ(zdep ? coresFor('normal', nzL1, simUse) : res.normal.cores, nzL1, null, wN).v + extra : normal2;
   /* 극이 풀린 턴의 SB 값도 강제 파괴 순서 모델로(2026-10-21 점검: 파괴 캐릭터가 SB 안 쓰는 계획인데 그 값을 다시 넣던 것) — 파괴 캐릭터 존은 SB 때 스스로 다시 깔므로 등급 그대로 */
-  const mix1 = (cores, z) => { const p = sumZ(cores, z, null, null).per, fc = fcOf(); if(!fc.length) return p; const m = sbMixP(z, p, zz => sumZ(cores, zz, null, null).per, fc, sbFld && sbFld.level>0 ? sbFld : NOZ, true); return m ? m.per : p; };
+  const mix1 = (cores, z) => { const p = sumZ(cores, z, null, null).per, fc = fcOf(); if(!fc.length) return p; const fz = sbFld && sbFld.level>0 ? sbFld : NOZ, pa = zz => sumZ(cores, zz, null, null).per, ms = S.sbOrderSpd!==false && ((z.key||'none')===(fz.key||'none') || fc.some(k=>sbFZ[k] && sbFZ[k].key===z.key)) ? sbMixSpd(z, p, pa, fc, fz, true) : null, m = (ms && !ms.none ? ms : null) || sbMixP(z, p, pa, fc, fz, true); return m ? m.per : p; };
   const sbSelf = z => z && fcOf().some(k=>sbFZ[k] && sbFZ[k].key===z.key && sbFZ[k].level>=2); // 파괴 캐릭터가 SB로 극까지 까는 존이면 극이 풀린 턴에도 극
   const sbz1 = sbz && sbz.level>=2 && !sbSelf(sbz) ? ({...sbz, ...{level:1}}) : sbz, sbPer1 = sbz && sbz.level>=2 && !sbSelf(sbz) ? mix1(res.sb.cores, sbz1) : res.sb.per;
   const sb3 = R3.sb, sbz3 = sb3.zone, sbz31 = sbz3 && sbz3.level>=2 && !sbSelf(sbz3) ? ({...sbz3, ...{level:1}}) : sbz3, sbPer31 = sbz3 && sbz3.level>=2 && !sbSelf(sbz3) ? mix1(sb3.cores, sbz31) : sb3.per;
