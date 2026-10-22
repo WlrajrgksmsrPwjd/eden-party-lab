@@ -486,5 +486,24 @@
   "buff_how": "skill",
   "mp_max": null,
   "manifest": 1
+ },
+ "suzune": {
+  "src": "https://altema.jp/anaden/chara/1242",
+  "personality": [
+   "杖",
+   "陰"
+  ],
+  "mp": {
+   "main": 17,
+   "sb": 102,
+   "buff": 80
+  },
+  "turns": {
+   "buff": 3,
+   "debuff": 3
+  },
+  "buff_how": "skill",
+  "mp_max": null,
+  "manifest": 0
  }
 }

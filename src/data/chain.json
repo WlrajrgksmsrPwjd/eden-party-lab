@@ -623,5 +623,32 @@
    "src": "딩 DB",
    "note": "체인 전용 스킬 솔리대리티: 적 전체 베기 극대 15배(3300%), 턴 최대 1회"
   }
+ ],
+ "suzune": [
+  {
+   "name": "連葬",
+   "on": {
+    "by": "other",
+    "act": "attack",
+    "kind": "mag"
+   },
+   "max": 4,
+   "atk": {
+    "target": "aoe",
+    "kind": "mag",
+    "stat": "int",
+    "element": "shade",
+    "weapon_type": "magic",
+    "size": "xl",
+    "mult": 5,
+    "hits": 1
+   },
+   "effect": "아군 전체 HP 20% 회복",
+   "when": {},
+   "af": false,
+   "src": "https://altema.jp/anaden/chara/1242",
+   "jp": "【チェインアビリティ：連葬】発動条件：自身以外の味方の魔法攻撃スキル使用時 ターン中の最大発動回数 4回 / 敵全体に陰属性の魔法攻撃(特大 5倍) +味方全体にHP20%回復 / 影咲状態時は威力2倍",
+   "note": "히트 수 표기 없음(1로 둠). 影咲 2배는 state.json 影咲 chain_pow. 마법 요격(알마(AS) リフレクトバレット 등)도 마법 공격이라 발동(벨벳(AS) 요격 체인과 같은 판단)"
+  }
  ]
 }

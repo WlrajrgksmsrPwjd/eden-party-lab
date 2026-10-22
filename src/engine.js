@@ -620,7 +620,7 @@ function prepChar(c){
     // 부활·전투불능 방지 등급(data/revive.json g, 0~3). 조사 밖이면 예전 true/false → 1/0
     sup: ({...sp, ...{revive: c.revive && c.revive.g!=null ? +c.revive.g : (sp.revive ? 1 : 0), reviveFx: (c.revive && c.revive.fx) || null}}),
     supTo: c.support_to || null, supSrc: c.support_src || null, play: c.play_kr || '',
-    selfStk: c.self_stk || null, stk: prepStk(c.stacks, c.af_t), poSt: Array.isArray(c.states) && c.states.some(q=>q && Array.isArray(q.party_off) && q.party_off.length) ? c.states.slice(0,3).filter(q=>q && Array.isArray(q.party_off) && q.party_off.length) : null,
+    selfStk: c.self_stk || null, stk: prepStk(c.stacks, c.af_t), poSt: Array.isArray(c.states) && c.states.some(q=>q && ((Array.isArray(q.party_off) && q.party_off.length) || (q.party_off_x && typeof q.party_off_x==='object'))) ? c.states.slice(0,3).filter(q=>q && ((Array.isArray(q.party_off) && q.party_off.length) || (q.party_off_x && typeof q.party_off_x==='object'))) : null,
     stkAny: /"(stack|cnt)"/.test(JSON.stringify([c.self_stk||null, c.main&&c.main.mcond||null, c.sb&&c.sb.mcond||null, c.af_skill&&c.af_skill.mcond||null, c.sb_normal&&c.sb_normal.mcond||null, c.party_rules||null, c.debuff_rules||null]))
       || (Array.isArray(c.states) && c.states.some(q=>q && (+q.from>1 || (q.up==null && (+q.start>0 || +q.dur>0))))), // 기존 축적 조건(평상 턴 H턴 평균)·구간 상태 — 누적 예열에서 턴마다 다시
     stkRule: /"(stack|cnt)"/.test(JSON.stringify([c.party_rules||null, c.debuff_rules||null])), turnEnd: Array.isArray(c.turn_end) && c.turn_end.length ? c.turn_end : null,
@@ -1077,8 +1077,8 @@ function stateVariant(c, sts, onMask){ // 상태 목록(sts)·켜짐·대리 여
   const r1 = stateVariantB(c, sts, onMask, px, ck); mc.set(ck, r1); return r1;
 }
 function stateVariantB(c, sts, onMask, px, ck){
-  let nf = ST_NF.get(sts); if(!nf){ const sk = sts.some(s=>s.main_off||s.sb_off||s.copy||(s.pow&&+s.pow!==1)), pt = sts.some(s=>s.party_off&&s.party_off.length);
-    nf = {a:['self','teishin'].concat(pt?['party']:[]), b:['self','teishin'].concat(pt?['party']:[], sk?['main','sb','afSk','sbN']:[])}; ST_NF.set(sts, nf); }
+  let nf = ST_NF.get(sts); if(!nf){ const sk = sts.some(s=>s.main_off||s.sb_off||s.copy||(s.pow&&+s.pow!==1)), pt = sts.some(s=>(s.party_off&&s.party_off.length)||s.party_off_x), chp = sts.some(s=>+s.chain_pow>0 && +s.chain_pow!==1);
+    nf = {a:['self','teishin'].concat(pt?['party']:[], chp?['main']:[]), b:['self','teishin'].concat(pt?['party']:[], sk?['main','sb','afSk','sbN']:[])}; ST_NF.set(sts, nf); }
   const F = px ? nf.a : nf.b; // 대리 스킬은 스킬 칸을 안 바꾸니 비교도 안 함
   let m1 = ST_V.get(sts); if(!m1){ m1 = new Map(); ST_V.set(sts, m1); }
   let L = m1.get(ck); if(!L){ L = []; m1.set(ck, L); }
@@ -1097,6 +1097,7 @@ function stateVariant0(c, sts, onMask){
           if(s.copy==='x2'){ o.execs = Math.max(1, +sk.execs||1)*2; o.hits = Math.max(1, +sk.hits||1)*2; if(Array.isArray(sk.af_seq)) o.af_seq = sk.af_seq.concat(sk.af_seq); } else if(s.copy==='ex2'){ o.execs = Math.max(1, +sk.execs||1)*2; if(Array.isArray(sk.af_seq)) o.af_seq = sk.af_seq.concat(sk.af_seq); }
           o.hit_w = null; return o; };
         if(to.includes('main')) main = f(main); if(to.includes('sb_normal')) sbN = f(sbN); if(to.includes('af_skill')) afSk = f(afSk); }
+      if(px && c._chain && +s.chain_pow>0 && +s.chain_pow!==1 && main) main = ({...main, ...{mult:(main.mult||1)*s.chain_pow}}); /* chain_pow: 상태 중 체인 어빌리티 위력 배율(스즈네 影咲 連葬 2배, 2026-10-22) */
       if(!px && s.pow && +s.pow!==1){ const to = s.pow_to || ['main','sb','af_skill','sb_normal'], mul = sk => sk ? ({...sk, ...{mult:(sk.mult||1)*s.pow, _stPow:(+sk._stPow||1)*s.pow}}) : sk;
         if(to.includes('main')) main = mul(main); if(to.includes('sb')) sb = mul(sb); if(to.includes('af_skill')) afSk = mul(afSk); if(to.includes('sb_normal')) sbN = mul(sbN); }
     } else {
@@ -1105,6 +1106,7 @@ function stateVariant0(c, sts, onMask){
       if(!px && s.main_off){ const mo = ({...s.main_off}), hasM = 'mcond' in mo; const mc = mo.mcond; delete mo.mcond; main = cp(main, mo); if(main && hasM){ if(mc) main.mcond = JSON.parse(JSON.stringify(mc)); else delete main.mcond; } }
       if(!px && s.sb_off){ const so = ({...s.sb_off}), hasM = 'mcond' in so; const mc = so.mcond; delete so.mcond; sb = cp(sb, so); if(sb && hasM){ if(mc) sb.mcond = JSON.parse(JSON.stringify(mc)); else delete sb.mcond; } }
       if(s.party_off && s.party_off.length && party){ party = ({...party}); for(const q of s.party_off) party[q] = typeof party[q]==='number' ? 0 : false; }
+      if(s.party_off_x && party){ party = ({...party}); for(const q in s.party_off_x){ const f = Math.max(0, +s.party_off_x[q]||0); if(typeof party[q]==='number') party[q] *= f; else if(party[q] && typeof party[q]==='object'){ const o = {}; for(const k in party[q]) o[k] = typeof party[q][k]==='number' ? party[q][k]*f : party[q][k]; party[q] = o; } } }
     } });
   return {self, main, sb, afSk, sbN, teishin, party}; // 바뀌는 칸만(stateVariantB가 캐릭터 객체에 덮어씀 — 큰 객체 복사 한 번 줄임)
 }
@@ -1135,7 +1137,8 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
   if(A.echg && A.ecU && !A._ecFix){ const r = ecGate(team, idx, progs, A, enemy, S, situation, ctx, FX, zone); if(r!==undefined) return r; }
   // 상태가 꺼지면 같이 꺼지는 파티 버프(state party_off, 2026-10-18 점검: 예전엔 그 캐릭터 자기 공격에서만 꺼지고 다른 아군이 받는 몫은 늘 켜짐) → 다른 아군 계산에선 상태 가동률만큼
   if(team.some((m,j)=>j!==idx && m && m.poSt && !m._poX)){ const t2 = team.map((m,j)=>{ if(j===idx || !m || !m.poSt || m._poX) return m; let p = m.party;
-      for(const st of m.poSt){ const u = stUp(st, situation, A, m, j, team, zone); if(u>=0.999) continue; p = ({...p}); for(const q of st.party_off){ if(typeof p[q]==='number') p[q] *= u; else if(p[q] && typeof p[q]==='object') p[q] = u>=0.5 ? p[q] : false; else if(p[q]) p[q] = u>=0.5; } }
+      for(const st of m.poSt){ const u = stUp(st, situation, A, m, j, team, zone); if(u>=0.999) continue; p = ({...p}); for(const q of st.party_off||[]){ if(typeof p[q]==='number') p[q] *= u; else if(p[q] && typeof p[q]==='object') p[q] = u>=0.5 ? p[q] : false; else if(p[q]) p[q] = u>=0.5; }
+        if(st.party_off_x) for(const q in st.party_off_x){ const f = u + (1-u)*Math.max(0, +st.party_off_x[q]||0); if(typeof p[q]==='number') p[q] *= f; else if(p[q] && typeof p[q]==='object'){ const o = {}; for(const k in p[q]) o[k] = typeof p[q][k]==='number' ? p[q][k]*f : p[q][k]; p[q] = o; } } } /* party_off_x {키: 배율}: 상태가 꺼지면 그 배율(스즈네 影咲 — 幻影冥加 지성·속도·지팡이 100 → 50, 가창 마법 대미지 120 → 30, 2026-10-22) */
       return ({...m, ...{party:p, _poX:true}}); });
     return attackerCore(t2, idx, progs, A, enemy, S, situation, ctx, FX, zone); }
   const c = team[idx];

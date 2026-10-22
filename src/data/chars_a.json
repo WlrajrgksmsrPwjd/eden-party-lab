@@ -585,5 +585,33 @@
   "sb_normal": {"skill": "青の羅針", "target": "aoe", "kind": "mag", "stat": "int", "element": "fire", "weapon_type": "magic", "size": "xxl", "mult": 4, "hits": 5, "execs": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "mcond": {"base": 1, "need": [{"other": "행운 600(행운 비례 최대 4배)"}]}, "condition": "[성도 스킬 일반 사용, 알테마 대조 2026-10-15] 時の予言者가 아니면 공격 전 진입(3턴), 자신 魔法クリティカル率 100%(5회 행동)+정신통일(3턴) 후 전체 火 魔 극대 5타(배율 표기 없음=1) × 時の予言者 2배 × 행운 최대 4배 = 8. 20배·極・烈火陣·버프 해제·마법 오버크리는 SB 한정"},
   "support_src": {"heal": "レゾンクルール", "dmg_cut": "ヴァリアブルチャント", "cleanse": "エタンセルシャリオ(緑カード)", "debuff_guard": "オンディーヌの正位置", "af_gauge": "オンディーヌの正位置"},
   "play_kr": "불 지팡이 버퍼 겸 행운 의존 딜러로, 스텔라 보드 강화 시 전열 턴 시작마다 時の予言者(스킬 위력 2배·지성/속도/행운 +100)에 들어가 レゾンクルール(아군 완력·지성 +50% 최대 3중첩, HP 25%+치유)를 자동으로 겁니다. 주력 アポーズリュンヌ(불 참격+마법 특대, 행운 600에서 4배, AF 콤보 증가량 2배)로 딜하며 적 불·마법 내성을 최대 −120%까지 깎고, 매 턴 뽑는 아스트랄 카드 색에 따라 エタンセルシャリオ가 물리/전속성 내성 −50%나 회복을 붙입니다. 행운을 키울수록 강해지고 카드는 무작위라는 점에 주의하세요."
+},
+{
+  "id": "suzune",
+  "name_kr": "스즈네",
+  "alias_kr": ["스즈누이", "스즈네이"],
+  "name_jp": "スズネー",
+  "style": "NS",
+  "element": ["shade"],
+  "weapon": "staff",
+  "align": "shadow",
+  "stellar": true,
+  "release_jp": "2026-10",
+  "tier": "",
+  "score": 0,
+  "roles": ["support", "healer", "zone", "debuffer"],
+  "main": {"skill": "睡蓮華", "target": "aoe", "kind": "mag", "stat": "int", "element": "shade", "weapon_type": "magic", "mult": 1, "size": "s", "hits": 1, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "적 전체 陰 마법 小 + 수면. 影咲이면 스킬 위력 1.2배(state pow)"},
+  "sb": {"skill": "影葬・別花", "target": "aoe", "kind": "mag", "stat": "int", "element": "shade", "weapon_type": "magic", "mult": 40, "size": "xxl", "hits": 3, "repeat": 0, "crit_sure": false, "def_ignore": false, "barrier_pierce": false, "af_combo_x": 1, "condition": "적 전체 陰 마법 극대 3회 — 影咲이면 40배(아니면 배율 표기 없음 → 1배, state sb_off). 幻魔陣이 아니면 존 파괴 후 極・幻魔陣 + 宿縁 20. 적 완력·지성 30%·속도·정신·마법 내성 50% DOWN(3턴)·페인(영구), 아군 디버프 리버설(1턴)"},
+  "self_buff": {"pwr": 0, "int": 100, "spd": 100, "elem_atk": 0, "weapon_atk": 100, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 100, "multihit": false, "over_tough": {"stat": "int", "per": 50}},
+  "party_buff": {"scope": "all", "restrict": "환영명가: 지성·속도 50%·지팡이 장비자 대미지 50%·정신통일·마법 오버터프니스(3턴, 영소면 버프 2배). 카미카쿠시의 동요(가창 2턴): HP 최대 +70%·MP 최대 +40%·마법 대미지 +30%(영소면 +120%)", "pwr": 0, "int": 100, "spd": 100, "all_elem_atk": 0, "elem_atk": {}, "weapon_atk": {"staff": 100}, "crit_rate": 0, "crit_dmg": 0, "over_crit": false, "singular_focus": false, "mental_focus": true, "overthrow": false, "eagle_eyes": false, "weak_dmg": 100, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false, "dmg_up": 120, "dmg_src": "song", "hp_up": 70, "mp_up": 40, "over_tough": {"stat": "int", "per": 50}},
+  "debuff": {"pwr": 30, "int": 30, "spd": 50, "spr": 50, "all_elem_res": 0, "elem_res": {}, "phys_res": 0, "mag_res": 50, "weapon_res": {}, "break": "", "weak_expose": "magic", "pain_poison": true, "weak_expose_up": {"n": 0.3, "af": 0, "real": 0}},
+  "zone": {"type": "magic", "awakened": true, "condition": "전투 시작 시 極・幻魔陣 자동 전개(강화 추가 어빌리티)+宿縁 50. SB 시 幻魔陣이 아니면 존 파괴 후 極・幻魔陣 전개", "breaks": "sb", "sb_force": true},
+  "support": {"heal": 3, "barrier": 1, "dmg_cut": 3, "cleanse": 2, "status_immune": 0, "debuff_guard": 2, "knockback_immune": 1, "guard": 0, "taunt": 0, "mp_recover": 2, "af_gauge": 0, "revive": false},
+  "support_to": {"barrier": {"weap": ["staff"]}, "knockback_immune": {"weap": ["staff"]}},
+  "support_src": {"heal": "癒法呪 / 博愛ノ抱擁 / 連葬", "barrier": "護法呪", "dmg_cut": "神隠しのわらべうた", "cleanse": "癒法呪", "debuff_guard": "影葬・別花(デバフリバーサル)", "knockback_immune": "護法呪", "mp_recover": "博愛ノ抱擁"},
+  "req": "影咲(宿業 합계 10 → 影送り), 아군 마법 공격(連葬)",
+  "tags": ["singer"],
+  "play_kr": "가창·회복·버프로 받치고 체인 어빌리티 연장(連葬)으로 딜하는 음(陰) 마법 서포터예요. 다른 아군이 마법 공격 스킬을 쓸 때마다 적 전체 음 마법 특대 5배와 아군 HP 20% 회복이 턴당 최대 4번 나가니, 마법 아군 셋에 요격(알마(AS) 등)을 더하면 4번을 다 채울 수 있어요. 박애의 포옹으로 숙업(宿業)을 전열 합계 10까지 모으면 통상 공격이 그림자 배웅(약점 간파(마)·약점 대미지 UP 3턴)으로 바뀌고, 그걸 쓰면 영소(影咲, 영구) 상태가 되어 연장 2배·SB 40배·버프 2배가 됩니다. 개전 극·환마진이 자동이고(이때만 숙연 50), SB는 환마진이 아니면 존을 깨고 극·환마진을 펴니 다른 존을 쓰는 파티라면 SB 순서에 주의하세요.",
+  "note_kr": "2026-10-22 출시(알테마 chara/1242). 기본 스탯·숙연(宿縁) 1개당 마법 대미지·그림자 배웅 약점 대미지 양·정신통일 양은 미공개라 비슷한 지팡이 마법사·표준값으로 가정(숙연은 아직 계산에 없음). 영소는 박애의 포옹 3번(전열 4명 × 숙업 1) 뒤 4턴째 그림자 배웅으로 들어간다고 보고 5턴째부터. 고별의 포옹(결사·솔선·심안 1턴, 적아군 완력·지성 −150)은 미반영."
 }
 ]
