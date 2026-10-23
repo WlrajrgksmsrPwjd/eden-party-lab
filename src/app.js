@@ -42,7 +42,11 @@ const bossSub = b => { const c = String(b.content||''), k = bossTop(b);
   if(k==='kaisei') return KAISEI_SUB(b);
   if(k==='kengen') return /真・/.test(c) || /^shin_/.test(b.id) ? '진·현현' : '현현';
   if(k==='ad') return /カイロス/.test(c) ? '시층 관측선 카이로스' : /封域/.test(c) ? '봉역' : '베리 하드';
+  if(k==='shoka') return b.shoka_part || '';
   return ''; };
+/* 성영의 서가 소분류(2026-10-23, 알테마 星詠みの書架 목록 순): 메인 스토리 부 → 외전 → 협주·군상·동료 → 외전(外典) → 호걸 */
+const SHOKA_PARTS = ['메인 1부','메인 1.5부','메인 2부 전편','메인 2부 중편','메인 2부 후편','메인 3부 전편','외전','협주','군상','동료','외전(外典)','호걸'];
+const subSort = (x, y) => { const a = SHOKA_PARTS.indexOf(x), b = SHOKA_PARTS.indexOf(y); return a>=0 && b>=0 ? a-b : a>=0 ? -1 : b>=0 ? 1 : x.localeCompare(y, 'ko', {numeric:true}); };
 const BOSS_CAT_KR2 = b => [Object.fromEntries(BOSS_TOP)[bossTop(b)], bossSub(b)].filter(Boolean).join(' · ') + (bossCat(b)==='gaishi_h' ? ' (히든)' : '');
 const SHOKA_TL = 5; // 성영의 서가 챌린지 턴 제한(사용자 2026-10-18: '서가 챌린지는 5턴 — 5턴 내 최대 딜과 안정 클리어로 구분')
 const shokaChal = b => !!b && bossCat(b)==='shoka' && !/_stella$/.test(b.id) && b.diff!=='stella'; // 서가 챌린지(점수전) — 스텔라 난이도로 넣은 보스는 처치형
@@ -824,7 +828,7 @@ function renderPlanControls(){
     const cs = $('#bossCatSel'), ss = $('#bossSubSel'), all0 = BOSSES.filter(b=>!b.kesshitsu), cK = P.bossCat||'', sK = P.bossSub||'';
     if(cs && cs.dataset.k!==cK){ cs.dataset.k = cK; const cnt = {}; for(const b of all0){ const k = bossTop(b); cnt[k] = (cnt[k]||0)+1; }
       cs.innerHTML = `<option value="">전체 분류 (${all0.length})</option>` + BOSS_TOP.filter(([k])=>cnt[k]).map(([k,v])=>`<option value="${k}">${esc(v)} (${cnt[k]})</option>`).join(''); cs.value = cK; }
-    const subs = cK ? [...new Set(all0.filter(b=>bossTop(b)===cK).map(bossSub).filter(Boolean))].sort((x,y)=>x.localeCompare(y, 'ko', {numeric:true})) : [];
+    const subs = cK ? [...new Set(all0.filter(b=>bossTop(b)===cK).map(bossSub).filter(Boolean))].sort(subSort) : [];
     if(ss){ ss.hidden = subs.length<2; const sk2 = cK+'|'+sK; if(ss.dataset.k!==sk2){ ss.dataset.k = sk2; ss.innerHTML = `<option value="">전체</option>` + subs.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join(''); ss.value = subs.includes(sK) ? sK : ''; } }
     const q = normBoss($('#planBossQ').value), L = all0.filter(b=>b.id===P.bossId || ((!cK || bossTop(b)===cK) && (!sK || !subs.includes(sK) || bossSub(b)===sK) && (!q || bossHay(b).includes(q))));
     const key = q+'|'+(P.bossId||'')+'|'+cK+'|'+sK;
@@ -1386,7 +1390,7 @@ function cardHtml(x, key, o){
       <div class="setup" data-for="${key}" hidden></div>
       <div class="order hint">왼쪽부터 이 순서로 전방에 · 이름을 누르면 추천 세팅${shared?'':` · 후열: ${x.reserves.length?x.reserves.map(c=>`<b>${esc(c.name)}</b>${x.fixedBack&&x.fixedBack.has(c.id)?' <span class="fixed">고정</span>':''}`).join(', '):'—'}`}</div>
       ${keyMetrics(x, o.mode, ref)}
-      ${ev.score ? `<div class="kt">5턴 점수 <b>${scoreTxt(ev.score.total)}</b> <span class="hint">(${ev.score.bonus!=null ? `피해 ${fmtN(ev.score.dmg)} × 보너스 ${Math.round(ev.score.bonus).toLocaleString()}${ev.score.comp ? `(편성 1000 포함${compBack(x, boss)})` : ' — 편성 보너스 없음'}` : `피해 ${fmtN(ev.score.dmg)}, 보너스 자료 없음`} · AF 1회 9.99억까지 · 실제 피해 ${fmtN(ev.bsim.total)})</span>${ev.score.bonus!=null && ev.score.vI ? ` <span class="hint">행동 보너스: ${x.team.map((c,i)=>`${esc(c.name)} +${ev.score.vI[i]||0}`).join(' · ')}</span>` : ''}${+((x.kt||{}).hg)>0 && +x.kt.hg<0.8 ? ` <span class="warn">타수 기믹으로 피해 ×${x.kt.hg} — 다단·행동 수 부족</span>` : ''}</div>` : x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(${x.kt.bars ? `HP ${x.kt.bars}줄 — 목숨·전회복·스토퍼를 넣어` : '보스 HP 1.3배 기준'}, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}${+x.kt.hg>0 && +x.kt.hg<0.8 ? ` <span class="warn">타수 기믹으로 피해 ×${x.kt.hg} — 다단·행동 수 부족</span>` : ''}</div>` : ''}${zlLine(ev)}${afTimingLine(x, o)}${singLine(x)}
+      ${ev.score ? `<div class="kt">5턴 점수 <b>${scoreTxt(ev.score.total)}</b> <span class="hint">(${ev.score.bonus!=null ? `피해 ${fmtN(ev.score.dmg)} × 보너스 ${Math.round(ev.score.bonus).toLocaleString()}${ev.score.comp ? `(편성 1000 포함${compBack(x, boss)})` : ' — 편성 보너스 없음'}` : `피해 ${fmtN(ev.score.dmg)}, 보너스 자료 없음`} · AF 1회 9.99억까지 · 실제 피해 ${fmtN(ev.bsim.total)})</span>${ev.score.bonus!=null && ev.score.vI ? ` <span class="hint">행동 보너스: ${x.team.map((c,i)=>`${esc(c.name)} +${ev.score.vI[i]||0}`).join(' · ')}</span>` : ''}${boss && boss.score_bonus && +boss.score_bonus.top>0 ? ` <span class="${ev.score.total >= +boss.score_bonus.top ? 'hint' : 'warn'}">최고 보상 라인 ${scoreTxt(+boss.score_bonus.top)}의 약 ${Math.round(100*ev.score.total/(+boss.score_bonus.top))}%(어림)</span>` : ''}${+((x.kt||{}).hg)>0 && +x.kt.hg<0.8 ? ` <span class="warn">타수 기믹으로 피해 ×${x.kt.hg} — 다단·행동 수 부족</span>` : ''}</div>` : x.kt ? `<div class="kt">예상 처치 <b>${x.kt.t>=99 ? '99턴 이상' : x.kt.t+'턴'}</b> <span class="hint">(${x.kt.bars ? `HP ${x.kt.bars}줄 — 목숨·전회복·스토퍼를 넣어` : '보스 HP 1.3배 기준'}, 넉넉히)</span>${o.pledge && +o.pledge.turns>0 && x.kt.t > +o.pledge.turns ? ` <span class="warn">서약 ${esc(o.pledge.turns)}턴 안에 못 깰 수 있음</span>` : ''}${+x.kt.hg>0 && +x.kt.hg<0.8 ? ` <span class="warn">타수 기믹으로 피해 ×${x.kt.hg} — 다단·행동 수 부족</span>` : ''}</div>` : ''}${zlLine(ev)}${afTimingLine(x, o)}${singLine(x)}
       ${warns.length?`<div class="warns">${wHtml(wShow)}${wMore>0?`<span class="warn more">외 ${wMore}개 (자세히 보기)</span>`:''}</div>`:''}
       <details class="why"><summary>자세히 보기 · 턴별 화력${showDummy(o.mode)?' · 최고점':''}</summary>
         <div class="flux">${alDot('light')} 천 ${ev.light} · ${alDot('shadow')} 명 ${ev.shadow} → ${ev.flux==='light'?'천의 흐름':ev.flux==='shadow'?'명의 흐름':'천명 동수'} · 천명치 합 <span class="num">${tSum}</span>${sbz&&sbz.how&&sbz.level?` · 존 ${esc(sbz.how)}`:''}</div>
@@ -2563,7 +2567,7 @@ let curBoss = null;
 function renderBossList(){
   { const sel = $('#bossFilter'); if(sel && sel.options.length<=1){ const cnt = {}; for(const b of BOSSES){ const k = bossTop(b); cnt[k] = (cnt[k]||0)+1; } sel.innerHTML = '<option value="">모든 콘텐츠</option>' + BOSS_TOP.filter(([k])=>cnt[k]).map(([k,v])=>`<option value="${k}">${esc(v)} (${cnt[k]})</option>`).join(''); } }
   const f=$('#bossFilter').value, q=normBoss($('#bossQ').value), ord = Object.fromEntries(BOSS_TOP.map(([k],i)=>[k,i]));
-  const list=BOSSES.filter(b=>(!f||bossTop(b)===f) && (!q || bossHay(b).includes(q))).sort((a,b)=>(ord[bossTop(a)]-ord[bossTop(b)]) || bossSub(a).localeCompare(bossSub(b), 'ko', {numeric:true})); // 대분류 → 소분류 순(2026-10-18)
+  const list=BOSSES.filter(b=>(!f||bossTop(b)===f) && (!q || bossHay(b).includes(q))).sort((a,b)=>(ord[bossTop(a)]-ord[bossTop(b)]) || subSort(bossSub(a), bossSub(b))); // 대분류 → 소분류 순(2026-10-18)
   $('#bossList').innerHTML=list.map(b=>`<button type="button" class="bossitem" data-boss="${esc(b.id)}" aria-current="${curBoss===b.id}"><div class="bn">${esc(b.name_kr)}</div><div class="bc">${esc(BOSS_CAT_KR2(b))} · 약점 ${b.weak.length?b.weak.map(t=>E.ELEM_KR[t]||E.WT_KR[t]).join('·'):'없음'}</div></button>`).join('') || '<div class="hint">일치하는 보스가 없습니다.</div>';
   if(!curBoss && list.length){ curBoss=list[0].id; renderBossList(); return; }
   renderBossDetail();
@@ -2611,7 +2615,11 @@ function hpModelHtml(b){ const h = b.hp_model; if(!h || !(+h.bars>1 || h.reset |
 /* 서가 챌린지 점수 규칙(2026-10-19, 사용자·알테마 星詠みの書架): 5턴 동안 준 피해 + 편성·행동 보너스, AF 중 준 피해는 한 번에 999,999,999까지만 */
 function scoreRuleHtml(b){ if(!shokaChal(b)) return ''; const sb = b.score_bonus, pk = p => (E.PERS_KR && E.PERS_KR[p]) || p;
   const pers = sb && sb.pers ? Object.entries(sb.pers).sort((x,y)=>y[1]-x[1]).map(([p,v])=>`<span class="need">${esc(pk(p))} +${v}</span>`).join(' ') : '';
-  return `<div class="bsneeds"><span class="bsl">점수</span><span class="hint">챌린지는 5턴 점수 = 피해 × 보너스 ÷ 10만. AF 중 피해는 한 번에 999,999,999(약 10억)까지만. 보너스 = 행동 보너스(지정 퍼스널리티 캐릭터가 AF 아닌 턴마다, 피해 없는 행동은 1.5배) + AF 1회 50 + 편성 1000(파티 전원 지정 퍼스널리티)${sb && sb.top ? ` · 최고 보상 ${Number(sb.top).toLocaleString()}점` : ''}</span></div>${pers ? `<div class="bsneeds"><span class="bsl">보너스 퍼스널리티</span>${pers}</div>` : '<div class="bsneeds"><span class="bsl">보너스 퍼스널리티</span><span class="hint">자료 없음 — 피해만으로 계산</span></div>'}`; }
+  return `<div class="bsneeds"><span class="bsl">점수</span><span class="hint">챌린지는 5턴 점수 = 피해 × 보너스 ÷ 10만. AF 중 피해는 한 번에 999,999,999(약 10억)까지만. 보너스 = 행동 보너스(지정 퍼스널리티 캐릭터가 AF 아닌 턴마다, 피해 없는 행동은 1.5배) + AF 1회 50 + 편성 1000(파티 전원 지정 퍼스널리티)${sb && sb.top ? ` · 최고 보상 ${Number(sb.top).toLocaleString()}점` : ''}</span></div>${pers ? `<div class="bsneeds"><span class="bsl">보너스 퍼스널리티</span>${pers}</div>` : '<div class="bsneeds"><span class="bsl">보너스 퍼스널리티</span><span class="hint">자료 없음 — 피해만으로 계산</span></div>'}${postsHtml(b)}`; }
+/* 서가 챌린지 투고 기록(2026-10-23, 알테마 파티 투고·game-info 스코어 어택 기록집·유튜브): 점수 높은 순 3개 — 엔진 점수와 견줘 보라고. 날짜가 오래된 기록(2023 출시 때 1타 상한 21억)은 지금보다 낮음 */
+const jpTeamKo = t => String(t||'').split(/[、,，／\/]+|\s+/).filter(Boolean).flatMap(w=>{ const f = n => prepped.find(c=>c.raw.name_jp===n); if(f(w)) return [f(w).name]; const parts = w.split('・'); return parts.length>1 && parts.every(f) ? parts.map(n=>f(n).name) : [w]; }).join('·');
+function postsHtml(b){ const P = (b.posts||[]).filter(p=>+p.score>0).sort((x,y)=>y.score-x.score).slice(0,3); if(!P.length) return '';
+  return `<div class="bsneeds"><span class="bsl">투고 기록</span>${P.map(p=>`<span class="need">${scoreTxt(p.score)}${+p.dmg>0 ? ` (피해 ${fmtN(+p.dmg)})` : ''}</span>${p.team ? ` <span class="hint">${esc(jpTeamKo(p.team))}${p.note ? ' · '+esc(p.note) : ''}</span>` : ''}`).join(' ')}</div>`; }
 /* 타수로 벗기는 기믹(2026-10-19, engine hgList): 스택·횟수 배리어·연격 경감 — 처치 턴·실전 N턴이 그 턴 타수로 계산한다는 것을 요약에 */
 function hitGimHtml(b){ const L = E.hgList ? E.hgList(b) : []; if(!L.length) return '';
   const on = g => g.on==='revive' ? '부활 뒤 ' : g.on==='revive2' ? '2회 부활 뒤 ' : +g.from>1 ? g.from+'턴째 ' : '';

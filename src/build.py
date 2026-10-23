@@ -144,6 +144,7 @@ for c in chars:
     if c['id'] in drules: c['debuff_rules']=drules[c['id']]
     if chain.get(c['id']): c['chain']=[{k:e[k] for k in ('on','max','atk','when','af','every','name','effect','stk') if k in e} for e in chain[c['id']]]
 bosses=json.load(open(P('data','bosses.json'),encoding='utf-8'))+json.load(open(P('data','bosses_more.json'),encoding='utf-8'))
+if os.path.exists(P('data','bosses_shoka.json')): bosses+=json.load(open(P('data','bosses_shoka.json'),encoding='utf-8')) # 성영의 서가 추가분(2026-10-23, 알테마 書架 목록)
 # 결실 현현(결현현): 필수 캐릭터·서약
 for b in json.load(open(P('data','bosses_kesshitsu.json'),encoding='utf-8')):
     b=dict(b); b['kesshitsu']=True; b.pop('enemies',None) if False else None
@@ -194,7 +195,7 @@ def _calc_view(o):
     return o
 # 보스 흉성 trigger(연전 편성에서 앞 전투가 붙이는 흉성 판정, 앱 전용 — 엔진 계산과 무관)는 계산 버전에서 뺌(2026-10-18)
 def _boss_view(o):
-    if isinstance(o,dict): return {k:_boss_view(v) for k,v in o.items() if k!='trigger'}
+    if isinstance(o,dict): return {k:_boss_view(v) for k,v in o.items() if k not in ('trigger','posts','shoka_part','name_src')} # 화면 전용(투고 기록·서가 소분류)은 계산 버전에서 뺌
     if isinstance(o,list): return [_boss_view(x) for x in o]
     return o
 calc_ver=hashlib.sha1((js(_calc_view(chars))+js(_boss_view(bosses))+js(_bfx)+rd('engine.js')+rd(os.path.join('data','meta_decks.json'))).encode('utf-8')).hexdigest()[:12] # 추천 덱도 탐색 시작점(seeds)이라 포함
