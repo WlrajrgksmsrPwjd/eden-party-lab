@@ -2273,7 +2273,19 @@ function afActionsOf(team, progs, cores, z, enemy, S, g0, prio, plan, lk){ // pl
 }
 /* ---------- 체인 어빌리티: 다른 아군의 행동에 반응하는 추격 ----------
    턴당 발동 수 = min(최대, 조건에 맞는 아군 행동 수). 평상 턴은 시뮬레이션의 행동 비율, SB 턴은 전원 1회, AF는 최대치 */
-function chainActP(m, i, on, cores, sit, sim){
+/* 체인 발동 판정 — 공격 스킬 실행마다(2026-10-23 사용자 확인: 엘레노아 재공격 2타·니나 복사 2번째 실행도 줄초상을 각각 발동): 주력 공격 턴은 실행 수(co.execs = 연속 실행 × (1+재공격), 루나틱<複写> 포함),
+   상태로 섞인 코어(mixL)는 하위 코어마다 맞는지·실행 수를 가중 합. S.chainExec=false면 예전(공격 1번 = 1) */
+function chainAtkQ(co, on){
+  if(!co) return 0;
+  if(co.mixL && co.mixL.length) return co.mixL.reduce((t,x)=>t + (+x.w||0)*chainAtkQ(x.co, on), 0);
+  if(on.elem && !on.elem.includes(co.el)) return 0;
+  if(on.wt && !on.wt.includes(co.wt)) return 0;
+  if(on.kind && co.kind!==on.kind) return 0;
+  if(on.tgt && co.tgt!==on.tgt) return 0;
+  return Math.max(1, +co.execs||1);
+}
+const cpyFrac = co => !co ? 0 : co.mixL && co.mixL.length ? co.mixL.reduce((t,x)=>t + (x.co && x.co.cpy ? (+x.w||0) : 0), 0) : (co.cpy ? 1 : 0); // 複写 켜진 비율(상태 섞인 코어)
+function chainActP(m, i, on, cores, sit, sim, S){
   const co = cores[i];
   const atkP = sit==='normal' && sim ? (sim.act[i]+sim.alt[i]) : 1;
   const act = on.act||'attack';
@@ -2281,6 +2293,7 @@ function chainActP(m, i, on, cores, sit, sim){
   if(act==='skill') return sit==='normal' && sim ? 1-sim.na[i] : 1;
   if(act==='attack'){
     if(!co) return 0;
+    if(S && S.chainExec!==false && sit!=='af'){ const q = chainAtkQ(co, on); if(!(q>0)) return 0; return sit==='normal' && sim ? sim.act[i]*q + sim.alt[i] : q; } /* 대체 공격(sim.alt)은 실행 1번 */
     if(on.elem && !on.elem.includes(co.el)) return 0;
     if(on.wt && !on.wt.includes(co.wt)) return 0;
     if(on.kind && co.kind!==on.kind) return 0;
@@ -2296,6 +2309,9 @@ function chainActP(m, i, on, cores, sit, sim){
 function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, combo, fw, ctr, ctrOnly){ // ctrOnly: 요격으로만 발동(AF 턴: AF가 끝난 뒤 적 공격 → 요격 → 체인, 사용자 확인 2026-10-17)
   const per = team.map(()=>0), trig = team.map(()=>0), trigA = team.map(()=>0);
   let any=false, stk=null;
+  /* 1단계: 아군 공격·요격으로 발동하는 횟수(base) — 2단계: 체인 공격도 공격이라 다른 체인을 발동(2026-10-23 사용자 확인: 니나 オートコーディネイト(晶 마법)가 스즈누이 連葬을 발동),
+     턴 최대 횟수(max)까지 몇 번 돌려 맞춤. AF 안은 그대로(체인 발동 안 함). S.chainOnChain=false면 끔 */
+  const ENT = [];
   for(let h=0;h<team.length;h++){
     const c=team[h]; if(!c.chain) continue;
     for(const e of c.chain){
@@ -2303,17 +2319,32 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
       if(e.when && Object.keys(e.when).length && ruleAct({w:e.when}, h, team, progs, sit==='af'?'normal':sit, z, A)<=0) continue;
       const on = e.on||{};
       const opts = Array.isArray(on.rand) && on.rand.length ? on.rand.map(o=>({...o, ...{by:on.by}})) : [on];
-      let n=0, nA=0;
+      const bS = [], bA = [];
       for(const o of opts){
         let s=0, sA=0;
         for(let i=0;i<team.length;i++){ if(i===h && (o.by||'other')!=='any') continue; if(sit==='sb' && cores[i] && cores[i].usingSB) continue; // SB 공격은 체인 어빌리티를 발동시키지 않음(사용자 확인 2026-10-16)
-          if(!ctrOnly){ const q = chainActP(team[i], i, o, cores, sit==='af'?'sb':sit, sim); s += q; sA += q; if(e.stk) trigA[i] += q/opts.length; }
+          if(!ctrOnly){ const q = chainActP(team[i], i, o, cores, sit==='af'?'sb':sit, sim, S); s += q; sA += q; if(e.stk) trigA[i] += q/opts.length; }
           // 요격도 공격(사용자 확인: 네코코(ES) 変幻自在로 알마(AS) 요격을 번개로 → 벨벳(AS) イレクトリ가 턴 최대 10번): 평상 턴 요격 횟수만큼
           if(ctr && sit==='normal' && ctr.trig[i]>0 && (o.act||'attack')==='attack' && (!o.elem || o.elem.includes(ctr.els[i])) && (!o.wt || o.wt.includes(ctr.wts[i])) && (!o.kind || ctr.kinds[i]===o.kind) && (!o.tgt || ctr.tgts[i]===o.tgt)) s += ctr.trig[i]; }
-        n += sit==='af' ? (s>0 ? (e.max||1) : 0) : Math.min(e.max||1, s); nA += Math.min(e.max||1, sA);
+        bS.push(s); bA.push(sA);
       }
-      n /= opts.length; nA /= opts.length;
-      if(e.every>1) n = Math.floor(n/e.every+1e-9) + (sit==='normal' ? (n%e.every)/e.every*0.5 : 0);
+      const ea = e.atk || {}, ek = ea.kind==='mag' ? 'mag' : 'phys';
+      /* 루나틱<複写> 중 체인도 2번 실행(2026-10-23 사용자 확인: 니나 オートコーディネイト 발동마다 2번 — 알테마 복사 문구엔 체인 언급 없음): state copy_chain이면 발동 1번 = 실행 1+(複写 가동률), 최대 횟수는 발동 기준 */
+      const cx2 = S.chainCopy!==false && c.states && c.states.some(q=>q && q.copy && q.copy_chain) ? 1 + cpyFrac(cores[h]) : 1;
+      ENT.push({h, e, opts, bS, bA, n:0, nA:0, x: cx2, el: ea.element||'none', kind: ek, wt: ea.weapon_type || (ek==='mag' ? 'magic' : null), tgt: ea.target==='st' ? 'st' : 'aoe'});
+    }
+  }
+  const cOn = sit!=='af' && S.chainOnChain!==false && ENT.length>1;
+  const nOf = (E, xs) => { let n=0, nA=0; E.opts.forEach((o,k)=>{ const s = E.bS[k] + (xs ? xs[k] : 0); n += sit==='af' ? (s>0 ? (E.e.max||1) : 0) : Math.min(E.e.max||1, s); nA += Math.min(E.e.max||1, E.bA[k]); });
+    n /= E.opts.length; nA /= E.opts.length; const ev = E.e.every; if(ev>1) n = Math.floor(n/ev+1e-9) + (sit==='normal' ? (n%ev)/ev*0.5 : 0); E.n = n; E.nA = nA; };
+  ENT.forEach(E=>nOf(E, null));
+  if(cOn) for(let it=0; it<4; it++){ let ch=false;
+    for(const E of ENT){ const xs = E.opts.map(o=> (o.act||'attack')!=='attack' ? 0 : ENT.reduce((t,F)=> F===E || (F.h===E.h && (o.by||'other')!=='any') || !(F.n>0) ? t
+        : (o.elem && !o.elem.includes(F.el)) || (o.wt && !o.wt.includes(F.wt)) || (o.kind && F.kind!==o.kind) || (o.tgt && F.tgt!==o.tgt) ? t : t + F.n*F.x, 0));
+      const n0 = E.n; nOf(E, xs); if(Math.abs(E.n-n0)>1e-9) ch=true; }
+    if(!ch) break; }
+  for(const E of ENT){
+      const {h, e} = E, c = team[h], n = E.n, nA = E.nA, xC = E.x || 1;
       if(n<=0) continue;
       const a=e.atk; let mult=+a.mult||1;
       if(a.mult_max){ const fh=team.filter((m,k)=>k!==h && (m.weapon==='fist'||m.weapon==='hammer')).length; mult=Math.min(a.mult_max, mult+0.5*fh); }
@@ -2337,8 +2368,7 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
         const Ht = n*Math.max(1, multSum/Math.max(1e-9, mult*n)), bE = e.stk.brk_each ? Math.max(1, ((2*Ht - 1)/Math.max(1, Ht))/Math.max(1, co.brk||1)) : 0;
         let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+co.typeR+rvAdd(S, co.physR, inc*k))/b0*(bE ? bE : (k>0 ? bF : 1));
         multSum *= sF/n; stk = stk || {inc:0, n:0, nA:0, brk:null, h, unc: S.revmaUncap===true}; stk.inc = Math.max(stk.inc, inc); stk.n = Math.max(stk.n, n); stk.nA = Math.max(stk.nA, Math.min(n, nA)); if(e.stk.brk) stk.brk = e.stk.brk; }
-      per[h] += d1*multSum; trig[h] += n; any=true;
-    }
+      per[h] += d1*multSum*xC; trig[h] += n*xC; any=true;
   }
   return any ? {per, trig, trigA, stk, total:per.reduce((x,y)=>x+y,0)} : null;
 }
@@ -2606,11 +2636,14 @@ function counterVariants(team, i, S, cx){
   const H = Math.max(0.5, +S.enemyHits||2), pA = Math.min(1, Math.max(0, S.enemyAoE!=null ? +S.enemyAoE : 0.4));
   const coverAoE = team.map(m=>m.cover==='aoe');
   const immuneAll = team.some(m=>m.sup && m.sup.status_immune>=2);
+  const tauntOf = m => !!(m && ((m.counter && m.counter.taunt) || (m.sup && m.sup.taunt>=2)));
   const selfT = ct.taunt || (c.sup&&c.sup.taunt>=2), otherT = team.some((m,j)=>j!==i && ((m.sup && m.sup.taunt>=2) || coverAoE[j]));
+  /* 도발이 겹치면(2026-10-23 사용자 지적: 질퍼니(AS)·알마(AS) 둘 다 도발) 단일 공격을 도발한 사람끼리 나눠 받는다고 봄(누가 받는지는 미확인 → 반반), 도발 없는 사람은 남는 10%를 나눔. S.tauntSplit=false면 예전(도발이면 늘 90%) */
+  const nT = S.tauntSplit===false ? 1 : Math.max(1, team.filter(tauntOf).length), nNT = Math.max(1, front - (S.tauntSplit===false ? 0 : team.filter(tauntOf).length));
   const cp = ct.copy===true ? 1 : Math.max(0, Math.min(1, +ct.copy||0));
   const trigF = t => t==='phys' ? 0.7 : t==='fire' ? 0.3 : (t==='slash' || t==='pierce' || t==='blunt') ? 0.3 : 1; // 피격 조건: 물리 0.7, 화속성·물리 한 타입(베기 등) 0.3
   const nOf = (cov, trig) => { const aoeHits = cov ? front : team.some((m,j)=>j!==i && coverAoE[j]) ? 0 : 1;
-    const stShare = cov ? 1 : selfT ? 0.9 : otherT ? 0.1 : 1/front;
+    const stShare = cov ? 1 : selfT ? 0.9/nT : otherT ? (S.tauntSplit===false ? 0.1 : 0.1/nNT) : 1/front;
     let n = nE * H * (pA*aoeHits + (1-pA)*stShare);
     n *= trigF(trig!=null ? trig : ct.trig);
     if(cx && cx.enemyCC && !immuneAll && !(c.sup && c.sup.status_immune>=1)) n*=0.6;
