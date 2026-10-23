@@ -1730,7 +1730,7 @@ function applyZoneCap(core, z, S, cap, combo){
   if(!core) return 0;
   if(core.mixL){ let v=0; for(const x of core.mixL) v += x.w*applyZoneCap(x.co, z, S, cap, combo); return v; }
   const zf = zoneFactorEff(z, core.el, core.wt, S, core.rel)*(core.sit==='af' && S.starseaZone!==false && S.starseaAF!==false && isSS(z) ? 2 : 1), c = combo||1, p = core.p, oc = core.oc||0; // 성해진: AF는 100%에서만 켜지고 그 AF 공격은 내내 ×2
-  const H = v => Math.min(HIT_MAX, v*c);
+  const HM = +S.afHitMax>0 && (core.sit==='af' || (core.sit==='sb' && c>1)) ? +S.afHitMax : HIT_MAX, H = v => Math.min(HM, v*c); /* afHitMax: 서가 챌린지 — AF 중 1타 999,999,999까지만 점수에(evalTeam 입구) */
   const E1 = x => !S.capOn ? x*c*((1-p) + p*core.cR*(1+oc))
     : S.capAfterCombo ? (1-p)*dingCap(x*c) + p*((1-oc)*dingCap(x*core.cR*c) + oc*dingCap(2*x*core.cR*c)) // 시험: 위키·공식('계산상 대미지가 25억을 넘으면 감쇠') 순서 — AF 콤보를 곱한 뒤 25억 경감
     : (1-p)*H(dingCap(x)) + p*((1-oc)*H(dingCap(x*core.cR)) + oc*H(dingCap(2*x*core.cR)));
@@ -2741,7 +2741,7 @@ function battleSim(N, o){
       const L = ()=> (aw1>0 || o.awConst) ? 2 : 1;
       const useSB = (inAF, fin)=>{ if(o.sbAw) aw1 = Math.max(aw1, 2); const lv = (o.sbAw||aw1>0||o.awConst) ? 2 : 1; let sv = o.sbT ? o.sbT(t) : {b:o.sbBurst, b1:o.sbBurst1, ch:o.sbChain||0};
         if(o.sbOnce){ const ox = o.sbOnce.t(t); if(ou1 || t>o.sbOnce.maxT){ sv = {b: sv.b - (lv>=2 ? ox.b : 0), b1: sv.b1 - (lv>=2 ? 0 : ox.b1), ch: sv.ch}; rec.sbNo1 = true; } else ou1 = 1; } // 틸릴(ES) 心の剣: 剣持つ救世主(개전 3턴) 중에만, 쓰면 해제 → 전투 중 1번
-        if(sv.on) rec.sbOn = true; d += (lv>=2 ? sv.b - (sv.ch||0) : sv.b1)*(inAF?fin:1)*(inAF && o.ss && o.ssAF ? 2 : 1); /* 성해진: AF 안 SB도 ×2(S.starseaAF일 때) */ /* SB 대미지만(그 턴 체인은 평상 턴 nd에 이미 있음 — SB는 체인을 발동시키지 않음) */ s1=0; rec.sb = inAF?'af':'turn'; if(inAF) rec.combo=fin;
+        if(sv.on) rec.sbOn = true; const kH = inAF && o.sbAfCap ? o.sbAfCap(fin) : 1; d += (lv>=2 ? sv.b - (sv.ch||0) : sv.b1)*(inAF?fin:1)*(inAF && o.ss && o.ssAF ? 2 : 1)*kH; /* kH: 서가 챌린지 AF 중 1타 상한(afHitMax) — AF 안 SB도 */ /* 성해진: AF 안 SB도 ×2(S.starseaAF일 때) */ /* SB 대미지만(그 턴 체인은 평상 턴 nd에 이미 있음 — SB는 체인을 발동시키지 않음) */ s1=0; rec.sb = inAF?'af':'turn'; if(inAF) rec.combo=fin;
         if(o.teSB){ d += o.teSB.total; rec.teSB = o.teSB.total; } // SB 턴 종료 공격
         if(R && (e1 || !R.cost) && !(inAF && R.noAF)){ g1=Math.max(g1, R.to); e1=0; rec.refill=true; }
         if(o.afSbG>0){ rec.gSb = o.afSbG; } }; // SB 턴 종료 추격의 AF 게이지는 턴 끝에(아래)
@@ -2819,6 +2819,8 @@ function zlList(S){ const out = [], bz = S && S.bossZone;
    교환하는 캐릭터가 있고 적에게 내성이 있으면, 2턴째부터 교환한 상성으로 계산한 쪽도 재서 성향 기준이 큰 쪽(무효·흡수는 그대로). 탐색 어림 단계는 전투 내내 교환한 쪽과 비교 */
 function swapAff(enemy){ const e = {}; for(const k of Object.keys(enemy||{})){ const v = enemy[k]; e[k] = v==='resist' ? 'weak' : v==='weak' ? 'resist' : v; } return e; }
 function evalTeam(team, progs, enemy, S, cap, ctx){
+  /* 서가 챌린지 AF 상한(2026-10-23): 알테마 '10억 이상 줘도 999,999,999까지만 가산'을 타격당으로 — 투고 72건 같은 조합 대조에서 'AF 한 번 합계'로 보면 엔진이 투고의 0.31배(지금 캐릭터가 더 센데 거꾸로), 타격당이면 1.2배(피해 적힌 29건 1.19배). S.afScoreUnit 'af'면 예전(AF 한 번 합계) */
+  if(S && +S.afScoreCap>0 && S.afScoreUnit!=='af' && !(+S.afHitMax>0)) S = ({...S, ...{afHitMax: +S.afScoreCap}});
   if(ctx && ctx._zl) return evalTeamV(team, progs, enemy, S, cap, ctx);
   ctx = ({...ctx||{}, ...{_svG: new Map()}}); // 행동 순위(stepValues) 다시 쓰기 — 호출마다 새로(다른 조합·육성 값과 섞이지 않게)
   /* 아군 전체 臨機応変(짭코코, 2026-10-21): 왼쪽에 둘 아군에 따라 타입이 정해지고 안 바꾸는 배치(짭코코를 맨 왼쪽)도 되니, 바꾼 쪽·안 바꾼 쪽 중 성향 기준이 큰 쪽(탐색 어림도) */
@@ -3492,8 +3494,9 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   const sbz1 = sbz && sbz.level>=2 && !sbSelf(sbz) ? ({...sbz, ...{level:1}}) : sbz, sbPer1 = sbz && sbz.level>=2 && !sbSelf(sbz) ? mix1(res.sb.cores, sbz1) : res.sb.per;
   const sb3 = R3.sb, sbz3 = sb3.zone, sbz31 = sbz3 && sbz3.level>=2 && !sbSelf(sbz3) ? ({...sbz3, ...{level:1}}) : sbz3, sbPer31 = sbz3 && sbz3.level>=2 && !sbSelf(sbz3) ? mix1(sb3.cores, sbz31) : sb3.per;
   const sbSum = (per) => sbIdx.reduce((v,i)=>v+(per[i]||0),0), sbCh = r => r.chain ? sbIdx.reduce((v,i)=>v+(r.chain.per[i]||0),0) : 0;
+  const sbAfCap = +S.afHitMax>0 ? (fin => { let raw = 0, cp = 0; for(const i of sbIdx){ const c = res.sb.cores && res.sb.cores[i], v = (res.sb.per[i]||0)*fin, h = Math.max(1, ((c && c.totHits)||1)*((c && c.nT)||1)); raw += v; cp += Math.min(v, h*S.afHitMax); } return raw>0 ? cp/raw : 1; }) : null; /* 서가 챌린지: AF 안 SB의 1타 상한 비율(평균 1타로 어림) */
   { const P = res.normal.per||[], C = res.normal.cores||[]; let a = 0, w0 = 0; P.forEach((v,i)=>{ const w = Math.max(0, +v||0); w0 += w; a += w*(C[i] ? Math.min(1, +C[i].pw||0) : 0); }); out.pierceS = w0>0 ? +(a/w0).toFixed(3) : 0; let b = 0; P.forEach((v,i)=>{ const c = C[i]; if(c) b += Math.max(0, +v||0)*Math.max(0, (+c.typeR||0) + (+c.physR||0)); }); out.resR = w0>0 ? +(b/w0).toFixed(3) : 0; } /* 배리어 관통 몫·팀 내성 다운(대미지 비중 평균) */
-  const simIn = {t1: out.tl ? out.tl.t1 : normal2, normal: bzG && bzG.up ? bzNorm() : normal2, normal1: bzG && bzG.up ? normal2 : normal1, budAw: bzG ? bzG.turns : null, sbBurst: sbSum(res.sb.per), sbBurst1: sbSum(sbPer1),
+  const simIn = {t1: out.tl ? out.tl.t1 : normal2, normal: bzG && bzG.up ? bzNorm() : normal2, normal1: bzG && bzG.up ? normal2 : normal1, budAw: bzG ? bzG.turns : null, sbBurst: sbSum(res.sb.per), sbBurst1: sbSum(sbPer1), sbAfCap,
     sbChain: sbCh(res.sb), // 체인 추격은 평상 턴 SB에만(AF 안 SB엔 없음)
     sbT: t => { if(onT(t)){ const O = onVals(), b = sbSum(O.sb.per), r1 = sbSum(sb3.per)>0 ? sbSum(sbPer31)/sbSum(sb3.per) : 1; const ch = sbCh(O.sb); return {b, b1: (b - ch)*r1, ch, on: true}; } // sb_full 턴: 상태가 켜진 SB
       const w = Math.min(1, Math.max(0, (t-1)/2)), L = (x,y)=>x+(y-x)*w; return {b: L(sbSum(res.sb.per), sbSum(sb3.per)), b1: L(sbSum(sbPer1), sbSum(sbPer31)), ch: L(sbCh(res.sb), sbCh(sb3))}; }, // 실전 N턴의 SB: 턴이 지날수록 3턴째 값으로
@@ -3609,14 +3612,14 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     out.burstOld = out.burst; out.burst = out.bsim.total;
     /* 서가 챌린지 점수(2026-10-19, 알테마 투고 6건으로 확인): 점수 = 피해(AF 1회 999,999,999까지) × 보너스 × 10⁻⁵, 보너스 = 행동 보너스(지정 퍼스널리티를 가진 캐릭터가 AF 아닌 턴마다 1번 —
        맞는 퍼스널리티 값의 합, 피해 없는 행동이면 1.5배) + AF 1회 50 + 편성 1000(전열 전원이 지정 퍼스널리티 — 후열은 엔진이 모름). AF 턴엔 행동 보너스가 없어 AF를 안 쓰는 계획과도 비교 */
-    if(+S.afScoreCap>0){ const scB = S.scoreBonus && S.scoreBonus.pers ? S.scoreBonus : null, base = ({...simIn, ...{scoreCap: +S.afScoreCap, afTailV: 0, sbHold: true}}); /* 챌린지는 N턴에서 끝 — 남은 게이지 값 없음 · sbHold: AF 안에서 찬 SB를 다음 평상 턴(상한 없음)에 쓰는 계획도 */
+    if(+S.afScoreCap>0){ const scB = S.scoreBonus && S.scoreBonus.pers ? S.scoreBonus : null, base = ({...simIn, ...{scoreCap: +S.afHitMax>0 ? 0 : +S.afScoreCap, afTailV: 0, sbHold: true}}); /* 타격당 상한(afHitMax)이면 AF 값에 이미 들어 있어 합계 상한 없음 */ /* 챌린지는 N턴에서 끝 — 남은 게이지 값 없음 · sbHold: AF 안에서 찬 SB를 다음 평상 턴(상한 없음)에 쓰는 계획도 */
       const plans = [battleSim(NB, base)]; if(scB) for(const mx of [0, 1, 2]) plans.push(battleSim(NB, ({...base, ...{maxAF: mx}}))); /* AF 1회 +50 대 그 턴 행동 보너스 — AF 횟수별로 */
       const vI = team.map(c=> scB ? [...(c.pers||[])].reduce((a,p)=>a + (+scB.pers[p]||0), 0) : 0);
       const mI = team.map((c,i)=> simUse ? 1 + 0.5*Math.max(0, 1 - Math.min(1, (sim.act[i]||0) + (sim.alt[i]||0) + (sim.na[i]||0))) : 1);
       const comp = scB && vI.every(v=>v>0) ? (+scB.comp>0 ? +scB.comp : 1000) : 0, perT = vI.reduce((x,v,i)=>x + v*mI[i], 0);
       const bonusOf = pl => !scB ? null : comp + pl.turns.reduce((a,r)=> a + (r.af ? (+scB.af>0 ? +scB.af : 50) : perT), 0);
       let best = null; for(const pl of plans){ const B = bonusOf(pl), v = B!=null ? pl.total*B*1e-5 : pl.total; if(!best || v > best.v) best = {v, pl, B}; }
-      out.score = {total: best.v, dmg: best.pl.total, bonus: best.B, comp: !!comp, vI, perT: +perT.toFixed(1), turns: best.pl.turns, cap: +S.afScoreCap}; out.burst = best.v; } // 성향 점수의 '실전'은 이 점수 — 처치 턴은 실제 피해(bsim)
+      out.score = {total: best.v, dmg: best.pl.total, bonus: best.B, comp: !!comp, vI, perT: +perT.toFixed(1), turns: best.pl.turns, cap: +S.afScoreCap, unit: +S.afHitMax>0 ? 'hit' : 'af'}; out.burst = best.v; } // 성향 점수의 '실전'은 이 점수 — 처치 턴은 실제 피해(bsim)
     out.opener = NB===1 ? out.bsim.total : battleSim(1, simIn).total;
   } else { out.bsim = {total:0, turns:[], N:NB, afStart:st, s0:simIn.s0}; }
   if(needDummy && ctx && ctx.dummyFast){ // 탐색 1단계: 허수아비를 빠르게 어림(버프 다 깔린 AF + AF 끝 콤보 SB), 상위 후보만 2단계에서 정밀 계산
