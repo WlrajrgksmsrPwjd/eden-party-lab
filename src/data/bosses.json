@@ -235,6 +235,7 @@
   },
   {
     "id": "tsukuyomi_mitama",
+    "posts": [{"score": 1130000000, "dmg": 39900000000, "bonus": 2850, "team": "メイン: 花咲の姫君・白磁の魔人・ツキハ・センヤ(AS) / サブ: オボロ・ニケ(AS) / バディ: クラマル(サブ コロボ)", "src": "https://altema.jp/anaden/tukuyominosyo", "note": "원문 「ダメージ399億」「スコア11.3億」「ボーナス1800＋50＋1000」, 증 획득은 「ダメージ180億くらい」. 날짜 없음"}],
     "shoka_part": "외전(外典)",
     "score_bonus": {"pers": {"巳の国": 60, "辰の国": 60, "呂の国": 60, "東方": 30}, "af": 50, "comp": 1000, "top": 356702000, "src": "https://altema.jp/anaden/tukuyominosyo"},
     "hp_model": {"bar": 2.234, "bars": 1, "reset": false, "kt_min": 0, "note_kr": "챌린지 HP 223,388,280(2.23억) 한 줄 = 현재 hp(VH 0.197억, 스텔라 표 없음). 부활·스토퍼 없음. 개시 月影 물리·마법 내성 100% UP. 滅びの啓示 7턴 뒤 전체 99,999(秩序を乱す異分子に終焉を) → 사실상 6턴 안에 처치(최대 턴 제한, 챌린지는 5턴 스코어전). 독·페인을 주면 아군 주는 대미지 90% DOWN(神厭)."},
@@ -306,6 +307,7 @@
   },
   {
     "id": "phantom_tilda",
+    "posts": [{"score": 5200000000, "dmg": 102100000000, "bonus": 5100, "team": "メイン: ポム(AS)・ノノルド・シェンファ・エヴァ / サブ: クレルヴォ・ガリユ / バディ: テュシア・テトラ", "src": "https://altema.jp/anaden/phantomtilda", "note": "원문 「スコア52億」「ダメージ1021億」「4050＋50＋1000」. 날짜 없음"}],
     "shoka_part": "호걸",
     "score_bonus": {"pers": {"拳": 100, "杖": 100, "科学者": 100, "東方": 100, "マシナリー": 200}, "af": 50, "comp": 1000, "top": 2566357000, "src": "https://altema.jp/anaden/phantomtilda"},
     "hitgim": [{"k": "barrier", "s0": 10, "x": 0.01, "on": "revive2", "label": "2회 부활 뒤 星を泳ぐ船 99% 경감 배리어 10회"}],
@@ -368,6 +370,7 @@
   },
   {
     "id": "lancel",
+    "posts": [{"score": 6570000000, "dmg": 147600000000, "bonus": 4450, "team": "メイン: フラムラピス(ES)・アルド(AS)・シェンファ・エヴァ / サブ: レレ・ガリユ / バディ: テトラ・テュシア", "src": "https://altema.jp/anaden/ranserusyoka", "note": "원문 「ベストスコアでダメージ1476億、スコア65.7億」「3350＋100＋1000」. 날짜 없음"}],
     "shoka_part": "호걸",
     "score_bonus": {"pers": {"剣": 100, "杖": 100, "聖職者": 200, "大食い": 200, "主人公": 300}, "af": 50, "comp": 1000, "top": 3575858000, "src": "https://altema.jp/anaden/ranserusyoka"},
     "hp_model": {"bar": 16.243, "bars": 3, "reset": false, "kt_min": 0, "note_kr": "HP 1,624,341,600(16.24억, VH·챌린지 공통) × 3회(라이프포인트 2) = 현재 hp 48.7. 라이프 소비마다 ZONE 파괴·아군 誓い 6, VH는 버프 해제+断たれた誓い 30(축적당 내구·정신 +50·전속성 내성 +3%, 턴 종료 그 턴 피격 히트 수만큼 최대 8 소모, 0이면 보스 다음 턴 행동 스킵). 부활 시 HP 처리 미기재. 챌린지 5턴."},
@@ -537,6 +540,7 @@
   },
   {
     "id": "eternal_ruler",
+    "posts": [{"score": 2835545618, "dmg": 64007801760, "bonus": 4430, "team": "メイン: エヴァ・ジタン・ビビ・ガーネット / サブ: アルド・アィシャ / バディ: ピスケ", "src": "https://altema.jp/anaden/eiennosihaisyanosyo", "note": "원문 「640億780万1760ダメージ」「スコア28億3554万5618」「ボーナス行動3380＋AF50＋編成1000」 — 투고자가 ステラ 칸에 잘못 올린 챌린지 투고. 날짜 없음"}],
     "shoka_part": "협주",
     "score_bonus": {"pers": {"FFIX": 200, "水": 20, "剣": 10}, "af": 50, "comp": 1000, "top": 1231401000, "src": "https://altema.jp/anaden/eiennosihaisyanosyo"},
     "hp_model": {"bar": 0.501, "bars": 3, "reset": false, "kt_min": 0, "dmg_cut": [{"turns": 99, "when": "always (被ダメージ軽減 小 永続, 수치 미기재)"}], "note_kr": "HP 50,134,000(0.5억, 난이도 표기 없음) × 3회(라이프포인트 2) = 현재 hp 1.5. 상시 받는 대미지 경감(소), 각 단계 1턴째 対攻撃用障壁(물리·마법 내성 중 3턴), 매 턴 종료 AF 게이지 감소. 부활 시 HP 처리 미기재."},
@@ -593,6 +597,7 @@
   },
   {
     "id": "kamu_nue",
+    "posts": [{"score": 566175081, "dmg": null, "bonus": 2180, "team": "メイン: チルリル(ES)・ウェネーフィカ・センヤ・カグラメ / サブ: イスカ(ES)・ツキハ / バディ: テトラ(AS)", "src": "https://altema.jp/anaden/kamuyanosyo", "note": "원문 「ハイスコア 566,175,081」「編成1,000＋行動1,080＋AF100＝2180」. 날짜 없음"}, {"score": 290000000, "dmg": 25600000000, "bonus": 1135, "team": "メイン: 銀朱の九尾・ミルシャ(AS)・ユキノ(AS)・セリエス / サブ: リュゼ・アルテナ / バディ: テュシア", "src": "https://altema.jp/anaden/kamuyanosyo", "note": "원문 「カンストダメージ11回+AF20億」으로 「256億前後」, リザルト「2.9億前後」, 총 보너스 1135(편성 0·행동 1035·AF 100). 같은 내용 투고 2회. 날짜 없음"}],
     "shoka_part": "외전(外典)",
     "score_bonus": {"pers": {"妖し": 90, "東方": 30, "陰": 30, "剣": 30}, "af": 50, "comp": 1000, "top": 236264000, "src": "https://altema.jp/anaden/kamuyanosyo"},
     "hp_model": {"bar": 3.182, "bars": 1, "reset": false, "carry": false, "stopper": [66, 33], "kt_min": 0, "note_kr": "챌린지 본체 318,192,505(3.18억) 한 줄 = 현재 hp(스텔라 0.64억). 亡骸 1.38억(스텔라 0.28억)은 처치 필요 여부 미기재 — 살아 있으면 본체에 디버프 안 들어감. 66/33% 스토퍼, 30%에서 전체 버프·디버프 해제·이후 교대 불가. 부활 없음. 챌린지 5턴."},
@@ -888,6 +893,7 @@
   },
   {
     "id": "chaos",
+    "posts": [{"score": 210000000, "dmg": null, "team": "メイン: セリエス・アルテナ・パリサ(AS)・プレメア(AS) / サブ: ユキノ(AS)・ラビナ / バディ: モケ", "src": "https://altema.jp/anaden/kontonnosyo", "note": "원문 「スコア2.1億」(最終報酬ライン1.7億). 날짜 없음"}],
     "shoka_part": "메인 2부 후편",
     "zone_boss": {"key": "chaos", "lv": 1, "note": "개시·스토퍼(85·50·25%) 때 混沌陣 전개: 화·수·지·풍 ×1.75, AF 게이지 행동당 1.5%(game-info ZONE 1-2-18)"},
     "score_bonus": {"pers": {"精霊対話": 90, "弓": 60}, "af": 50, "comp": 1000, "top": 177500000, "src": "https://altema.jp/anaden/kontonnosyo"},

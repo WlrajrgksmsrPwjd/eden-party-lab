@@ -169,6 +169,7 @@
  },
  {
    "id": "youju_ryuukaku",
+   "posts": [{"score": 1640000000, "dmg": 80000000000, "bonus": 2085, "team": "メイン: 花咲の姫君・白磁の魔人・ツキハ・アルド / サブ: センヤ・サイラス / バディ: リレーノ", "src": "https://altema.jp/anaden/ryuukakunosyo", "note": "원문 「ダメージ800億弱」「スコア16.4億」「ボーナス1035＋50＋1000」, 증 획득은 「330億程度のダメージ」. 날짜 없음"}],
    "shoka_part": "호걸",
    "score_bonus": {"pers": {"火": 30, "地": 30, "普賢一刀流": 120}, "af": 50, "comp": 1000, "top": 654225000, "src": "https://altema.jp/anaden/ryuukakunosyo"},
    "hp_model": {"bar": 6.722, "bars": 3, "reset": false, "kt_min": 0, "note_kr": "챌린지 HP 672,207,591(6.72억) × 3회(생명력 2) = 현재 hp 20.2(스텔라 2.67억). 妖殻 축적 중 물리·마법·전속성 내성 150% UP(虚勢로 축적, 일정 턴 뒤 소비 — 턴 수 미기재) → 妖殻이 빠진 턴에 AF·SB. 행동 패턴·부활 시 HP 처리 미기재. 챌린지 5턴."},
@@ -227,6 +228,7 @@
  },
  {
    "id": "hyougokuki",
+   "posts": [{"score": 990000000, "dmg": null, "team": "メイン: 電影の明星・不知火舞・韜晦の討手・草薙京 / サブ: いいマクマク / バディ: モケ", "src": "https://altema.jp/anaden/hyougokukinosho", "note": "원문 「スコア9.9億(最終報酬ライン7.1億)」. 날짜 없음"}],
    "shoka_part": "호걸",
    "score_bonus": {"pers": {"拳": 60, "槌": 60, "格闘技": 20}, "af": 50, "comp": 1000, "top": 711708000, "src": "https://altema.jp/anaden/hyougokukinosho"},
    "hitgim": [{"k": "barrier", "s0": 20, "x": 0, "reset_on": "stop", "label": "鬼城鉄壁 피해 무효 배리어 20회(개막·스토퍼마다)"}],
@@ -358,6 +360,7 @@
  },
  {
    "id": "karna_genesis",
+   "score_bonus": {"pers": {"アトリエ": 60, "杖": 30, "弓": 30}, "af": 50, "comp": 1000, "top": null, "src": "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"},
    "shoka_part": "협주",
    "hitgim": [{"k": "barrier", "s0": 99, "x": 0, "reset_on": "revive", "label": "ゲシュタルト障壁 99(남아 있는 동안 피해 무효, 피격 1타당 1 — 턴 종료 마법 공격 수×3 감소는 뺌)"}],
    "hp_model": {"bar": 68.1, "bars": 4, "reset": false, "stopper": [50], "kt_min": 0, "dmg_cut": [{"x": 0, "when": "start·부활마다 (ゲシュタルト障壁 99: 피격 1회당 1, 턴 종료 그 턴 마법 공격 수×3 소모, 0이면 무효 해제+물리·마법·전속성 내성 90% DOWN)"}], "note_kr": "HP 약 68.1억(최고 난이도) × 4회(生命の共振 3) = 현재 hp 272(추정). 부활마다 ZONE 해제·障壁 99 재축적·아군 부여 효과 해제. 50% 스토퍼는 마지막 줄만: 共振 0에서 HP 50% → Regenesis 5(턴 종료마다 1, 0이면 전체 최대HP 100%) → 남은 50%를 5턴 안에. 속성 ZONE이면 Open the eyes(HP 전회복·障壁 99), Convert type1 턴 종료 자기 회복(최대 50%). 이번 조사에서 altema 페이지 접근 불가 — 기존 데이터 기준."},
@@ -468,6 +471,7 @@
  },
  {
    "id": "teyuru_menas",
+   "score_bonus": {"pers": {"陰": 30, "晶": 30, "雷": 30, "西方": 60}, "af": 50, "comp": 1000, "top": null, "src": "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"},
    "shoka_part": "외전(外典)",
    "hp_model": {"bar": 3.98, "bars": 1, "reset": false, "carry": false, "stopper": [42], "kt_min": 0, "note_kr": "챌린지 본체 1.59억 + 날개 3장 각 0.398억. 날개가 다 없어질 때까지 본체 전속성 무효 → 날개 3장(1.19억) → 본체 30% 스토퍼(날개 전부 부활·버프 해제) → 날개 3장 다시 → 본체 나머지. 합계 3.98억 = 현재 hp 4.0. 스토퍼 42%는 본체 30% 시점을 합계 기준으로 바꾼 값(남은 1.19+0.48=1.67/3.98). 이번 조사에서 altema 페이지 접근 불가 — 기존 데이터 기준."},
    "threat": {"lvl": 2, "tank": false, "heal": false, "single": "フェアトラーク 단체 晶 마법×2+기절, ベーテンフリーゲン 단체 날려버리기, 下段の翼 생존 시 턴 종료 단체 마법 3회, 中段の翼 생존 시 본체 2회 행동", "aoe": "ベシュヴェール 전체 고정 1,000, ネーメブリッツ 전체 晶 마법+전속성 내성 디버프(중 3턴), 30% 뒤 ネーメシュテルン 전체 晶 마법, ラディーレン 버프·디버프 해제", "status": "기절·날려버리기", "note_kr": "모든 공격이 마법이라 지성 디버프와 晶 내성 버프가 매우 유효(기존 공략). 탱커 지시 없음."},
@@ -531,6 +535,7 @@
  },
  {
    "id": "karakuri_senki_mishiki",
+   "posts": [{"score": 750000000, "dmg": null, "team": "メイン: オルレイア(AS)・ヴェレット・オボロ・ウツハラ / サブ: ヴィクト・電影の明星 / バディ: ガンス", "src": "https://altema.jp/anaden/misikinosyo", "note": "원문 「7.5億スコア超える事に成功」(イヅナ 없이) — 7.5억 초과. 날짜 없음"}],
    "shoka_part": "외전(外典)",
    "score_bonus": {"pers": {"仮面": 90, "東方": 60, "雷": 30}, "af": 50, "comp": 1000, "top": 252802000, "src": "https://altema.jp/anaden/misikinosyo"},
    "hp_model": {"bar": 3.182, "bars": 1, "reset": false, "carry": false, "stopper": [66, 33], "kt_min": 0, "note_kr": "챌린지 HP 318,192,505(3.18억) 한 줄 = 현재 hp(VH 0.483억) — 禍夢鵺 본체와 같은 숫자라 altema 표 복사 오류 가능. 부활 없음. 66% 스토퍼에 断空一閃(전체 현재HP 50%), 33%에 終桜閃刃(전체 현재HP 99%). 剣気(최대 99): 물리 내성 UP, 피격 시 소모. 챌린지 5턴."},
@@ -722,6 +727,7 @@
  },
  {
    "id": "kudan",
+   "posts": [{"score": 2045000000, "dmg": 107100000000, "bonus": 2010, "team": "メイン: アナベル(ES)・リュゼ・ユキノ(AS)・ベルトラン / サブ: ティラミス(AS)・シュゼット(AS) / バディ: ライリス", "src": "https://altema.jp/anaden/kudannosho", "note": "원문 「ダメージ1071億、スコア20.45億」「ボーナス910＋100＋1000」. 날짜 없음"}, {"score": 920000000, "dmg": null, "team": "メイン: セリエス・紫装の槍使い・ガリアード・プレメア(AS) / サブ: いいマクマク / バディ: モケ", "src": "https://altema.jp/anaden/kudannosho", "note": "원문 「スコア9.2億(最終報酬ライン7億)」. 날짜 없음"}],
    "shoka_part": "호걸",
    "score_bonus": {"pers": {"槍": 60, "弓": 60, "格闘技": 20}, "af": 50, "comp": 1000, "top": 709030000, "src": "https://altema.jp/anaden/kudannosho"},
    "hp_model": {"bar": 12.971, "bars": 1, "reset": false, "kt_min": 0, "note_kr": "챌린지 HP 1,297,143,317(12.97억) 한 줄 = 현재 hp(VH 3.27억), 부활·스토퍼 없음. 매 턴 종료 鉄牢鬼 소환(HP 미기재, 격파해도 다음 턴 재소환). クダン 본체 격파 시 전체 피해(챌린지 3,000 / VH 9,000). 챌린지 5턴."},
@@ -786,6 +792,7 @@
  },
  {
    "id": "veiris",
+   "posts": [{"score": 300000000, "dmg": null, "team": "メイン: アィシャ・ツキハ・パリサ(AS)・ガラムバレル / サブ: サイラス・ラクレア / バディ: モルディ", "src": "https://altema.jp/anaden/veirisu", "note": "원문 「スコア3億程」. 날짜 없음"}, {"score": 400000000, "dmg": null, "team": "メイン: ラクレア・ガラムバレル・ツキハ・リュゼ / サブ: サザンカ・サイラス / バディ: ライリス", "src": "https://altema.jp/anaden/veirisu", "note": "원문 「スコア４億は楽に行けるくらい」 — 실제 결과가 아니라 가능 수준 언급. 날짜 없음"}, {"score": 340000000, "dmg": null, "team": "メイン: リュゼ・サザンカ・ガラムバレル・パリサ(AS) / サブ: セリエス・サイラス / バディ: ライリス", "src": "https://altema.jp/anaden/veirisu", "note": "원문 「上手く行った場合のスコアは3.4億くらい」. 날짜 없음"}],
    "shoka_part": "외전",
    "score_bonus": {"pers": {"呪い": 30, "ドラゴンキラー": 30}, "af": 50, "comp": 1000, "top": 279710000, "src": "https://altema.jp/anaden/veirisu"},
    "hitgim": [{"k": "barrier", "s0": 20, "x": 0.5, "label": "개시 50% 경감 배리어 20회(다 벗기면 怯み)"}],
@@ -859,6 +866,7 @@
  },
  {
    "id": "meiryuuou_tsukai",
+   "score_bonus": {"pers": {"火": 45, "水": 45, "風": 45, "地": 45, "アルカディア": 60}, "af": 50, "comp": 1000, "top": null, "src": "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"},
    "shoka_part": "외전",
    "hp_model": {"bar": 0.893, "bars": 4, "bar_seq": [0.223, 0.446, 0.67, 0.893], "reset": false, "carry": false, "stopper": [75, 50, 25], "kt_min": 0, "dmg_cut": [{"x": 0.7, "when": "1차 스토퍼 뒤 (冥竜の障壁 30% 경감 배리어)"}, {"x": 0.5, "when": "2·3차 스토퍼 뒤 (冥竜の多重障壁 50% 경감 배리어)"}], "note_kr": "챌린지 HP 89,288,864(0.893억, VH 0.103억). 75/50/25% 스토퍼마다 HP 전회복·버프/디버프 해제·아군 완력·지성·속도 디버프(중 99턴) → 구간별로 깎을 양 25%·50%·75%·100%(bar_seq) = 합계 2.5줄 2.23억(현재 hp 2.2와 같음). 25% 스토퍼 뒤 4턴째가 끝나기 전에 처치(冥の気 4 → 배리어·踏ん張り 관통 전멸)."},
    "threat": {"lvl": 2, "tank": false, "heal": false, "single": "冥竜の瘴気×2 단체 최대HP 30%(1차 뒤), 冥竜の威圧×3 단체 최대HP 30%+봉인(2차 뒤)", "aoe": "매 턴 개시 冥 캐릭터 HP 500 고정+기절(높은 확률), 深き/昏き冥の衝突 전체 무속성 물리(+독·페인·암흑), ヘルドラゴンブレス/ブレイク 전체 음 마법", "status": "冥 캐릭터 기절 → 天 캐릭터 편성·기절 내성 배지·상태이상 무효 배리어, 봉인, 冥の気 4축적 턴 종료 전멸(시간 제한)", "note_kr": "공략: 天 캐릭터로 기절을 피하고, 화력이 부족하면 3차 스토퍼까지 AF를 아낌. 탱커 지시 없음, 예시에 ライリス·テトラ 회복."},

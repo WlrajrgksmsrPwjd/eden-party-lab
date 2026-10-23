@@ -1,0 +1,6131 @@
+[
+ {
+ "id": "sk_varesu",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "火": 30,
+   "バルオキー": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/varesu"
+ },
+ "hp_model": {
+  "bar": 0.483,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 48,300,000(0.483억) 한 줄, HP 50% 스토퍼(뒤에 카운트다운 → 전체 물리). 부활·웨이브 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "통상 공격(단체 물리)",
+  "aoe": "死ぬがいい！！(50% 스토퍼 뒤 카운트 3번 다음 전체 무속성 물리)",
+  "status": "기재 없음",
+  "note_kr": "물리만 써서 완력 디버프(アナベル·キッド·アィシャ·マナ)·물리 내성 버프(アナベル·リィカ·ブリアー·マナ)로 버틴다."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/varesu",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8"
+ ],
+ "name_kr": "마수 바레스",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "魔獣ヴァレス",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "fire",
+  "water",
+  "wind",
+  "earth",
+  "slash",
+  "pierce",
+  "blunt",
+  "magic"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 48,300,000(0.483억, VH 4,830,000). HP 50% 스토퍼 → 행동 변화(3……→2……→1…… 카운트 후 4번째 행동 死ぬがいい！！ 전체 무속성 물리). 부활·웨이브·소환 기재 없음. 약점 칸 아이콘이 화·수·풍·지·참·돌·타·마 8개 + 이름 없는 아이콘 2개(무엇인지 미확인), 내성 없음. 투고 누적 피해(수백억)가 HP보다 훨씬 커서 5턴 동안 피해가 계속 쌓이는 방식으로 보임(알테마 설명 없음).",
+ "mechanics": [
+  "통상 공격: 단체 물리",
+  "HP 50% 스토퍼 뒤 3……・2……・1…… (카운트만, 공격 없음)",
+  "死ぬがいい！！: 카운트 뒤 전체 무속성 물리",
+  "물리 공격만 씀 → 완력 디버프·물리 내성 버프 유효(VC로 디버프 가능한 캐릭터도 확인)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "エニ",
+  "花咲の姫君",
+  "赤套の炎使い",
+  "ミナルカ",
+  "アルド",
+  "アナベル",
+  "キッド",
+  "アィシャ",
+  "マナ",
+  "リィカ",
+  "ブリアー"
+ ],
+ "strategy_kr": "약점이 화·수·풍·지·참·돌·타·마로 넓어서 속성 제약이 거의 없다. 알테마 편성은 ミナルカ 한 명이 딜을 맡고 エニ·花咲の姫君·赤套の炎使い가 버프만 써서 1.5배 행동 보너스를 챙기는 형태다(AF 중엔 행동 보너스가 안 쌓임). 보너스는 火 30·バルオキー 60이라 アルド 같은 バルオキー 캐릭터가 유리하다. 50% 스토퍼 뒤 카운트다운 끝에 전체 물리가 오니 완력 디버프나 물리 내성 버프를 챙긴다. 2023 기록집 상위는 스코어 9.6~11.8억(누적 피해 약 500억), 알테마 투고엔 ミナルカ(AS) 편성 스코어 90억(피해 5700억 이상)도 있다.",
+ "source": "https://altema.jp/anaden/varesu",
+ "hp": 0.483,
+ "posts": [
+  {
+   "score": 9000000000.0,
+   "dmg": 570000000000.0,
+   "team": "ミナルカ(AS)・韜晦の討手・ユーイン・メリト / サブ エニ・ギルドナ / バディ テトラ(AS)",
+   "src": "https://altema.jp/anaden/varesu",
+   "note": "원문 'スコア90億。与ダメ5700億強' (날짜 표시 없음, dmg는 5700억으로 넣음)"
+  },
+  {
+   "score": 750000000.0,
+   "dmg": null,
+   "team": "エニ・トゥーヴァ(ES)・ウェネーフィカ・ヤクモ / サブ アルド・アシュティア / バディ キュモス",
+   "src": "https://altema.jp/anaden/varesu",
+   "note": "원문 'スコア7.5億。ヤクモ冥16、ネフィカ冥50。' (날짜 표시 없음)"
+  },
+  {
+   "score": 1180400472.0,
+   "dmg": 52800000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 床舐 2023/6/18 (累計ダメージ 約528億)"
+  },
+  {
+   "score": 1056060065.0,
+   "dmg": 52500000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 Legne 2023/6/15 — 동영상 있음 (累計ダメージ 約525億)"
+  },
+  {
+   "score": 1000104641.0,
+   "dmg": 52000000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 3위 りんね 2023/6/14 (累計ダメージ 約520億)"
+  },
+  {
+   "score": 957744982.0,
+   "dmg": 49900000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 4위 エビ 2023/6/16 (累計ダメージ 約499億)"
+  },
+  {
+   "score": 569787135.0,
+   "dmg": 74000000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 ※(순위 외) Legne 2023/6/19 — 水物理パ攻略 (累計ダメージ 約740億)"
+  },
+  {
+   "score": 539836281.0,
+   "dmg": 28100000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 5위 レイラ 2023/6/11 (累計ダメージ 約281億)"
+  }
+ ]
+},
+ {
+ "id": "sk_gariado",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "風": 30,
+   "拳": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/gariado"
+ },
+ "hp_model": {
+  "bar": 0.483,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   70
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 48,300,000(0.483억) 한 줄, HP 70% 스토퍼. 부활·웨이브 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "통상 공격(단체 물리 다단), フンッ！(단체 무속성 베기)",
+  "aoe": "現実を知れ！·思い知るがいい！(전체 풍 찌르기)",
+  "status": "기재 없음",
+  "note_kr": "공격이 거의 물리라 완력 디버프(アナベル·キッド·アィシャ·マナ, VC 포함)·풍 내성 버프(ラブリ·ガリユ·ミーユ·ハーディー)가 유효. 보스가 빨라서 투고는 전원 속도 장비(隼)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/gariado",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8"
+ ],
+ "name_kr": "갤리어드",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ガリアード",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "wind"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 48,300,000(0.483억, VH 4,830,000). HP 70% 스토퍼 → 행동 변화(그 전엔 통상 공격만, 뒤엔 11행동 순환). 부활·웨이브·소환 기재 없음. 약점 풍, 내성 없음. 유저 투고: 1턴째에 창으로 바꿔 드는지 여부가 흔들림.",
+ "mechanics": [
+  "통상 공격: 단체 물리 다단(70% 전)",
+  "現実を知れ！: 전체 풍 찌르기(행동표 9번째만 단체 무속성 베기로 적혀 있음)",
+  "フンッ！: 단체 무속성 베기",
+  "思い知るがいい！: 전체 풍 찌르기",
+  "70% 스토퍼가 있어 그 전에 AF를 쓰면 피해가 낭비됨 → 70%까지 게이지를 모으고 스토퍼 뒤 AF"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "セスタ",
+  "碧光の鎌使い",
+  "ツキハ(ES)",
+  "イーファ(AS)",
+  "キュリオ",
+  "キキョウ",
+  "アナベル",
+  "キッド",
+  "アィシャ",
+  "マナ",
+  "ラブリ",
+  "ガリユ",
+  "ミーユ",
+  "ハーディー"
+ ],
+ "strategy_kr": "풍 약점이라 풍 파티가 기본이고 보너스도 風 30·拳 30이다. 70% 스토퍼까지는 평소대로 싸우며 AF 게이지를 모으고 스토퍼 뒤에 AF를 쓴다. 알테마 편성은 セスタ·碧光の鎌使い가 딜, ツキハ(ES)·イーファ(AS)가 서포트 스킬로 1.5배 행동 보너스를 받는다. 유저 투고(스코어 약 2.65억)는 전원 風으로 맞춰 편성 보너스 1000을 받고 AF 중 ハカーム·ラファール 디버프를 상한까지 쌓았다. 2023 기록집 1위는 스코어 11.5억(누적 피해 약 712억).",
+ "source": "https://altema.jp/anaden/gariado",
+ "hp": 0.483,
+ "posts": [
+  {
+   "score": 265485680.0,
+   "dmg": null,
+   "team": "イーファ(AS)・赤套の炎使い・ミストレア(AS)・ルイナ(AS) / サブ シンシア・セヴェン / バディ テトラ",
+   "src": "https://altema.jp/anaden/gariado",
+   "note": "원문 'スコア・265485680' — 風揃えで1000ボーナス, 2T AF (날짜 표시 없음)"
+  },
+  {
+   "score": 1153946720.0,
+   "dmg": 71200000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 Legne 2023/6/15 — 동영상 있음 (累計ダメージ 約712億)"
+  },
+  {
+   "score": 421306012.0,
+   "dmg": 25100000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 Nabu 2023/6/13 (累計ダメージ 約251億)"
+  }
+ ]
+},
+ {
+ "id": "sk_yamisalamander",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "水": 30,
+   "東方": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/yamisalamander"
+ },
+ "hp_model": {
+  "bar": 0.2818,
+  "bars": 2,
+  "bar_seq": [
+   0.0805,
+   0.483
+  ],
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "다운 전 HP 8,050,780(0.08억) → 다운 뒤 48,300,000(0.483억), bar는 평균. 다운 4행동째 起き上がる로 다운 전 상태 복귀(그때 HP가 어떻게 되는지 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "통상 공격(물리), グガァァ！！(지 마법), グルルル……(화 마법), 다운 중 グォォォ……(풍 마법)",
+  "aoe": "ギャァアゥッ！！！(전체 화 마법)",
+  "status": "기재 없음",
+  "note_kr": "마법 위주 → 지성 디버프. 화 흡수라 화 공격 금지."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/yamisalamander",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8"
+ ],
+ "name_kr": "어둠의 샐러맨더",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "闇サラマンダー",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "water"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [
+  "fire"
+ ],
+ "phases": "챌린지 HP 8,050,780(0.08억) → 0이 되면 다운, 다운 뒤 HP 48,300,000(0.483억). 다운 중 행동은 何もしない ×2 → グォォォ……(단체 풍 마법) → 起き上がる(다운 전 상태로 돌아감)라서 다운 동안 못 깎으면 일어남. 약점 수, 화 흡수, 내성 기재 없음. 스토퍼·소환 기재 없음.",
+ "mechanics": [
+  "통상 공격: 단체 물리",
+  "グガァァ！！: 단체 지 마법",
+  "グルルル……: 단체 화 마법",
+  "ギャァアゥッ！！！: 전체 화 마법",
+  "다운 뒤: 何もしない → 何もしない → グォォォ……(단체 풍 마법) → 起き上がる(다운 전 상태로 복귀)",
+  "다운 뒤 HP가 매우 크고 못 깎으면 일어나므로 AF로 한 번에 깎음 → 약점·연타로 AF 게이지 버는 캐릭터 우선",
+  "마법 위주라 지성 디버프 유효(マナ クイーンオブハート는 아군도 디버프 → 딜러는 물리가 낫다)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "エルシール",
+  "トゥーヴァ(ES)",
+  "月華の令嬢",
+  "シグレ(AS)",
+  "フォラン(AS)",
+  "サイラス",
+  "マナ"
+ ],
+ "strategy_kr": "수 약점·화 흡수라 수 파티가 기본이고 보너스는 水 30·東方 60이다. 다운 뒤 HP가 크고 일어나기 전에 깎아야 해서 AF를 여러 번 쓰는 것을 노리며, 약점과 연타로 게이지를 버는 캐릭터를 우선한다. 알테마 편성은 エルシール 존·버프디버프와 トゥーヴァ(ES) 확정 페인으로 月華の令嬢·シグレ(AS)를 받친다. 유저 투고 최고는 エルシール(AS)·ジルファニー·深緋の刈人·ヴェルダンタ로 피해 2,246.9억·스코어 34.2억(행동 420·AF 100·편성 1000), 2023 기록집 1위는 스코어 22.2억(누적 약 1130억).",
+ "source": "https://altema.jp/anaden/yamisalamander",
+ "hp": 0.564,
+ "posts": [
+  {
+   "score": 3415286440.0,
+   "dmg": 224689897393.0,
+   "team": "エルシール(AS)・ジルファニー・深緋の刈人・ヴェルダンタ / サブ 夢吟の詩人・ロベーラ / バディ モケ",
+   "src": "https://altema.jp/anaden/yamisalamander",
+   "note": "행동 보너스 420·AF 100·편성 1000 (날짜 표시 없음)"
+  },
+  {
+   "score": 332971986.0,
+   "dmg": 15969879429.0,
+   "team": "サザンカ・ユナ(AS)・マイティ・ナギ(ES) / サブ 高橋花林・アィシャ / バディ テトラ",
+   "src": "https://altema.jp/anaden/yamisalamander",
+   "note": "행동 보너스 1,035·AF 50·편성 1000 (날짜 표시 없음)"
+  },
+  {
+   "score": 200000000.0,
+   "dmg": 13900000000.0,
+   "team": "デューイ(AS)・フェルミナ(ES)・エルシール・月華の令嬢 / サブ ソフィア・ネロ / バディ テトラ",
+   "src": "https://altema.jp/anaden/yamisalamander",
+   "note": "원문 '最高スコア2億（ダメージ約139億）' (날짜 표시 없음)"
+  },
+  {
+   "score": 2220948139.0,
+   "dmg": 113000000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 Legne 2023/6/16 — 동영상은 스코어 20.99억 때 것 (累計ダメージ 約1130億)"
+  },
+  {
+   "score": 350367220.0,
+   "dmg": 25800000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 無属性愛好家 2023/6/11 — 陰パ軸攻略 (累計ダメージ 約258億)"
+  },
+  {
+   "score": 208335076.0,
+   "dmg": 12700000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 3위 ウクアージLover 2023/6/21 — ウクアージ採用型攻略 (累計ダメージ 約127億)"
+  }
+ ]
+},
+ {
+ "id": "sk_gensitai",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "吟遊詩人": 60,
+   "呪い": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/gensitai"
+ },
+ "hp_model": {
+  "bar": 0.483,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 48,299,996(0.483억) 한 줄, HP 약 50% 스토퍼. 治癒の時로 자기 회복(양 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "突撃/斬撃/打撃の時(물리), 猛毒の時(마법+독), 忘却の時(마법+봉인)",
+  "aoe": "破滅の時(전체 무속성 마법, 50% 뒤 지성 버프 小·中·大와 함께 3번)",
+  "status": "독, 봉인",
+  "note_kr": "50% 뒤 마법이 세짐 → 지성 디버프(シオン·コレット·マナ·キッド) 유지."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/gensitai",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8"
+ ],
+ "name_kr": "환시 태아",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "幻視胎",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "wind",
+  "earth",
+  "fire",
+  "water"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 48,299,996(0.483억, VH 4,829,997). 약점이 풍→지→화→수 순서로 매 턴 바뀜(한 번에 하나), 내성 없음. HP 약 50% 스토퍼 → 時ノ検索ヲ開始 뒤 지성 버프와 전체 마법을 번갈아 씀. 부활·웨이브·소환 기재 없음.",
+ "mechanics": [
+  "1번째: 突撃の時/斬撃の時/打撃の時 — 단체 무속성 물리",
+  "2번째: 猛毒の時(단체 마법+독) / 忘却の時(단체 마법+봉인)",
+  "3번째: 治癒の時 — 자기 HP 회복",
+  "4번째: 破滅の時 — 전체 무속성 마법",
+  "HP 50% 이하: 時ノ検索ヲ開始 → 時の検索25%(자기 지성 버프 小 1턴) → 破滅の時 → 時の検索50%(中) → 破滅の時 → 時の検索100%(大) → 破滅の時",
+  "50% 뒤 강한 마법 → 지성 디버프를 끊기지 않게 다시 걸기",
+  "AF는 스토퍼까지 아끼고 스토퍼 뒤 한 번에(알테마 공략 문구, 편성 예는 1턴째 AF로 풍 존·각성)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ミストレア(AS)",
+  "ツキハ(ES)",
+  "赤套の炎使い",
+  "セスタ",
+  "アィシャ",
+  "サイラス",
+  "シオン",
+  "コレット",
+  "マナ",
+  "キッド"
+ ],
+ "strategy_kr": "약점이 매 턴 풍→지→화→수로 바뀌어 한 속성 파티로는 첫 턴(풍)이나 특정 턴만 약점을 찌른다. 보너스는 吟遊詩人 60·呪い 60이고 알테마 편성은 편성 보너스를 버리고 セスタ 딜 + 행동 보너스로 점수를 번다. 1턴째 AF로 풍 존을 펴고 각성한 뒤, 2턴째부터 吟遊詩人·呪い를 가진 アィシャ와 サイラス를 앞으로 내 행동 보너스를 챙긴다. 50% 뒤 지성 버프+전체 마법이 커지므로 지성 디버프를 유지한다. 2023 기록집 1위 스코어 9.1억(누적 약 450억), 水物理パ·陰パ 기록도 있음.",
+ "source": "https://altema.jp/anaden/gensitai",
+ "hp": 0.483,
+ "posts": [
+  {
+   "score": 914303131.0,
+   "dmg": 45000000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 ユウ 2023/6/17 (累計ダメージ 約450億)"
+  },
+  {
+   "score": 874144119.0,
+   "dmg": 45800000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 迷子の猫 2023/6/16 (累計ダメージ 約458億)"
+  },
+  {
+   "score": 708259308.0,
+   "dmg": 74500000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 3위 Legne 2023/6/19 — 水物理パ攻略 (累計ダメージ 約745億)"
+  },
+  {
+   "score": 478759883.0,
+   "dmg": 40200000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 ※(순위 외) Legne 2023/6/15 — 陰パ軸攻略, 동영상 있음 (累計ダメージ 約402億)"
+  },
+  {
+   "score": 372573973.0,
+   "dmg": 23600000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 4위 無属性愛好家 2023/6/11 (累計ダメージ 約236億)"
+  }
+ ]
+},
+ {
+ "id": "sk_girudona",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "王族": 60,
+   "魔獣": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/girudona"
+ },
+ "hp_model": {
+  "bar": 0.4885,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 48,854,792(0.489억) 한 줄, 스토퍼·부활 기재 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "통상 공격(물리), これが本当の力だ！(3턴째 단체 HP 99% 피해)",
+  "aoe": "吹き飛べ！(전체 지 마법), 消えてなくなれ！(5턴째 전체 무속성 마법)",
+  "status": "기재 없음",
+  "note_kr": "회복(ノーナ·マリエル, 가능하면 전체 회복), 지성 디버프(キッド), 전속성 내성 버프(ツクヨミ)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/girudona",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8"
+ ],
+ "name_kr": "마수왕 길드너",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "魔獣王ギルドナ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 48,854,792(0.489억, VH 4,750,179). 약점·내성 없음. 5행동 순환(3턴째 단체 HP 99% 피해, 5턴째 전체 무속성 마법). 스토퍼·부활·웨이브·소환 기재 없음.",
+ "mechanics": [
+  "1·4번째: 통상 공격(단체 물리)",
+  "2번째: 吹き飛べ！ — 전체 지 마법",
+  "3번째: これが本当の力だ！ — 단체 HP 99% 피해 → 회복 필요",
+  "5번째: 消えてなくなれ！ — 전체 무속성 마법(강함) → 지성 디버프·전속성 내성 버프"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "クロード(ES)",
+  "赤套の炎使い",
+  "セスタ",
+  "シンシア(AS)",
+  "ギルドナ",
+  "トーム",
+  "ノーナ",
+  "マリエル",
+  "キッド",
+  "ツクヨミ"
+ ],
+ "strategy_kr": "약점·내성이 없어 버프로 파티 화력을 올리는 쪽이다. 보너스는 王族 60·魔獣 60이고, 둘 다 가진 ギルドナ를 앞에 세워 행동 보너스를 번다. 알테마 편성은 1턴째 AF로 풍 존을 펴고 각성, クロード(ES)·赤套の炎使い 버프디버프로 セスタ·シンシア(AS)를 받친다. 3턴째 단체 HP 99% 피해는 회복으로, 5턴째 전체 마법은 지성 디버프로 막는다. 2023 기록집 1위 스코어 6.8억(누적 약 458억, 陰パ).",
+ "source": "https://altema.jp/anaden/girudona",
+ "hp": 0.488,
+ "posts": [
+  {
+   "score": 683135651.0,
+   "dmg": 45800000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 迷子の猫 2023/6/16 — 陰パ軸攻略 (累計ダメージ 約458億)"
+  },
+  {
+   "score": 381310766.0,
+   "dmg": 25600000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 Legne 2023/6/15 — 陰パ軸攻略, 동영상 있음 (累計ダメージ 約256億)"
+  },
+  {
+   "score": 212461278.0,
+   "dmg": 11500000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 3위 Nabu 2023/6/20 (累計ダメージ 約115億)"
+  }
+ ]
+},
+ {
+ "id": "sk_gouseidrone",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "火": 30,
+   "剣": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/gouseidrone"
+ },
+ "hp_model": {
+  "bar": 0.5097,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 50,970,812(0.510억) 한 줄, 스토퍼·부활 기재 없음. 챌린지 5턴(5턴째 マキシマムキャノン)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "통상 공격(물리 ×4), リングウェーブ(무속성 마법+수면)",
+  "aoe": "マキシマムキャノン(챌린지 5턴째 전체 무속성 마법)",
+  "status": "수면",
+  "note_kr": "フォトンバリア(자기 전속성 내성 中 2턴) 동안 속성 피해가 줄어듦. 알테마 편성은 バディ テトラ(レアンカルナシオン 踏ん張り)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/gouseidrone",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8"
+ ],
+ "name_kr": "합성드론",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "合成ドローン",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "fire"
+ ],
+ "resist": [
+  "wind"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 50,970,812(0.510억, VH 5,097,078). 약점 화, 내성 풍. 원래 10턴째 マキシマムキャノン이지만 챌린지는 5턴째에 씀. 스토퍼·부활·웨이브·소환 기재 없음.",
+ "mechanics": [
+  "1번째: 통상 공격 — 단체 물리 ×4",
+  "2번째: リングウェーブ — 단체 무속성 마법 + 수면",
+  "3번째: フォトンバリア — 자기 전속성 내성 버프(中, 2턴)",
+  "マキシマムキャノン: 전체 무속성 마법(챌린지는 5턴째)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ピチカ",
+  "花咲の姫君",
+  "赤套の炎使い",
+  "ミナルカ",
+  "ラブリ(AS)",
+  "ヴァイオレット",
+  "ガリユ",
+  "アルフェン"
+ ],
+ "strategy_kr": "화 약점이라 화 파티가 기본이고 보너스는 火 30·剣 30이다. 알테마 편성은 ピチカ 가창(グランドフィナーレ)·花咲の姫君 존·赤套の炎使い 버프로 ミナルカ 딜을 받치고, 서브에 火·拳 ラブリ(AS)와 剣 ヴァイオレット를 둔다. 3번째 행동 フォトンバリア로 2턴 동안 보스 전속성 내성이 오르고, 5턴째 マキシマムキャノン(전체 마법)이 오니 버틸 수단(テトラ 踏ん張り 등)을 챙긴다. 2023 기록집 1위 스코어 13.8억(누적 약 781억, 月華 채용).",
+ "source": "https://altema.jp/anaden/gouseidrone",
+ "hp": 0.51,
+ "posts": [
+  {
+   "score": 1382934019.0,
+   "dmg": 78100000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 床舐 2023/6/18 — 月華採用型パーティ, 동영상 있음 (累計ダメージ 約781億)"
+  },
+  {
+   "score": 1024531352.0,
+   "dmg": 52500000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 Legne 2023/6/15 — 동영상 있음 (累計ダメージ 約525億)"
+  }
+ ]
+},
+ {
+ "id": "sk_jisounoyugami",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "KMS社": 60,
+   "マシナリー": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/jisounoyugami"
+ },
+ "hp_model": {
+  "bar": 0.5381,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 53,814,064(0.538억) 한 줄. 60%·30%는 행동 변화 기준(스토퍼 기재 없음). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 3,
+  "tank": false,
+  "heal": true,
+  "single": "ガトリングガン(찌르기×4), メタルクロー(베기+베기 내성 다운), 脳天砕き(타격+기절), 水竜斬り, ウォーターバン(수 마법+봉인), ポイズンニードル(찌르기+독)",
+  "aoe": "時の幻影(전체 — 처음 물리, 60%·30% 뒤 마법), 存在の否定(내용 미기재, 踏ん張り 필요)",
+  "status": "기절, 봉인, 독, 베기 내성 다운",
+  "note_kr": "存在の否定를 踏ん張り로 버텨야 하고 상태이상이 많음. 알테마 편성은 リィカ パワーヒール로 회복."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/jisounoyugami",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8"
+ ],
+ "name_kr": "시층의 뒤틀림",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "時層の歪み",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 53,814,064(0.538억, VH 5,381,401). 약점·내성 없음. HP 60% 이하·30% 이하에서 행동 변화(3행동씩, 時の幻影 전체 공격이 물리 → 마법으로). 스토퍼·부활·웨이브·소환 기재 없음. 행동표에 없는 '存在の否定'(알테마 편성 설명)이 있어 踏ん張り로 버팀 — 효과·발동 턴 미기재.",
+ "mechanics": [
+  "HP 100~60%: ガトリングガン(단체 무속성 찌르기 ×4) / メタルクロー(단체 무속성 베기 + 베기 내성 디버프 小 3턴) / 時の幻影（ガリアード）(전체 물리)",
+  "HP 60% 이하: 脳天砕き(단체 무속성 타격 + 기절) / 水竜斬り(단체 수 베기) / 時の幻影（魔獣王ギルドナ）(전체 무속성 마법)",
+  "HP 30% 이하: ウォーターバン(단체 수 마법 + 봉인) / ポイズンニードル(단체 무속성 찌르기 + 독) / 時の幻影（幻視胎）(전체 마법)",
+  "存在の否定: 행동표 미기재, ミルシャ(AS) トラグディスパスィ의 踏ん張り로 버티라고만 적혀 있음(유저 글엔 '存在の拒絶で誰か落ちたら' 언급)",
+  "첫 時の幻影만 물리, 그 뒤는 마법 → 지성 디버프 우선"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": true,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "エニ",
+  "ヤクモ",
+  "トゥーヴァ(ES)",
+  "ミルシャ(AS)",
+  "リィカ",
+  "ノノルド"
+ ],
+ "strategy_kr": "약점이 없어 파티 전체 공격 버프로 화력을 올리는 쪽이다. 보너스는 KMS社 60·マシナリー 60이고 편성 보너스를 맞추기 어려워, 알테마 편성은 둘 다 가진 リィカ를 서브에서 꺼내 서포트 스킬(パワーヒール)로 행동 보너스를 챙긴다. 딜은 ヤクモ에게 エニ 음 존·トゥーヴァ(ES) 연계·ミルシャ(AS) 가창을 얹고, 1턴째 AF. 存在の否定는 ミルシャ(AS) 踏ん張り로 넘긴다. 2023 기록집 상위는 전부 陰パ(1위 스코어 6.4억, 누적 약 464억).",
+ "source": "https://altema.jp/anaden/jisounoyugami",
+ "hp": 0.538,
+ "posts": [
+  {
+   "score": 636333085.0,
+   "dmg": 46400000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 迷子の猫 2023/6/16 — 陰パ軸攻略 (累計ダメージ 約464億)"
+  },
+  {
+   "score": 617208470.0,
+   "dmg": 45100000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 ユウ 2023/6/14 — 陰パ軸攻略 (累計ダメージ 約451億)"
+  },
+  {
+   "score": 410404152.0,
+   "dmg": 40600000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 3위 Legne 2023/6/21 — 陰パ軸攻略, 동영상 있음 (累計ダメージ 約406億)"
+  }
+ ]
+},
+ {
+ "id": "sk_gouseikiryu",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "地": 30,
+   "仮面": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/gouseikiryu"
+ },
+ "hp_model": {
+  "bar": 0.523,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 52,301,076(0.523억) 한 줄. HP 약 20%마다 時が加速する(스토퍼 아님), 80%에서 행동 변화. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "통상 공격(물리+독)",
+  "aoe": "吹き飛ばしてやる！/焼き払ってくれる！(전체 화 마법), 苦しみを味わうがいい！(전체 무속성 마법+독), 時が加速する(독 걸린 아군 최대 HP 50%)",
+  "status": "독",
+  "note_kr": "독이 걸린 채 HP 20% 구간을 넘기면 큰 피해 → 독 무효·해제 필수, 지성 디버프."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/gouseikiryu",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8"
+ ],
+ "name_kr": "합성귀룡",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "合成鬼竜",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "earth"
+ ],
+ "resist": [
+  "water"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 52,301,076(0.523억, VH 5,230,103). 약점 지, 내성 수. HP가 약 20% 줄 때마다 時が加速する(독 걸린 아군에게 최대 HP 50% 비율 피해). HP 80% 이하에서 전체 화 마법이 焼き払ってくれる！로 바뀜. 스토퍼·부활·웨이브·소환 기재 없음.",
+ "mechanics": [
+  "통상 공격: 단체 물리 + 독(1·3번째)",
+  "吹き飛ばしてやる！: 전체 화 마법(2·4·6번째, HP 80% 이하는 焼き払ってくれる！)",
+  "苦しみを味わうがいい！: 전체 무속성 마법 + 독(5번째)",
+  "時が加速する: HP 약 20% 감소마다, 독 걸린 아군에게 최대 HP 50% 피해",
+  "독 대책(상태이상 배리어·테일즈 콜라보 요리 무기 독 무효), 마법 위주라 지성 디버프(부족하면 전속성 내성 버프)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "クロード(ES)",
+  "ねここ(AS)",
+  "ツバメ(AS)",
+  "ロキド",
+  "ツキハ(ES)",
+  "シェリーヌ(AS)"
+ ],
+ "strategy_kr": "지 약점·수 내성이라 지 파티가 기본이고 보너스는 地 30·仮面 60이다. 알테마 편성은 ロキド·ツバメ(AS)를 딜러로, クロード(ES) 버프와 ねここ(AS) 버프디버프·존으로 받친다(서브 ツキハ(ES) 페인, シェリーヌ(AS) 拳·地). HP 20%마다 독 걸린 아군에게 최대 HP 50% 피해가 오므로 독 무효·상태이상 배리어를 챙긴다. 유저 투고는 テオドロス 편성 스코어 59.7억(피해 3778억), 2023 기록집 1위는 스코어 11.6억(누적 약 654억, ヴァイオレット 축).",
+ "source": "https://altema.jp/anaden/gouseikiryu",
+ "hp": 0.523,
+ "posts": [
+  {
+   "score": 5970000000.0,
+   "dmg": 377800000000.0,
+   "team": "ティラミス(AS)・クロード(ES)・紫装の槍使い(AS)・テオドロス / サブ シェリーヌ・白磁の魔人(AS) / バディ モケ",
+   "src": "https://altema.jp/anaden/gouseikiryu",
+   "note": "원문 'テオドロス試運転。スコア59.7億、ダメージ3778億' (날짜 표시 없음)"
+  },
+  {
+   "score": 1160592795.0,
+   "dmg": 65400000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 Legne 2023/6/25 — ヴァイオレット軸 (累計ダメージ 約654億)"
+  },
+  {
+   "score": 801627988.0,
+   "dmg": 46900000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 床舐 2023/6/19 — オトハ(AS)軸, 동영상 있음 (累計ダメージ 約469億)"
+  }
+ ]
+},
+ {
+ "id": "sk_parusifaruou",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "風": 30,
+   "復讐者": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/parusifaruou"
+ },
+ "hp_model": {
+  "bar": 0.539,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 53,861,552(0.54억) 한 줄, 스토퍼·부활 기재 없음. 개막 3턴 뒤 방패(본체 대미지 차단, 방패 HP 미기재). 보상 단계별 필요 점수는 알테마에 없음(top 미기재). 투고 누적 피해가 표 HP의 수백 배라 챌린지는 HP 0이 돼도 5턴 내내 이어지는 스코어전으로 보임(추정)."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "通常攻撃(물리), 砕けろ！(지 마법), ハッ！(무속성 타격+기절), 방패 중 動きを封じよう！(무속성 마법+기절)·素晴らしい力だ！(무속성 마법+자기 회복)",
+  "aoe": "방패 중 全てを破壊する！ 전체 무속성 마법",
+  "status": "기절",
+  "note_kr": "단체 공격 위주. 길어지면 HP 회복과 지성 디버프를 준비하라는 정도(알테마)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/parusifaruou",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+  "https://altema.jp/anaden/hosiyominosyoka"
+ ],
+ "name_kr": "파르지팔 왕",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "パルシファル王",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "wind"
+ ],
+ "resist": [
+  "earth"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 53,861,552(0.54억), 1체. 풍 약점·지 내성(무효·흡수 칸 기재 없음). 스토퍼·웨이브·부활·소환 기재 없음. 개막 3턴 경과 뒤 盾を構える — 방패를 깰 때까지 본체에 공격이 안 들어가고 행동 패턴이 바뀜(방패 HP 미기재). 챌린지 5턴. VH HP 5,368,580.",
+ "mechanics": [
+  "通常攻撃: 단체 물리",
+  "砕けろ！: 단체 지 마법",
+  "ハッ！: 단체 무속성 타격 + 기절",
+  "개막 3턴 경과 뒤 盾を構える: 방패를 깰 때까지 본체 대미지 없음, 행동 패턴 변화 (VH 설명은 '3턴 경과마다')",
+  "방패 중 動きを封じよう！: 단체 무속성 마법 + 기절",
+  "방패 중 素晴らしい力だ！: 단체 무속성 마법 + 자기 HP 회복",
+  "방패 중 全てを破壊する！: 전체 무속성 마법"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ミストレア(AS)",
+  "イーファ(AS)",
+  "ツキハ(ES)",
+  "セスタ",
+  "キュリオ",
+  "アザミ(AS)",
+  "シュゼット",
+  "ガラムバレル",
+  "エイミ"
+ ],
+ "strategy_kr": "풍 약점이라 풍 공격 파티가 기본이고, 알테마 예시는 セスタ 주력에 ミストレア(AS) 가창·イーファ(AS) 버프·ツキハ(ES) 버프와 페인을 붙인다. 4턴째부터 방패가 올라와 방패를 깰 때까지 본체에 대미지가 안 들어가므로 1~3턴에 화력을 몰고, 그 뒤엔 방패부터 깬다. 보너스는 풍 +30, 復讐者 +60이라 서브에 보너스 캐릭터를 두고 교대로 행동 보너스를 챙긴다. 2023 기록집 1·2위(11.7억·10.1억점)도 セスタ 중심 공략.",
+ "source": "https://altema.jp/anaden/parusifaruou",
+ "hp": 0.54,
+ "posts": [
+  {
+   "score": 1166323858.0,
+   "dmg": 55500000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 メル 2023/6/15, セスタ軸攻略, 累計ダメージ '約555億' (편성 미기재)"
+  },
+  {
+   "score": 1007897466.0,
+   "dmg": 37200000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 Legne 2023/6/21, セスタ軸攻略, 累計ダメージ '約372億' (편성 미기재)"
+  }
+ ]
+},
+ {
+ "id": "sk_jioangirasu",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "ジオ": 90,
+   "精霊対話": 90
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/jioangirasu"
+ },
+ "hp_model": {
+  "bar": 0.549,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   60,
+   40,
+   20
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 54,913,232(0.55억) 한 줄, 60/40/20% 스토퍼(天使の唄 아군 영구 디버프). 20% 뒤 약 4턴째 끝에 フィーネ 전체 99,999. 부활 없음. 보상 단계별 필요 점수는 알테마에 없음(top 미기재). 투고 누적 피해가 표 HP의 수백 배라 챌린지는 HP 0이 돼도 5턴 내내 이어지는 스코어전으로 보임(추정)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "없음(기본 행동이 전부 전체)",
+  "aoe": "ジオ・サイクロン 전체 풍 마법 / ジオ・アース 전체 지 마법 / ジオ・レイジ 전체 무속성 타격(랜덤), フィーネ 전체 99,999 고정 또는 HP 99% 비율",
+  "status": "天使の唄 영구 디버프 누적(물리 내성 → 전속성 내성 → 완력·지성·속도, 각 소 500턴)",
+  "note_kr": "완력·지성 디버프로 랜덤 전체 공격을 줄이고, 20% 스토퍼 뒤 フィーネ 전에 끝낸다."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/jioangirasu",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+  "https://altema.jp/anaden/hosiyominosyoka"
+ ],
+ "name_kr": "마수천사 지오 앙길라스",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ジオ・アンギラス",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 54,913,232(0.55억), 1체. 약점·내성·무효·흡수 없음. HP 60/40/20% 스토퍼 — 스토퍼마다 기본 행동과 별도로 天使の唄 발동. 20%(ダ・カーポ)에서 3턴 뒤 최후의 노래 예고 → 다음 턴 종료 시 天使の唄 フィーネ(전체 99,999 고정). HP 0% 행에도 フィーネ(전체 HP 99% 비율 피해). 웨이브·소환·부활 없음. 챌린지 5턴. VH HP 5,491,310.",
+ "mechanics": [
+  "기본 행동(랜덤): ジオ・サイクロン 전체 풍 마법 / ジオ・アース 전체 지 마법 / ジオ・レイジ 전체 무속성 타격",
+  "HP 60% 天使の唄: 아군 전체 물리 내성 디버프(소, 500턴)",
+  "HP 40% 天使の唄 クレッシェンド: 아군 전체 전속성 내성 디버프(소, 500턴)",
+  "HP 20% 天使の唄 ダ・カーポ: 아군 전체 완력·지성·속도 디버프(소, 500턴), 3턴 뒤 최후의 노래 예고",
+  "天使の唄 フィーネ: 예고 다음 턴 종료 시 전체 99,999 고정 / HP 0%에선 전체 HP 99% 비율 피해"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "エニ",
+  "フラムラピス(AS)",
+  "ヤクモ",
+  "リヴァイア(AS)",
+  "フィーネ",
+  "アルテナ",
+  "クロード(ES)",
+  "ユーイン",
+  "フィーネ(AS)",
+  "メリナ",
+  "レンリ",
+  "メリッサ",
+  "アルマ(AS)",
+  "チルリル(ES)",
+  "赤套の炎使い",
+  "ウクアージ"
+ ],
+ "strategy_kr": "약점·내성이 없어 속성 제약은 없고, 매 턴 전체 공격(풍·지 마법, 무속성 타격)이 랜덤으로 오니 완력·지성 디버프를 건다. 보너스는 ジオ·精霊対話 퍼스널리티 각 +90으로 크므로 アルテナ·フィーネ를 서브에 두고 교대로 행동 보너스를 받는다. 알테마 예시는 ヤクモ 주력에 エニ 존·버프, フラムラピス(AS) 브레이크·버프, リヴァイア(AS) 아군 독 부여. 20% 스토퍼 뒤 フィーネ 전에 끝내도록 버프·AF를 아껴 쓰라고 하며, 2023 기록집 상위(5.0~5.1억점)는 음 파티 공략.",
+ "source": "https://altema.jp/anaden/jioangirasu",
+ "hp": 0.55,
+ "posts": [
+  {
+   "score": 511691209.0,
+   "dmg": 45300000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 紅色ざくろ 2023/6/16, 陰パ軸攻略, 累計ダメージ '約453億' (편성 미기재)"
+  },
+  {
+   "score": 505678654.0,
+   "dmg": 44800000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 2위 迷子の猫 2023/6/16, 陰パ軸攻略, '約448億'"
+  },
+  {
+   "score": 504231814.0,
+   "dmg": 44600000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 3위 ユウ 2023/6/14, 陰パ軸攻略, '約446億'"
+  },
+  {
+   "score": 445692697.0,
+   "dmg": 44800000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 4위 Legne 2023/6/21, 水物理パ攻略, '約448億'"
+  },
+  {
+   "score": 274502178.0,
+   "dmg": 20900000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 5위 でんでん 2023/6/11, セスタ軸攻略, '約209億'"
+  },
+  {
+   "score": 197762222.0,
+   "dmg": 14600000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 6위 りんね 2023/6/11, セスタ軸攻略, '約146億'"
+  }
+ ]
+},
+ {
+ "id": "sk_kuronosumenasu",
+ "shoka_part": "메인 1부",
+ "score_bonus": {
+  "pers": {
+   "火": 30,
+   "水": 30,
+   "風": 30,
+   "地": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/kuronosumenasu"
+ },
+ "hp_model": {
+  "bar": 0.591,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 59,080,460(0.59억) 한 줄, 스토퍼·부활 기재 없음. 보상 단계별 필요 점수는 알테마에 없음(top 미기재). 투고 누적 피해가 표 HP의 수백 배라 챌린지는 HP 0이 돼도 5턴 내내 이어지는 스코어전으로 보임(추정)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "通常攻撃 단체 무속성 물리",
+  "aoe": "メテオインパクト 전체 화 마법, ライトニングレーザー 전체 무속성 마법, メナスショック 전체 1,200 고정",
+  "status": "ホワイトイレーサー 적·아군 전체 버프·디버프 해제(상태이상은 없음)",
+  "note_kr": "완력·지성 디버프로 피해를 줄이고, ホワイトイレーサー 뒤 버프·디버프를 다시 건다."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/kuronosumenasu",
+  "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+  "https://altema.jp/anaden/hosiyominosyoka"
+ ],
+ "name_kr": "크로노스 메나스",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "クロノス・メナス",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 59,080,460(0.59억), 1체. 약점·내성·무효·흡수 없음. 스토퍼·웨이브·소환·부활 기재 없음. 5행동 순환(3번째가 ホワイトイレーサー). 챌린지 5턴. VH HP 5,908,027.",
+ "mechanics": [
+  "5행동 순환: 通常攻撃 → メテオインパクト → ホワイトイレーサー → ライトニングレーザー → メナスショック",
+  "通常攻撃: 단체 무속성 물리",
+  "メテオインパクト: 전체 화 마법",
+  "ホワイトイレーサー: 적·아군 전체 버프·디버프 해제",
+  "ライトニングレーザー: 전체 무속성 마법",
+  "メナスショック: 전체 1,200 고정 피해"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "セスタ",
+  "ミストレア(AS)",
+  "イーファ(AS)",
+  "ツキハ(ES)",
+  "赤套の炎使い",
+  "キュリオ",
+  "シュゼット",
+  "メロディ(AS)",
+  "イスカ",
+  "セヴェン",
+  "ピチカ",
+  "花咲の姫君",
+  "クロード(ES)",
+  "ツキハ",
+  "シオン",
+  "アィシャ",
+  "アザミ(AS)",
+  "ガリユ(AS)",
+  "ツクヨミ",
+  "キッド"
+ ],
+ "strategy_kr": "약점·내성이 없고 보너스가 화·수·풍·지 퍼스널리티 각 +30이라 4속성 중 어느 속성 파티든 행동 보너스를 받고 편성 보너스도 노리기 쉽다. 3번째 행동 ホワイトイレーサー가 아군 버프와 적 디버프를 모두 지우므로 그 뒤 다시 걸고, 큰 딜·AF는 해제 시점을 피해 맞춘다. 물리·마법을 섞어 치므로 완력·지성 디버프를 준비한다. 알테마 예시는 セスタ 풍 파티(赤套の炎使い 서브)이고, 투고에 'スコア4億'(ピチカ·花咲の姫君·クロード(ES)·ツキハ), 2023 기록집 1위는 14.3억점(水物理パ).",
+ "source": "https://altema.jp/anaden/kuronosumenasu",
+ "hp": 0.59,
+ "posts": [
+  {
+   "score": 400000000.0,
+   "dmg": null,
+   "team": "ピチカ・花咲の姫君・クロード(ES)・ツキハ／サブ シオン・アィシャ／バディ モルディ",
+   "src": "https://altema.jp/anaden/kuronosumenasu",
+   "note": "알테마 투고 '【装備】スコア4億' (날짜 표시 없음)"
+  },
+  {
+   "score": 1433268746.0,
+   "dmg": 89300000000.0,
+   "team": "",
+   "src": "https://anothereden.game-info.wiki/d/%A5%B9%A5%B3%A5%A2%A5%A2%A5%BF%A5%C3%A5%AF%B5%AD%CF%BF%BD%B8",
+   "note": "2023 기록집 1위 Legne 2023/6/25, 水物理パ攻略, 累計ダメージ '約893億' (편성 미기재)"
+  }
+ ]
+},
+ {
+ "id": "sk_syokonobannin",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "風": 30,
+   "科学者": 45
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 203609000,
+  "src": "https://altema.jp/anaden/syokonobannin"
+ },
+ "hp_model": {
+  "bar": 0.687,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 68,681,936(0.69억) 한 줄, 스토퍼·부활 기재 없음. 마지막 보상(挑戦者の証) 203,609,000점. 챌린지 5턴. 투고에 점수·피해 숫자 없음."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "通常攻撃 단체 물리",
+  "aoe": "火炎の書 전체 화 마법, 水撃の書 전체 수 마법, 深淵の書 전체 무속성 마법",
+  "status": "없음(완력·지성 디버프도 안 씀)",
+  "note_kr": "전체 마법이 거의 매 턴 와서 지성 디버프가 핵심."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/syokonobannin",
+  "https://altema.jp/anaden/hosiyominosyoka"
+ ],
+ "name_kr": "서고 관리인",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "書庫の番人",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [
+  "water"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 68,681,936(0.69억), 1체. 수 내성, 약점·무효·흡수 없음. 스토퍼·웨이브·소환·부활 기재 없음. 9행동 순환. 챌린지 5턴. VH HP 6,722,745.",
+ "mechanics": [
+  "9행동 순환: 通常攻撃 → 火炎の書 → 水撃の書 → 通常攻撃 → 深淵の書 → 火炎の書 → 通常攻撃 → 深淵の書 → 水撃の書",
+  "通常攻撃: 단체 물리",
+  "火炎の書: 전체 화 마법 / 水撃の書: 전체 수 마법 / 深淵の書: 전체 무속성 마법",
+  "완력·지성 디버프를 쓰지 않음 → 아군 버프가 그대로 유지됨"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ミストレア(AS)",
+  "イーファ(AS)",
+  "ツキハ(ES)",
+  "セスタ",
+  "ノクシス",
+  "ユーリ",
+  "ユーイン",
+  "チルリル(ES)",
+  "メリナ",
+  "レンリ(AS)",
+  "ピチカ",
+  "花咲の姫君",
+  "クロード(ES)",
+  "ツキハ",
+  "ノクシス(AS)",
+  "メロディ(AS)",
+  "セヴェン",
+  "ヴェイナ(AS)"
+ ],
+ "strategy_kr": "수 내성 말고는 제약이 없고 보스가 아군 스탯을 깎지 않으므로, 공격자에게 완력·지성 버프를 몰아 짧게 끝낸다. 화·수·무속성 전체 마법이 이어지니 지성 디버프를 걸고, 모자라면 전속성 내성 대책을 더한다. 보너스는 풍 +30, 科学者 +45 — 알테마 예시는 セスタ 풍 파티(ミストレア(AS)·イーファ(AS)·ツキハ(ES))에 ノクシス를 서브로 둬 행동 보너스를 받는다.",
+ "source": "https://altema.jp/anaden/syokonobannin",
+ "hp": 0.69,
+ "posts": []
+},
+ {
+ "id": "sk_ryujinnotukai",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "火": 30,
+   "竜": 45
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 202246000,
+  "src": "https://altema.jp/anaden/ryujinnotukai"
+ },
+ "hp_model": {
+  "bar": 0.679,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   75,
+   50,
+   25
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 67,856,328(0.68억, 알테마 'VH' 표 값을 챌린지로 봄 — 챌린지 표 68,681,936은 書庫の番人 복사로 보임) 한 줄, 75/50/25% 스토퍼(스토퍼 뒤 자기 버프 누적), 부활 없음. 마지막 보상 202,246,000점. 투고 누적 피해가 표 HP의 수백 배라 챌린지는 HP 0이 돼도 5턴 내내 이어지는 스코어전으로 보임(추정)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": true,
+  "heal": true,
+  "single": "体当たり 단체 물리 + 기절",
+  "aoe": "ストームブレス 전체 풍 마법, ドラゴンブレス 전체 화 마법, グランドブレイク 전체 지 마법, 이름 없는 전체 마법",
+  "status": "기절(体当たり), 竜の咆哮 자기 완력·지성·속도 버프 최대 6누적",
+  "note_kr": "알테마 예시는 3턴째부터 ラディアス(AS) 守護, 버디 テトラ HP 회복. 내구는 고려하지 않은 편성이라 못 버틸 수 있다고 적음."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/ryujinnotukai",
+  "https://altema.jp/anaden/hosiyominosyoka"
+ ],
+ "name_kr": "용신의 수하",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "竜神の遣い",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [
+  "wind"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 67,856,328(0.68억)로 봄 — 알테마 챌린지 표 68,681,936은 書庫の番人과 HP·스탯(352/352/267/271/271/18)이 똑같아 복사 오류로 보이고, 'ベリーハード' 표의 67,856,328(완력·지성 357, 속도 270)이 챌린지 수준 값(보상 문턱 202,246,000과 다른 책들의 문턱/HP 비율도 맞음). 1체, 풍 내성, 약점·무효·흡수 없음. HP 약 75/50/25% 스토퍼, 스토퍼마다 행동 변화. 웨이브·소환·부활 없음. 챌린지 5턴. VH 실제 HP 미기재.",
+ "mechanics": [
+  "개시~75%: 体当たり(단체 물리 + 기절), 전체 마법, ストームブレス(전체 풍 마법)",
+  "75% 뒤: ドラゴンブレス(전체 화 마법), 竜の咆哮(자기 완력·지성·속도 버프 99턴, 최대 6누적)",
+  "50% 뒤: グランドブレイク(전체 지 마법) 추가",
+  "25% 뒤: 행동 순서 변화(ドラゴンブレス·グランドブレイク·体当たり)",
+  "스토퍼를 넘길수록 竜の咆哮가 쌓여 받는 피해가 커짐"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": true,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "花咲の姫君",
+  "ピチカ",
+  "アルド",
+  "ミナルカ",
+  "ラディアス(AS)",
+  "シオン",
+  "クロード(ES)",
+  "ツキハ",
+  "エニ",
+  "ヤクモ",
+  "赤套の炎使い",
+  "トゥーヴァ(ES)",
+  "ガリユ"
+ ],
+ "strategy_kr": "풍 내성이고 보너스가 화 +30·竜 +45라 화 파티가 기본이다. 알테마 예시는 1턴째 개막 AF로 화력 지원을 전체에 깔고 ミナルカ 주력(花咲の姫君 존·ピチカ 가창·アルド 지원), 3턴째부터 ラディアス(AS)를 전열에 내 守護로 받는 피해를 줄인다. 스토퍼마다 竜の咆哮가 쌓여 피해가 커지니 탱커·회복을 둔다. 투고 최고 246,017,090점(피해 362.9억·행동 보너스 678, エニ·ヤクモ·赤套の炎使い·トゥーヴァ(ES), 속도 조정과 ヤクモ デリート 브레이크 수가 조건)이고, 투고자는 보상을 다 받으려면 피해 300억 정도가 기준이라고 적었다.",
+ "source": "https://altema.jp/anaden/ryujinnotukai",
+ "hp": 0.68,
+ "posts": [
+  {
+   "score": 246017090.0,
+   "dmg": 36285706515.0,
+   "team": "エニ・ヤクモ・赤套の炎使い・トゥーヴァ(ES)／サブ ガリユ・ピチカ／バディ キュモス",
+   "src": "https://altema.jp/anaden/ryujinnotukai",
+   "note": "알테마 투고 '《スコア》246,017,090 / ダメージ 36,285,706,515', 행동 보너스 678, '報酬コンプの為に必要なダメージの目安は30,000,000,000' (날짜 표시 없음)"
+  }
+ ]
+},
+ {
+ "id": "sk_kyoujuuou",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "剣": 30,
+   "冥の誘い": 45
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 198680000,
+  "src": "https://altema.jp/anaden/kyoujuuou"
+ },
+ "hp_model": {
+  "bar": 0.657,
+  "bars": 2,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "2체 교대, 각 65,717,720(0.66억) = 2줄. 스토퍼는 보스마다 다름(凶獣王 75·25%, ネオ 50%)이라 stopper 칸은 비움 — 스토퍼마다 아군 HP 1 필살기 후 교대. 마지막 보상 198,680,000점. 투고 누적 피해가 표 HP의 수백 배라 챌린지는 HP 0이 돼도 5턴 내내 이어지는 스코어전으로 보임(추정)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "凶獣王 デモニックサークル(단체 남은 HP 1), 通常攻撃(물리)",
+  "aoe": "스토퍼 필살기(전체 남은 HP 1), サンダーロア 전체 무속성 마법, ネオサイクロン 전체 풍 마법+도발, ネオサーキュラー 전체 물리+페인, ネオウィング 전체 물리, ネオブラスター 전체 마법",
+  "status": "凶つ使いの唄 독·페인·수면·봉인·기절·혼란 랜덤, 도발, グアンナ 물리 내성 디버프",
+  "note_kr": "HP 1 공격 자체로는 안 죽지만 그 뒤 다른 피해·자해로 쓰러지기 쉬움 → 장기전이면 회복 필수(クロード(ES)·ピチカ·ラディアス(AS)·テトラ)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/kyoujuuou",
+  "https://altema.jp/anaden/hosiyominosyoka"
+ ],
+ "name_kr": "흉수왕",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "凶獣王・凶獣ネオアンギラス",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "凶獣王·凶獣ネオアンギラス 2체가 스토퍼마다 교대로 등장. 챌린지 HP 각 65,717,720(0.66억, 합 1.31억), 둘 다 약점·내성·무효·흡수 없음. 凶獣王 HP 약 75/25%, 凶獣ネオアンギラス 약 50% 스토퍼 — 스토퍼 때 필살기(아군 전체 남은 HP 1) 뒤 상대 쪽과 교대. ネオアンギラス는 眷属グアンナ 소환, 50% 뒤 후반 패턴. 챌린지 5턴. VH HP 凶獣王 6,250,603·ネオ 6,194,673.",
+ "mechanics": [
+  "凶獣王 순환: 通常攻撃(단체 물리) → サンダーロア(전체 무속성 마법) → デモニックサークル(단체 남은 HP 1) → サンダーロア → デモニックサークル",
+  "스토퍼 필살기(양쪽 공통): 아군 전체 남은 HP 1 → 상대 보스와 교대",
+  "凶獣ネオアンギラス 전반: 眷属を召喚(グアンナ), ネオサイクロン(전체 풍 마법 + 도발), ネオサーキュラー(전체 물리 + 페인), 通常攻撃, ネオブラスター(전체 마법)",
+  "凶獣ネオアンギラス 후반: 凶つ使いの唄(전체 독·페인·수면·봉인·기절·혼란 랜덤), ネオサイクロン, ネオウィング(전체 물리), ネオブラスター 추가",
+  "眷属グアンナ: 威嚇の拳(아군 전체 물리 내성 디버프 소 3턴), 気合の拳(적 쪽 전체 완력 버프 소 3턴), 나머지 턴 아무것도 안 함"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ミストレア(AS)",
+  "赤套の炎使い",
+  "クロード(ES)",
+  "セスタ",
+  "ギルドナ",
+  "トーム",
+  "ヤクモ",
+  "深緋の刈人",
+  "フェルミナ(ES)",
+  "ピチカ",
+  "ラディアス(AS)",
+  "アルド(AS)",
+  "チルリル(ES)",
+  "メルピピア",
+  "アルフェン",
+  "アルド",
+  "エニ",
+  "トゥーヴァ(ES)",
+  "月華の令嬢"
+ ],
+ "strategy_kr": "약점·내성이 없고 보너스는 剣 +30, '冥の誘い' +45(알테마 표기 그대로 — 퍼스널리티 이름으로는 이상해 오기 가능). 한 번에 스토퍼까지 깎는 고화력 딜러로 보스 행동을 끊는 게 추천이고, 스토퍼 필살기·デモニックサークル로 HP가 1이 되므로 오래 끌면 회복이 필수다. 알테마 예시는 1턴째 개막 AF로 풍왕진·각성까지 깔고 セスタ 주력, 2턴째부터 ギルドナ로 행동 보너스를 벌며, 페인이 없으면 화력이 모자라 페인 장비를 챙긴다. 투고로는 剣 보너스 파티(アルド(AS)·チルリル(ES)·クロード(ES)·メルピピア) 약 2.7억점, エニ·ヤクモ·トゥーヴァ(ES)·ピチカ 206,743,153점이 있다.",
+ "source": "https://altema.jp/anaden/kyoujuuou",
+ "hp": 1.31,
+ "posts": [
+  {
+   "score": 270000000.0,
+   "dmg": 18300000000.0,
+   "team": "アルド(AS)・チルリル(ES)・クロード(ES)・メルピピア／サブ アルフェン・ギルドナ／バディ テトラ",
+   "src": "https://altema.jp/anaden/kyoujuuou",
+   "note": "알테마 투고 '自分は183億くらいのダメージでスコアが2億7千万くらいでした' (어림값, 날짜 표시 없음)"
+  },
+  {
+   "score": 206743153.0,
+   "dmg": 32660845588.0,
+   "team": "エニ・ヤクモ・トゥーヴァ(ES)・ピチカ／サブ ギルドナ・月華の令嬢／バディ キュモス",
+   "src": "https://altema.jp/anaden/kyoujuuou",
+   "note": "알테마 투고 '《スコア》206,743,153 《ダメージ》32,660,845,588 《ボーナス》633' (날짜 표시 없음)"
+  }
+ ]
+},
+ {
+ "id": "sk_papamakuminaru",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "IDAスクール": 45,
+   "メガネ": 45
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 201630000,
+  "src": "https://altema.jp/anaden/papamakuminaru"
+ },
+ "hp_model": {
+  "bar": 0.675,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 67,485,168(0.67억) 한 줄, 50% 스토퍼(약점·내성 물리↔마법 교체), 부활 없음. 마지막 보상 201,630,000점. 투고에 점수·피해 숫자 없음."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "없음(전부 전체 공격)",
+  "aoe": "フリーフォールプレス 전체 물리+기절, ベノムスモッグ 전체 공격+독, マクミナルサンダー 전체 마법(50% 전), バリアタックル 전체 물리(50% 뒤)",
+  "status": "기절·독, マクミナルリフレクター 아군 물리 내성 디버프 최대 20누적",
+  "note_kr": "내성 쪽으로 맞힐 때마다 아군 물리 내성이 깎이므로 약점 쪽 공격 위주로."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/papamakuminaru",
+  "https://altema.jp/anaden/hosiyominosyoka"
+ ],
+ "name_kr": "파파 맥미널",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "パパ・マクミナル",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "slash",
+  "pierce",
+  "blunt"
+ ],
+ "resist": [
+  "magic"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 67,485,168(0.67억), 1체. HP 50% 스토퍼. 약점·내성이 바뀜 — 개시 リフレクト・モード：魔法(마법 내성·물리 약점, 위 배열은 이 단계), 50% 스토퍼에 リフレクト・モード：物理(물리 내성·마법 약점). 무효·흡수 없음. 웨이브·소환·부활 없음. 챌린지 5턴. VH HP 6,530,573.",
+ "mechanics": [
+  "개시 リフレクト・モード：魔法: 마법 내성 + 물리 약점, 마법으로 맞으면 マクミナルリフレクター 사용 + 자기 전속성 내성 버프(소 1턴)",
+  "HP 50% 스토퍼 リフレクト・モード：物理: 물리 내성 + 마법 약점, 물리로 맞으면 マクミナルリフレクター 사용 + 자기 물리 내성 버프(소 1턴)",
+  "マクミナルリフレクター: 아군 전체 물리 내성 디버프(소 99턴, 최대 20누적)",
+  "50% 전: フリーフォールプレス(전체 물리 + 기절), ベノムスモッグ(전체 공격 + 독), マクミナルサンダー(전체 마법)",
+  "50% 뒤: マクミナルサンダー 자리에 バリアタックル(전체 물리)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "墨染の軍師",
+  "赤套の炎使い",
+  "ミストレア(AS)",
+  "セスタ",
+  "クロード(ES)",
+  "キュリオ",
+  "ユーイン",
+  "月華の令嬢",
+  "ジェイド",
+  "メイ",
+  "アルマ(AS)",
+  "チルリル(ES)",
+  "マリエル(ES)",
+  "セヴェン",
+  "アナベル"
+ ],
+ "strategy_kr": "50% 스토퍼에서 약점·내성이 물리↔마법으로 뒤집히므로 마법·물리 딜러를 하나씩 넣는 게 기본이고, AF는 주력 공격이 내성에 걸리지 않는 단계에 쓴다. 알테마 예시는 개막 AF로 버프·디버프를 깔며 50%까지 깎은 뒤 墨染の軍師 調虎離山으로 약점·내성을 바꿔 セスタ 물리로 계속 치고, 2턴째부터 クロード(ES)·キュリオ를 전열에 내 행동 보너스를 번다. 내성 쪽 공격으로 맞히면 マクミナルリフレクター로 아군 물리 내성 디버프가 쌓이니 약점 쪽으로 친다. 보너스는 IDAスクール·メガネ 각 +45로, 투고는 セヴェン(둘 다 보유)을 서브에 넣어 행동 보너스 90을 받는다.",
+ "source": "https://altema.jp/anaden/papamakuminaru",
+ "hp": 0.67,
+ "posts": []
+},
+ {
+ "id": "sk_ghostking",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "拳": 30,
+   "霊媒体質": 45
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 203092000,
+  "src": "https://altema.jp/anaden/ghostking"
+ },
+ "hp_model": {
+  "bar": 0.684,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 68,368,128(0.68억) 한 줄. 50% 스토퍼는 VH 표 기준(챌린지 표엔 특징 칸 없음, 행동표에 '스토퍼 뒤' 행동은 있음), 부활 없음. 마지막 보상 203,092,000점. 투고 누적 피해가 표 HP의 수백 배라 챌린지는 HP 0이 돼도 5턴 내내 이어지는 스코어전으로 보임(추정)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "通常攻撃 물리, 壊れた大剣 무속성 베기+기절, 스토퍼 뒤 決戦の一撃 1만",
+  "aoe": "없음(VH 50% 스토퍼 때 아군 전체 화 내성 디버프)",
+  "status": "기절, 보스 자기 완력·지성 버프",
+  "note_kr": "단체 물리 위주라 완력 디버프·물리 내성 버프로 충분. 決戦の一撃 1만은 한 명이 쓰러질 수 있음."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/ghostking",
+  "https://altema.jp/anaden/hosiyominosyoka"
+ ],
+ "name_kr": "고스트 킹",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ゴーストキング",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 68,368,128(0.68억), 1체. 약점·내성·무효·흡수 없음. 챌린지 표엔 특징 칸이 없지만 행동표에 '스토퍼 뒤' 決戦の一撃이 있고, VH 표 특징은 HP 50% 스토퍼(도달 시 아군 전체 화 내성 디버프). 웨이브·소환·부활 없음. 챌린지 5턴. VH HP 6,672,144.",
+ "mechanics": [
+  "通常攻撃: 단체 물리",
+  "壊れた大剣: 단체 무속성 베기 + 기절",
+  "暴走する動力装置: 보스 쪽 전체 완력·지성 버프",
+  "스토퍼 뒤 決戦の一撃: 단체 1만 피해",
+  "VH 기준 HP 50% 스토퍼 도달 시 아군 전체 화 내성 디버프"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "クロード(ES)",
+  "ミストレア(AS)",
+  "赤套の炎使い",
+  "セスタ",
+  "アザミ",
+  "エイミ",
+  "ねここ(AS)",
+  "キッド",
+  "エニ",
+  "トゥーヴァ(ES)",
+  "ユーイン",
+  "ミナルカ(AS)",
+  "チルリル(ES)",
+  "ヤクモ",
+  "エリナ"
+ ],
+ "strategy_kr": "물리 위주라 완력 디버프·물리 내성 버프로 피해를 줄인다(ねここ(AS)·キッド(최대 50%)·赤套の炎使い·エニ 추천). 보너스는 拳 +30, 霊媒体質 +45인데 霊媒体質 캐릭터가 적어 화력과 점수를 같이 챙기기 어렵다고 하며, 전열 4명이 할 일을 끝낸 뒤 후열 보너스 캐릭터(특히 エイミ — 서포트 스킬로 1.5배)와 교대해 행동 보너스를 번다. 알테마 예시는 セスタ 주력에 クロード(ES)·ミストレア(AS) 가창, 赤套の炎使い 존 각성, 2턴째부터 クロード(ES)를 エイミ로 교대. 투고는 'スコア2.1億のギリギリ(最終報酬ライン2億)'(エニ·ヤクモ·赤套の炎使い·トゥーヴァ(ES)).",
+ "source": "https://altema.jp/anaden/ghostking",
+ "hp": 0.68,
+ "posts": [
+  {
+   "score": 210000000.0,
+   "dmg": null,
+   "team": "エニ・ヤクモ・赤套の炎使い・トゥーヴァ(ES)／サブ エイミ・エリナ／バディ キュモス",
+   "src": "https://altema.jp/anaden/ghostking",
+   "note": "알테마 투고 'スコア2.1億のギリギリ(最終報酬ライン2億)' (날짜 표시 없음)"
+  }
+ ]
+},
+ {
+ "id": "sk_psychicido",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "封印": 30,
+   "人見知り": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 220440000,
+  "src": "https://altema.jp/anaden/psychicido"
+ },
+ "hp_model": {
+  "bar": 0.792,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   75,
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 79,245,000(0.79억) 한 줄, 부활 없음. 스토퍼 75%·50%는 VH 표 기재(챌린지 표엔 특징 없음, 행동표는 같은 75%·50% 단계). 瓦礫 HP 미기재. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "スピリットグランス 단체 물리",
+  "aoe": "ソウルグランス·サイキックグランス 전체 마법, サイコサクスム·カラミティサクスム·サイコラーミナ 전체 물리, 스토퍼 다음 턴 강한 전체 공격",
+  "status": "상태이상 기재 없음. 瓦礫 소환마다 자신 완력·지성 버프, 50% 이하 물리 내성 버프",
+  "note_kr": "탱커 언급 없음. 스토퍼 뒤 전체 물리는 완력 디버프·물리 내성 버프, 마법은 지성 디버프로 줄인다."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/psychicido"
+ ],
+ "name_kr": "사이킥 이드",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "サイキック・イド",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "약점·내성·무효·흡수 모두 없음(챌린지·VH). 챌린지 HP 79,245,000(0.79억) / VH 8,506,360. 챌린지 표에는 특징 기재 없음 — VH 표 기준 HP 75%·50% 스토퍼, 스토퍼 도달 다음 턴 강한 전체 공격. 행동표는 통상 / 75% 이하 / 50% 이하로 나뉨. 召喚(プラウスス)으로 瓦礫 소환(HP·개수 미기재), サイコサクスム 사용 시 瓦礫 소멸.",
+ "mechanics": [
+  "召喚(プラウスス): 瓦礫 소환 + 자신 완력·지성 버프 (50% 이하는 召喚(グランデプラウスス))",
+  "スピリットグランス(단체 물리) / ソウルグランス(전체 마법)",
+  "サイコサクスム: 전체 물리, 瓦礫 소멸",
+  "75% 이하: カラミティサクスム(전체 물리) 추가, サイコラーミナ(전체 물리)+ソウルグランス(전체 마법)",
+  "50% 이하: サイコパリエース(자신 물리 내성 버프) + サイキックグランス(전체 마법)",
+  "스토퍼 다음 턴 강한 전체 물리 → 완력 디버프·물리 내성 버프, 마법도 쓰므로 지성 디버프(キッド처럼 둘 다 거는 캐릭터)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "エニ",
+  "ヤクモ",
+  "フラムラピス(AS)",
+  "リヴァイア(AS)",
+  "白磁の魔人",
+  "月華の令嬢"
+ ],
+ "strategy_kr": "약점·내성이 없는 단일 보스라 속성 제약 없이 화력 덱으로 친다. 알테마 챌린지 예시는 ヤクモ 아타커 지팡이(陰) 파티로, 1턴 AF에서 エニ의 ワルプルギスの闇夜를 2번 써 フラムラピス(AS)·リヴァイア(AS) 공격을 陰으로 바꿔 게이지를 유지하고 フラムラピス(AS) 웨폰 브레이크 3개를 남긴 채 AF를 끝낸다. 2턴부터 ヤクモ는 매 턴 デリート, 보너스 대상(封印·人見知り 각 +30)인 リヴァイア(AS)·白磁の魔人을 앞으로 내 행동 보너스를 쌓는다. 스토퍼 뒤 전체 물리·마법은 완력·지성 디버프와 물리 내성 버프로 받는다. 이 페이지에는 유저 투고 점수가 없다.",
+ "source": "https://altema.jp/anaden/psychicido",
+ "hp": 0.792,
+ "posts": []
+},
+ {
+ "id": "sk_deathogrehellogre",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "刀": 15,
+   "フード": 20,
+   "記憶喪失": 20,
+   "ねこ好き": 20
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 308982000,
+  "src": "https://altema.jp/anaden/deathogrehellogre"
+ },
+ "hp_model": {
+  "bar": 1.403,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50,
+   25
+  ],
+  "kt_min": 0,
+  "note_kr": "2체 동시, 각 70,133,480(0.70억), 합 1.40억. 각자 50%·25% 스토퍼(어느 쪽이든 닿으면 아군 전체 HP 75% 비율 피해). 한쪽 격파 시 다른 쪽 패턴 변화, 회복·부활 기재 없음. 투고 피해(620억)가 HP를 크게 넘어 챌린지는 격파로 끝나지 않는 것으로 보임(페이지 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "スマッシュハンマー(단체 물리+기절), ブルーズフレイル·グレイトフレイル×2(단체 물리+페인), アッパースマッシュ×2",
+  "aoe": "스토퍼 연계 공격 전체 HP 75% 비율 피해, ストライククラッシュ·ギガントハンマー(기절) 전체 물리",
+  "status": "기절, 페인, 아군 전체 물리 내성 디버프",
+  "note_kr": "탱커 언급 없음. 스토퍼마다 회복, 완력 디버프·물리 내성 버프로 받는다(알테마)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/deathogrehellogre"
+ ],
+ "name_kr": "데스 오우거·헬 오우거",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "デスオーガ・ヘルオーガ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "2체 동시전(デスオーガ·ヘルオーガ, '스테이터스 포함 2체 모두 같음'). 약점·내성·무효·흡수 없음. 챌린지 HP 각 70,133,480(2체 합 1.40억) / VH 각 6,958,564. 각자 HP 50%·25% 스토퍼 — 어느 쪽이든 스토퍼에 닿으면 연계 공격으로 아군 전체 HP 75% 비율 피해, 스토퍼 직후엔 통상 행동 없음. 한쪽이 쓰러지면 남은 쪽 행동 패턴이 바뀜(전회복 여부는 이 페이지에 기재 없음).",
+ "mechanics": [
+  "스토퍼(50%·25%) 도달 시 연계 공격: 아군 전체 HP 75% 비율 피해 → 직후 통상 행동이 없으니 그 사이 회복",
+  "デスオーガ: 死の雄叫び(아군 전체 완력 버프), 통상 공격(단체 물리), スマッシュハンマー(단체 물리+기절)",
+  "デスオーガ(ヘルオーガ 격파 후): 死の咆哮(자신 완력 버프), ストライククラッシュ(전체 물리), ギガントハンマー(전체 물리+기절)",
+  "ヘルオーガ: 地獄の雄叫び(아군 전체 물리 내성 디버프), 통상 공격, ブルーズフレイル×2(단체 물리+페인)",
+  "ヘルオーガ(デスオーガ 격파 후): グレイトフレイル×2(단체 물리+페인), 地獄の咆哮(전체 물리 내성 디버프), アッパースマッシュ×2(단체 물리)",
+  "모든 공격이 물리 → 완력 디버프·물리 내성 버프"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "クロード(ES)",
+  "ミストレア(AS)",
+  "赤套の炎使い",
+  "セスタ",
+  "レイヴン",
+  "エルガ"
+ ],
+ "strategy_kr": "두 오우거가 동시에 나오고 둘 다 약점·내성이 없다. 50%·25% 스토퍼마다 아군 전체 HP 75% 비율 피해가 오지만 직후 통상 행동이 없어 회복할 틈이 있고, 공격이 전부 물리라 완력 디버프·물리 내성 버프면 충분하다. 알테마 예시는 セスタ 아타커로, 1턴 AF에 クロード(ES)가 참 존을 펴 リレーノ 오라를 켜고 極・風王陣까지 깐 뒤 2턴부터 二刀神狼, テトラ 오라(최대 MP)로 心技一体를 키우고 レイヴン은 피해 없는 보조 스킬로 행동 보너스를 번다. 보너스가 刀 15·フード·記憶喪失·ねこ好き 20으로 낮아, 투고(エニ·ヤクモ 陰 파티)는 피해 620억 × 보너스 530 ≈ 3.3억을 목표로 했고 실제 3.9억을 냈다.",
+ "source": "https://altema.jp/anaden/deathogrehellogre",
+ "hp": 1.403,
+ "posts": [
+  {
+   "score": 390000000.0,
+   "dmg": 62000000000.0,
+   "team": "エニ・ヤクモ・フラムラピス(AS)・レイヴン / サブ 月華の令嬢・ノーナ(AS) / バディ キュモス",
+   "src": "https://altema.jp/anaden/deathogrehellogre",
+   "note": "「ダメージ 620億あたり」「ボーナス 530」「スコアが3.3億あたりになって証がとれるはずです。」「(筆者はスコア3.9億で獲得)」 — 피해 620억은 예상치. 턴별 누적 피해 10억(1T, AFカンスト＋α)·80억·250억·430억·620억, 보너스 50·170·290·410·530. 날짜 미표시"
+  }
+ ]
+},
+ {
+ "id": "sk_ogrebaron",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "いぬ好き": 30,
+   "仮面": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 222034000,
+  "src": "https://altema.jp/anaden/ogrebaron"
+ },
+ "hp_model": {
+  "bar": 0.803,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   80
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 80,280,512(0.80억) 한 줄, 80% 스토퍼, 부활 기재 없음. 스토퍼 뒤 オーガメロン(HP 미기재) 2회 소환 — 1개째는 잡지 말고 3턴 소멸을 기다리고 2개째는 3턴 안에 처치. 투고 피해(494억)가 HP를 크게 넘어 챌린지는 격파로 끝나지 않는 것으로 보임(페이지 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "エレガントダークネス·マーベラスフレイム/アクア 단체 마법, ルミナスチェイン·トライチェイン×3(봉인), マジックアタック(MP 30% 피해)",
+  "aoe": "オーガメロン 아군 전체 HP 99% 비율 피해, エレガントフォース 전체 무속성 마법, マーベラスストーム/グランド 전체 풍·지 마법",
+  "status": "봉인, MP 피해",
+  "note_kr": "탱커 언급 없음. 메론 비율 피해 직후 바론이 쉬는 턴에 회복, 지성 디버프·전속성 내성 버프(알테마)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/ogrebaron"
+ ],
+ "name_kr": "오우거 바론",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "オーガバロン",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "약점·내성·무효·흡수 없음. 챌린지 HP 80,280,512(0.80억) / VH 8,689,422. HP 80% 스토퍼. 스토퍼 뒤 オーガメロン 소환(HP 미기재): 1개째는 HP를 0으로 만들면 아군 전체 HP 99% 비율 피해, 3턴 지나면 자연 소멸. 1개째 소멸 다음 턴 시작 시 エレガントフォース + 2개째 소환: 잡으면 아군 전체 HP 회복, 3턴 안에 못 잡으면 아군 전체 HP 99% 비율 피해. 메론이 쓰러진 턴엔 바론 본체 행동 없음.",
+ "mechanics": [
+  "통상: マーベラスフレイム(단체 화 마법), マーベラスストーム(전체 풍 마법), マーベラスアクア(단체 수 마법), マーベラスグランド(전체 지 마법)",
+  "80% 스토퍼 뒤: エレガントダークネス(단체 무속성 마법), ルミナスチェイン(단체 무속성 마법+봉인), エレガントフォース(전체 무속성 마법)",
+  "オーガメロン 1개째: 격파하면 아군 전체 HP 99% 비율 피해, 3턴 뒤 자연 소멸 / 2개째: 격파하면 아군 회복, 3턴 안에 못 잡으면 99% 비율 피해",
+  "2개째 출현 중: マジックアタック(단체 무속성 마법 / 단체 MP 30% 피해), エレガントダークネス",
+  "2개째 소멸 뒤: トライチェイン×3(단체 무속성 마법+봉인), エレガントフォース 2회, マジックアタック(MP 30%)",
+  "모든 공격이 마법 → 지성 디버프, 속성 마법도 있어 전속성 내성 버프"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "クロード(ES)",
+  "深緋の刈人",
+  "赤套の炎使い",
+  "セスタ",
+  "ツキハ",
+  "ヒナギク"
+ ],
+ "strategy_kr": "약점·내성이 없고 공격이 전부 마법이라 지성 디버프와 전속성 내성 버프가 잘 듣는다. 80% 스토퍼 뒤 나오는 オーガメロン은 1개째는 잡으면 99% 비율 피해(3턴 뒤 저절로 사라짐), 2개째는 3턴 안에 못 잡으면 99% 비율 피해라 대응이 반대다. 알테마 예시는 セスタ 베기 파티로, 1턴 AF에 クロード(ES)가 참 존을 펴 リレーノ 오라를 켜고, テトラ는 메론 비율 피해로 오라가 켜져 최대 MP를 올려 心技一体를 키운다. 투고 최고는 같은 계열(クロード(ES)·深緋の刈人·赤套の炎使い·セスタ)로 피해 494억 × (행동 보너스 435 + AF 50) = 2.40억이다. 보너스는 いぬ好き·仮面 각 +30.",
+ "source": "https://altema.jp/anaden/ogrebaron",
+ "hp": 0.803,
+ "posts": [
+  {
+   "score": 239771391.0,
+   "dmg": 49437400180.0,
+   "team": "クロード(ES)・深緋の刈人・赤套の炎使い・セスタ / サブ ラクレア・ツキハ(AS) / バディ リレーノ",
+   "src": "https://altema.jp/anaden/ogrebaron",
+   "note": "「スコア：239,771,391」「ダメージ：49,437,400,180」「行動ボーナス：435」「AFボーナス：50」. 장비 칸엔 異イルルゥ·異デューイ 표기(헤더와 불일치). 날짜 미표시"
+  }
+ ]
+},
+ {
+ "id": "sk_ogrezenon",
+ "shoka_part": "메인 1.5부",
+ "score_bonus": {
+  "pers": {
+   "雷": 30,
+   "ミグランス王宮": 30,
+   "竜": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": null,
+  "src": "https://altema.jp/anaden/ogrezenon"
+ },
+ "hp_model": {
+  "bar": 0.803,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   60
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 80,280,512(0.80억, オーガバロン과 같은 값으로 기재) 한 줄, HP 약 60% 스토퍼(양팔이 부서져 있으면 부활). 팔 HP 미기재. 보상표에 점수 칸이 없어 마지막 보상(挑戦者の証) 점수 미확인 — 같은 HP의 オーガバロン은 2.22억. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "カオスパニック(혼란)·リザイン(봉인) 단체 마법, エレメンタルスパーク 단체 랜덤 속성 마법",
+  "aoe": "精霊剣·真・精霊剣 전체 랜덤 속성 물리, エレメンタルラウンド·グラビティーフォース 전체 마법",
+  "status": "혼란, 봉인, ダークイレイサー 버프·디버프 전체 해제, グラビティーフォース 자기 회복(피해의 10배)",
+  "note_kr": "탱커 언급 없음. 해제 뒤 버프를 다시 거는 순서와 상태이상 회복이 필요."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/ogrezenon"
+ ],
+ "name_kr": "오우거 제논",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "オーガゼノン",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [
+  "fire",
+  "water",
+  "wind",
+  "earth"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "본체 + 右手·左手(팔 능력치 미기재). 약점 없음, 화·수·풍·지 내성, 무효·흡수 없음. 챌린지 HP 80,280,512(0.80억) / VH 8,689,422. HP 약 60% 스토퍼 — 그때 양팔이 부서져 있으면 둘 다 부활하고 스토퍼 뒤 행동으로 바뀜. 부활 기재 없음.",
+ "mechanics": [
+  "본체(스토퍼 전): オーガシールド(적 전체 물리 내성 버프), カオスパニック(단체 무속성 마법+혼란), リザイン(단체 무속성 마법+봉인), ダークイレイサー(적·아군 전체 버프·디버프 해제)",
+  "본체(스토퍼 뒤): オーガマイトネス(적 전체 완력·지성 버프), グラビティーフォース(전체 마법 + 준 피해의 10배만큼 자신 HP 회복), ダークイレイサー 계속",
+  "右手 エレメンタルスパーク(단체 화/수/풍/지 랜덤 마법), 左手 精霊剣(전체 화/수/풍/지 랜덤 베기)",
+  "스토퍼 뒤 팔: エレメンタルラウンド(전체 속성 마법), 真・精霊剣(전체 속성 물리)",
+  "HP 약 60% 스토퍼 때 양팔이 부서져 있으면 양팔 부활",
+  "4속성 내성 → 뇌·음·정 위주, 또는 墨染の軍師 약점·내성 교환으로 약점을 만든다"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "墨染の軍師",
+  "クロード(ES)",
+  "赤套の炎使い",
+  "セスタ",
+  "ミーユ(ES)",
+  "ヴィクト(AS)"
+ ],
+ "strategy_kr": "약점이 없고 화·수·풍·지에 내성이 있어 뇌·음·정 속성으로 치거나 墨染の軍師의 약점·내성 교환으로 약점을 만든다. 알테마 예시는 1턴 AF에 軍師 교환·赤套の炎使い 존 각성과 버프·디버프를 깔고 セスタ로 딜, AF 뒤엔 보너스 대상(雷·ミグランス王宮·竜 각 +30)인 ミーユ(ES)·ヴィクト(AS)를 앞으로 내 행동 보너스를 번다. ダークイレイサー로 버프·디버프가 지워지고 グラビティーフォース는 준 피해의 10배를 회복하며, 혼란·봉인도 건다. 투고는 オボロ·ヴェレット 중심 뇌 보너스 파티가 많고 수치는 '2.6억 정도' 하나뿐이다.",
+ "source": "https://altema.jp/anaden/ogrezenon",
+ "hp": 0.803,
+ "posts": [
+  {
+   "score": 260000000.0,
+   "dmg": null,
+   "team": "ヴェレット・スカル・クロード(ES)・オルレイア / サブ ミーユ(ES)・アルド / バディ ガンス",
+   "src": "https://altema.jp/anaden/ogrezenon",
+   "note": "「ペインが外れなければスコアは2.6億ほど」 (예상치). 날짜 미표시"
+  }
+ ]
+},
+ {
+ "id": "sk_zankirekki",
+ "shoka_part": "메인 2부 전편",
+ "score_bonus": {
+  "pers": {
+   "火": 45,
+   "水": 45,
+   "天の導き": 90
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 163213000,
+  "src": "https://altema.jp/anaden/zankirekki"
+ },
+ "hp_model": {
+  "bar": 0.685,
+  "bars": 2,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "斬鬼 75,329,734 + 裂鬼 61,633,362 = 1.37억, 50% 스토퍼마다 교대(교대 뒤 다시 돌아오는지·HP 처리 미기재) → bars 2(평균 0.685억). 裂鬼 분신 2체 HP 미기재. 투고 피해(2350억)가 HP를 크게 넘어 챌린지는 격파로 끝나지 않는 것으로 보임(페이지 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "刀頭打ち, 十文字斬り×2, 撥ね飛裂(날려버리기)",
+  "aoe": "蛇空断(페인)·幻炎斬(화)·毒飛爪(독)·水刃裂波(수) 전체 베기, 反撃の構え 요격 反撃断 전체 베기",
+  "status": "페인, 독, 날려버리기, 속도·베기 내성·전속성 내성 디버프, 影纏い(교대 불가 3턴)",
+  "note_kr": "탱커 언급 없음. 물리뿐이라 완력 디버프·물리 내성 버프, 斬鬼 요격 자세 중 다단 공격 주의."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/zankirekki"
+ ],
+ "name_kr": "참귀·열귀",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "斬鬼・裂鬼",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "fire",
+  "water"
+ ],
+ "resist": [
+  "pierce"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "斬鬼(수 약점, 화·찌르기 내성)와 裂鬼(화 약점, 수·찌르기 내성)가 HP 약 50% 스토퍼마다 교대(투고: 斬鬼가 2턴째 물러나고 이후 裂鬼). 챌린지 HP 斬鬼 75,329,734 / 裂鬼 61,633,362(합 1.37억), VH 11,229,282 / 9,187,585. 斬鬼는 턴 종료 시 影纏い(아군 전후열 교대 불가), 裂鬼는 매 턴 분신 2체 소환(HP 미기재, 裂鬼 행동 중 랜덤 공격, 분신이 다시 나오면 디버프가 사라진다는 투고). 무효·흡수 없음. ※weak·resist 배열은 두 개체 합침: 화·수는 한쪽 약점이자 다른 쪽 내성.",
+ "mechanics": [
+  "斬鬼: 影纏い(아군 전체 서브와 교대 불가 3턴, 턴 종료 시 부여), 蛇空断(전체 무속성 베기+페인), 属鈍の術(전체 속도·전속성 내성 디버프 소 4턴), 反撃の構え(자신 요격 — 반격 시 反撃断 전체 무속성 베기), 幻炎斬(전체 화 베기), 刀頭打ち(단체 무속성 베기)",
+  "裂鬼: 매 턴 분신 2체 소환, 통상 공격, 十文字斬り(단체 무속성 베기×2), 毒飛爪(전체 무속성 베기+독), 撥ね飛裂(단체 날려버리기), 属裂の術(전체 베기 내성·전속성 내성 디버프 소 4턴), 水刃裂波(전체 수 베기)",
+  "HP 약 50% 스토퍼마다 서로 교대",
+  "모든 공격이 물리 → 완력 디버프·물리 내성 버프(韜晦の討手·アナベル(ES))",
+  "斬鬼 화 내성·裂鬼 수 내성이라 한 속성 편성은 한쪽에 피해가 덜 들어감"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "パリサ(AS)",
+  "韜晦の討手",
+  "ミナルカ(AS)",
+  "ユーイン",
+  "アルド",
+  "電影の明星",
+  "アナベル(ES)"
+ ],
+ "strategy_kr": "斬鬼(수 약점)로 시작해 HP 약 50% 스토퍼에서 裂鬼(화 약점)와 교대하고, 裂鬼는 매 턴 분신 2체를 부른다. 알테마 예시는 ユーイン 화 파티로, パリサ(AS) 가창과 韜晦の討手 버프·디버프로 받치고 ミナルカ(AS)가 개막 極・烈火陣을 편 뒤 2턴부터 アルド(火·天の導き 보너스)와 교대한다. 투고 최고는 ユーイン·ミナルカ(AS)·エニ·韜晦の討手로 피해 약 2350억·보너스 1900 이상 = 45억 이상이며, 本体를 노리면 분신은 ミナルカ 요격이 정리한다. 斬鬼의 影纏い(3턴 교대 불가)가 있어 보너스 교대 턴을 맞춰야 한다. 보너스는 火·水 각 +45, 天の導き +90.",
+ "source": "https://altema.jp/anaden/zankirekki",
+ "hp": 1.37,
+ "posts": [
+  {
+   "score": 1200000000.0,
+   "dmg": null,
+   "team": "花咲の姫君・ユーイン・ツキハ・韜晦の討手 / サブ プライ・サイラス / バディ モケ",
+   "src": "https://altema.jp/anaden/zankirekki",
+   "note": "「【装備】スコア12億(最終報酬ライン1.6億)」. 천명 표기에 レンリ(헤더와 불일치). 날짜 미표시"
+  },
+  {
+   "score": 549000000.0,
+   "dmg": null,
+   "team": "ラディアス(AS)・アルド・アナベル(ES)・ミナルカ(AS) / サブ ミラ・クレス / バディ テトラ(AS)",
+   "src": "https://altema.jp/anaden/zankirekki",
+   "note": "「あまり装備も考えずにとりあえず突撃してみたら5.49億を叩き出し報酬全獲得できました。」 날짜 미표시"
+  },
+  {
+   "score": 4500000000.0,
+   "dmg": 235000000000.0,
+   "team": "ユーイン・ミナルカ(AS)・エニ・韜晦の討手 / サブ ジョーカー・プライ / バディ テトラ(AS)",
+   "src": "https://altema.jp/anaden/zankirekki",
+   "note": "「トータルダメージが約2350億前後、トータルボーナスが1900以上で45億超える事が出来ました」「スコア40億超えることが可能な編成」 — 점수는 '45억 초과'. 날짜 미표시"
+  }
+ ]
+},
+ {
+ "id": "sk_kaohaginosyo",
+ "shoka_part": "메인 2부 전편",
+ "score_bonus": {
+  "pers": {
+   "風": 45,
+   "拳": 45,
+   "料理": 90
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 161176000,
+  "src": "https://altema.jp/anaden/kaohaginosyo"
+ },
+ "hp_model": {
+  "bar": 1.11,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   30
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 110,951,505(1.11억) 한 줄, HP 약 30% 스토퍼(자신 완력·지성·속도 버프 99턴), 부활 없음. 剥ぎ吸引 회복량 미기재. 투고 점수(11억)로 보면 챌린지는 격파로 끝나지 않는 것으로 보임(페이지 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": true,
+  "heal": false,
+  "single": "顔剥(1턴 행동 불능), 憤怒の面・毒手·無面・毒手(베기+독), 無面・魔毒(마법+독)",
+  "aoe": "纏剣・紅蓮裂炎 전체 화 베기, 毒潰 전체 무속성 베기, 無面・魔光 전체 마법",
+  "status": "행동 불능(顔剥), 독, 30% 이하 자신 완력·지성·속도 버프 + 턴 종료 완력 버프 누적",
+  "note_kr": "알테마: 顔剥은 도발 캐릭터로 막는다."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/kaohaginosyo"
+ ],
+ "name_kr": "박면귀",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "顔剥ぎ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "wind"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "단일 보스. 풍 약점, 내성·무효·흡수 없음. 챌린지 HP 110,951,505(1.11억) / VH 14,715,343. HP 약 30% 스토퍼 — 가면이 깨져 자신 완력·지성·속도 버프(소 99턴), 이후 無面 계열 행동. 부활 기재 없음.",
+ "mechanics": [
+  "顔剥: 단체 공격 + 顔剥(1턴 행동 불능) → 도발 캐릭터로 아타커를 지킨다",
+  "剥ぎ吸引: 자신 HP 회복 + 단체 顔剥 해제",
+  "纏剣・紅蓮裂炎: 전체 화 베기",
+  "통상 공격(단체), 턴 종료 시 자신 완력 버프(소 6턴)",
+  "憤怒の面・毒手(단체 무속성 베기+독), 憤怒の面・毒潰(전체 무속성 베기)",
+  "30% 스토퍼 뒤: 無面・毒手(단체 베기+독)/毒潰し(전체 베기), 無面・魔毒(단체 마법+독)/魔光(전체 마법), 顔剥·剥ぎ吸引·紅蓮裂炎 계속"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": true,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ミストレア(AS)",
+  "メルピピア",
+  "セスタ",
+  "シュゼット",
+  "ユーリ",
+  "ソイラ(AS)"
+ ],
+ "strategy_kr": "풍 약점에 내성이 없어 セスタ·シュゼット 같은 풍 아타커가 기본이다. 顔剥은 맞은 1명을 1턴 행동 불능으로 만들어 아타커가 걸리면 손해가 크니 도발 캐릭터로 막는다. 알테마 예시는 ミストレア(AS) 가창·メルピピア 기도로 セスタ·シュゼット를 받치는 풍 파티이고, 투고(セスタ·メロディ(AS)·メルピピア·シュゼット)는 1턴 AF → 2·3턴 통상 → 4턴 SB → 5턴 モケ 차지로 11억을 냈다. HP 약 30% 스토퍼에서 완력·지성·속도 버프가 붙는다. 보너스는 風·拳 각 +45, 料理 +90.",
+ "source": "https://altema.jp/anaden/kaohaginosyo",
+ "hp": 1.11,
+ "posts": [
+  {
+   "score": 1100000000.0,
+   "dmg": null,
+   "team": "セスタ・メロディ(AS)・メルピピア・シュゼット / サブ メリッサ・ソイラ(AS) / バディ モケ(パンドラ10)・ガンス",
+   "src": "https://altema.jp/anaden/kaohaginosyo",
+   "note": "「【装備】スコア11億(最終報酬ライン1.6億)」. 1T AF, 2T「二刀、ダーク、ザクザク、アサルト」, 3T「二刀、ディプラ、ザクザク、アサルト」, 4T「SB安寧バハムート」, 5T「モケチャージ」. 날짜 미표시"
+  }
+ ]
+},
+ {
+ "id": "sk_madouheinosyo",
+ "shoka_part": "메인 2부 전편",
+ "score_bonus": {
+  "pers": {
+   "地": 45,
+   "合成人間": 90
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 187419000,
+  "src": "https://altema.jp/anaden/madouheinosyo"
+ },
+ "hp_model": {
+  "bar": 1.075,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 107,482,080(1.07억) 한 줄, 스토퍼·부활 없음. 40% 이하 전속성 내성 UP(중 3턴). 투고 점수(최대 18억)로 보면 챌린지는 격파로 끝나지 않는 것으로 보임(페이지 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "破城剛腕(타격+기절), 魔瓦機関銃(찌르기×4+봉인), 통상 공격",
+  "aoe": "砕氷降 전체 수 타격, 岩隆撃 전체 지 마법",
+  "status": "기절(破城剛腕·턴 종료 눈덩이), 봉인",
+  "note_kr": "알테마: 스토퍼가 없어 개막 AF로 끝내면 내구 지원 불필요. 챌린지에선 눈덩이 기절이 점수 변수."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/madouheinosyo"
+ ],
+ "name_kr": "마도병",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "魔導兵",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "earth"
+ ],
+ "resist": [
+  "pierce"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "단일 보스. 지 약점, 찌르기 내성, 무효·흡수 없음. 챌린지 HP 107,482,080(1.07억) / VH 13,978,435, 내구 919(높음)·속도 154. HP 스토퍼 없음. 턴 종료 시 눈덩이가 魔導兵 또는 아군 1명에 맞을 수 있음(魔導兵: 피해+완력 버프 소 1턴 / 아군: 피해+기절). HP 40% 이하에서 魔力増強(자신 전속성 내성 UP 중 3턴) 추가.",
+ "mechanics": [
+  "행동은 랜덤: 통상 공격(단체 무속성 타격), 破城剛腕(단체 무속성 타격+기절), 砕氷降(전체 수 타격), 魔瓦機関銃(단체 무속성 찌르기×4+봉인), 岩隆撃(전체 지 마법)",
+  "HP 40% 이하: 魔力増強(자신 전속성 내성 UP 중 3턴) 추가",
+  "턴 종료 눈덩이: 魔導兵에 맞으면 완력 버프(소 1턴), 아군에 맞으면 피해+기절",
+  "스토퍼가 없어 개막 AF로 크게 깎을 수 있음"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ガリアード",
+  "ヘレナ",
+  "メリッサ",
+  "クチナワ",
+  "セリエス",
+  "白磁の魔人",
+  "残影の佳人"
+ ],
+ "strategy_kr": "지 약점(찌르기 내성)이고 스토퍼가 없어 개막 AF부터 공격 위주로 밀 수 있다. 알테마 예시는 クチナワ·ヘレナ 아타커에 メリッサ로 개막 閃撃陣을 펴 행동 보너스를 벌고, 2턴부터 極・地烈陣 + 지 캐릭터만으로 친다. 보너스는 地 +45, 合成人間 +90이고 ガリアード·ヘレナ·メリッサ가 合成人間(이 앱 데이터 기준)이라, 투고에는 편성 보너스 1000까지 받은 예(행동 보너스 1124 + AF 2회 + 편성 1000 = 5.2억)와 18억 예가 있다. 턴 종료 눈덩이 기절이 변수라 기절하면 다시 하는 투고도 있다.",
+ "source": "https://altema.jp/anaden/madouheinosyo",
+ "hp": 1.075,
+ "posts": [
+  {
+   "score": 11900000000.0,
+   "dmg": null,
+   "team": "白磁の魔人・残影の佳人・クチナワ・コマチ(AS) / サブ いいマクマク・いいマクマク / バディ モケ",
+   "src": "https://altema.jp/anaden/madouheinosyo",
+   "note": "원문「スコア119億、報酬ライン2.1億」 — 이 책 마지막 보상은 1.87억이라 報酬ライン이 안 맞음(2.1억은 妖魔ミズチ 값), 같은 편성 글이 妖魔ミズチ 페이지에도 있어 다른 책 기록이거나 11.9억 오기일 수 있음. 날짜 미표시"
+  },
+  {
+   "score": 1200000000.0,
+   "dmg": null,
+   "team": "セリエス・ヘレナ・白磁の魔人・ミュルス / サブ ガリアード・プレメア(AS) / バディ モケ",
+   "src": "https://altema.jp/anaden/madouheinosyo",
+   "note": "「【装備】スコア12億(最終報酬ライン1.8億)」 날짜 미표시"
+  },
+  {
+   "score": 870000000.0,
+   "dmg": null,
+   "team": "クチナワ・クロード(ES)・白磁の魔人・セリエス / サブ ヘレナ・プレメア / バディ テトラ",
+   "src": "https://altema.jp/anaden/madouheinosyo",
+   "note": "「ターン終了時の氷塊で気絶しない事を前提(気絶した場合はやり直し)で最高8.7億」「覚醒実装済みの3人は覚醒必須」 날짜 미표시"
+  },
+  {
+   "score": 520000000.0,
+   "dmg": null,
+   "team": "ベルトラン・白磁の魔人・ガリアード・ヘレナ / サブ クラルテ(AS)・ミルシャ / バディ モルディ",
+   "src": "https://altema.jp/anaden/madouheinosyo",
+   "note": "「行動ボーナス1124＋AF２回・編成ボーナス1000。スコア5.2億取れた」「SB一回だけでも挑戦者の証取れます」 날짜 미표시"
+  },
+  {
+   "score": 1800000000.0,
+   "dmg": null,
+   "team": "ガリアード・白磁の魔人・クチナワ・ヘレナ / サブ セリエス・コマチ / バディ モケ",
+   "src": "https://altema.jp/anaden/madouheinosyo",
+   "note": "「ボーナス入りまくって、スコアは、18億位になりました。」(보너스 편성) 날짜 미표시"
+  }
+ ]
+},
+ {
+ "id": "sk_mizutinosyo",
+ "shoka_part": "메인 2부 전편",
+ "score_bonus": {
+  "pers": {
+   "地": 45,
+   "KMS社": 90,
+   "マシナリー": 90
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 211807000,
+  "src": "https://altema.jp/anaden/mizutinosyo"
+ },
+ "hp_model": {
+  "bar": 1.028,
+  "bars": 2,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   40
+  ],
+  "kt_min": 0,
+  "note_kr": "虚貝 96,699,362 → 본체 108,862,644(합 2.06억, bars 2 평균 1.03억). 본체 HP 40% 스토퍼. 虚貝는 6턴 뒤 또는 幻術の霧로 부활(그 사이 본체 회피 상승). 虚貝 챌린지 HP가 VH(300만)의 약 32배로 본체 배율(약 7.6배)과 크게 다름 — 페이지 값 그대로. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "大鋏(베기+페인), 尖脚·双尖脚·太刀鋏 단체 수 물리, 水柱 단체 수 마법",
+  "aoe": "渦潮 전체 수 마법, 海雷 전체 무속성 마법, 瘴気 전체 독+봉인",
+  "status": "페인, 독, 봉인, 완력·지성·전속성 내성 디버프 누적, 40% 이하 자신 지성 버프 최대 6누적",
+  "note_kr": "탱커 언급 없음. 알테마 예시 버디 テトラ(상태이상 회복). 디버프는 40% 전 완력 → 이후 지성."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/mizutinosyo"
+ ],
+ "name_kr": "요마 이무기",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "妖魔ミズチ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "slash",
+  "earth"
+ ],
+ "resist": [
+  "magic",
+  "blunt",
+  "water"
+ ],
+ "null": [
+  "fire"
+ ],
+ "absorb": [],
+ "phases": "본체 + 등의 虚貝(2부위). 본체: 참·지 약점, 마법·타격·수 내성, 화 무효. 虚貝: 타격·지 약점, 수 내성. 흡수 없음. 챌린지 HP 虚貝 96,699,362 / 본체 108,862,644(합 2.06억), VH 3,004,137 / 14,270,184. 虚貝를 깨기 전엔 본체 회피율 대폭 상승(霧). 虚貝는 6턴 뒤 부활(幻術の霧로도 부활). 본체 HP 40% 스토퍼 → 이후 마법 공격 위주. ※weak·resist 배열은 본체 기준(虚貝 타격 약점은 phases 참고).",
+ "mechanics": [
+  "虚貝: 깨기 전엔 본체 회피율 대폭 상승 → 지·타격으로 먼저 깬다(手数·고화력이면 억지로도 통함). 6턴 뒤 부활",
+  "虚貝 격파 전: 哀哭(전체 완력·지성 디버프 소 5턴), 大鋏(단체 무속성 베기+페인), 尖脚(단체 수 찌르기), 太刀鋏(단체 수 베기), 双尖脚(단체 수 찌르기×2)",
+  "虚貝 격파 후: 喪心哀歌(전체 완력·지성·전속성 내성 디버프 소 5턴), 幻術の霧(전속성 내성 디버프 소 3턴 + 虚貝 부활)",
+  "본체 HP 40% 이하: 개시 시 자신 지성 버프(소 6턴, 최대 6누적), 渦潮(전체 수 마법), 水柱(단체 수 마법), 瘴気(전체 독+봉인), 海雷(전체 무속성 마법), 金切声(지성 버프 + 전체 완력·지성·전속성 내성 디버프 중 3턴 + 봉인)",
+  "40% 전까지 공격이 전부 물리 → 완력 디버프, 이후 지성 디버프로 바꾼다"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "プレメア(AS)",
+  "白磁の魔人",
+  "クチナワ",
+  "リィカ"
+ ],
+ "strategy_kr": "등의 虚貝를 깨지 않으면 본체 회피가 크게 올라 공격이 잘 안 맞으므로 지·타격으로 虚貝부터 깬다. 본체는 참·지 약점에 화 무효, 마법·타격·수 내성이라 지 파티가 무난하다. 알테마 예시는 プレメア(AS)·白磁の魔人 서포트에 クチナワ 아타커, 보너스 칸 リィカ(KMS社·マシナリー)이고, 투고도 魔導兵과 거의 같은 지 보너스 파티로 10~13억이다. 40% 스토퍼 뒤엔 마법·독·봉인으로 바뀌어 디버프를 완력에서 지성으로 바꾼다. 보너스는 地 +45, KMS社·マシナリー 각 +90.",
+ "source": "https://altema.jp/anaden/mizutinosyo",
+ "hp": 2.056,
+ "posts": [
+  {
+   "score": 1000000000.0,
+   "dmg": null,
+   "team": "セリエス・残影の佳人・ヘレナ・白磁の魔人 / サブ プレメア(AS)・ベルベット / バディ モケ",
+   "src": "https://altema.jp/anaden/mizutinosyo",
+   "note": "「【装備】スコア10億(最終報酬ライン2.1億)」 1T 통상, 2T AF, 3T 통상, 4T SB, 5T モケチャージ. 날짜 미표시"
+  },
+  {
+   "score": 1300000000.0,
+   "dmg": null,
+   "team": "ガリアード・白磁の魔人・クチナワ・ヘレナ / サブ セリエス・コマチ / バディ モケ",
+   "src": "https://altema.jp/anaden/mizutinosyo",
+   "note": "「星詠み魔導兵とほぼ同じボーナス編成狙いの地パーティ」「スコアは13億位。」 날짜 미표시"
+  }
+ ]
+},
+ {
+ "id": "sk_karakurinosyo",
+ "shoka_part": "메인 2부 전편",
+ "score_bonus": {
+  "pers": {
+   "剣": 45,
+   "刀": 45,
+   "魔獣": 90,
+   "王族": 90
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 176729000,
+  "src": "https://altema.jp/anaden/karakurinosyo"
+ },
+ "hp_model": {
+  "bar": 0.967,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50,
+   10
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 96,699,362(0.97억) 한 줄(VH 0.118억), HP 50%/10% 스토퍼, 부활 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": true,
+  "heal": false,
+  "single": "絡操鬼哭流-双刃(2회)·三悪道(3회)·肆ノ型(3회+1회+페인)·伍ノ型(2회+3회) 단체 무속성 베기 연격, 朔突(베기+페인)",
+  "aoe": "一閃·奥義 전체 무속성 베기, 弐ノ型·参ノ型 전체+단체 베기 (수치 미기재)",
+  "status": "페인(朔突·弐ノ型·肆ノ型)",
+  "note_kr": "공략: 공격 전부 물리 → 완력 디버프, 단체 연격 대비 최대 HP 관리. 알테마 예시는 ラディアス(AS)를 탱커로 씀."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/karakurinosyo"
+ ],
+ "name_kr": "태엽 사무라이",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "からくり侍",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "약점·내성·무효·흡수 없음(챌린지·VH 공통). HP 50%/10% 스토퍼, 50% 이하·10% 이하에서 행동 패턴이 바뀜. 매 턴 絡操複刀流-残心으로 자기 디버프 해제. 부활·소환·웨이브 없음. 챌린지 HP 96,699,362(약 0.97억) / VH 11,775,264, 챌린지 5턴.",
+ "mechanics": [
+  "絡操複刀流-残心: 매 턴 자기 디버프 해제 → 디버프는 매 턴 다시 걸어야 함",
+  "HP 100~50%: 絡操鬼哭流-双刃(단체 무속성 베기 2회)·一閃(전체 무속성 베기)·三悪道(단체 베기 3회)·朔突(단체 베기+페인)",
+  "HP 50% 이하: 絡操鬼哭流-奥義(전체 베기)·弐ノ型(전체+단체 베기+페인)·参ノ型(단체 2회+전체)·肆ノ型(단체 3회+단체+페인)·伍ノ型(단체 2회+단체 3회)",
+  "HP 10% 이하: 첫 행동 奥義(전체 베기), 이후 단체 물리 통상 공격",
+  "공격이 전부 물리 → 완력 디버프로 쉽게 버팀, 단체 연격이 많아 최대 HP 낮은 캐릭터는 늘 HP를 채워 둠"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": true,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "クロード(ES)",
+  "チルリル(ES)",
+  "ツキハ",
+  "ラディアス(AS)",
+  "ギルドナ"
+ ],
+ "strategy_kr": "약점·내성이 없어 속성 제한이 없고, 행동 보너스가 큰 魔獣·王族(+90)과 剣·刀(+45) 캐릭터로 짜는 게 기본이다. 알테마 예시는 クロード(ES)·チルリル(ES) 지원에 ツキハ 딜, ラディアス(AS) 탱커, 서브 ギルドナ(보너스)·화 刀 캐릭터, 버디 モケ·リレーノ다. 공격이 전부 물리 베기라 완력 디버프면 버티기 쉽지만 보스가 매 턴 디버프를 지우니 다시 걸어야 한다. 투고는 1턴 AF로 판을 깔고 SB·モケ 차지를 뒤 턴에 몰아 스코어 15억~20억(최종 보상선 1.77억)이 나왔다.",
+ "source": "https://altema.jp/anaden/karakurinosyo",
+ "hp": 0.97,
+ "posts": [
+  {
+   "score": 2000000000.0,
+   "dmg": null,
+   "team": "チルリル(ES)・クロード(ES)・ツキハ・ミナルカ(AS) / サブ メリナ・ギルドナ / バディ モケ",
+   "src": "https://altema.jp/anaden/karakurinosyo",
+   "note": "「ミナルカ火力伸びて、スコアは20億行けました。」 天冥 チルリル(ES)冥200・クロード(ES)天84・ツキハ冥112・ミナルカ(AS)冥30, 1T AF, モケ チャージ 3·5T. 날짜 없음"
+  },
+  {
+   "score": 1500000000.0,
+   "dmg": null,
+   "team": "花咲の姫君・チルリル(ES)・メルピピア・ツキハ / サブ セスタ・黒衣の刀使い / バディ モケ",
+   "src": "https://altema.jp/anaden/karakurinosyo",
+   "note": "「スコア15億(最終報酬ライン1.7億)」 1T AF, 5T SB. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_suzakunosyo",
+ "shoka_part": "메인 2부 전편",
+ "score_bonus": {
+  "pers": {
+   "水": 30,
+   "東方": 60,
+   "復讐者": 60,
+   "主人公": 120
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 230464000,
+  "src": "https://altema.jp/anaden/suzakunosyo"
+ },
+ "hp_model": {
+  "bar": 1.346,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   70,
+   30
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 134,562,930(1.35억) 한 줄(VH 0.23억), HP 70%/30% 스토퍼, 부활 없음. 70% 이하 焔鬼の相 스킬 게이지(6턴, 게이지 HP 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "削暗呪(단체 HP 99% 피해), 烈破衝(날려버리기), 飛翔緋炎拳(화 타격 2회), 剛烈拳(지 타격)",
+  "aoe": "爆炎怒豪術(전체 화 마법), 70% 이하 첫 행동 전체 화 공격, 紅蓮斬·紅蓮一閃(전체 화 베기), 스킬 게이지 0이면 전체 큰 피해 (수치 미기재)",
+  "status": "날려버리기, 灰燼波로 보스 디버프 해제",
+  "note_kr": "탱커 지시 없음. 완력·지성 디버프로 받고 버디 テュシア로 HP 회복."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/suzakunosyo"
+ ],
+ "name_kr": "스자쿠",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "朱雀",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "water"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "약점 수, 내성·무효·흡수 없음(챌린지·VH 공통). HP 70%/30% 스토퍼. 70% 이하 첫 행동으로 전체 화 공격 → 灰燼波(자기 디버프 해제) → 焔鬼の相(완력·수 내성 버프 + 스킬 게이지 6턴). 소환·부활·웨이브 없음. 챌린지 HP 134,562,930(약 1.35억) / VH 22,952,538, 챌린지 5턴.",
+ "mechanics": [
+  "통상: 剛烈拳(단체 지 타격)·飛翔緋炎拳(단체 화 타격 2회)·削暗呪(단체 HP 99% 피해)·烈破衝(단체 날려버리기)·爆炎怒豪術(전체 화 마법)",
+  "HP 70% 이하 첫 행동: 전체 화 공격(기술명 미기재) + 灰燼波(자기 디버프 해제)",
+  "焔鬼の相: 자기 완력 버프·수 내성 버프 + 스킬 게이지(6턴). 카운트 0이면 전체 큰 피해 + 주작에 건 디버프 해제",
+  "스킬 게이지는 본체와 같이 깎을 수 있어 전체 공격이 유리, 깨면 행동 패턴이 처음으로 돌아감",
+  "紅蓮斬·紅蓮一閃: 전체 화 베기",
+  "주로 물리지만 일부 마법 → 완력·지성 디버프로 피해 경감"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "エルシール",
+  "フェルミナ(ES)",
+  "月華の令嬢",
+  "夢吟の詩人",
+  "アルド",
+  "マツリカ",
+  "ジルファニー",
+  "深緋の刈人"
+ ],
+ "strategy_kr": "수 약점이라 수 파티가 기본이고, 행동 보너스는 主人公 +120, 東方·復讐者 +60, 水 +30이다. 알테마 예시는 エルシール 지원, フェルミナ(ES)·月華の令嬢 딜, 夢吟の詩人 가창 지원, 서브 アルド·수 도끼 캐릭터, 버디 テュシア로 개막 AF로 버프를 깔고 エルシール를 アルド로 바꿔 비공격 행동 보너스를 벌며 두 딜러로 친다. 딜러는 マツリカ·ジルファニー·深緋の刈人로 대체 가능. 70% 이하 焔鬼の相 스킬 게이지는 전체 공격으로 본체와 같이 깎고, 완력·지성 디버프로 피해를 줄인다. 투고는 花咲の姫君·アルド·白磁の魔人·ツキハ로 1T AF, 4T SB 운용해 스코어 11억(최종 보상선 2.3억).",
+ "source": "https://altema.jp/anaden/suzakunosyo",
+ "hp": 1.35,
+ "posts": [
+  {
+   "score": 1100000000.0,
+   "dmg": null,
+   "team": "花咲の姫君・アルド・白磁の魔人・ツキハ / サブ 深緋の刈人・ニケ / バディ モケ・ガンス",
+   "src": "https://altema.jp/anaden/suzakunosyo",
+   "note": "「スコア11億(最終報酬ライン2.3億)」 天冥 花咲0・覚醒アルド229・ミュンファ16・覚醒ツキハ86, 1T AF, 2T 花咲↔イルルゥ交代, 4T SB, 5T モケチャージ. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_seireijuunosyo",
+ "shoka_part": "메인 2부 중편",
+ "score_bonus": {
+  "pers": {
+   "精霊対話": 40,
+   "火": 20,
+   "風": 20,
+   "地": 20
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 349244000,
+  "src": "https://altema.jp/anaden/seireijuunosyo"
+ },
+ "hp_model": {
+  "bar": 1.302,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 角 36,628,621 + 本体 93,575,948 = 130,204,569(1.30억) 합(VH 角 0.044억 + 本体 0.112억). 角을 먼저 깨야 本体 약점이 정해짐. 스토퍼·부활 기재 없음, 角 재생 기재 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "神通力・霊風/霊火/霊水/霊砕(단체 마법 + 페인/혼란/독/기절), 角 파괴 후 霊風×2",
+  "aoe": "霊風刃·霊火炎·霊水砲·霊砕槍(전체 속성 마법 + 지성/완력/속도 디버프 소 3턴), 神通力・霊裁(전체 무속성 마법) (수치 미기재)",
+  "status": "페인·혼란·독·기절, 아군 지성·완력·속도 디버프",
+  "note_kr": "탱커 지시 없음. 지성 디버프·마법 내성 버프로 받고 버디 テトラ(AS)로 HP 회복. 투고는 ベルトラン 혼자 피해를 받아 냄."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/seireijuunosyo"
+ ],
+ "name_kr": "정령수",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "精霊獣",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "fire"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "부위 2개(角·本体). 角의 약점은 정령수가 편 존에 따라 바뀜(風王陣→화, 烈火陣→수, 水天陣→지, 地裂陣→표에는 수·아이콘 순서상 풍), 角을 깬 순간의 약점이 本体 약점으로 넘어감. 챌린지는 보통 1턴 風王陣 중에 角을 깨므로 화 약점으로 둠. 내성 없음, 무효·흡수 기재 없음. 스토퍼·부활·소환 기재 없음. 챌린지 HP 角 36,628,621 + 本体 93,575,948 = 130,204,569(약 1.30억) / VH 角 4,369,345 + 本体 11,162,463, 챌린지 5턴.",
+ "mechanics": [
+  "존 순환: 風王陣(神通力・霊風 단체 풍 마법+페인 / 霊風刃 전체 풍 마법) → 烈火陣(霊火 단체 화 마법+혼란 / 霊火炎 전체 화 마법+지성 디버프 소 3턴) → 水天陣(霊水 단체 수 마법+독 / 霊水砲 전체 수 마법+완력 디버프 소 3턴) → 地裂陣(霊砕 단체 지 마법+기절 / 霊砕槍 전체 지 마법+속도 디버프 소 3턴)",
+  "角 약점 = 지금 존의 상극 속성, 角을 깨면 그때 약점이 本体 약점으로 고정 → 角에 타깃을 걸고 먼저 깸",
+  "角 파괴 후: 神通力・霊風×2(단체 마법+페인)·霊風刃(전체 마법), 속성은 정령수가 편 존 따라 바뀜, 4번째 神通力・霊裁(전체 무속성 마법)",
+  "공격이 전부 마법 → 지성 디버프·마법 내성 버프(韜晦の討手·シグレ(ES)가 둘 다 가능)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": true
+ },
+ "recommended": [
+  "パリサ(AS)",
+  "韜晦の討手",
+  "ミナルカ(AS)",
+  "ユーイン",
+  "プライ",
+  "レンリ(AS)",
+  "シグレ(ES)"
+ ],
+ "strategy_kr": "1턴 風王陣 중에 角을 깨면 화 약점이 本体로 넘어가므로 화 파티가 기본이다(角에 타깃 지정). 행동 보너스는 精霊対話 +40, 火·風·地 +20. 알테마 예시는 パリサ(AS) 가창 지원, 韜晦の討手 버프·디버프, ミナルカ(AS) 화 존, ユーイン 딜, 서브 プライ·レンリ(AS), 버디 テトラ(AS)·コロボ. 공격이 전부 마법이라 지성 디버프·마법 내성 버프로 받는다. 투고 최고는 セスタ(AS)·メルピピア·シュゼット·シグレ(ES)로 1·4T AF, 3·5T SB 운용해 피해 1900억·보너스 1370·스코어 26억.",
+ "source": "https://altema.jp/anaden/seireijuunosyo",
+ "hp": 1.3,
+ "posts": [
+  {
+   "score": 2600000000.0,
+   "dmg": 190000000000.0,
+   "team": "セスタ(AS)・メルピピア・シュゼット・シグレ(ES) / サブ アザミ・キュリオ / バディ モルディ",
+   "src": "https://altema.jp/anaden/seireijuunosyo",
+   "note": "「ダメ1900億、ボーナス1370、スコア26億」 천명 セスタ32・メルピ30・シュゼ108・シグレ53, 전원 성도각성, 1·4T AF, 3·5T SB. 날짜 없음"
+  },
+  {
+   "score": 840000000.0,
+   "dmg": null,
+   "team": "アナベル(ES)・ベルトラン・花咲の姫君・ツキハ / サブ シュゼット・アカネ(AS) / バディ テュシア",
+   "src": "https://altema.jp/anaden/seireijuunosyo",
+   "note": "「編成ボーナスありでスコア8.4億」 アナベル(ES)天120・ツキハ冥200, 角にターゲットマーク. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_tutinobunmeinosyo",
+ "shoka_part": "메인 2부 중편",
+ "score_bonus": {
+  "pers": {
+   "風": 40,
+   "杖": 20
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 353705000,
+  "src": "https://altema.jp/anaden/tutinobunmeinosyo"
+ },
+ "hp_model": {
+  "bar": 1.282,
+  "bars": 2,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 外殻 73,280,885(0.73억) → 土偶核 183,202,057(1.83억), 합 2.56억(VH 0.075억 + 0.187억). bars = 2구간, bar = 합 ÷ 2. 土偶核 4번째 행동에 外殻 부활(부활 HP 미기재). 스토퍼 기재 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "張り手(단체 지 타격)",
+  "aoe": "衝撃波(전체 지 타격), 土偶魔術・惑·拡散魔光(전체 무속성 마법) (수치 미기재)",
+  "status": "土偶魔術・惑 전체 혼란, 魔術閃光 지성 디버프(소 3턴), 土偶魔術・衰弱 완력 디버프(소 5턴)",
+  "note_kr": "탱커 지시 없음. 혼란 대책(상태이상 무효·혼란 내성 배지 힐러)이 핵심, 버디 テトラ(AS)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/tutinobunmeinosyo"
+ ],
+ "name_kr": "토우 대왕 흙의 문명",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "土偶大王ツチノブンメイ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "wind",
+  "magic"
+ ],
+ "resist": [
+  "earth",
+  "pierce"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "부위 2개: 外殻(약점 풍·타격, 내성 지·베기·찌르기)을 깨면 土偶核(약점 마법, 내성 타격·찌르기)이 나옴. 土偶核은 등장하면서 外殻 부활 주문을 시작하고 4번째 행동에 外殻이 부활. 무효·흡수 없음(챌린지·VH 공통). 스토퍼·소환·웨이브 기재 없음. weak/resist는 HP가 큰 土偶核 쪽 기준으로 풍·마법 약점, 두 부위 공통 내성 지(외각)·찌르기만 넣음. 챌린지 HP 外殻 73,280,885 + 土偶核 183,202,057 = 256,482,942(약 2.56억) / VH 外殻 7,480,233 + 土偶核 18,700,567, 챌린지 5턴. 기절이 통함(투고).",
+ "mechanics": [
+  "外殻: 張り手(단체 지 타격)·魔術閃光(전체 지성 디버프 소 3턴)·張り手·衝撃波(전체 지 타격)",
+  "土偶核: 등장 시 外殻 부활 주문(外殻에 에너지가 모임) → 土偶魔術・惑(전체 무속성 마법+혼란)·土偶魔術・衰弱(전체 완력 디버프 소 5턴)·拡散魔光(전체 무속성 마법) → 4번째에 外殻 부활",
+  "土偶核 HP가 크고 마법 약점 → 마법 딜러 우선, 外殻은 풍·타격 약점",
+  "土偶魔術・惑 전체 혼란 → 상태이상 무효 버프나 혼란 내성 배지 단 힐러"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "エニ",
+  "ヤクモ(AS)",
+  "クチナワ",
+  "シェンファ",
+  "デュナリス",
+  "ガリユ"
+ ],
+ "strategy_kr": "外殻은 풍·타격, HP가 큰 土偶核은 마법 약점이라 풍 또는 마법 파티가 권장된다. 행동 보너스는 風 +40, 杖 +20. 알테마 예시는 エニ·ヤクモ(AS)·クチナワ·シェンファ(마법 딜), 서브 デュナリス·ガリユ, 버디 キュモス(AS)/テトラ(AS)로, エニ는 개막 AF에만 전열에 두고 2턴부터 デュナリス를 내 행동 보너스를 번다. 1턴 AF로 外殻을 깨 土偶核을 드러내는 운용이 기본이고, 土偶魔術・惑 혼란은 상태이상 무효로 막는다. 투고 최고는 エニ·メルピピア·ヤクモ·シェンファ로 피해 945억·보너스 1570·스코어 약 14억.",
+ "source": "https://altema.jp/anaden/tutinobunmeinosyo",
+ "hp": 2.56,
+ "posts": [
+  {
+   "score": 1400000000.0,
+   "dmg": 94500000000.0,
+   "team": "エニ・メルピピア・ヤクモ・シェンファ / サブ クレルヴォ・ガリユ / バディ キュモス",
+   "src": "https://altema.jp/anaden/tutinobunmeinosyo",
+   "note": "「スコアは14億ほど。ダメ945億、ボーナス1570」 본문엔 'サブにモケ'. 전열 천명 シェンファ50·ヤクモ24·나머지 30, 1T AF로 外殻 격파. 날짜 없음"
+  },
+  {
+   "score": 1000000000.0,
+   "dmg": null,
+   "team": "墨染の軍師・イーファ(AS)・フィーネ(AS)・シェンファ / サブ デュナリス・ヤクモ / バディ テュシア",
+   "src": "https://altema.jp/anaden/tutinobunmeinosyo",
+   "note": "「スコア10億超えた」(10억 초과, 정확한 값 없음). 기절이 통함. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_biggonjuronosyo",
+ "shoka_part": "메인 2부 중편",
+ "score_bonus": {
+  "pers": {
+   "妖し": 60,
+   "煉獄界": 60,
+   "地": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 306751000,
+  "src": "https://altema.jp/anaden/biggonjuronosyo"
+ },
+ "hp_model": {
+  "bar": 1.172,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 117,185,659(1.17억) 한 줄(VH 0.16억), 스토퍼·부활 기재 없음. 呑み込み 중 咀嚼으로 자기 HP 회복(양 미기재). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "毒管足(단체 무속성 타격+독), 呑み込み(1명 삼킴 → 咀嚼 HP·MP 피해)",
+  "aoe": "渦の壁が迫ってきた·魔毒液(전체 수 마법, 魔毒液은 독), 迎撃 反転霊力(전체 무속성 마법) (수치 미기재)",
+  "status": "독, 지성 디버프(소 5턴), 수 내성 디버프(소 3턴)",
+  "note_kr": "탱커 지시 없음. 마법으로 치면 迎撃 전체 마법이 오고, 삼켜지면 타격으로 바로 꺼냄. 버디 テトラ(AS)로 HP 회복."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/biggonjuronosyo"
+ ],
+ "name_kr": "빅 곤쥬로",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ビッグ・ゴンジュロ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "earth"
+ ],
+ "resist": [
+  "water"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "약점 지, 내성 수, 무효·흡수 없음(챌린지·VH 공통). 스토퍼·부활·소환·웨이브 기재 없음. 5번째 행동 呑み込み로 아군 1명을 삼킴(타격 공격을 넣으면 바로 뱉음, 아니면 턴 종료에 뱉음). 反射の魔鏡으로 자기에게 迎撃(마법 공격을 받으면 反転霊力 전체 무속성 마법). 챌린지 HP 117,185,659(약 1.17억) / VH 16,072,533, 챌린지 5턴.",
+ "mechanics": [
+  "통상(순서): 鏡の霊力(전체 지성 디버프 소 5턴) → 毒管足(단체 무속성 타격+독) → 嵐の呼び声(전체 수 내성 디버프 소 3턴) → 渦の壁が迫ってきた(전체 수 마법) → 呑み込み(1명 삼킴)",
+  "反射の魔鏡: 자기 迎撃 부여 — 마법 공격을 받으면 反転霊力(전체 무속성 마법)",
+  "呑み込み 중: 咀嚼(매 턴, 삼킨 대상 HP·MP 피해 + 자기 HP 회복·완력·지성 버프 소 6턴 최대 3누적), 魔毒液(전체 수 마법+독), 턴 종료에 뱉음",
+  "삼켜졌을 때 타격 공격을 넣으면 바로 뱉음 → 타격 공격 캐릭터 1명 이상 권장"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ねここ(AS)",
+  "ヒナギク(AS)",
+  "クチナワ",
+  "ロキド",
+  "メイ",
+  "シェリーヌ",
+  "セリエス",
+  "残影の佳人"
+ ],
+ "strategy_kr": "지 약점·수 내성이라 지 파티가 기본이고, 지 딜러로는 クチナワ·セリエス·残影の佳人이 꼽힌다. 행동 보너스는 妖し·煉獄界 +60, 地 +30이며 ねここ(AS)는 地·妖し 둘 다라 보너스와 지원을 겸한다. 알테마 예시는 ねここ(AS) 버프·디버프, ヒナギク(AS) 딜, クチナワ 디버프, ロキド(ヒナギク(AS) 六文銭 유지), 서브 メイ·シェリーヌ, 버디 テトラ(AS)·モケ. 지 딜러가 없으면 地裂陣을 펴고 ねここ(AS) 속성 변화를 쓴다. 투고는 ねここ(AS)·ウツハラ·白磁の魔人·ジルバー(AS)(서브 イオ로 편성 보너스)로 스코어 15.95억.",
+ "source": "https://altema.jp/anaden/biggonjuronosyo",
+ "hp": 1.17,
+ "posts": [
+  {
+   "score": 1595000000.0,
+   "dmg": null,
+   "team": "ねここ(AS)・ウツハラ・白磁の魔人・ジルバー(AS) / サブ イオ・深緋の刈人 / バディ テュシア",
+   "src": "https://altema.jp/anaden/biggonjuronosyo",
+   "note": "「編成ボーナスあり(イオ・地)。スコア15.95億」 展技(地)→迎撃 부여→AF→霊恵→SB 순. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_zorumunosyo",
+ "shoka_part": "메인 2부 중편",
+ "score_bonus": {
+  "pers": {
+   "魔剣": 120,
+   "王族": 90,
+   "弓": 45
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 164089000,
+  "src": "https://altema.jp/anaden/zorumunosyo"
+ },
+ "hp_model": {
+  "bar": 0.736,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 본체 HP 73,601,898(0.74억) 한 줄(VH 0.114억), HP 약 50% 스토퍼. 졸개(0.61억·0.61억·0.81억 중 랜덤 3체)는 본체 HP에 안 넣음 — 3체면 본체 무효, 2체면 내성이라 실제로는 졸개 처치 피해가 먼저 필요. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "邪魔(무속성 마법), 邪隆岩(지 타격), 双邪岩×2(지 마법), 졸개 脳天砕き(타격+기절)",
+  "aoe": "졸개를 써서 전체 기절 공격(4번째 행동), 邪惑岩(전체 지 마법+혼란), 졸개 破砕撃·邪破 (수치 미기재)",
+  "status": "기절, 혼란(스토퍼 뒤), 졸개 重邪鬼 雄叫び 도발, 穿邪鬼 지 내성 디버프, 보스 완력·지성 버프 최대 10누적",
+  "note_kr": "탱커 지시 없음. 혼란 대책(상태이상 무효·혼란 내성 배지 힐러 — 예시는 メリナ)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/zorumunosyo"
+ ],
+ "name_kr": "아사귀 졸름",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "餓邪鬼ゾルム",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "본체 약점·내성·무효·흡수 없음. 개시에 졸개 3체 소환(狂邪鬼 약점 찌르기·穿邪鬼 약점 타격·重邪鬼 약점 베기 중 랜덤 3체), 졸개 3체가 있으면 본체가 모든 공격 무효, 1체 처치 시 모든 공격 내성, 2체 이상 처치 시 내성 없음. 4번째 행동(졸개를 써서 전체 기절 공격, 졸개 전부 소멸) 뒤와 HP 약 50% 스토퍼 때 다시 3체 소환. 부활·웨이브 없음. 챌린지 HP 본체 73,601,898(약 0.74억), 졸개 狂邪鬼·穿邪鬼 6,112,145 / 重邪鬼 8,149,527 / VH 본체 11,407,127, 챌린지 5턴.",
+ "mechanics": [
+  "졸개 3체 동안 본체 공격 무효 → 1체 처치로 내성, 2체 이상 처치로 정상 → 전체 공격으로 졸개를 빨리 처치",
+  "HP 50% 전: 邪魔(단체 무속성 마법)·邪隆岩(단체 지 타격)·そんなものか？(보스 측 전체 완력·지성 버프 소 4턴 최대 10누적)·졸개로 전체 기절 공격(졸개 소멸) → 다시 3체 소환",
+  "HP 50% 스토퍼 뒤 3체 소환: もっと働けぃ！(완력·지성 버프 소 4턴)·邪惑岩(전체 지 마법+혼란)·双邪岩×2(단체 지 마법)·졸개로 전체 기절 공격 → 다시 소환",
+  "졸개: 狂邪鬼 破岩撃·破砕撃·狂振(지/무속성 타격), 穿邪鬼 心穿(전체 지 내성 디버프 소 3턴)·邪衡·邪破(무속성 마법), 重邪鬼 雄叫び(전체 도발)·脳天砕き(타격+기절)·岩盤砕き",
+  "스토퍼 뒤 전체 혼란 → 상태이상 무효 버프나 혼란 내성 배지 힐러"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "クロード(ES)",
+  "アルテナ",
+  "メリナ",
+  "アルド"
+ ],
+ "strategy_kr": "졸개 3체가 남아 있으면 본체에 피해가 안 들어가므로 전체 공격으로 졸개부터 정리하는 게 핵심이고, 졸개는 4번째 행동 뒤와 50% 스토퍼에서 다시 나온다. 행동 보너스는 魔剣 +120, 王族 +90, 弓 +45. 알테마 예시는 クロード(ES)(천 140) 지원, アルテナ(명 255) 보너스, メリナ(명 234, 혼란 내성 배지) 지원, アルド(천 255) 딜, 버디 リレーノ. 스토퍼 뒤 邪惑岩 전체 혼란은 상태이상 무효나 혼란 내성으로 막는다. 알테마에 유저 스코어 투고는 없다.",
+ "source": "https://altema.jp/anaden/zorumunosyo",
+ "hp": 0.74,
+ "posts": []
+},
+ {
+ "id": "sk_geirukyarigonosyo",
+ "shoka_part": "메인 2부 중편",
+ "score_bonus": {
+  "pers": {
+   "騎乗": 90,
+   "ねこ好き": 60,
+   "水": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 214693000,
+  "src": "https://altema.jp/anaden/geirukyarigonosyo"
+ },
+ "hp_model": {
+  "bar": 1.785,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 표는 1호・2호 공통 한 벌 89,240,983(0.89억, VH 0.103억) — 각각 그 값으로 보고 합 1.78억. 동시에 나오는 2체이고 한쪽만 쓰러지면 턴 종료에 남은 쪽 HP 절반으로 부활. 스토퍼 기재 없음(충전 저지는 한쪽 격파). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "ストライクスイム(단체 물리 타격+화 내성 디버프 소 3턴)",
+  "aoe": "ミサイルキャリゴ(전체 화 마법), フィンブレイド(전체 물리 베기), スパークルレイ(전체 무속성 마법+암흑), 5턴째 Xデストロイヤー(전체 2회) (수치 미기재)",
+  "status": "암흑, 화 내성 디버프",
+  "note_kr": "탱커·힐러 지시 없음. 보통 디버프만으로 합체 공격을 버티기 쉽다고 기재."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/geirukyarigonosyo"
+ ],
+ "name_kr": "게일칼리고",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ゲイルキャリゴ1号／ゲイルキャリゴ2号",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "water"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "적 2체(1호·2호), 약점 수, 내성·무효·흡수 없음(챌린지·VH 공통). 매 턴 종료 에너지 25% 충전 → 4턴 종료에 충전 완료, 5턴째 Xデストロイヤー(1호·2호 합체, 전체 2회 공격). 한쪽만 쓰러지면 남은 쪽이 자기 HP 절반을 주고 턴 종료에 부활시킴 → 동시 격파, 한쪽만 쓰러뜨려도 충전은 멈춤. 소환·웨이브 없음. 챌린지 HP는 1호·2호 공통 표 한 벌에 89,240,983(VH 10,331,639) — 각각 그 값으로 보면 합 약 1.78억, 챌린지 5턴.",
+ "mechanics": [
+  "충전: 매 턴 종료 에너지 25%, 4턴 종료 완료 → 5턴째 Xデストロイヤー(1호·2호 합체, 전체 2회)",
+  "부활: 한쪽 격파 시 살아남은 쪽이 자기 HP 절반을 주고 턴 종료에 부활 → 동시 격파 노림, 한쪽 격파만으로도 충전 저지",
+  "1호: ミサイルキャリゴ(전체 화 마법)·フィンブレイド(전체 물리 베기)·ストライクスイム(단체 물리 타격+화 내성 디버프 소 3턴)·ブーストチャージ(보스 측 속도 버프 소 1턴)",
+  "2호: ストライクスイム(단체 타격+화 내성 디버프)·スパークルレイ(전체 무속성 마법+암흑)·ミサイルキャリゴ(전체 화 마법)·エナジーチャージ(보스 측 지성 버프 소 1턴)",
+  "보통 디버프만 넣어도 합체 공격은 버티기 쉬움"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "シグレ(ES)",
+  "茨呪の艶女",
+  "シオン",
+  "キキョウ(AS)",
+  "オボロ",
+  "リィカ"
+ ],
+ "strategy_kr": "적 2체 모두 수 약점이라 수 파티와 전체 공격이 기본이다. 행동 보너스는 騎乗 +90, ねこ好き +60, 水 +30. 알테마 예시는 シグレ(ES)·シオン 딜, 茨呪の艶女 지원, キキョウ(AS) 보너스, 서브 オボロ·リィカ, 버디 リレーノ. 한쪽만 쓰러뜨리면 다른 쪽이 HP 절반으로 부활시키니 동시 격파를 노리고, 5턴째 합체 공격은 보통 디버프로 버틴다. 투고는 水 편성 보너스 トゥーヴァ(ES)·クーラ・ダイアモンド·メリナ·リュゼ로 피해 257억·스코어 4.3억, ジルファニー·エルシール·フェルミナ(ES)·夢吟の詩人 피해 약 850억.",
+ "source": "https://altema.jp/anaden/geirukyarigonosyo",
+ "hp": 1.78,
+ "posts": [
+  {
+   "score": 430000000.0,
+   "dmg": 25700000000.0,
+   "team": "トゥーヴァ(ES)・クーラ・ダイアモンド・メリナ・リュゼ / サブ ブリアー・シーラ / バディ ライリス",
+   "src": "https://altema.jp/anaden/geirukyarigonosyo",
+   "note": "「ダメージ257億のスコア4.3億」 パーソナリティ(水)で編成(ボーナス+1000). 천명 トゥーヴァ冥146・クーラ天17・メリナ冥50・リュゼ天21. 날짜 없음"
+  },
+  {
+   "score": null,
+   "dmg": 85000000000.0,
+   "team": "ジルファニー・エルシール・フェルミナ(ES)・夢吟の詩人 / サブ 深緋の刈人・月華の令嬢 / バディ ぴーたん",
+   "src": "https://altema.jp/anaden/geirukyarigonosyo",
+   "note": "「最終的に約850億はでた」 스코어 미기재. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_mirokudisasternosyo",
+ "shoka_part": "메인 2부 중편",
+ "score_bonus": {
+  "pers": {
+   "主人公": 120,
+   "東方": 60,
+   "火": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 289050000,
+  "src": "https://altema.jp/anaden/mirokudisasternosyo"
+ },
+ "hp_model": {
+  "bar": 1.527,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 본체 HP 152,673,750(1.53억) 한 줄(VH 0.245억), 50%에서 행동 패턴 변경(스토퍼 기재 없음). 졸개 ガルバ 0.21억(クシティ는 페이지 값 1.53억, 오기로 보임)은 본체 HP에 안 넣음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "成仏キャノン·滅却キャノン(단체 마법+암흑·페인), 如来ジャブ(타격+기절), 如来バニッシュ(날려버리기), 졸개 穿つ光·侵食する光(+독)",
+  "aoe": "天上弥勒如来拳(전체 고정 369 + 봉인), 下生レーザー·上生レーザー(전체 무속성 마법), 졸개 諸横消滅(전체 마법 + MP 피해, 자폭)",
+  "status": "암흑·페인·기절·봉인·독·날려버리기, 아군 완력(중 5턴)·지성·속도 디버프",
+  "note_kr": "탱커·힐러 지시 없음. 스킬 게이지를 깨 天上弥勒如来拳·諸横消滅을 막는 게 핵심."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/mirokudisasternosyo"
+ ],
+ "name_kr": "미륵 디저스터",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ミロクディザスター／ジゾウ・ガルバ／ジゾウ・クシティ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "본체 ミロクディザスター 약점·내성·무효·흡수 없음. 졸개 ジゾウ・ガルバ(약점 타격·마법, 내성 베기·찌르기)·ジゾウ・クシティ(약점 베기·찌르기, 내성 타격·마법). 三部経・前記(HP 50% 이상)로 졸개 2체 소환, 50% 이하 三部経로 ガルバ 4체 소환(스토퍼 기재는 없고 50% 이하 행동 패턴 변경). 스킬 게이지를 깨면 天上弥勒如来拳·諸横消滅 저지(게이지 턴 수 미기재). 부활·웨이브 기재 없음. 챌린지 HP 본체 152,673,750(약 1.53억), ガルバ 20,942,825, クシティ는 페이지에 152,673,750으로 적혀 있으나 본체 값과 같아 오기로 보임(VH는 ガルバ·クシティ 둘 다 3,366,442, 본체 24,541,452). 챌린지 5턴.",
+ "mechanics": [
+  "본체 HP 50% 이상: 三部経・前記(전체 완력 디버프 중 5턴 + 스킬 게이지 + 졸개 2체 소환) → 下生レーザー(전체 무속성 마법) → 成仏キャノン(단체 마법+암흑·페인) → 如来ジャブ(단체 타격+기절) → 天上弥勒如来拳(전체 고정 369 + 봉인, 스킬 게이지 깨면 회피)",
+  "본체 HP 50% 이하: 三部経(전체 지성 디버프 + 스킬 게이지 + ガルバ 4체 소환) → 上生レーザー → 滅却キャノン(단체 마법+암흑·페인)·弥勒の慈しみ(전체 속도 디버프) → 如来ストレート(단체 타격)·如来バニッシュ(날려버리기) → 天上弥勒如来拳",
+  "ジゾウ・ガルバ: 読経(스킬 게이지) → 穿つ光(단체 찌르기) → 天龍護念・硬(보스 측 물리 내성 버프 소 2턴) → 諸横消滅(전체 마법+MP 피해, 자폭, 게이지 깨면 저지)",
+  "ジゾウ・クシティ: 読経 → 侵食する光(단체 마법+독) → 天龍護念・属(보스 측 전속성 내성 버프 소 2턴) → 諸横消滅",
+  "졸개 약점이 반대(ガルバ 타격·마법 / クシティ 베기·찌르기)라 물리 타입을 섞거나 전체 공격으로 정리"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "アナベル(ES)",
+  "シグレ(ES)",
+  "シオン",
+  "菊花の剣客"
+ ],
+ "strategy_kr": "본체는 약점·내성이 없고, 행동 보너스는 主人公 +120, 東方 +60, 火 +30이라 東方·刀 캐릭터 중심으로 짠다. 알테마 예시는 アナベル(ES) 지원, シグレ(ES)·シオン·菊花の剣客 딜, 서브 東方 刀 캐릭터·刀 캐릭터(자유 칸), 버디 リレーノ. 스킬 게이지를 깨면 天上弥勒如来拳(전체 고정 369+봉인)과 졸개 諸横消滅(전체 마법+MP 피해)을 막을 수 있고, 졸개는 약점이 서로 반대라 전체 공격으로 같이 정리한다. 알테마에 유저 스코어 투고는 없다.",
+ "source": "https://altema.jp/anaden/mirokudisasternosyo",
+ "hp": 1.53,
+ "posts": []
+},
+ {
+ "id": "sk_houkounosyo",
+ "shoka_part": "메인 2부 후편",
+ "score_bonus": {
+  "pers": {
+   "吟遊詩人": 90,
+   "水": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 208500000,
+  "src": "https://altema.jp/anaden/houkounosyo"
+ },
+ "hp_model": {
+  "bar": 0.641,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   30
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 64,122,395(0.64억) 한 줄, HP 약 30% 스토퍼. 부활·웨이브 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "穿角·刳角·妖枝角 단체 찌르기, 鬼気森然 최대 MP 50% 피해+서브 교대 불가, 鎧破斬 단체 베기+물리 내성 DOWN",
+  "aoe": "落衝破·業山崩し 전체 타격, 樹撲撃 전체 타격+기절, 百枝百爪 전체 베기, 迎撃 魔鏡・十全谺撃 전체 다단",
+  "status": "기절(樹撲撃), 서브 교대 불가(鬼気森然)",
+  "note_kr": "기절 무효를 준비하고 迎撃 턴(3턴째·스토퍼)에 공격 속성을 조절한다."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/houkounosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "팽후",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ほうこう",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 64,122,395(0.64억). 약점·내성·무효·흡수 없음(두 난이도 공통). HP 약 30% 스토퍼(ほうこうが暴れだした！: 자기 迎撃 부여, 魔鏡・十全谺撃 100턴) 뒤 행동 변화. 3턴째와 스토퍼 때 迎撃 발동. 부활·웨이브·소환 없음. VH HP 10,307,316.",
+ "mechanics": [
+  "스토퍼 전 6턴 순환: 穿角·刳角(단체 무속성 찌르기) → 落衝破(전체 무속성 타격) → 呪木斬(단체 베기)+妖刀山彦返し(자기 迎撃 부여) → 発根(자기 완력 UP 소 5턴) → 繁茂(자기 회복 2회 부여, 회복량 미기재) → 業山崩し(전체 무속성 타격)",
+  "迎撃 魔鏡・十全谺撃: 3턴째와 HP 스토퍼 때 발동, 그 턴 아군이 가장 많이 쓴 속성으로 전체 다단 공격(2턴) → 파티 공격 속성을 맞춰 대비",
+  "HP 30% 스토퍼: ほうこうが暴れだした！ 자기 迎撃 부여, 魔鏡・十全谺撃 100턴",
+  "스토퍼 후: 樹撲撃(전체 타격+기절), 妖枝角(단체 찌르기), 鬼気森然(단체 최대 MP 50% 피해+서브 교대 불가), 鎧破斬(단체 베기+물리 내성 DOWN 소 3턴), 百枝百爪(전체 베기)",
+  "기절 대책: 상태이상 무효 또는 기절 무효 배지"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": false,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "夢吟の詩人",
+  "エルシール",
+  "マツリカ",
+  "ジルファニー",
+  "ウクアージ",
+  "サイラス"
+ ],
+ "strategy_kr": "약점·내성이 없어 속성 제한은 없지만 보너스가 吟遊詩人 +90·水 +60이라 음유시인과 물 속성 캐릭터로 짜야 점수가 오른다. 3턴째와 HP 30% 스토퍼에서 迎撃(魔鏡・十全谺撃)이 그 턴 가장 많이 쓴 속성으로 반격하므로 공격 속성을 맞춰 둔다. 스토퍼 뒤 樹撲撃의 기절은 상태이상 무효나 기절 무효 배지로 막는다. 알테마 예시는 夢吟の詩人(내구 지원)·エルシール·マツリカ가 ジルファニー를 받치는 물 파티(버디 ぴーたん·モケ). 유저 점수 투고는 없다.",
+ "source": "https://altema.jp/anaden/houkounosyo",
+ "hp": 0.64,
+ "posts": []
+},
+ {
+ "id": "sk_karakurisenkinosyo",
+ "shoka_part": "메인 2부 후편",
+ "score_bonus": {
+  "pers": {
+   "東方": 90,
+   "火": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 204200000,
+  "src": "https://altema.jp/anaden/karakurisenkinosyo"
+ },
+ "hp_model": {
+  "bar": 0.68,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 67,996,750(0.68억) 한 줄, HP 약 50% 스토퍼. 부활·웨이브 없음. 챌린지 5턴(투고 피해 225억 > HP)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "陣月·弐ノ業 단체 베기×2, 遁月 단체 타격+기절, 裂刃·参ノ業 단체 베기+페인, 三悪趣·壱ノ業·肆ノ業 무작위 베기×2+베기 내성 DOWN",
+  "aoe": "刀車·小刀車·裂銛 전체 베기+페인, 獄刃·朔月断 전체 베기",
+  "status": "기절(遁月), 페인",
+  "note_kr": "한 턴에 여러 번 공격하고 迎撃도 있어 못 버티면 큰 배율 버프·디버프 캐릭터를 넣는다(알테마). 알테마 예시에 ミナルカ(AS)·プライ."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/karakurisenkinosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "태엽 전귀 (미확인)",
+ "name_src": "",
+ "name_jp": "からくり戦鬼",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 67,996,750(0.68억). 약점·내성·무효·흡수 없음. HP 약 50% 스토퍼(撃ノ型: 煌斬陣 전개) 뒤 행동 변화. 매 턴 종료 시 아군 ZONE을 깨고 煌斬陣 전개(アナザーゾーン은 안 깨짐), 매 턴 종료 絡繰一刀流-残心으로 자기 디버프 해제. 단체 물리 공격을 받으면 迎撃(100턴). 공격은 전부 무속성 베기·타격. 부활·웨이브·소환 없음. VH HP 10,930,097.",
+ "mechanics": [
+  "스토퍼 전 4턴 순환(턴당 1~2회 행동): 陣月(단체 베기×2)·遁月(단체 타격+기절) → 刀車(전체 베기+페인) → 三悪趣(무작위 단체 베기×2+베기 내성 DOWN 소 3턴)·遁月 → 獄刃(전체 베기)",
+  "HP 50% 스토퍼: 撃ノ型 — 煌斬陣 전개",
+  "스토퍼 후 4턴 순환: 朔月断(전체 베기)·裂刃(단체 베기+페인) → 壱ノ業(무작위 단체 베기×2+베기 내성 DOWN)·小刀車(전체 베기+페인) → 弐ノ業(단체 베기×2)·裂銛(전체 베기+페인) → 参ノ業(단체 베기+페인)·肆ノ業(무작위 단체 베기×2+베기 내성 DOWN)·獄刃(전체 베기)",
+  "매 턴 종료: 아군 ZONE 파괴 후 煌斬陣 전개 → 존을 지키려면 ZONE 각성",
+  "매 턴 종료: 絡繰一刀流-残心 — 자기 디버프 해제(디버프는 매 턴 다시)",
+  "迎撃: 단체 물리 공격을 받으면 반격(100턴, 반격 내용 미기재)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": false,
+  "sustain": false,
+  "zone_control": true,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "韜晦の討手",
+  "花咲の姫君",
+  "ミナルカ(AS)",
+  "ユーイン",
+  "レンリ(AS)",
+  "プライ",
+  "ユナ",
+  "マツリカ",
+  "クラウディア"
+ ],
+ "strategy_kr": "약점·내성이 없고 공격이 전부 무속성 물리라 완력 디버프·물리 내성 버프로 받는 피해를 줄인다. 보너스는 東方 +90·火 +60이라 동방·불 캐릭터로 짜면 편성 보너스까지 노릴 수 있다. 매 턴 종료 시 아군 존을 깨고 煌斬陣을 펴므로 존이 필요하면 ZONE 각성으로 지키고, 보스 디버프는 매 턴 풀리니 다시 건다. 단체 물리 공격에는 迎撃이 붙는다. 유저 투고는 ねここ(AS)·花咲の姫君·白磁の魔人·ツキハ로 피해 225억·스코어 7.68억.",
+ "source": "https://altema.jp/anaden/karakurisenkinosyo",
+ "hp": 0.68,
+ "posts": [
+  {
+   "score": 768000000.0,
+   "dmg": 22500000000.0,
+   "team": "ねここ(AS)・花咲の姫君・白磁の魔人・ツキハ / サブ オボロ・センヤ / バディ コロボ",
+   "src": "https://altema.jp/anaden/karakurisenkinosyo",
+   "note": "보너스 3405(행동 2305). 날짜 없음. 白磁の魔人은 천 80 이상이면 ブレイクタイム 권장"
+  }
+ ]
+},
+ {
+ "id": "sk_goseidrone2nosyo",
+ "shoka_part": "메인 2부 후편",
+ "score_bonus": {
+  "pers": {
+   "剣": 60,
+   "刀": 60,
+   "水": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 396800000,
+  "src": "https://altema.jp/anaden/goseidrone2nosyo"
+ },
+ "hp_model": {
+  "bar": 1.8,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 180,017,453(1.80억) 한 줄, HP 50% 스토퍼(뒤로 베기 약점). お供 닌자 HP 미기재. 챌린지 5턴(투고 피해 500억대 > HP)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "グラヴィティゴア HP 99% 고정 피해, ヘヴィカルマ HP 99% 고정 피해×2, イグニトライ 화 마법×3+페인, ハイパーヒートラム 화 물리+기절",
+  "aoe": "ミリオンフレア·ホーミングバーン·ビリオンフレア·アポカリプスレイ 등 전체 화 마법, ヒプノリング 수면, スピネルレイ 암흑",
+  "status": "수면·암흑·혼란·기절·페인, 완력·지성·속도 DOWN, 전속성 내성 DOWN",
+  "note_kr": "상태이상 무효와 지성 디버프·마법/전속성 내성 버프, 99% 고정 피해 뒤 회복."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/goseidrone2nosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "강공형 합성드론 2호",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "強攻型合成ドローン2号・空戦強化型合成ニンジャ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "slash"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 180,017,453(1.80억). HP 50% 스토퍼(ドローンの出力が変わった……！) 전엔 약점·내성 없음, 스토퍼 뒤 베기 약점. 스토퍼 전 8행동·후 10행동을 순서대로. お供 空戦強化型合成ニンジャ(수·HP·등장 시점 미기재)가 혼란·암흑을 건다. 부활·웨이브 없음. VH HP 28,936,799.",
+ "mechanics": [
+  "스토퍼 전(화 마법 위주): イグナイテッド(단체 화 마법+완력·지성 DOWN 중 3턴) → ミリオンフレア(전체 화 마법+전속성 내성 DOWN 중 3턴) → イグニトライ(단체 화 마법×3+페인+완력·지성 DOWN 소) → ホーミングバーン(전체 화 마법) → フォトンエフェクト(아군 전속성 내성 DOWN 소·자기편 전속성 내성 UP 소 3턴) → ツインクリムゾン(단체 화 마법×2) → ヒプノリング(전체 화 마법+수면) → スピネルレイ(전체 화 마법+암흑)",
+  "HP 50% 스토퍼: 베기 약점으로 바뀜",
+  "스토퍼 후: スペクトルエフェクト(フォトンエフェクト와 같음) → グラヴィティゴア(단체 HP 99% 고정 피해) → ビリオンフレア(전체 화 마법) → ヘヴィカルマ(단체 HP 99% 고정 피해×2) → ホーミングノヴァ(전체 화 마법) → フレイムパルス(단체 화 마법×2+완력·지성·속도 DOWN 중 3턴) → メギドランス(단체 화 물리×2) → プレイグフレア(단체 화 마법+혼란) → ハイパーヒートラム(단체 화 물리+기절) → アポカリプスレイ(전체 화 마법)",
+  "空戦強化型合成ニンジャ: ブレインショット(단체 화 마법+혼란), ブラインドボム(전체 무속성 마법+암흑), ダブルキャノン(단체 화 마법×2)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": false,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "ジルファニー",
+  "エルシール",
+  "マツリカ",
+  "フェルミナ(ES)",
+  "ゼヴィーロ",
+  "月華の令嬢",
+  "セスタ(AS)",
+  "チルリル(ES)"
+ ],
+ "strategy_kr": "HP 50% 스토퍼부터 베기 약점이라 베기 딜러가 중심이고, 보너스가 剣·刀·水 각 +60이라 검·도·물 캐릭터로 짜면 편성 보너스 1000도 노리기 쉽다. 공격은 화 마법 위주라 지성 디버프·전속성/마법 내성 버프로 줄이고, 혼란·암흑·수면·기절은 상태이상 무효로 막는다. 스토퍼 뒤 HP 99% 고정 피해(グラヴィティゴア·ヘヴィカルマ)가 있어 회복을 준비한다. 유저 투고는 クロード(ES)·ラディアス(AS)·アルド·ツキハ로 피해 500억대 중반·스코어 12억대 중반이고, 피해 200억 전후면 挑戦者の証를 받는다고 한다.",
+ "source": "https://altema.jp/anaden/goseidrone2nosyo",
+ "hp": 1.8,
+ "posts": [
+  {
+   "score": 1250000000.0,
+   "dmg": 55000000000.0,
+   "team": "クロード(ES)・ラディアス(AS)・アルド・ツキハ / サブ オボロ・センヤ",
+   "src": "https://altema.jp/anaden/goseidrone2nosyo",
+   "note": "원문 「ボーナス1220＋50＋1000」「ダメージ500億台半ば」「スコア12億半ば」(근사값). 버디는 リレーノ 추천. 피해 200억 전후면 挑戦者の証. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_titanoganosyo",
+ "shoka_part": "메인 2부 후편",
+ "score_bonus": {
+  "pers": {
+   "風": 90,
+   "呪い": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 465600000,
+  "src": "https://altema.jp/anaden/titanoganosyo"
+ },
+ "hp_model": {
+  "bar": 0.68,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 67,996,750(0.68억, からくり戦鬼와 같은 값이라 표기 확인 필요) 한 줄, HP 50% 스토퍼 뒤 魔導車輪(HP 미기재)을 깨야 통상 복귀. 챌린지 5턴(투고 피해 475~490억 > HP)."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "豪輪打 단체 물리+물리 내성 DOWN 중, 連猛打連 단체 물리 2회, 輪魔昏蝕 단체 마법+독·수면",
+  "aoe": "穿杭落 전체 찌르기, 滅撃波 전체 마법, 萎輪の陣 전체 지성 DOWN",
+  "status": "독·수면(輪魔昏蝕)",
+  "note_kr": "바퀴 태세 중 지성 DOWN이 마법 딜러 점수를 깎으니 해제나 재버프를 준비한다."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/titanoganosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "타이탄 오우거",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "タイタン・オーガ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [
+  "pierce",
+  "blunt"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 67,996,750(0.68억 — 알테마 표기, からくり戦鬼와 같은 값). 약점 없음, 찌르기·타격 내성. 능력치 耐久 1,049·精神 0(알테마 표). HP 50% 스토퍼에서 魔導車輪으로 방어 태세(바퀴 HP 미기재), 바퀴 HP를 0으로 만들면 통상 행동 복귀. 통상 순환 5번째에도 바퀴 태세. 부활·웨이브·소환 없음. VH HP 10,930,097.",
+ "mechanics": [
+  "통상 순환: 豪輪打(단체 무속성 물리+물리 내성 DOWN 중 4턴) → 穿杭落(전체 무속성 찌르기) → 豪輪打 → 連猛打連(단체 물리 2회) → 魔導車輪으로 방어 태세",
+  "HP 50% 스토퍼: 魔導車輪으로 방어 태세",
+  "魔導車輪 태세 중: 護輪の陣(자기 전속성 내성 UP 중 4턴) → 輪魔昏蝕(단체 무속성 마법+독·수면) → 萎輪の陣(전체 지성 DOWN 중 4턴) → 滅撃波(전체 무속성 마법)",
+  "바퀴 HP 0: 魔導車輪を退けた！ 통상 행동 복귀 — 전환 때 디버프가 풀려 다시 건다(알테마)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": false,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "メルピピア",
+  "シュゼット",
+  "茨呪の艶女",
+  "セスタ(AS)",
+  "ガラムバレル",
+  "ユーリ",
+  "セスタ"
+ ],
+ "strategy_kr": "찌르기·타격 내성이라 베기나 마법 딜러를 쓰고, 알테마 표상 精神이 0이라 마법이 잘 들어간다. 보너스는 風 +90·呪い +60이며 セスタ·セスタ(AS)는 내성에 안 걸리면서 보너스도 받는다. HP 50% 스토퍼부터 魔導車輪 태세로 전속성 내성 UP·독·수면·지성 DOWN을 쓰고, 바퀴를 깨면 통상으로 돌아오며 디버프가 풀리니 다시 건다. 유저 투고는 피해 475~490억·스코어 약 10억~14.7억.",
+ "source": "https://altema.jp/anaden/titanoganosyo",
+ "hp": 0.68,
+ "posts": [
+  {
+   "score": 1000000000.0,
+   "dmg": 47500000000.0,
+   "team": "チルリル(ES)・メリナ・ユーイン・ガラムバレル / サブ ヴィクト 등 / バディ リレーノ",
+   "src": "https://altema.jp/anaden/titanoganosyo",
+   "note": "피해 475~480억(변동), 스코어 약 10억. 보너스 2090(행동 2040+AF 50+편성 0). 날짜 없음"
+  },
+  {
+   "score": 1470000000.0,
+   "dmg": 49000000000.0,
+   "team": "アィシャ・ねここ(ES)・茨呪の艶女・ツキハ / サブ センヤ・ヴィクト / バディ コロボ",
+   "src": "https://altema.jp/anaden/titanoganosyo",
+   "note": "「与ダメ490億」「スコア14.7億」, 보너스 3095(행동 1965). 투고문은 茨呪の艶女를 'シェ異ネ'로 적음. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_kidouhimikanosyo",
+ "shoka_part": "메인 2부 후편",
+ "score_bonus": {
+  "pers": {
+   "杖": 60,
+   "地": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 236800000,
+  "src": "https://altema.jp/anaden/kidouhimikanosyo"
+ },
+ "hp_model": {
+  "bar": 0.72,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   30
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 72,006,981(0.72억) 한 줄, HP 30% 스토퍼(아군 버프 해제). 부활·웨이브 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "鬼道閃 단체 찌르기, 턴 종료 무속성 찌르기 추격 1~5회",
+  "aoe": "天地魔幻破 전체 마법, 鬼力呪術 전체 완력(스토퍼 후 완력·지성) DOWN",
+  "status": "상태이상 없음(디버프만), 스토퍼 때 아군 버프 해제",
+  "note_kr": "추격 횟수가 늘수록 위험 — 완력 디버프·후공 회복(알테마)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/kidouhimikanosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "귀도 여왕 히미카 (미확인)",
+ "name_src": "",
+ "name_jp": "鬼道女王ヒミカ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 72,006,981(0.72억). 약점·내성·무효·흡수 없음. HP 30% 스토퍼 — 도달 시 자기 디버프 해제 + 아군 전체 버프 해제 + 瞬突陣 전개, 이후 일부 행동 강화. 매 턴 종료 시 아군 1명에게 무속성 찌르기 추격: 턴마다 1회씩 늘어 최대 5회, 5턴 경과 후 1회로 리셋. 부활·웨이브·소환 없음. VH HP 11,574,719.",
+ "mechanics": [
+  "5행동 순환: 鬼道閃(단체 무속성 찌르기) → 鬼力呪術(전체 완력 DOWN 소 4턴) → 鬼道術・護符(자기 전속성 내성 UP 중 4턴) → 鬼神念術(자기 완력·지성 UP 소 4턴) → 鬼道術・壊(ZONE 파괴)·天地魔幻破(전체 무속성 마법) — 표에 같은 칸",
+  "HP 30% 스토퍼: 자기 디버프 해제 + 아군 전체 버프 해제 + 瞬突陣 전개",
+  "스토퍼 후: 鬼力呪術이 완력·지성 DOWN, 鬼道術・護符가 물리·전속성 내성 UP으로 바뀜",
+  "매 턴 종료: 아군 1명에게 무속성 찌르기 추격(1→최대 5회, 5턴 경과 후 1회로 리셋)",
+  "瞬突陣: 보스 찌르기 피해 UP 존, 다른 존으로 덮어쓸 수 있음"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": false,
+  "sustain": false,
+  "zone_control": true,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ミュルス",
+  "ガリアード",
+  "白磁の魔人",
+  "ヘレナ",
+  "レイヴン"
+ ],
+ "strategy_kr": "약점·내성이 없어 속성 제한은 없고, 보너스가 杖·地 각 +60이라 지팡이·지 속성 캐릭터로 편성 보너스를 노린다. 매 턴 종료 찌르기 추격이 턴마다 늘어(최대 5회) 완력 디버프나 후공 회복으로 버틴다. HP 30% 스토퍼에서 아군 버프가 풀리고 瞬突陣이 펴지므로 다른 존으로 덮어쓰고 버프를 다시 건다. 알테마 예시는 ミュルス·白磁の魔人 지원에 ガリアード·ヘレナ 딜(서브 レイヴン·자유 槍 캐릭터, 버디 テュシア·キュモス). 유저 투고는 墨染の軍師·白磁の魔人·フィーネ(AS)가 ジルバー(AS)를 받치는 파티(점수 미기재).",
+ "source": "https://altema.jp/anaden/kidouhimikanosyo",
+ "hp": 0.72,
+ "posts": []
+},
+ {
+ "id": "sk_jigenhimikanosyo",
+ "shoka_part": "메인 2부 후편",
+ "score_bonus": {
+  "pers": {
+   "魔剣": 90,
+   "杖": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 264200000,
+  "src": "https://altema.jp/anaden/jigenhimikanosyo"
+ },
+ "hp_model": {
+  "bar": 0.741,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   60
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 74,062,822(0.74억) 한 줄, HP 60% 스토퍼(전체 버프·디버프 해제). 부활·웨이브 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "衝絶剛打 단체 타격+기절, 衝闇滅斬 단체 베기+암흑",
+  "aoe": "次元滅裂斬 전체 베기(순환에 2번), 呪力念 전체 완력 DOWN 중",
+  "status": "기절·암흑",
+  "note_kr": "알테마: 스토퍼의 버프·디버프 해제 말고는 특별한 대책 불필요."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/jigenhimikanosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC",
+  "https://www.youtube.com/watch?v=N3GXwMwY1aI"
+ ],
+ "name_kr": "차원 파괴신 히미카",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "次元破壊神ヒミカ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 74,062,822(0.74억). 약점·내성·무효·흡수 없음. 耐久·精神 720(알테마 표). HP 60% 스토퍼 — 도달 시 아군·적 전체 버프·디버프 해제. 5행동 순환. 부활·웨이브·소환·존 없음. VH HP 11,905,184.",
+ "mechanics": [
+  "5행동 순환: 衝絶剛打(단체 타격+기절) → 次元滅裂斬(전체 베기) → 呪力念(전체 완력 DOWN 중 3턴) → 衝闇滅斬(단체 베기+암흑) → 次元滅裂斬(전체 베기)",
+  "HP 60% 스토퍼: 전체 버프·디버프 해제",
+  "공격 속성은 행동표엔 무속성, 공략문엔 '전부 물리'로 적혀 있음"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": false,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "シェンファ",
+  "ユナ",
+  "フラムラピス(AS)",
+  "マイティ",
+  "ノノルド",
+  "セヴェン"
+ ],
+ "strategy_kr": "약점·내성이 없고 공격이 물리라 완력 디버프·물리 내성 버프로 피해를 줄인다. 보너스는 魔剣 +90·杖 +60이라 마검·지팡이 캐릭터 위주로 짠다. HP 60% 스토퍼에서 양쪽 버프·디버프가 모두 풀리니 그 뒤 다시 건다. 기절·암흑 대비로 상태이상 무효가 있으면 편하다. 알테마 예시는 シェンファ·マイティ 딜에 ユナ·フラムラピス(AS) 지원(서브 ノノルド·セヴェン, 버디 テュシア·キュモス), 유저 투고(점수 없음)는 アルテナ·白磁の魔人·フィーネ(AS)·シェンファ.",
+ "source": "https://altema.jp/anaden/jigenhimikanosyo",
+ "hp": 0.74,
+ "posts": []
+},
+ {
+ "id": "sk_garudosunosho",
+ "shoka_part": "메인 3부 전편",
+ "score_bonus": {
+  "pers": {
+   "火": 30,
+   "アウトロー": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 405992000,
+  "src": "https://altema.jp/anaden/garudosunosho"
+ },
+ "hp_model": {
+  "bar": 1.963,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   75
+  ],
+  "kt_min": 0,
+  "note_kr": "ガルドス 196,291,928(1.96억) 기준 한 줄, HP 약 75% 스토퍼. 機馬는 별도 개체(HP 표기 오타 '1,954,627,03', 약 1.95억으로 보임, 50% 스토퍼). 둘 다 치면 합 약 3.9억(미확인). 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "レストアランス 무작위 3명 뇌 찌르기+자기 HP 50% 회복",
+  "aoe": "ブレーキングスピア·バイタルズスラスト·アイアンジャベリン 전체 뇌 찌르기, ライトニングストンプ 전체 뇌 타격",
+  "status": "봉인(スチールマウント), 완력·지성 DOWN, 뇌 내성 DOWN",
+  "note_kr": "속도 350 이상 ギアチェンジ로 크리 100% — 속도 디버프·완력 디버프(알테마). 뇌 내성 버프도 유효."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/garudosunosho",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "갈도스",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ガルドス・機馬",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [
+  "pierce",
+  "blunt"
+ ],
+ "null": [],
+ "absorb": [
+  "thunder"
+ ],
+ "phases": "2체: ガルドス 챌린지 HP 196,291,928(1.96억), 機馬 챌린지 HP는 알테마 표기 '1,954,627,03'(자릿수 오타 — VH 비율로 보면 약 1.95억, 미확인). 둘 다 약점 없음·뇌 흡수, 내성은 ガルドス 찌르기·機馬 타격(따로). ガルドス HP 약 75% 스토퍼(アイアンジャベリン), 機馬 HP 약 50% 스토퍼(態勢を崩す → 그 턴 ガルドス 행동 취소). 매 턴 종료 ガルドス 속도 UP + 百万機力 1개 → 축적 수만큼 속도 증가, 속도 350 이상이면 오라 ギアチェンジ. 행동표는 ガルドス만 있음. VH HP ガルドス 47,876,080 / 機馬 47,673,830.",
+ "mechanics": [
+  "행동 1: ブレーキングスピア(전체 뇌 찌르기+완력·지성 DOWN 3턴) 또는 スチールマウント(전체 봉인)",
+  "행동 2: バイタルズスラスト(전체 뇌 찌르기) 또는 ライトニングストンプ(전체 뇌 타격)",
+  "행동 3: レストアランス(무작위 3명 뇌 찌르기+자기 HP 50% 회복) 또는 サンダーズネイ(아군 뇌 내성 DOWN 5턴·자기 뇌 공격 UP 소 5턴)",
+  "행동 4: アイアンジャベリン(전체 뇌 찌르기), HP 75% 스토퍼에도 사용",
+  "매 턴 종료: 자기 속도 UP(소, 1턴) + 百万機力 1 축적 → 축적 수만큼 속도 증가",
+  "오라 ギアチェンジ: 속도 350 이상이면 물리·마법 크리율 100%·회피 25%",
+  "機馬 HP 50% 스토퍼: 態勢を崩す → ガルドス 행동 취소"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": false,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "ツキハ",
+  "韜晦の討手",
+  "ミナルカ(AS)",
+  "ユーイン",
+  "プライ",
+  "センヤ"
+ ],
+ "strategy_kr": "뇌를 흡수하므로 뇌 공격은 빼고, ガルドス는 찌르기·機馬는 타격에 내성이라 베기·마법(뇌 외)이 무난하다. 보너스는 火 +30·アウトロー +60. 매 턴 百万機力으로 속도가 올라 350을 넘으면 ギアチェンジ(크리율 100%)로 피해가 커지니 속도·완력 디버프로 늦춘다. 機馬를 50%까지 깎으면 그 턴 ガルドス 행동이 취소된다. 알테마 예시는 ツキハ·韜晦の討手·ミナルカ(AS)·ユーイン(서브 プライ·センヤ, 버디 テトラ(AS)). 유저 투고는 없다.",
+ "source": "https://altema.jp/anaden/garudosunosho",
+ "hp": 1.96,
+ "posts": []
+},
+ {
+ "id": "sk_gidorunnosho",
+ "shoka_part": "메인 3부 전편",
+ "score_bonus": {
+  "pers": {
+   "雷": 30,
+   "槌": 30,
+   "時間帝国": 60,
+   "メガネ": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 581031000,
+  "src": "https://altema.jp/anaden/gidorunnosho"
+ },
+ "hp_model": {
+  "bar": 2.699,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 269,901,401(2.70억) 한 줄, HP 50% 스토퍼(행동표 기준). 40% 이하 デッドロック 피해 2배. 捕縛アーム HP 미기재. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "捕縛アーム射出 행동 불능(남으면 HP 30% 피해), フレイムレイ 화 물리×3+물리 내성 DOWN",
+  "aoe": "ナパームブレイズ·スプレッドブレイズ 전체 화 마법+디버프, バイセクトライフ 현재 HP 50%, 焼き払う熱線 전체 화 마법 크리 확정(오일로 화 1.5배)",
+  "status": "암흑·혼란(ハッキングパルス), 행동 불능(捕縛アーム)",
+  "note_kr": "1턴째 상태이상 무효가 핵심, 팔은 바로 처리. 40% 이하에선 받는 피해도 2배."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/gidorunnosho",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "기드룬 (미확인)",
+ "name_src": "",
+ "name_jp": "ギドルン",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "thunder"
+ ],
+ "resist": [
+  "slash",
+  "pierce",
+  "blunt",
+  "crystal",
+  "shade"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 269,901,401(2.70억). 뇌 약점, 베기·찌르기·타격·晶·음 내성. 전투 시작 対侵入者プロトコル로 AF 게이지 25% 흡수, HP 50% 스토퍼에서 다시 25% 흡수 + 焼き払う熱線(챌린지 표엔 특징 칸이 없고 행동표에 50% 스토퍼 표시, VH는 50% 명시). HP 40% 이하 오라 デッドロック: 아군·적 모두 받는 피해 +100%. 환경 オイル(地表): 화 공격 피해 1.5배. 1턴째 捕縛アーム(수·HP 미기재) — 남아 있으면 턴 종료에 HP 30% 피해 + 보스 10% 회복. 부활·웨이브 없음. VH HP 65,829,610.",
+ "mechanics": [
+  "対侵入者プロトコル: 전투 시작·HP 50% 스토퍼 때 AF 게이지 25% 흡수",
+  "1턴째: 捕縛アーム射出(단체 행동 불능, 팔이 남으면 턴 종료에 HP 30% 피해 + 보스 10% 회복) + ハッキングパルス(전체 암흑·혼란)",
+  "ナパームブレイズ: 전체 화 마법 + 화 내성 DOWN(중, 4턴)",
+  "フレイムレイ: 단체 화 물리×3 + 물리 내성 DOWN(중, 3턴)",
+  "スプレッドブレイズ: 전체 화 마법 + 완력·지성 DOWN(중, 3턴)",
+  "バイセクトライフ: 전체 현재 HP 50% 피해",
+  "HP 50% 스토퍼 뒤: 焼き払う熱線(전체 화 마법, 크리 확정)",
+  "오라 デッドロック(HP 40% 이하): 아군·적 받는 피해 +100%",
+  "환경 オイル(地表): 화 공격 피해 1.5배"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": false,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "オルレイア(AS)",
+  "ヴェレット(AS)",
+  "シオン(ES)",
+  "オボロ",
+  "スカル",
+  "ヴィクト(AS)"
+ ],
+ "strategy_kr": "뇌 약점에 물리 세 타입·晶·음 내성이라 뇌 마법 딜러가 중심이고, 보너스도 雷 +30·槌 +30·時間帝国 +60·メガネ +60이다. 전투 시작과 HP 50% 스토퍼에서 AF 게이지를 25%씩 흡수하니 AF 시점을 맞춘다. 1턴째 捕縛アーム은 남기면 매 턴 피해 + 보스 회복이라 바로 깨고, ハッキングパルス의 암흑·혼란은 상태이상 무효 배리어·배지(또는 버디 テトラ·海じゃらし로 공격 뒤 회복)로 막는다. HP 40% 이하 デッドロック부터 서로 받는 피해가 2배다. 유저 투고는 イヅナ·カムラナージュ·ヴェレット·オルレイア 뇌 파티(버디 ガンス)로 스코어 12억.",
+ "source": "https://altema.jp/anaden/gidorunnosho",
+ "hp": 2.7,
+ "posts": [
+  {
+   "score": 1200000000.0,
+   "dmg": null,
+   "team": "イヅナ・カムラナージュ・ヴェレット・オルレイア / サブ いいマクマク / バディ ガンス(・テトラ)",
+   "src": "https://altema.jp/anaden/gidorunnosho",
+   "note": "원문 「スコア12億(最終報酬ライン5.8億)」. 1턴 AF, 2~3턴 SB·雷鳴, 4턴 ガンス 차지. 피해 미기재, 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_asupidonosho",
+ "shoka_part": "메인 3부 전편",
+ "score_bonus": {
+  "pers": {
+   "拳": 45,
+   "弓": 45,
+   "剣": 20,
+   "杖": 20
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 636709000,
+  "src": "https://altema.jp/anaden/asupidonosho"
+ },
+ "hp_model": {
+  "bar": 6.037,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "칠 수 있는 HP = 두 촉수 합 603,669,732(촉수당 301,834,866), 본체 392,583,856은 전 공격 무효. 두 촉수 모두 HP 50% 스토퍼, 동시 격파해야 끝나고 한쪽만 격파하면 재출현. 부활 기재 없음."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "미기재(행동 패턴 準備中)",
+  "aoe": "미기재(행동 패턴 準備中)",
+  "status": "유저 투고: 4턴 랜덤 날려 버리기×2, 상태이상 회피는 운(ノノルド 언급)",
+  "note_kr": "Altema에 보스 행동이 없어 위협도는 투고 문구로만 판단. 오라로 버프·디버프 5종 이상이면 피해·내성 DOWN."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/asupidonosho",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "아스피드",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "アスピド／第1触手／第2触手",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP: 본체 392,583,856(전 공격 무효) + 제1촉수 301,834,866 + 제2촉수 301,834,866. 제1촉수는 마법·타격 약점 / 베기·찌르기 내성, 제2촉수는 베기·찌르기 약점 / 마법·타격 내성이라 보스 전체로는 약점·내성 칸을 비워 둠. 두 촉수 모두 HP 50% 스토퍼, 둘을 같이 격파해야 전투 종료(한쪽만 격파하면 재출현). 환경 時の加速: AF 게이지 75%에서 시작. 5턴 챌린지(VH HP 본체 95,752,160 / 촉수 각 73,618,260).",
+ "mechanics": [
+  "時の加速(환경): 전투 시작 시 AF 게이지 75%",
+  "오라(본체): 버프·디버프가 5종 이상 걸린 적·아군 단체는 주는 피해 25% DOWN + 물리·마법 내성 25% DOWN, 10종 이상이면 30%",
+  "제1촉수 마법·타격 약점 / 베기·찌르기 내성, 제2촉수 베기·찌르기 약점 / 마법·타격 내성, 본체는 전 공격 무효",
+  "두 촉수 HP 50% 스토퍼, 동시 격파 필요(한쪽만 격파하면 재출현)",
+  "VH만: 전투 시작 시 본체에 迎撃(99턴, 공격받으면 반격)",
+  "행동 패턴은 Altema '準備中'. 유저 투고에 4턴 랜덤 날려 버리기(吹き飛ばし)×2 언급"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "エニ",
+  "ユナ",
+  "ヤクモ(AS)",
+  "シェンファ",
+  "フィーネ(AS)",
+  "カムラナージュ"
+ ],
+ "strategy_kr": "두 촉수의 약점이 서로 반대(마법·타격 / 베기·찌르기)라 전체 공격으로 둘을 같이 깎는다. Altema 예시는 エニ·ユナ·ヤクモ(AS) 서포트 + シェンファ 지팡이 마법 딜, 후열 지팡이 셔틀(フィーネ(AS)·カムラナージュ). 보너스는 拳·弓 +45, 剣·杖 +20이라 유저 최고 투고(27억)는 チルリル(ES)·赤套の炎使い·マリエル(ES)·アルマ(AS)(검·권갑·활)에 모케. 5턴째만 공격하고 나머지 턴은 비공격 행동으로 보너스 2,100을 모아 13억을 낸 투고도 있다. 오라 때문에 한 캐릭터에 버프·디버프를 5종 넘게 쌓지 않는 편이 낫다.",
+ "source": "https://altema.jp/anaden/asupidonosho",
+ "hp": 6.04,
+ "posts": [
+  {
+   "score": 1300000000.0,
+   "dmg": null,
+   "team": "チルリル(ES)・韜晦の討手・赤套の炎使い(AS)・マリエル(ES) / サブ デューイ・シェリーヌ / モケ",
+   "src": "https://altema.jp/anaden/asupidonosho",
+   "note": "「スコア１３億（証６億）」「ボーナス２１００」「５T目以外攻撃せず」, 날짜 없음"
+  },
+  {
+   "score": 2000000000.0,
+   "dmg": 139400000000.0,
+   "team": "シェンファ・ノノルド・白磁の魔人・フィーネ(AS) / サブ 墨染の軍師・アンペル",
+   "src": "https://altema.jp/anaden/asupidonosho",
+   "note": "「ダメージ1394億でスコア20億」「ボーナス390＋50＋1000」, 버디 テトラ 또는 テシュア 언급, 날짜 없음"
+  },
+  {
+   "score": 2700000000.0,
+   "dmg": null,
+   "team": "チルリル(ES)・赤套の炎使い・マリエル(ES)・アルマ(AS) / サブ いいマクマク×2 / モケ",
+   "src": "https://altema.jp/anaden/asupidonosho",
+   "note": "「スコア27億(最終報酬ライン6.3億)」, 1T AF 뒤 SB 心の剣, 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_zomasu88nosyo",
+ "shoka_part": "메인 3부 전편",
+ "score_bonus": {
+  "pers": {
+   "水": 20,
+   "地": 20,
+   "騎乗": 40
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 420223000,
+  "src": "https://altema.jp/anaden/zomasu88nosyo"
+ },
+ "hp_model": {
+  "bar": 0.491,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 49,072,982 한 줄. 스토퍼·부활·소환 기재 없음(행동 패턴 準備中)."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "미기재(행동 패턴 準備中)",
+  "aoe": "미기재(행동 패턴 準備中)",
+  "status": "미기재",
+  "note_kr": "보스 행동이 공개되지 않아 위협도 근거 없음. 완력·지성 396, 속도 275."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/zomasu88nosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "조마스 88",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ゾマス88",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 49,072,982(0.49억, VH 11,969,020). 약점·내성·무효·흡수 없음. 대신 매 턴 시작 시 자기에게 베기·찌르기·타격·마법 내성 UP(中 1턴). 환경 突風(大気): 선제 스킬 1.5배·후공 스킬 3.0배. 스토퍼·부활·소환 기재 없음, 행동 패턴은 Altema '準備中'. 5턴 챌린지.",
+ "mechanics": [
+  "突風(大気, 환경): 先制 스킬 피해 1.5배, 後攻 스킬 피해 3.0배",
+  "매 턴 시작 시 자기 베기·찌르기·타격·마법 내성 UP(中 1턴)",
+  "행동 패턴·공략 팁은 Altema '準備中'"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ミュルス",
+  "ヘレナ",
+  "クチナワ",
+  "ガリアード"
+ ],
+ "strategy_kr": "약점이 없고 매 턴 타입 내성 UP(中)이 붙어서 후공 3.0배 환경을 살리는 쪽이 유리하다. Altema 예시는 ミュルス·ガリアード 서포트 + ヘレナ·クチナワ 지 지팡이 딜러, 후열은 창·지팡이 셔틀, 버디 テュシア·キュモス. 보너스는 騎乗 +40, 水·地 +20. 유저 투고 최고는 深緋の刈人·ガリアード·白磁の魔人·ジルバー(AS)로 피해 540억·스코어 8.4억(보너스 510+50+1000), 1턴 AF 후 2~5턴에 성도 스킬을 끼워 넣는 운영.",
+ "source": "https://altema.jp/anaden/zomasu88nosyo",
+ "hp": 0.49,
+ "posts": [
+  {
+   "score": 840000000.0,
+   "dmg": 54000000000.0,
+   "team": "深緋の刈人・ガリアード・白磁の魔人・ジルバー(AS) / サブ ナギ・ソフィア / テュシア",
+   "src": "https://altema.jp/anaden/zomasu88nosyo",
+   "note": "「スコア8.4億前後」「ダメージ540億前後」「ボーナス510＋50＋1000」, 본문은 1번째를 '異ルルゥ(冥16)'로 적음, 날짜 없음"
+  },
+  {
+   "score": 710000000.0,
+   "dmg": null,
+   "team": "セリエス・ミュルス・白磁の魔人・クロード(ES) / サブ 寂寞の舞台人・いいマクマク / テュシア",
+   "src": "https://altema.jp/anaden/zomasu88nosyo",
+   "note": "「スコア7.1億(最終報酬ライン4.2億)」, 1T AF·4T AF, 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_meiryuou",
+ "shoka_part": "외전",
+ "score_bonus": {
+  "pers": {
+   "杖": 45,
+   "斧": 45,
+   "剣": 45,
+   "弓": 45,
+   "アルカディア": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 303964000,
+  "src": "https://altema.jp/anaden/meiryuou"
+ },
+ "hp_model": {
+  "bar": 0.9434,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   75,
+   50,
+   10
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 94,337,800(0.94억) 한 줄, 부활 없음. 스토퍼 75/50/10%는 알테마 일반 특징 기준(챌린지 적용 여부 미기재). 환경 竜の障壁(적이 받는 피해 50% DOWN)·冥竜王の障壁 50축적도 일반 특징 기준. 5턴 스코어전."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "챌린지 행동표 없음 — 스텔라 기준 瘴気の牙(단체 무속성 베기), 瘴気満ちる爪撃(단체 고정 피해 ×2), 冥気の威圧(단체 음 마법×2)",
+  "aoe": "스텔라 기준 瘴気の爪(전체 고정 500+冥竜王の気×500), 스토퍼마다 終焉の息吹",
+  "status": "챌린지 미기재 (스텔라 2차 스토퍼 뒤 羈絆の陰爪 봉인)",
+  "note_kr": "알테마 챌린지 예시는 회복 버디 テトラ + 오라 キュモス. 탱커 지시 없음. 최대 MP 50 이하 아군은 피해 90% DOWN."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/meiryuou",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "명룡왕",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "冥竜王",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 94,337,800(약 0.94억), 5턴 스코어전. 약점·내성·무효·흡수 없음. 알테마 '특징'(난이도 구분 없음)에 HP 약 75%/50%/10% 스토퍼(스토퍼마다 終焉の息吹, 자기 버프·디버프 해제)가 있으나 챌린지 적용 여부는 미기재. 챌린지 전용 행동표 없음(행동표는 스텔라만). 투고 피해(280억~1000억)는 표기 HP보다 훨씬 크다.",
+ "mechanics": [
+  "冥竜王の障壁: 개시 50 축적(최대 50), 축적당 물리·전속성 내성 10% UP, 피격 1히트당 1 소모, 0이 되면 2턴간 물리·전속성 내성 DOWN(중) 뒤 다시 50 → 연격으로 깎기 (일반 특징, 챌린지 표기 없음)",
+  "冥竜王の気: 일부 행동으로 아군에 축적, 축적에 따라 최대 MP·지성 변동, 瘴気の爪 계열 위력 증가",
+  "瘴気の兆し: 다음 행동이 冥竜王の気 축적 비례 공격",
+  "환경 冥竜王の災厄: 冥竜王の吸気(소비 MP 20% 증가)·竜の障壁(적이 받는 피해 50% DOWN)",
+  "오라 冥竜王の睥睨: 최대 MP 50 이하인 아군은 주는 피해 90% DOWN",
+  "챌린지 행동표는 알테마에 없음 (스텔라: 瘴気の牙 단체 베기, 瘴気の爪 전체 고정 500+축적×500, 스토퍼마다 終焉の息吹 최대HP 30%→50%→99%)",
+  "보너스: 杖·斧·剣·弓 각 +45, アルカディア +60"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "残影の佳人",
+  "クチナワ",
+  "白磁の魔人",
+  "クロード(ES)",
+  "アルド",
+  "メルピピア",
+  "クラルテ",
+  "チルリル(ES)",
+  "ウェネーフィカ",
+  "アルマ(AS)",
+  "セリエス",
+  "ラクレア(AS)"
+ ],
+ "strategy_kr": "약점·내성이 없어 속성보다 연격 수가 중요하다. 冥竜王の障壁 50축적을 다단히트로 벗겨야 피해가 제대로 들어가고, 알테마 챌린지 예시는 残影の佳人·クチナワ 공격에 白磁の魔人·クロード(ES) 지원, 1턴 AF·5턴 SB 흐름이다. 보너스는 杖·斧·剣·弓 각 +45, アルカディア +60이라 무기만 맞추면 되고, 후열까지 보너스 대상으로 채우면 편성 +1000이 붙는다. 투고로는 クチナワ·残影の佳人·セリエス·白磁の魔人 피해 1000억·스코어 22.23억, アルマ(AS) 요격 덱 280억·7~8억점이 있다. 최대 MP 50 이하면 주는 피해가 90% 줄어서 MP 관리도 필요하다.",
+ "source": "https://altema.jp/anaden/meiryuou",
+ "hp": 0.94,
+ "posts": [
+  {
+   "score": 2223000000.0,
+   "dmg": 100000000000.0,
+   "team": "メイン: クチナワ・残影の佳人・セリエス・白磁の魔人 / サブ: メルピピア・ラクレア(AS) / バディ: モケ",
+   "src": "https://altema.jp/anaden/meiryuou",
+   "note": "원문 「总计1000亿damage」「22.23亿score」, 날짜 없음"
+  },
+  {
+   "score": 700000000.0,
+   "dmg": 28000000000.0,
+   "team": "メイン: アルド・チルリル(ES)・ウェネーフィカ・アルマ(AS) / サブ: シオン・ミストレア(AS) / バディ: モルディ",
+   "src": "https://altema.jp/anaden/meiryuou",
+   "note": "원문 「280億ダメージ」「(7～8億点)」 — 점수는 범위 하한, 2·4~5턴 합, 'アルマ 冥200 이상이면 10億点 超える'. 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_phantomrugaru",
+ "shoka_part": "협주",
+ "score_bonus": {
+  "pers": {
+   "KOF": 90,
+   "拳": 90
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 213482000,
+  "src": "https://altema.jp/anaden/phantomrugaru"
+ },
+ "hp_model": {
+  "bar": 1.0606,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 106,064,168(1.06억) 한 줄, 부활 없음(스텔라는 ファントムソウル 2). アタックカウンター 99 전멸 기믹. 5턴 스코어전."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "ダークバリア 턴 迎撃 フハハハハッ！(단체 陰 타격+혼란)",
+  "aoe": "烈風拳(전체 무속성 베기+기절, 1·3턴), 終わりなき災厄(전체 현재 HP·MP 10%, 4턴)",
+  "status": "기절·혼란, アタックカウンター 99 전멸",
+  "note_kr": "알테마 예시는 회복 버디 テトラ + 오라 コロボ. 탱커 지시 없음. 연격으로 アタックカウンター를 계속 깎는 게 생존 핵심."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/phantomrugaru",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "팬텀 루갈",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ファントム・ルガール",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "blunt"
+ ],
+ "resist": [
+  "slash",
+  "pierce"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 106,064,168(약 1.06억), 5턴. 打 약점, 斬·突 내성, 무효·흡수 없음. 스토퍼·부활(ファントムソウル)은 스텔라만. アタックカウンター 개시 50·턴 종료마다 +15·최대 99, 99면 턴 개시에 아군 전멸 → 히트 수로 깎지 않으면 4턴 종료에 99가 되어 5턴 개시에 전멸.",
+ "mechanics": [
+  "오라 ナックルブレイカー: 打 피해를 받으면 그 적 打 내성 30% DOWN",
+  "アタックカウンター: 개시 50(최대 99), 피격 히트당 1 소모, 축적당 물리·전속성 내성 1% UP, 턴 종료마다 +15, 99면 턴 개시에 아군 전멸",
+  "デスペレイト: デスペレイトレイ를 받으면 축적, 축적당 물리 내성 5% DOWN (챌린지 행동표엔 デスペレイトレイ 없음)",
+  "1턴 烈風拳(전체 무속성 베기+기절)",
+  "2턴 ダークバリア(자기 전속성 내성 대 UP 1턴 + 迎撃 フハハハハッ！: 단체 陰 타격+혼란)",
+  "3턴 烈風拳, 4턴 終わりなき災厄(전체 현재 HP·MP 10%)",
+  "보너스: KOF·拳 +90"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "韜晦の討手",
+  "草薙京",
+  "ミナルカ(AS)",
+  "ユーイン",
+  "メイ",
+  "ヴァイオレット",
+  "チルリル(ES)",
+  "メリナ(AS)",
+  "ラブリ(AS)",
+  "赤套の炎使い",
+  "ハーディー(AS)",
+  "ウクアージ",
+  "マツリカ",
+  "クロード(ES)",
+  "テリー・ボガード"
+ ],
+ "strategy_kr": "打 약점이고 打를 맞으면 打 내성이 30% 더 내려가므로 타격 위주로 친다. 보너스가 KOF·拳 +90이라 KOF 콜라보 캐릭터(草薙京 등)와 拳 캐릭터로 짜며, 알테마 예시는 韜晦の討手·草薙京·ミナルカ(AS)·ユーイン에 후열 メイ·ヴァイオレット다. アタックカウンター가 턴마다 15씩 쌓여 99가 되면 전멸하므로 연격과 AF로 히트 수를 계속 채운다. 2턴째 ダークバリア 중엔 迎撃(혼란)이 붙으니 그 턴 공격 배분에 주의한다. 투고로는 ラブリ(AS)·赤套の炎使い·韜晦の討手·草薙京 스코어 8.9억이 있다.",
+ "source": "https://altema.jp/anaden/phantomrugaru",
+ "hp": 1.06,
+ "posts": [
+  {
+   "score": 890000000.0,
+   "dmg": null,
+   "team": "メイン: ラブリ(AS)・赤套の炎使い・韜晦の討手・草薙京 / サブ: ハーディー(AS)・ウクアージ / バディ: モケ",
+   "src": "https://altema.jp/anaden/phantomrugaru",
+   "note": "원문 「スコア8.9億」(最終報酬ライン2.1億). 날짜 없음"
+  }
+ ],
+ "hitgim": [
+  {
+   "k": "stack",
+   "s0": 50,
+   "r": 0.01,
+   "regen": 15,
+   "max": 99,
+   "label": "アタックカウンター 50(축적당 물리·전속성 내성 1%, 피격 1타당 1 감소, 턴 종료 +15, 99면 턴 개시 전멸)"
+  }
+ ]
+},
+ {
+ "id": "sk_motherfatenosyo",
+ "shoka_part": "협주",
+ "score_bonus": {
+  "pers": {
+   "時の傷痕の輪舞": 200,
+   "雷": 20,
+   "杖": 10
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 563482000,
+  "src": "https://altema.jp/anaden/motherfatenosyo"
+ },
+ "hp_model": {
+  "bar": null,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 미기재(스텔라 본체 61,912,470 = 0.62억, 50% 스토퍼). 5턴 스코어전."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": true,
+  "heal": false,
+  "single": "스텔라 기준 熱線(HP 20%+암흑), ライフシェイバー(HP 15%), 왼손 迎撃 HP 30% 드레인, 오른손 迎撃 MP 999",
+  "aoe": "스텔라 기준 グラビトン(전체 HP 15%), マナフィーブル(전체 완력·지성 디버프 4턴)",
+  "status": "스텔라 기준 ブラスト 단체 기절(자주)",
+  "note_kr": "챌린지 행동 미기재. 알테마 팁: 전체 공격 땐 도발 탱커로 손 迎撃을 받게 함, 비율 피해 위주."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/motherfatenosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "마더 페이트",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "マザーフェイト",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP·약점·내성은 알테마에 없음(능력치 표는 스텔라만: 본체·오른손·왼손, 본체 HP 61,912,470, 약점·내성 없음, 50% 스토퍼). 5턴 스코어전. 챌린지 행동표 없음 — 아래 행동은 스텔라 기준.",
+ "mechanics": [
+  "챌린지 전용 능력치·행동표 없음 (아래는 스텔라 기준)",
+  "양손 迎撃(스텔라): 왼손 ライフドレイン(단체 HP 30%+자기 회복), 오른손 マジックバスター(단체 MP 999) → 공략 팁 '両腕を攻撃しない'",
+  "행동(스텔라, 무작위 순서): ブラスト×2(단체 기절) 뒤 熱線(단체 HP 20%+암흑) / グラビトン(전체 HP 15%) / マナフィーブル(전체 완력·지성 디버프 4턴) 중 하나, 또는 ライフシェイバー(HP 15%)·ブラスト·マジックバスター(MP 999)",
+  "공략 팁: 전체 공격을 쓸 땐 도발 탱커를 미끼로, 공격 대부분이 비율 피해라 HP 관리",
+  "보너스: 時の傷痕の輪舞 +200, 雷 +20, 杖 +10"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": true,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ヤクモ(AS)",
+  "ツクヨミ",
+  "イヅナ",
+  "マリエル",
+  "レイヴン"
+ ],
+ "strategy_kr": "보너스가 時の傷痕の輪舞 +200으로 크고 雷 +20·杖 +10은 작아서, 時の傷痕の輪舞 퍼스널리티를 가진 캐릭터를 몇 명 넣느냐가 점수를 좌우한다(대상 캐릭터는 페이지에 없음). 알테마 챌린지 예시는 ヤクモ(AS) 지원에 ツクヨミ·イヅナ 공격, マリエル 가창의 杖 마법 파티이고, 후열에 杖 캐릭터와 レイヴン을 둔다. 스텔라 기준으로 양손을 치면 迎撃(HP 30% 드레인·MP 999)이 오므로 단체 공격으로 본체를 노린다. 챌린지 HP·약점·행동은 페이지에 없어 확인이 필요하다.",
+ "source": "https://altema.jp/anaden/motherfatenosyo",
+ "posts": []
+},
+ {
+ "id": "sk_yudhikiumu",
+ "shoka_part": "군상",
+ "score_bonus": {
+  "pers": {
+   "COA": 70,
+   "IDAスクール": 50,
+   "斧": 30,
+   "槍": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 201466000,
+  "src": "https://altema.jp/anaden/yudhikiumu"
+ },
+ "hp_model": {
+  "bar": null,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "HP 미확인(Altema 準備中, game-info 없음). 스토퍼·부활 기재 없음."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "미기재",
+  "aoe": "미기재",
+  "status": "미기재",
+  "note_kr": "보스 행동 미공개라 위협도 근거 없음. Altema 예시에 탱커(ヒスメナ)가 들어감."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/yudhikiumu",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "유디키움 (미확인)",
+ "name_src": "",
+ "name_jp": "ユーディキウム",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP·약점·내성 미확인 — Altema '基本情報と行動'이 '準備中'이고 game-info 위키에도 없음. 스토퍼·부활도 미기재. 5턴 챌린지(VH는 3턴 안에 격파 조건).",
+ "mechanics": [
+  "보스 행동·특징 미공개(Altema 準備中)",
+  "유저 투고 운영: 1턴 AF(ディミティアス) → 2턴 SB → 4턴 AF + フレイムレイジ(ZONE 각성) → 5턴 SB 포함 딜"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": false
+ },
+ "recommended": [
+  "リナリア",
+  "イスカ",
+  "セティー",
+  "ヒスメナ"
+ ],
+ "strategy_kr": "보너스가 COA +70, IDAスクール +50, 斧·槍 +30이라 해당 퍼스널리티 캐릭터로 행동 보너스를 모은다. Altema 예시는 リナリア 서포트, イスカ·セティー 딜러, ヒスメナ 탱커에 후열 검·창 셔틀, 버디 テトラ·クラマル. 유저 투고는 イルルゥ(이시층)·セティー·レンリ·ジルバー(AS)로 보너스 880+100+1000, '피해 100억 미만으로도 증 획득, 300억 전후는 낼 수 있다'고 함. 약점 정보가 없어 속성은 정하지 못함.",
+ "source": "https://altema.jp/anaden/yudhikiumu",
+ "posts": [
+  {
+   "score": null,
+   "dmg": 30000000000.0,
+   "team": "イルルゥ(異時層)・セティー・レンリ・ジルバー(AS) / サブ ベネディト・ゼヴィーロ / リレーノ",
+   "src": "https://altema.jp/anaden/yudhikiumu",
+   "note": "원문 「ボーナス880＋100＋1000、ダメージは100億弱で証獲得可能」「ダメージ300億前後は稼げる」 — 300억은 가능하다는 말이라 실제 기록인지 불명, 스코어 미기재, 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_flameload",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "水": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 234694000,
+  "src": "https://altema.jp/anaden/flameload"
+ },
+ "hp_model": {
+  "bar": 0.8872,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   70,
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 88,719,344(0.89억) 한 줄. 70%·50% 스토퍼마다 HP 전회복 + 盟友の追憶 +5(전회복이라 실제로 깎을 양은 약 1.6줄). 부활 없음. 5턴 스코어전."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "ヘルフレイム×3(단체 화 마법+기절), 雑魚が！×2(단체 날려버리기), エクスプロージョン(단체 화 마법 4히트)",
+  "aoe": "1턴 전체 지성(중 3턴)·속도(대 5턴) 디버프, 5턴 オレ様が焼き尽くす！(전체 화 내성 디버프)·フレイムストライク(전체 화 마법)",
+  "status": "기절·날려버리기",
+  "note_kr": "탱커 지시 없음. 4턴째 존이 덮어써지는 것이 가장 큰 변수(선공 못 하면 AF로 다시 전개)."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/flameload",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "플레임 로드",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "フレイムロード",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [
+  "wind",
+  "earth"
+ ],
+ "absorb": [
+  "fire"
+ ],
+ "phases": "챌린지 HP 88,719,344(약 0.89억), 5턴. 약점·내성 없음, 풍·지 무효, 화 흡수(業火の鎧로 전속성 내성 대 UP 영속). HP 약 70%·50% 스토퍼: 그때마다 HP 전회복 + 盟友の追憶 5 축적. 부활 없음. 4턴째 선제 炎帝領域으로 極・烈火陣 전개(아군 ZONE 덮어씀).",
+ "mechanics": [
+  "盟友の追憶: 축적당 전 능력치 5% UP, 매 턴 개시 +1(최대 10), 스토퍼마다 +5",
+  "業火の鎧: 자기 전속성 내성 UP(대, 영속)",
+  "오라 灼熱の免疫: 마법 피해를 받으면 적 상태이상 내성 100% UP",
+  "1턴 まったく とろいヤツらだな！: 전체 지성 디버프(중 3턴)·속도 디버프(대 5턴) + 자신 100% 경감 배리어(1회) / ヘルフレイム×3: 단체 화 마법 + 기절",
+  "2턴 バーニングシールド(자기 전속성 내성 + 雷·陰·晶 내성 버프 중 3턴), バーニングソウル(자기 지성·화 공격 버프 중 3턴)",
+  "3턴 あとはオレ様にまかせろ！(자기 전 능력치 버프 중 3턴), 雑魚が！×2(단체 날려버리기), エクスプロージョン(단체 화 마법 4히트)",
+  "4턴 炎帝領域(선제, 極・烈火陣 전개), 燃え尽きる覚悟はできたか？(자기 마법 크리율 대 UP 1회)",
+  "5턴 オレ様が焼き尽くす！(전체 화 내성 디버프), フレイムストライク(전체 화 마법)",
+  "보너스: 水 +30만"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": true,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "エルシール",
+  "深緋の刈人",
+  "月華の令嬢",
+  "夢吟の詩人",
+  "アナベル",
+  "ゼヴィーロ",
+  "ラディアス(AS)"
+ ],
+ "strategy_kr": "풍·지 무효, 화 흡수에 業火の鎧로 전속성 내성까지 높아서, 알테마 예시는 弱点看破(水)로 물 약점을 만들고 極・水天陣을 까는 물 파티(エルシール·深緋の刈人·月華の令嬢·夢吟の詩人)다. 1턴째 지성 디버프(중)가 걸리므로 물리 공격 위주가 낫다. 4턴째 선제 極・烈火陣으로 아군 존이 덮어써지니 그 턴 AF로 極・水天陣과 약점 간파를 다시 건다. 보너스가 水 +30뿐이라 행동 보너스는 작고, 전원 水로 맞춘 편성 +1000의 비중이 크다. 70%·50% 스토퍼마다 전회복과 盟友の追憶이 쌓여 보스가 점점 세진다.",
+ "source": "https://altema.jp/anaden/flameload",
+ "hp": 0.89,
+ "posts": []
+},
+ {
+ "id": "sk_dragonbearershoka",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "竜": 30,
+   "天の導き": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 380477000,
+  "src": "https://altema.jp/anaden/dragonbearershoka"
+ },
+ "hp_model": {
+  "bar": 2.124,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 212,418,352 한 줄. 竜神の神威로 4턴 동안 쓰러지지 않음(그 뒤 처치 가능 여부 미기재). 스토퍼·부활 기재 없음."
+ },
+ "threat": {
+  "lvl": 3,
+  "tank": true,
+  "heal": true,
+  "single": "竜神斬・號×3(단체 베기 + 고정 1,500, 물리·전속성 내성 다운, 최대 HP·MP 감소)",
+  "aoe": "エックス斬り・天(전체 화 베기×2), ハヤブサ斬り(전체 베기×2 + 완력·지성 다운), 4·5턴 보스 AF(필살기 포함)",
+  "status": "디버프(내성·완력·지성 다운, 최대 HP·MP 감소)",
+  "note_kr": "4·5턴 보스 AF가 가장 위험. 유저 공략(스텔라)은 ミナルカ(AS)·ラブリ(AS) 수호로 버팀."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/dragonbearershoka",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "드래곤 베어러",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "アルド（ドラゴンベアラー）",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 212,418,352(2.12억, VH 41,244,348). 약점이 고정이 아님: 天の導き로 '전열에서 가장 많은 속성 1개'가 약점, 그 밖의 속성은 전부 무효(그래서 칸을 비워 둠). 竜神の神威로 4턴 동안 쓰러지지 않고, 턴 종료 시 HP가 남아 있으면 다음 턴 자기 대폭 강화. 4·5턴째 보스가 AF 사용, 전열에 アルド가 없으면 전투 시작 시에도 보스 AF. 스토퍼·부활 기재 없음(VH는 HP 약 60%·40% 스토퍼). 5턴 챌린지.",
+ "mechanics": [
+  "天の導き: 전열에서 가장 많은 속성이 약점, 그 밖의 속성 무효 / 스탯·속성 다운 디버프를 안 받음 / 전열에 アルド가 없으면 전투 시작 시 アナザーフォース 사용",
+  "竜神の神威: 4턴 동안 쓰러지지 않음, 턴 종료 시 HP가 남아 있으면 다음 턴 대폭 강화, 전투 시작 시 闇に仇なす傍に立つ者(HP 전부 회복 + 완력·지성·속도·내구·행운·정신 버프 大 99턴)",
+  "오라 湧き上がる力: AF 게이지가 최대가 되면 발동, 味方全体 주는 피해 50% UP(원문 그대로)",
+  "1턴 竜神の神威: 자기 능력 버프(中 1턴)",
+  "2턴 竜神斬・號×3: 단체 베기 + 고정 1,500 피해, 물리·전속성 내성 다운, 최대 HP·MP 감소 / エックス斬り・天: 전체 화 베기×2, 자기 전속성 공격 버프(中 3회)",
+  "3턴 ハヤブサ斬り: 전체 베기×2 + 완력·지성 다운(小 3턴) / ボルケーノブレイド: 랜덤 화 베기×3 + 자기 크리 위력 버프(30% 3턴)",
+  "4·5턴 アナザーフォース: ハヤブサ斬り→ボルケーノブレイド→エックス斬り・天→竜神斬・號→必殺技"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": true,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "チルリル(ES)",
+  "ミナルカ(AS)",
+  "ユーイン",
+  "アルド",
+  "ガリユ",
+  "メイ"
+ ],
+ "strategy_kr": "전열 속성 구성이 곧 약점이 되고 나머지 속성은 무효라 전열을 한 속성으로 맞춘다. Altema 예시는 전열에 화속성 3명(ミナルカ(AS)·ユーイン·アルド) + チルリル(ES) 버프라 화가 약점이 되고, 보너스 칸으로 전열 アルド·후열 ガリユ(竜·天の導き 각 +30)를 쓴다. 전열에 アルド가 없으면 보스가 시작부터 AF를 쓰므로 アルド는 전열에 둔다. 4·5턴 보스 AF와 竜神斬・號의 최대 HP·MP 감소를 버틸 회복(テトラ)이 필요하고, 스텔라 투고에선 ミナルカ(AS)·ラブリ(AS) 수호로 버틴다.",
+ "source": "https://altema.jp/anaden/dragonbearershoka",
+ "hp": 2.12,
+ "posts": []
+},
+ {
+ "id": "sk_azamishoka",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "火": 30,
+   "普賢一刀流": 45
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 244968000,
+  "src": "https://altema.jp/anaden/azamishoka"
+ },
+ "hp_model": {
+  "bar": 0.958,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 95,846,112 한 줄, HP 전부 회복이 매 턴 지속(開幕 효과). 스토퍼·부활 기재 없음."
+ },
+ "threat": {
+  "lvl": 3,
+  "tank": false,
+  "heal": true,
+  "single": "極・みね打ち(단체 무속성 베기 + 기절), 飛剣・アマテラス×3(단체 풍 베기×6 + 기절)",
+  "aoe": "風扇迅·竜巻斬り(전체 풍 베기×4), 飛天の舞(전체 풍 베기×7)",
+  "status": "기절, 真剣勝負(지성 100% DOWN·교대 불가)",
+  "note_kr": "전열에 刀·普賢一刀流가 없으면 99,999 피해 + 다음 턴 전원 행동 불가. Altema 예시는 ラディアス(AS)에 기절 내성 배지."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/azamishoka",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "아마테라스",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "アザミ（アマテラス）",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [
+  "fire",
+  "earth",
+  "thunder",
+  "shade",
+  "crystal"
+ ],
+ "null": [
+  "water",
+  "wind",
+  "slash",
+  "pierce",
+  "blunt",
+  "magic"
+ ],
+ "absorb": [],
+ "phases": "챌린지 HP 95,846,112(0.96억, VH 11,606,648), 開幕 효과로 HP 전부 회복이 매 턴 지속. 약점 없음, 화·지·뇌·음·晶 내성, 수·풍·베기·찌르기·타격·마법 무효(챌린지 표 그대로). 開幕에 煌斬陣 전개 + 아군 전체 真剣勝負(지성 100% DOWN, 교대·후퇴 불가). 盟友の追憶 매 턴 +1(축적당 전 스탯 5% UP). 스토퍼·부활 기재 없음. 5턴 챌린지.",
+ "mechanics": [
+  "開幕 いざ！尋常に勝負！: 煌斬陣 전개 + 아군 전체 真剣勝負 + 자기 盟友の追憶 1 축적, HP 전부 회복(매 턴 지속)",
+  "真剣勝負: 지성 100% DOWN, 한 번이라도 걸리면 교대·후퇴 불가",
+  "盟友の追憶: 축적 수만큼 전 스탯 5% UP, 매 턴 1씩 축적",
+  "斬り捨て御免: 전열에 「刀」 또는 「普賢一刀流」 캐릭터가 없으면 전열 1명에 99,999 피해 + 다음 턴 전원 행동 불가(피해도 안 받음). 있으면 다음 턴 그 캐릭터 1명만 행동 + 나머지 행동 불가(피해 안 받음) + 턴 종료 시 AF 게이지 전부 회복. 발동 턴은 미기재",
+  "오라 死合: 물리 피해를 받으면 발동, 味方全体 물리 공격 피해 50% UP(원문 그대로)",
+  "1·3턴 極・みね打ち: 단체 무속성 베기 + 기절",
+  "2·4턴 風扇迅(전체 풍 베기×4) / 竜巻斬り(전체 풍 베기×4) / 飛天の舞(전체 풍 베기×7)",
+  "5턴 死してなお桜色(자기 풍 공격 버프) → 飛剣・アマテラス×3(단체 풍 베기×6 + 기절)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": true,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "墨染の軍師",
+  "花咲の姫君",
+  "ラディアス(AS)",
+  "ツキハ",
+  "シオン",
+  "アカネ"
+ ],
+ "strategy_kr": "보너스가 火 +30, 普賢一刀流 +45라 Altema 예시·유저 투고 모두 화속성 파티(墨染の軍師·花咲の姫君·ツキハ 등)다. 墨染の軍師가 1턴에 展技・烈火陣→調虎離山→幻略戦術・黒竜을 쓰는 것이 공통. 斬り捨て御免 때문에 전열에 刀 또는 普賢一刀流 캐릭터(ツキハ·シグレ(ES) 등)를 꼭 두고, 기절(極・みね打ち·飛剣)은 내성 배지로 막는다. 유저 최고 투고는 墨染の軍師·花咲の姫君·アナベル(ES)·シグレ(ES) + 모케로 8.4억, 4턴에 ツキハ SB 妖刀開眼→鮮紅으로 쓰러지는 것을 감수하는 운영도 있다.",
+ "source": "https://altema.jp/anaden/azamishoka",
+ "hp": 0.96,
+ "posts": [
+  {
+   "score": 840000000.0,
+   "dmg": null,
+   "team": "墨染の軍師・花咲の姫君・アナベル(ES)・シグレ(ES) / サブ いいマクマク×2 / モケ",
+   "src": "https://altema.jp/anaden/azamishoka",
+   "note": "「8.4億出せました」, 2T·3T AF, 5T 모케, 날짜 없음"
+  },
+  {
+   "score": 420000000.0,
+   "dmg": null,
+   "team": "ツキハ・花咲の姫君・墨染の軍師・パルテティオ / サブ シオン・アルフェン / リレーノ",
+   "src": "https://altema.jp/anaden/azamishoka",
+   "note": "「スコア4.2億(最終報酬ライン2.4億)」, 1T AF, 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_syerinusyoka",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "風": 60,
+   "IDAスクール": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 259116000,
+  "src": "https://altema.jp/anaden/syerinusyoka"
+ },
+ "hp_model": {
+  "bar": 1.061,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 106,064,168 한 줄, 2턴 종료 시 HP 전부 회복. 스토퍼·부활 기재 없음."
+ },
+ "threat": {
+  "lvl": 3,
+  "tank": false,
+  "heal": true,
+  "single": "ショックウィップ×3(현재 HP 50% + 기절, 속도 783), レイジングパイソン×3(지 물리 + 고정 1,000)",
+  "aoe": "5턴 クラッシュウィップ·ランドフロッキング(전체 지 물리×2, 고정 1,000)",
+  "status": "봉인, 기절, 완력·지성·속도 다운, 2·4턴 버프 해제",
+  "note_kr": "1턴 고속 기절과 5턴 전체 지 공격이 위험. 아군 HP 10% 이하면 오라 監督者 발동."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/syerinusyoka",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC",
+  "https://seesaawiki.jp/anothereden-game-info/bbs/39352/l50"
+ ],
+ "name_kr": "엠프리스",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "シェリーヌ（エンプレス）",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [
+  "water"
+ ],
+ "absorb": [
+  "earth"
+ ],
+ "phases": "챌린지 HP 106,064,168(1.06억, VH 13,681,224). 표의 약점·내성은 없음, 수 무효·지 흡수, 특징으로 전속성 내성 UP(大·영구). 2턴 종료 시 HP 전부 회복 + 아군 버프 해제. 3턴 존 파괴 후 極・地裂陣 전개. 盟友の追憶 1에서 시작해 매 턴 +1(축적당 전 스탯 5% UP, 최대 10). 속도 783. 스토퍼·부활 기재 없음(VH는 HP 30% 스토퍼). 5턴 챌린지.",
+ "mechanics": [
+  "특징: 전속성 내성 UP(大·영구), 盟友の追憶(축적당 전 스탯 5% UP, 최대 10, 매 턴 +1)",
+  "오라 監督者: 아군 누구든 현재 HP 10% 이하가 되면 발동, 味方全体 완력·지성 100% DOWN(원문 그대로)",
+  "1턴 しつけてあげるわ: 전체 완력·지성·속도 다운(1턴) + 봉인 / ショックウィップ×3: 단체 무속성 물리, 현재 HP 50% 피해 + 기절",
+  "2턴 可愛がってあげるから！: 전체 물리 내성 다운, 자기 크리율 버프(3회)·지 공격 버프 / 턴 종료 시 자기 HP 전부 회복 + 아군 전체 버프 해제",
+  "3턴 だらしないわねぇ: 존 파괴 + 極・地裂陣 전개 / レイジングパイソン×3: 단체 지 물리 + 고정 1,000, 자기 완력·속도·지성 버프(최대 3)",
+  "4턴 まだまだいけるわぁ！: 2턴 可愛がってあげるから！와 같은 효과",
+  "5턴 痛みを受け入れてごらん！: 전체 완력·지성·속도 다운 + 지 내성 다운 / クラッシュウィップ: 전체 지 물리×2 / ランドフロッキング: 전체 지 물리×2 + 고정 1,000"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": true,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "メルピピア",
+  "シュゼット",
+  "セスタ",
+  "キュリオ",
+  "イスカ"
+ ],
+ "strategy_kr": "보너스가 風·IDAスクール 각 +60이라 풍속성 파티가 기본이다(セスタ·シュゼット·メルピピア·イーファ(AS) 등). 1턴 고속 기절 공격(ショックウィップ×3)에 주의하고, 3턴 極・地裂陣은 존 파괴로 지운다(Altema 팁). Altema 예시는 1턴 AF, 4턴 SB로 メルピピア 未来予知 + シュゼット·セスタ·キュリオ. 유저 투고는 イーファ(AS)·シュゼット·茨呪の艶女·セスタ(AS) 약 7억(최고 피해 약 335억), 碧光の鎌使い(AS)·ねここ(ES)·セスタ(AS)·イスカ 6억 초과(피해 300억), game-info 기록 7.4억(SB는 마지막 턴까지 아낌). 5턴에 전열이 거의 쓰러지는 것을 감수하는 투고가 많다.",
+ "source": "https://altema.jp/anaden/syerinusyoka",
+ "hp": 1.06,
+ "posts": [
+  {
+   "score": 600000000.0,
+   "dmg": 30000000000.0,
+   "team": "碧光の鎌使い(AS)・ねここ(ES)・セスタ(AS)・イスカ / サブ キュリオ・セヴェン / リレーノ",
+   "src": "https://altema.jp/anaden/syerinusyoka",
+   "note": "「スコア6億超」「ダメージ300億」, 5T에 イスカ 외 전원 쓰러짐, 날짜 없음"
+  },
+  {
+   "score": 700000000.0,
+   "dmg": 33500000000.0,
+   "team": "イーファ(AS)・シュゼット・茨呪の艶女・セスタ(AS) / サブ ユーリ・ツキハ(ES) / テトラ(AS)",
+   "src": "https://altema.jp/anaden/syerinusyoka",
+   "note": "「スコアは約7億でした」「最高ダメージ約335億」, 날짜 없음"
+  },
+  {
+   "score": 300000000.0,
+   "dmg": null,
+   "team": "シュゼット・セスタ(AS)・イーファ(AS)・ヒイナ(AS) / サブ いいマクマク×2 / キュモス",
+   "src": "https://altema.jp/anaden/syerinusyoka",
+   "note": "「スコアは3億ちょい」, 날짜 없음"
+  },
+  {
+   "score": 300000000.0,
+   "dmg": null,
+   "team": "メルピピア・シュゼット・イーファ(AS)・セスタ / サブ キュリオ・メロディ(AS) / テュシア",
+   "src": "https://altema.jp/anaden/syerinusyoka",
+   "note": "「スコア300,000,000」, 二刀神狼5連撃, 날짜 없음"
+  },
+  {
+   "score": 740000000.0,
+   "dmg": null,
+   "team": "セスタ(冥20) 외 멤버 미기재",
+   "src": "https://seesaawiki.jp/anothereden-game-info/bbs/39352/l50",
+   "note": "game-info 스코어 보고 스레드 No.67 「7.4億の人」, 24/02/10, 적 シェリーヌ, 'ステラバーストは最終ターンまで引っ張る'"
+  }
+ ]
+},
+ {
+ "id": "sk_rakuenwomezasumono",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "槍": 30,
+   "杖": 30,
+   "刀": 30,
+   "合成人間": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 358887000,
+  "src": "https://altema.jp/anaden/rakuenwomezasumono"
+ },
+ "hp_model": {
+  "bar": 2.259,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "두 보스 동시: ガリアード 180,698,528 + ヘレナ 45,174,712. 自己修復装置 4개로 HP가 0이 되지 않고 매 턴 시작 HP 100% 회복, 0개가 된 턴 후공 전멸. ヘレナ HP '残りわずか'에서 調停の意志 소비(HP% 수치 미기재)."
+ },
+ "threat": {
+  "lvl": 3,
+  "tank": false,
+  "heal": true,
+  "single": "(스텔라 기준) ライトニングランス계 단체 찌르기×3 + 속도 다운·기절, アースエッジ 지 마법 + 혼란",
+  "aoe": "(스텔라 기준) レイジングチャージ, スターバースト, グランフェネラル 고정 1,000~2,000, 5턴 リミットブレイク 9,999",
+  "status": "기절, 혼란, 페인, 완력·지성·속도 20% DOWN 누적 + 버프 해제",
+  "note_kr": "自己修復装置가 0이 된 턴 후공으로 아군 전멸. 챌린지 행동표가 없어 공격은 스텔라 기준."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/rakuenwomezasumono",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "낙원을 향하는 자들",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "叛逆者ガリアード／共生の懸橋ヘレナ",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [
+  "fire",
+  "water",
+  "wind",
+  "thunder",
+  "shade",
+  "crystal"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP: ガリアード 180,698,528 + ヘレナ 45,174,712(합 2.26억). 둘 다 약점 없음, 지 외 전속성 내성. 둘 다 自己修復装置(4 축적)로 HP가 0이 되지 않고, 매 턴 시작에 1개 써서 HP 100% 회복, 0개가 된 턴에 후공으로 아군 전멸. ヘレナ HP가 거의 없어지면 調停の意志를 소비해 다음 턴 ガリアード 강화(HP% 수치 미기재). 챌린지 행동 패턴은 없음(스텔라 표만). 5턴 챌린지.",
+ "mechanics": [
+  "自己修復装置(두 보스, 4 축적): HP가 0이 되지 않음, 매 턴 시작에 1개 소비해 HP 100% 회복, 0개가 된 턴에 후공으로 아군 전체 섬멸",
+  "ヘレナ 調停の意志: 매 턴 시작에 축적, 축적된 상태로 턴 시작 시 아군 전체 완력·지성·속도 20% DOWN(99턴, 최대 4) + 버프 해제",
+  "ヘレナ HP가 거의 없어지면 調停の意志 소비 → ガリアード 叛逆の意志 축적 → 다음 턴 시작 ガリアード 완력·지성·속도 20% UP(99턴, 최대 4) + 선제 행동(1턴)",
+  "스텔라 행동(챌린지 표 없음) ガリアード: レイジングチャージ(전체 지 찌르기 + 페인), ライトニングランス계(단체 무속성 찌르기×3, 속도 다운·기절), グランデュオランス, リベリオンチャージ, 5턴 リミットブレイク(전체 9,999)",
+  "스텔라 행동 ヘレナ: アースエッジ(단체 지 마법 + 혼란) 또는 スターバースト(전체 무속성 마법 + 물리·전속성 내성 다운), ウィングシュート(단체 찌르기 내성 다운), グランフェネラル(전체 고정 1,000 → 1,500 → 2,000 + 지 내성 다운)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "ミルシャ(AS)",
+  "紫装の槍使い",
+  "白磁の魔人",
+  "クチナワ",
+  "エニ"
+ ],
+ "strategy_kr": "지 외 전속성 내성이라 지속성으로 친다. Altema 예시는 ミルシャ(AS) 가창 + 紫装の槍使い·白磁の魔人 서포트 + クチナワ 지 지팡이 딜러, 후열 エニ·지팡이 셔틀, 버디 テトラ. 1턴 AF → 2~4턴 가창·貫魔之巌(紫装の槍使い는 エニ와 교대) → 5턴 SB 순서. 보너스는 槍·杖·刀·合成人間 각 +30. 기절·혼란 대책(내성 배지, 여러 번 무효 캐릭터)이 필요하다는 팁이 있다.",
+ "source": "https://altema.jp/anaden/rakuenwomezasumono",
+ "hp": 2.26,
+ "posts": []
+},
+ {
+ "id": "sk_modorisiotome",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "火": 60,
+   "水": 60,
+   "風": 60,
+   "地": 60,
+   "ジオ": 90
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 303964000,
+  "src": "https://altema.jp/anaden/modorisiotome"
+ },
+ "hp_model": {
+  "bar": 2.124,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 212,418,349 한 줄. 4턴 동안 쓰러지지 않고 매 턴 종료 HP 100% 회복, 4턴 종료 시 HP가 남아 있으면 전체 즉사. 天使の唄 피해 50% 무효 배리어(1턴째 10회, 3턴째 30회). 스토퍼 기재 없음."
+ },
+ "threat": {
+  "lvl": 3,
+  "tank": false,
+  "heal": true,
+  "single": "シャイン(랜덤 단체 무속성 마법×3 + 마법 내성 다운), ジオ・アンセム(단체 무속성 마법)",
+  "aoe": "星の唄(매 턴 시작 전체 고정 최대 7,500), 天使の唄・フィーネ(전체 무속성 마법), 4턴 종료 HP 남으면 전체 즉사",
+  "status": "없음(보스는 リフレッシュ로 자기 상태이상 회복·1회 무효)",
+  "note_kr": "전열에 フィーネ가 없으면 AF 게이지 100% → 星の唄 7,500. Altema는 エニ 血の盟約으로 대응 가능하다고 함."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/modorisiotome",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC",
+  "https://www.youtube.com/watch?v=Hsxg03YaKfU"
+ ],
+ "name_kr": "돌아온 소녀",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "フィーネ（戻りし乙女）",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "slash",
+  "blunt",
+  "pierce"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 212,418,349(2.12억, VH 41,244,347). 약점 베기·타격·찌르기, 내성·무효·흡수 없음. 宇宙の妹로 4턴 동안 쓰러지지 않고, 4턴 종료 시 HP가 남아 있으면 전체 즉사 공격. 純真: 매 턴 종료 시 남은 HP에 따라 AF 게이지 회복 + HP 100% 회복 + 純真 1 축적(축적 수만큼 마법 내성 UP, 최대 5). 전투 시작·매 턴 종료 オーガグレイス로 존 파괴 후 星海陣 전개. 스토퍼 기재 없음(VH는 약 75%·25%). 5턴 챌린지.",
+ "mechanics": [
+  "冥の誘い: 매 턴 시작 시 전열에 フィーネ가 없으면 AF 게이지 100% 회복",
+  "星の唄: 매 턴 시작 시 AF 게이지 양에 따라 적 전체(아군)에 고정 피해, AF 게이지 100%면 최대 7,500",
+  "宇宙の妹: 4턴 동안 쓰러지지 않음, 4턴 종료 시 HP가 남아 있으면 전체 즉사 공격",
+  "純真: 매 턴 종료 시 남은 HP에 따라 AF 게이지 회복, 자기 HP 100% 회복 + 1 축적, 축적 수만큼 마법 내성 UP(최대 5)",
+  "オーガグレイス: 전투 시작·매 턴 종료 시 존 파괴 후 星海陣 전개",
+  "1 無窮の祈り(자기 정신·마법 내성 버프 中 5턴) / 天使の唄(피해 50% 무효 배리어 10회·1턴 + 전속성 내성 버프 中 1턴)",
+  "2 シャイン: 랜덤 단체 무속성 마법×3 + 마법 내성 다운(小 3턴)",
+  "3 リフレッシュ(상태이상 회복 + 상태이상 무효 1회 + 속도 버프 大 1턴) / 天使の唄(피해 50% 무효 배리어 30회·1턴 + 전속성 내성 버프)",
+  "4 天使の唄・フィーネ: 전체 무속성 마법 / 5 ジオ・アンセム: 단체 무속성 마법"
+ ],
+ "needs": {
+  "barrier_pierce": true,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": true,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "フィーネ(AS)",
+  "韜晦の討手",
+  "ミナルカ(AS)",
+  "ユーイン",
+  "メイ",
+  "ヴァイオレット",
+  "エニ"
+ ],
+ "strategy_kr": "베기·타격·찌르기 약점이고 보너스는 火·水·風·地 각 +60, ジオ +90. Altema 공략: 전열에 フィーネ를 두어 冥の誘い의 AF 게이지 회복을 막고(星の唄 고정 피해가 AF 게이지 양에 비례, 최대 7,500), 星の唄은 エニ 血の盟約으로도 대응 가능. 매 턴 HP를 깎아 純真의 AF 게이지 회복을 줄이고, 4턴 전체 즉사를 피하려면 4턴 끝까지 HP를 0으로 만든다. Altema 예시는 フィーネ(AS)·韜晦の討手 서포트 + ミナルカ(AS)·ユーイン 화속성 물리 딜러, 후열 망치·검 셔틀, 버디 テトラ·コロボ. 유튜브에 스코어 54.4억 영상이 있다.",
+ "source": "https://altema.jp/anaden/modorisiotome",
+ "hp": 2.12,
+ "posts": [
+  {
+   "score": 5440000000.0,
+   "dmg": null,
+   "team": "",
+   "src": "https://www.youtube.com/watch?v=Hsxg03YaKfU",
+   "note": "유튜브 제목 「戻りし乙女の書 スコア54.4億」 — 영상 페이지를 열지 못해 편성·날짜 미확인. Altema 챌린지 투고란은 비어 있음(편집부 예시 영상 _om0vdJVYhk는 스코어 표기 없음)"
+  }
+ ]
+},
+ {
+ "id": "sk_maounosyo",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "魔獣": 100,
+   "王族": 100,
+   "剣": 60,
+   "火": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 802857000,
+  "src": "https://altema.jp/anaden/maounosyo"
+ },
+ "hp_model": {
+  "bar": 23.0,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 2,300,000,000(23억) 한 줄, 부활·스토퍼 기재 없음(스텔라는 2회 부활). 5턴 스코어전."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "챌린지 미기재",
+  "aoe": "챌린지 미기재 (스텔라: ビーストスラッシュ 전체 베기, カラミティ 전체 화 베기, MPバスター 최대 MP 20%)",
+  "status": "챌린지 미기재",
+  "note_kr": "챌린지 행동표·공략 팁 없음. 알테마 예시 버디는 モケ(오라)·コロボ. 魔煌珠로 보스 완력이 턴마다 4%씩 오름."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/maounosyo",
+  "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
+ ],
+ "name_kr": "마왕",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "魔王（ギルドナ）",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "fire"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 2,300,000,000(23억), 5턴. 火 약점(알테마 표 이미지 기준), 내성·무효·흡수 없음. 부활·스토퍼 기재 없음(2회 부활은 스텔라). 챌린지 행동표 없음(스텔라만).",
+ "mechanics": [
+  "魔煌珠: 축적당 완력 4% UP, 턴 종료마다 +1, 챌린지 최대 10(스텔라 20)",
+  "오라 魔王の慈悲: HP 10% 이하일 때 조건을 채운 아군 단체 주는 피해 30% UP",
+  "王の覇気(ギルドナ가 전열에 없으면 전체 999,999)는 스텔라 행동표에만 있음 — 챌린지 적용 여부 미기재",
+  "챌린지 행동표 없음 (스텔라: ビーストスラッシュ·カラミティ·ディストーション·MPバスター 등)",
+  "공략 팁은 '準備中'",
+  "보너스: 魔獣·王族 +100, 剣 +60, 火 +30"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ギルドナ",
+  "ミュルス(ES)",
+  "クロード(ES)",
+  "マツリカ",
+  "アルテナ",
+  "ゼヴィーロ(AS)"
+ ],
+ "strategy_kr": "火 약점에 내성이 없어 화속성 화력이 그대로 들어간다. 보너스가 魔獣·王族 +100, 剣 +60, 火 +30이라 魔獣·王族인 ギルドナ가 핵심이고, 알테마 예시도 ギルドナ 공격에 ミュルス(ES)·クロード(ES)·マツリカ 지원, 후열 アルテナ·ゼヴィーロ(AS)이다. 魔煌珠가 턴마다 쌓여 보스 완력이 오르므로 후반 피해에 대비한다. 스텔라의 王の覇気(ギルドナ가 없으면 전체 999,999)가 챌린지에도 있는지는 미기재라 ギルドナ는 전열에 두는 편이 안전하다.",
+ "source": "https://altema.jp/anaden/maounosyo",
+ "hp": 23.0,
+ "posts": []
+},
+ {
+ "id": "sk_suteropesunosyo",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "杖": 20,
+   "時間帝国": 40,
+   "読書家": 60,
+   "未来革命家": 80
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 1728516000,
+  "src": "https://altema.jp/anaden/suteropesunosyo"
+ },
+ "hp_model": {
+  "bar": 146.0,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP カムラナージュ 46억 + ミルディ 40억 + クラグホーン 60억 = 146억(3체 동시, 합계를 한 줄로). 스토퍼·부활·재소환 기재 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "없음(대부분 전체 공격)",
+  "aoe": "트리니티 그루브 매 턴 종료 현재 HP 약 50%, プネウマフィプニス·ザリスマ(선제, 기절·페인)·イレクトテラス×2(뇌 내성 디버프 누적) 전체 뇌 마법, ダウンスパイク×2 전체 음 찌르기+완력·지성·속도 디버프",
+  "status": "기절·페인(ザリスマ), 뇌 내성 디버프 최대 5누적",
+  "note_kr": "죽이는 공격보다 깎는 공격 위주. 매 턴 회복·상태이상 해제, 보스 쪽 버프(밀디)는 해제나 디버프로 대응. 탱커 지시 없음."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/suteropesunosyo"
+ ],
+ "name_kr": "스테로페스",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "時の皇子・カムラナージュ／ミルディ／クラグホーン",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "thunder",
+  "crystal",
+  "shade"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "3체전. 時の皇子・カムラナージュ(챌린지 HP 4,600,000,000 = 46억)가 개시 시 ミルディ(40억)·クラグホーン(60억)을 소환, 합계 146억. 챌린지 표엔 스토퍼·부활·웨이브 기재 없음(스텔라의 라이프포인트·雷帝·滅びの未来視는 챌린지에 없음). 매 턴 종료 トリニティ・グルーヴ(아군 전체 현재 HP 약 50% 피해, 스텔라 표 기준 3체가 다 있을 때만). 3체 모두 약점 뇌·晶·음, 내성·무효·흡수 없음. 챌린지 5턴.",
+ "mechanics": [
+  "トリニティ・グルーヴ: 매 턴 종료 아군 전체 현재 HP 약 50% 피해(3체가 다 있을 때만 — 스텔라 표 기준)",
+  "グルーヴィ・ディフェンス: 3체 모두 물리·마법 내성 UP(중)",
+  "サテラ・エンハンス(오라): 月光陣이 깔려 있으면 보스 쪽 주는 피해 30% UP → 月光陣은 피함",
+  "カムラナージュ: プネウマフィプニス(전체 뇌 마법), ブロンテクラトール(자기 지성 버프 중 3턴), ザリスマ(선제 전체 뇌 마법+기절·페인), イレクトテラス(전체 뇌 마법×2+뇌 내성 디버프 소 4턴, 최대 5누적)",
+  "ミルディ: 月光の輝響唄(보스 쪽 완력·지성·속도 버프 중 4턴+HP 100% 회복), テレパスコード(보스 쪽 전체 전속성 내성 버프 중 4턴)",
+  "クラグホーン: サイキックウォール(자기 물리·마법 내성 버프 중 2턴+피해 경감 배리어 1회), ダウンスパイク×2(전체 음 찌르기×2+완력·지성·속도 디버프 중 1턴)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "セスタ(AS)",
+  "シェンファ",
+  "シオン(ES)",
+  "カムラナージュ",
+  "ユナ",
+  "ヤクモ(AS)",
+  "白磁の魔人",
+  "サイラス"
+ ],
+ "strategy_kr": "3체 모두 뇌·晶·음 약점이라 그 속성 전체 공격 딜러(セスタ(AS)·シェンファ·シオン(ES)·カムラナージュ)를 넣는다. 매 턴 종료 현재 HP 50% 피해와 ザリスマ의 기절·페인이 있어 회복과 상태이상 대책이 필요하다. ミルディ가 보스 쪽 HP 100% 회복·전속성 내성 버프를 걸고, 月光陣이 깔리면 보스 피해가 30% 오르므로 月光陣은 쓰지 않는다. 보너스는 杖·時間帝国·読書家·未来革命家(+20~+80). 알테마 편성 예는 ユナ·ヤクモ(AS)·白磁の魔人·シェンファ(サブ サイラス·カムラナージュ, 버디 モケ), 챌린지 투고는 아직 없음.",
+ "source": "https://altema.jp/anaden/suteropesunosyo",
+ "hp": 146.0,
+ "posts": []
+},
+ {
+ "id": "sk_guratinerunosyo",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "槌": 100,
+   "地": 100,
+   "ねこ好き": 200,
+   "KMS社": 200
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 2019864000,
+  "src": "https://altema.jp/anaden/guratinerunosyo"
+ },
+ "hp_model": {
+  "bar": 62.0,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "dmg_cut": [
+   {
+    "x": 0.5,
+    "when": "start (カタストロフ・リィカ 50% 경감 배리어 20회)",
+    "hits": 20
+   }
+  ],
+  "note_kr": "챌린지 HP カタストロフ・リィカ 31억 + リィカ・デラックス 31억 = 62억(2체 동시, 합계를 한 줄로). 부활·스토퍼 기재 없음. デラックス 2·4턴째 1.55억 회복. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": true,
+  "heal": true,
+  "single": "マインドスタンプ·サンクトゥスレイ×2·クラッシュスタンプ(단체), ガイア・スタンプ×2(고정 2,500+페인 1,000)",
+  "aoe": "エリミネートレイ 5턴째 전체 지×3(앞 턴에 크리율 UP·물리 내성 디버프가 겹침)",
+  "status": "페인(고정 1,000), 완력·지성·물리 내성 디버프",
+  "note_kr": "공략: 수호·감싸기 탱커나 내성 버프·완력 디버프로 エリミネートレイ 대비, 최대 HP 6,000 이상. 길게 끌면 デラックス 버프가 쌓여 불리."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/guratinerunosyo"
+ ],
+ "name_kr": "그라티넬",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "カタストロフ・リィカ／リィカ・デラックス",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "earth"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "2체전. カタストロフ・リィカ(챌린지 HP 3,100,000,000 = 31억) + リィカ・デラックス(31억), 합계 62억. 개시 시 カタストロフ・リィカ에 50% 피해 경감 배리어 20회 + カタストロフ・モード(완력·지성 +150). 챌린지 표엔 스토퍼·부활 기재 없음(デラックス가 リィカ를 되살리는 건 스텔라만). デラックス가 2·4턴째 パワーヒール로 보스 쪽 HP 1.55억 회복. 둘 다 약점 지, 내성·무효·흡수 없음. 챌린지 5턴.",
+ "mechanics": [
+  "개시: 50% 피해 경감 배리어 20회(リィカ) + カタストロフ・モード(완력·지성 +150)",
+  "カタストロフ・リィカ: マインドスタンプ(단체 무속성 타격+완력·지성 디버프 중 3턴), カタストロフ・チャージ(보스 쪽 완력·지성 버프 소 99턴, 최대 5누적 + カタストロフ・モード 누적), サンクトゥスレイ×2(단체 무속성+물리 내성 디버프 중 5턴), クラッシュスタンプ(단체 지 타격+자기 크리율 UP 대 1회)",
+  "エリミネートレイ: 5턴째 전체 지 공격×3 + 보스 쪽 속도 버프(중 1턴)",
+  "リィカ・デラックス: ガイア・スタンプ×2(단체 지 타격 고정 2,500 + 페인 고정 1,000), パワーヒール(2·4턴째, 보스 쪽 治癒 3회+물리 내성 버프 중 5턴+HP 155,000,000 회복), 4턴째 カタストロフ・チャージ",
+  "투고: デラックス는 페인이 잘 안 먹힘, デラックス를 무시하고 앞 リィカ만 때려도 됨"
+ ],
+ "needs": {
+  "barrier_pierce": true,
+  "cleanse": false,
+  "guard": true,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": false,
+  "multi_target": true
+ },
+ "recommended": [
+  "クチナワ",
+  "紫装の槍使い(AS)",
+  "リィカ",
+  "白磁の魔人",
+  "ガリアード",
+  "ヘレナ"
+ ],
+ "strategy_kr": "둘 다 지 약점이라 지 속성 딜러(クチナワ·紫装の槍使い(AS))가 기본이고, 보너스는 槌·地 +100, ねこ好き·KMS社 +200으로 큰 편이다. 알테마 투고는 リィカ·ねここ(ES)·茨呪の艶女·シェンファ로 보너스 7600을 모아 피해 1382억·점수 119.5억. 개시 50% 경감 배리어 20회를 연타로 먼저 벗기고, 5턴째 エリミネートレイ(전체 지 ×3)는 수호·감싸기 탱커(ガリアード)로 버틴다. デラックス의 고정 2,500+페인 1,000이 쌓이므로 최대 HP 6,000 이상을 권장한다.",
+ "source": "https://altema.jp/anaden/guratinerunosyo",
+ "hp": 62.0,
+ "posts": [
+  {
+   "score": 11950000000.0,
+   "dmg": 138200000000.0,
+   "team": "リィカ・ねここ(ES)・茨呪の艶女・シェンファ（サブ クレルヴォ・ノノルド／バディ モルディ・キュモス）",
+   "src": "https://altema.jp/anaden/guratinerunosyo",
+   "note": "ボーナス 7600+50+1000, 「1382億」「119.5億」, 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_bravestormnosyo",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "刀": 100,
+   "剣": 100,
+   "斧": 100,
+   "呪い": 200,
+   "天の導き": 200
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 1084454000,
+  "src": "https://altema.jp/anaden/bravestormnosyo"
+ },
+ "hp_model": {
+  "bar": 35.0,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 3,500,000,000(35억) 한 줄, 챌린지는 라이프포인트·스토퍼 기재 없음(스텔라는 라이프포인트 1). 手合わせ를 버티면 현재 HP 5% 피해. 행동표는 스텔라와 공통. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": true,
+  "heal": true,
+  "single": "水天斬(수면)·みね打ち(기절)·水竜斬り(페인)·涅槃斬り×3·円空自在流・蒼破 — 대부분 단체 물리",
+  "aoe": "手合わせ 고정 2,000+500/회(단체), 부활 뒤 円空自在流・蛙落 전체(스텔라)",
+  "status": "수면·기절·페인 → 수면 내성 배지·상태이상 대책",
+  "note_kr": "공략: 단체 물리 위주라 물리 내구 탱커·도발이 유효, 화력 담당과 받는 담당을 나눔. 吼えよ剣으로 완력·물리 내성이 깎임."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/bravestormnosyo"
+ ],
+ "name_kr": "브레이브 스톰",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "サイラス",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "단일 보스. 챌린지 HP 3,500,000,000(35억), 챌린지 특징 칸엔 라이프포인트 없음(스텔라만 1회 부활). 手合わせ: 일정 턴 종료 시(공략 글은 첫 턴 종료 시)와 이후 1턴 걸러, 그 턴 가장 큰 피해를 준 전열 행동 가능 캐릭터와 1:1 — 고정 피해 첫 회 2,000, 회마다 +500, 버티면 サイラス가 현재 HP 5% 피해. 吼えよ剣！呼べよ嵐！로 아군 완력·물리 내성 각 30% DOWN. 약점·내성·무효·흡수 없음. 챌린지 5턴.",
+ "mechanics": [
+  "手合わせ: 그 턴 최대 피해 전열 캐릭터와 1:1, 고정 2,000부터 회마다 +500, 버티면 サイラス 현재 HP 5% 피해",
+  "吼えよ剣！呼べよ嵐！: 아군 전체 완력·물리 내성 30% DOWN",
+  "水天斬: 단체 수 베기+수면, 자기 수 공격 강화",
+  "みね打ち: 단체 무속성 베기+기절 / 水竜斬り: 단체 수 베기+페인(고정 1,000)",
+  "涅槃斬り: 단체 무속성 베기×3",
+  "円空自在流・蒼破: 단체 수 베기+자기 완력·속도 UP(최대 4누적)",
+  "부활 뒤(스텔라만): ゾーン破壊·バフ解除·吼えよ剣！呼べよ嵐！, 無為・涅槃斬り, 円空自在流・蛙落(전체 수 베기), 迎撃準備(물리·마법 요격 1턴, 요격 시 전체 수 베기)"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": true,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "シオン(ES)",
+  "アルド(AS)",
+  "サイラス",
+  "サザンカ"
+ ],
+ "strategy_kr": "약점·내성이 없어 속성 제한이 없고, 보너스가 刀·剣·斧 +100, 呪い·天の導き +200이라 보너스 편성이 점수를 크게 좌우한다. 알테마 편성 예는 シオン(ES)·アルド(AS)·サイラス(수면 내성 배지)·サザンカ + 剣·刀 셔틀, 버디 テトラ(AS)·リレーノ. 투고는 呪い 파티(サイラス·アィシャ·茨呪の艶女·ツキハ, 보너스 8000)로 점수 20억대. 공격 대부분이 단체 물리라 물리 탱커나 円空自在流 배지 도발로 받고, 手合わせ 고정 피해가 회마다 오르므로 딜러 HP를 높게 둔다.",
+ "source": "https://altema.jp/anaden/bravestormnosyo",
+ "hp": 35.0,
+ "posts": [
+  {
+   "score": 2000000000.0,
+   "dmg": null,
+   "team": "サイラス・アィシャ・茨呪の艶女・ツキハ（サブ センヤ・ヴィクト）",
+   "src": "https://altema.jp/anaden/bravestormnosyo",
+   "note": "「呪いPTでチャレンジ攻略」(ステラ投稿欄), ボーナス 8000+50+1000, 「スコア20億台」, 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_godhandnosyo",
+ "shoka_part": "동료",
+ "score_bonus": {
+  "pers": {
+   "拳": 100,
+   "風": 100,
+   "復讐者": 200,
+   "料理": 200,
+   "霊媒体質": 300
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 2171314000,
+  "src": "https://altema.jp/anaden/godhandnosyo"
+ },
+ "hp_model": {
+  "bar": 5.0,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 500,000,000(5억) 한 줄, 라이프포인트 없음(스텔라는 1). ゴッドハンド 피해 경감은 수치 미기재 — 한 턴 AF 콤보 배율 합 1,000% 이상이면 해제. 5턴 스코어전."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": false,
+  "single": "スマッシュ/ダブル/トリプルダウン(단체 타격 1~3회+기절), サマーソルトキック(단체 2,500 고정, 3·4턴), 5턴 スーパーコンボ(무작위 단체 1→2→3회)",
+  "aoe": "5턴 ゲイルクラッシャー(전체 풍 타격)",
+  "status": "기절(연타기마다), ウィンドスマッシュ 완력·지성 디버프(중 1턴)",
+  "note_kr": "탱커 지시 없음. 알테마 예시 버디는 テトラ(AS)(상태이상 회복)·モケ(오라). チャージスタンス가 매 턴 쌓여 후반일수록 아픔."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/godhandnosyo"
+ ],
+ "name_kr": "갓 핸드",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "ゴッドハンド（エイミ）",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "wind",
+  "blunt"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 500,000,000(5억), 5턴. 風·打 약점, 내성·무효·흡수 없음. 라이프포인트 없음(스텔라만), 스토퍼 없음. ゴッドハンド 상태(완력·속도 +100, 받는 피해 경감)는 コンボ・カウンター 10을 0으로 만들면 해제.",
+ "mechanics": [
+  "ゴッドハンド: 완력·속도 +100, 받는 피해 경감(수치 미기재), コンボ・カウンター가 0이 되면 해제",
+  "コンボ・カウンター: 개시 10, 한 턴에 쓴 AF 콤보 배율 100%마다 1 소모 → 약 1,000% 이상이면 해제",
+  "고정 피해 무효, 毒·ペイン 부여 불가(공략 팁 '毒ペインは付与できない')",
+  "1턴 スマッシュダウン(단체 무속성 타격+기절), チャージスタンス(자기 완력·속도 소 5턴, 최대 10누적 — 매 턴)",
+  "2턴 ダブルダウン(단체 타격×2+기절), ウィンドスマッシュ(단체 풍 타격+완력·지성 디버프 중 1턴)",
+  "3턴 トリプルダウン(단체 타격×3+기절), ウィンドスマッシュ, サマーソルトキック(단체 2,500 고정)",
+  "4턴 ダブルハリケーン(단체 풍 타격×2+물리·풍 내성 디버프 중 1턴), ウィンドスマッシュ, サマーソルトキック, ブラストヘヴン(단체 풍 타격 + 자기 크리율 중 3턴)",
+  "5턴 スーパーコンボ(무작위 단체 타격 1→2→3회), ゲイルクラッシャー(자기 풍 공격 버프 + 전체 풍 타격)",
+  "보너스: 拳·風 +100, 復讐者·料理 +200, 霊媒体質 +300"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ねここ(ES)",
+  "セスタ(AS)",
+  "シグレ(ES)",
+  "フェルミナ",
+  "ウクアージ",
+  "トーム",
+  "エイミ"
+ ],
+ "strategy_kr": "風·打 약점이고 고정 피해·독·페인이 통하지 않으므로 致命撃·宿命の力·漲る力 グラスタ로 화력을 올린다. AF 콤보 배율 합 1,000% 이상으로 コンボ・カウンター를 0으로 만들어야 ゴッドハンド(피해 경감)가 풀리니 エイミ·フェルミナ 같은 콤보 배율 증가 캐릭터나 콤보 강화 광석으로 AF를 길게 굴린다. 알테마 예시는 ねここ(ES)·シグレ(ES) 지원에 セスタ(AS)·フェルミナ 공격의 풍 파티다. 보너스가 霊媒体質 +300, 復讐者·料理 +200, 拳·風 +100으로 커서 대상 퍼스널리티를 최대한 넣는다. 단체 연타+기절과 3·4턴 2,500 고정 피해에 대비해 기절 대책을 갖춘다.",
+ "source": "https://altema.jp/anaden/godhandnosyo",
+ "hp": 5.0,
+ "posts": []
+},
+ {
+ "id": "sk_peninsulafulminu",
+ "shoka_part": "외전(外典)",
+ "score_bonus": {
+  "pers": {
+   "陰": 60,
+   "西方": 30
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 209008000,
+  "src": "https://altema.jp/anaden/peninsulafulminu"
+ },
+ "hp_model": {
+  "bar": 0.72,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 0.72억(71,996,096 — 알테마 표의 챌린지 7,265,605 / VH 71,996,096가 뒤바뀐 것으로 보고 큰 쪽, 미확인). 50% 스토퍼(버프·디버프 해제), 부활 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "CorCaroli 랜덤 단체 무속성 마법×3",
+  "aoe": "Regulus·TempelTuttle 전체 뇌 마법, Dubhe 전체 무속성 마법+암흑",
+  "status": "암흑, 50% 이후 전속성 내성 디버프",
+  "note_kr": "전부 마법 공격 — 지성 디버프·경감 배리어(ノーナ)로 충분. 탱커·힐러 지시 없음."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/peninsulafulminu"
+ ],
+ "name_kr": "Peninsula Fulminu",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "PeninsulaFulminu",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "shade"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [
+  "thunder"
+ ],
+ "phases": "단일 보스. 알테마 표는 챌린지 HP 7,265,605 / VH 71,996,096로 적혀 있지만 다른 두 권(Sinuslridum·MareMarginis)은 챌린지가 VH보다 훨씬 크고 마지막 보상 점수 비율도 맞아서 표가 뒤바뀐 것으로 보고 챌린지 71,996,096(0.72억)으로 둠(미확인). HP 50% 스토퍼: 아군·적 전체 버프·디버프 해제 + 자기 지성 버프(소 99턴), 이후 TempelTuttle 추가. 약점 음, 흡수 뇌, 내성·무효 없음. 챌린지 5턴.",
+ "mechanics": [
+  "HP 50% 스토퍼: 양쪽 전체 버프·디버프 해제 + 자기 지성 버프(소 99턴)",
+  "Regulus: 전체 뇌 마법",
+  "Dubhe: 전체 무속성 마법+암흑",
+  "CorCaroli: 랜덤 단체 무속성 마법×3",
+  "HP 50% 이하 TempelTuttle: 전체 뇌 마법+전속성 내성 디버프(소 1턴, 최대 3누적)",
+  "공격이 전부 마법 → 지성 디버프로 피해를 줄임"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": false,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "ヤクモ",
+  "チルリル",
+  "ミルシャ",
+  "ツクヨミ",
+  "ノーナ",
+  "キッド",
+  "ミストレア(AS)",
+  "エニ",
+  "赤套の炎使い",
+  "白磁の魔人",
+  "チルリル(AS)"
+ ],
+ "strategy_kr": "약점이 음뿐이고 뇌는 흡수라 음 속성 딜러(ヤクモ·ミルシャ·チルリル)로 간다. 1턴째 AF로 ヤクモ 디리트·エニ 발푸르기스를 몰아 넣는 게 기본이고, ツクヨミ 음 내성 디버프·ノーナ 배리어·지성 디버프로 받는 피해를 줄인다. 50% 스토퍼에서 버프·디버프가 다 풀리므로 다시 건다. 보너스는 陰 +60·西方 +30. 투고: ミルシャ(AS)·エニ·茨呪の艶女·ヤクモ로 보너스 1050, 피해 400억대·점수 9억대.",
+ "source": "https://altema.jp/anaden/peninsulafulminu",
+ "hp": 0.72,
+ "posts": [
+  {
+   "score": 900000000.0,
+   "dmg": 40000000000.0,
+   "team": "ミルシャ(AS)・エニ・茨呪の艶女・ヤクモ（サブ ツクヨミ・クラルテ(AS)／バディ キュモス）",
+   "src": "https://altema.jp/anaden/peninsulafulminu",
+   "note": "ボーナス 1050+50+1000, 「ダメージ400億台」「スコア9億台」(하한으로 기입), 날짜 없음"
+  },
+  {
+   "score": null,
+   "dmg": null,
+   "team": "ヨルナ・エリナ・黒衣の刀使い",
+   "src": "https://www.youtube.com/watch?v=_qy89xXJK8I",
+   "note": "YouTube Hinaden, 1턴 AF (scratch yt/summary.json 수집값 219억, 영상 미확인). 219억이 점수인지 피해인지 불명 — 알테마 투고는 피해 400억대에 점수 9억대",
+   "raw": 21900000000
+  }
+ ]
+},
+ {
+ "id": "sk_sinuslridum",
+ "shoka_part": "외전(外典)",
+ "score_bonus": {
+  "pers": {
+   "晶": 30,
+   "西方": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 230986000,
+  "src": "https://altema.jp/anaden/sinuslridum",
+  "note_kr": "알테마 챌린지 칸엔 陰 +60·西方 +30(PeninsulaFulminu와 똑같음 — 복사 오류로 보임), 수복 조건 표엔 晶 +30·西方 +60. 이 책의 수복 조건(결정 지대·클라르테)·알테마 편성의 보너스 담당 クラルテ(晶)와 맞는 晶 +30·西方 +60을 채택(미확인)."
+ },
+ "hp_model": {
+  "bar": 0.862,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   50
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 86,208,152(0.862억) 한 줄(VH 9,764,272). 50% 스토퍼(아군 전체 상태이상 6종), 부활 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": true,
+  "heal": true,
+  "single": "Sham(봉인)·Rukbat(날려버리기), 50% 뒤 Rasalhague 晶 찌르기×4+기절·독",
+  "aoe": "Antares·Ras Algethi 전체 晶 마법, 50% 스토퍼 전체 기절·수면·봉인·암흑·페인·독",
+  "status": "봉인·날려버리기·기절·수면·암흑·페인·독 → 상태이상 무효·해제",
+  "note_kr": "공략: 완력·지성 디버프, プライ 守護로 강공격 대책, 50% 스토퍼 뒤 상태이상 주의."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/sinuslridum"
+ ],
+ "name_kr": "Sinus Iridum",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "Sinuslridum",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "crystal"
+ ],
+ "resist": [
+  "fire",
+  "water",
+  "wind",
+  "earth",
+  "thunder",
+  "shade"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "단일 보스. 챌린지 HP 86,208,152(0.862억) / VH 9,764,272. HP 50% 스토퍼: 아군 전체 기절·수면·봉인·암흑·페인·독, 이후 행동이 강해짐. 약점 晶, 내성 화·수·풍·지·뇌·음, 무효·흡수 없음(晶·무속성만 제대로 들어감). 챌린지 5턴.",
+ "mechanics": [
+  "HP 50% 스토퍼: 아군 전체 기절·수면·봉인·암흑·페인·독",
+  "Sham: 단체 무속성 찌르기+봉인 / Rukbat: 단체 무속성 마법+날려버리기",
+  "Unukalhai: 랜덤 단체 晶 찌르기×2 / Antares: 전체 晶 마법",
+  "HP 50% 이하: Sham×2, Rukbat×2, Rasalhague(랜덤 단체 晶 찌르기×4+기절·독), Ras Algethi(전체 晶 마법)",
+  "물리·마법 둘 다 쓰므로 완력·지성 디버프, プライ 守護가 강공격 대책"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": true,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "マリエル(ES)",
+  "ミストレア(AS)",
+  "白磁の魔人",
+  "赤套の炎使い",
+  "クラルテ",
+  "アルマ(AS)",
+  "プライ"
+ ],
+ "strategy_kr": "晶과 무속성 외엔 전부 내성이라 晶·무속성 딜러가 필수다. 알테마 챌린지 편성은 マリエル(ES) 딜에 ミストレア(AS) 가창·白磁の魔人·赤套の炎使い 지원, サブ クラルテ(보너스)·アルマ(晶 존). 50% 스토퍼의 전체 상태이상에 대비해 상태이상 무효·해제를 준비하고, 완력·지성 디버프와 プライ 守護로 강공격을 받는다. 투고: エニ·トゥーヴァ(ES)·赤套の炎使い·アルマ(AS)로 피해 366억·점수 4.09억(평균 약 3.5억, 증표 2.3억).",
+ "source": "https://altema.jp/anaden/sinuslridum",
+ "hp": 0.862,
+ "posts": [
+  {
+   "score": 408550822.0,
+   "dmg": 36641329341.0,
+   "team": "エニ・トゥーヴァ(ES)・赤套の炎使い・アルマ(AS)（サブ ロゼッタ・ミストレア(AS)／バディ キュモス）",
+   "src": "https://altema.jp/anaden/sinuslridum",
+   "note": "ボーナス 1165, 「平均は3.5億ぐらい」「証 2.3億」, 날짜 없음"
+  },
+  {
+   "score": 600000000.0,
+   "dmg": null,
+   "team": "メリナ・星の子・クラルテ(AS)・エヴァ（サブ いいマクマク／バディ コロボ）",
+   "src": "https://altema.jp/anaden/sinuslridum",
+   "note": "「スコア６億行ったりする」(정확한 값 없음), 날짜 없음"
+  },
+  {
+   "score": null,
+   "dmg": null,
+   "team": "メリナ・ミストレア・チルリル(ES)・ジルファニー(AS)",
+   "src": "",
+   "note": "YouTube Hinaden, 4AF. 423억이 점수인지 피해인지 불명 — 알테마 투고는 피해 366억에 점수 4.09억, 마지막 보상 2.31억",
+   "raw": 42300000000
+  }
+ ]
+},
+ {
+ "id": "sk_maremarginis",
+ "shoka_part": "외전(外典)",
+ "score_bonus": {
+  "pers": {
+   "雷": 30,
+   "西方": 60
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 255377000,
+  "src": "https://altema.jp/anaden/maremarginis"
+ },
+ "hp_model": {
+  "bar": 1.033,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [
+   70,
+   50,
+   30
+  ],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 103,318,144(1.03억) 한 줄(VH 13,111,864). 스토퍼 70/50/30%(70·30% 폭주, 50% 디버프 해제), 부활 없음. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": true,
+  "heal": true,
+  "single": "Menkar 단체 HP 80%, Mirfak(봉인)·Schedar×2(완력 디버프), 폭주 Hamal×2·Markab×3(기절+전속성 내성 디버프 최대 10누적)",
+  "aoe": "Alpheratz·Fomalhaut 전체 음 마법",
+  "status": "봉인·기절, 완력 디버프, 전속성 내성 디버프 누적",
+  "note_kr": "공략: 단체 공격이 대부분이라 도발 탱커로 버팀. 투고: 적의 완력 디버프가 딜러(オボロ)에 오지 않는 게 조건일 수 있음."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/maremarginis"
+ ],
+ "name_kr": "Mare Marginis",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
+ "name_jp": "MareMarginis",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "thunder"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [
+  "shade"
+ ],
+ "phases": "단일 보스. 챌린지 HP 103,318,144(1.03억) / VH 13,111,864. HP 약 70% / 50% / 30% 스토퍼: 70%·30%에서 폭주(행동 변화), 50%에서 일반 행동으로 돌아오며 보스에 걸린 디버프 해제(공략 글은 '전체 버프·디버프 해제'). 약점 뇌, 흡수 음, 내성·무효 없음. 챌린지 5턴.",
+ "mechanics": [
+  "스토퍼 70/50/30%: 70·30%에서 폭주, 50%에서 일반 행동 + 디버프 해제(다시 걸어야 함)",
+  "Mirfak: 단체 음 베기+봉인 / Schedar×2: 단체 음 찌르기+완력 디버프(중 4턴)",
+  "Menkar: 단체 HP 80% 피해 / Alpheratz: 전체 음 마법",
+  "폭주: Hamal×2(단체 음 베기+전속성 내성 디버프 소 2턴, 최대 10누적), Markab×3(단체 음 마법+전속성 내성 디버프+기절), Fomalhaut(전체 음 마법)",
+  "공격 대부분이 단체 → 도발 탱커로 받을 수 있음"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": true,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "オルレイア",
+  "ヴェレット",
+  "カムラナージュ",
+  "ティティ",
+  "サイラス",
+  "スカル",
+  "ノーナ(AS)",
+  "パルテティオ",
+  "クラルテ"
+ ],
+ "strategy_kr": "약점 뇌·흡수 음이라 뇌 속성으로 통일한다(보너스도 雷 +30·西方 +60). 알테마 편성은 オルレイア 존·버프, ヴェレット·カムラナージュ 딜(3턴째 각성), ティティ 가창, 버디 ガンス 뇌 브레이크, 또는 ノーナ(AS)·パルテティオ·ティティ로 サイラス를 미는 구성. 50% 스토퍼에서 디버프가 풀려 점수가 떨어지므로 AF로 넘기거나 속도를 맞춰 서포터가 바로 다시 건다. 70%·30% 폭주 뒤엔 공격이 세지니 빨리 깎고, 단체 공격이 대부분이라 도발 탱커로 버틸 수 있다.",
+ "source": "https://altema.jp/anaden/maremarginis",
+ "hp": 1.033,
+ "posts": []
+},
+ {
+ "id": "sk_kidnapmachinennosyo",
+ "shoka_part": "호걸",
+ "score_bonus": {
+  "pers": {
+   "IDAスクール": 60,
+   "KMS社": 60,
+   "杖": 15
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 358887000,
+  "src": "https://altema.jp/anaden/kidnapmachinennosyo"
+ },
+ "hp_model": {
+  "bar": 3.644,
+  "bars": 4,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 364,380,720(3.64억) × 4회(라이프포인트 3) = 14.58억. 부활 시 HP 처리 미기재. 부활마다 전체 HP 99%·완력·지성 디버프(대 99턴)·자기 내구 UP, 행동 강화. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 3,
+  "tank": false,
+  "heal": true,
+  "single": "コンビクト/ギガコンビクト 단체 무속성 마법×6, キッドナップ×4 날려버리기(2회 부활 뒤)",
+  "aoe": "부활 시 전체 HP 99%, シージャー 전체 HP·MP 20~30%, ディソシエーション 전체 마법, 독·페인 고정 2,000~2,500",
+  "status": "봉인·독·혼란·페인, 완력·지성·마법 내성 디버프(대 99턴)",
+  "note_kr": "공략: 상태이상 무효(エリキシル薬)·회복 버디(テトラ), 비율 피해라 감싸기 탱커는 즉사 위험. 마법 내성 디버프로 전체 마법이 아프니 HP를 높게 유지."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/kidnapmachinennosyo"
+ ],
+ "name_kr": "키드냅 머신 (미확인)",
+ "name_src": "",
+ "name_jp": "キッドナップマシン",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "magic"
+ ],
+ "resist": [
+  "slash",
+  "blunt",
+  "pierce"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "단일 보스, 라이프포인트 3(HP 0이면 소비해 부활, 합계 4줄). 챌린지 HP 364,380,720(3.64억) × 4 = 14.58억(부활 시 HP 처리 미기재). 부활할 때마다 아군 전체 HP 99% 피해 + 완력·지성 디버프(대 99턴) + 자기 내구 UP(대 99턴), 행동 강화. 妙なフレーム 물리 내성 UP(대 영구), 오라 不気味な噂(幻魔陣이 깔리면 보스 속도 50% DOWN)·奇妙な現象(물리 피해를 받으면 보스가 선공). 속도 600. 약점 마법, 내성 베기·타격·찌르기. 챌린지 5턴.",
+ "mechanics": [
+  "妙なフレーム: 물리 내성 UP(대, 영구) + 베기·타격·찌르기 내성 → 마법 파티",
+  "不気味な噂(오라): 幻魔陣 전개 중 보스 속도 50% DOWN / 奇妙な現象: 물리 피해를 받으면 보스 행동 순서 선공",
+  "ポイズンシーリング: 전체 봉인+독(고정 2,000 → 2·3회 부활 뒤 2,500)",
+  "コンビクト(부활 1회 뒤 ×2, 2회 뒤 ギガコンビクト): 단체 무속성 마법×6",
+  "アブサード／デクライン: 자기 내구 UP(대 99턴) / 전체 완력·지성·마법 내성 디버프(대 99턴)",
+  "シージャー: 전체 HP·MP 20%(→25%→30%) 피해 / ディソシエーション: 전체 무속성 마법",
+  "부활 시: 전체 HP 99% 피해 + 완력·지성 디버프(대 99턴) + 자기 내구 UP, 이후 ペインエンザイエティ(전체 혼란+페인 2,000/2,500), 2회 뒤 キッドナップ×4(단체 날려버리기)",
+  "공략: 부활 뒤 비율 피해를 감싸기 탱커가 받으면 즉사할 수 있음"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": true,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "アンペル",
+  "ノノルド",
+  "ミュルス",
+  "ヘレナ",
+  "クチナワ",
+  "トゥーヴァ",
+  "レイヴン"
+ ],
+ "strategy_kr": "물리 내성(대)+베기·타격·찌르기 내성에 약점이 마법이라 마법 파티가 기본이다. アンペル 幻魔陣으로 보스 속도를 반으로 줄여 먼저 움직이고, エリキシル薬 상태이상 무효 버프나 회복 버디로 봉인·독·혼란·페인을 막는다. 99턴 완력·지성 디버프가 쌓이므로 해제나 내성 글래스터를 준비한다. 보너스는 IDAスクール·KMS社 +60, 杖 +15. 투고 최고는 ヤクモ(AS)·シェンファ·クレルヴォ(AS)·星の子로 점수 758,179,255(보너스 907+100+1000).",
+ "source": "https://altema.jp/anaden/kidnapmachinennosyo",
+ "hp": 14.58,
+ "posts": [
+  {
+   "score": 758179255.0,
+   "dmg": null,
+   "team": "ヤクモ(AS)・シェンファ・クレルヴォ(AS)・星の子（サブ ノノルド・ヘレナ／バディ キュモス(AS)）",
+   "src": "https://altema.jp/anaden/kidnapmachinennosyo",
+   "note": "ハイスコア, ボーナス 907+AF100+編成1000=2007, 날짜 없음"
+  },
+  {
+   "score": 500000000.0,
+   "dmg": 27800000000.0,
+   "team": "アンペル・ノノルド・白磁の魔人・フィーネ(AS)（サブ サイラス・クレルヴォ／バディ テュシア）",
+   "src": "https://altema.jp/anaden/kidnapmachinennosyo",
+   "note": "「スコア５億前後」「278億とか出せます」, ボーナス 50+800弱+1000, 投稿者: 証 目安 208億程度, 날짜 없음"
+  },
+  {
+   "score": 900000000.0,
+   "dmg": null,
+   "team": "クレルヴォ(AS)・シェンファ・ノノルド・ヤクモ（サブ マイティ・ヘレナ／バディ キュモス）",
+   "src": "https://altema.jp/anaden/kidnapmachinennosyo",
+   "note": "「9億〜12億ぐらい」(예상 범위, 하한 기입), 날짜 없음"
+  }
+ ]
+},
+ {
+ "id": "sk_mimichannosho",
+ "shoka_part": "호걸",
+ "score_bonus": {
+  "pers": {
+   "剣": 60,
+   "刀": 60,
+   "斧": 60,
+   "格闘技": 20
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 785377000,
+  "src": "https://altema.jp/anaden/mimichannosho"
+ },
+ "hp_model": {
+  "bar": 9.378,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 937,763,620(9.38억) 한 줄(VH 199,401,958), 부활·스토퍼 없음. うきうきダンス로 최대 HP 1%×3 회복+治癒. 챌린지 5턴."
+ },
+ "threat": {
+  "lvl": 1,
+  "tank": false,
+  "heal": false,
+  "single": "스매시 3종(무속성 타격, 2종은 혼란), ジャンプキック, ミミちゃんプレス(지 타격)",
+  "aoe": "きらきらドリーム 전체 무속성 마법+물리 내성 디버프",
+  "status": "혼란(단체·전체)",
+  "note_kr": "공략: 혼란 대책만 있으면 됨(상태이상 무효·혼란 내성 배지). 탱커·힐러 지시 없음."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/mimichannosho"
+ ],
+ "name_kr": "미미짱 (미확인)",
+ "name_src": "",
+ "name_jp": "ミミちゃん",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "slash"
+ ],
+ "resist": [],
+ "null": [],
+ "absorb": [],
+ "phases": "단일 보스. 챌린지 HP 937,763,620(9.38억) / VH 199,401,958. 배리어·스토퍼·부활·소환 기재 없음, 행동은 무작위. 약점 베기, 내성·무효·흡수 없음. 챌린지 5턴.",
+ "mechanics": [
+  "행동 무작위(순서 없음)",
+  "ミミちゃんの…スマッシュ！！: 자기 완력 버프(소 3턴)+단체 무속성 타격",
+  "ミミちゃんの……スマーッシュ！！ / ………スマーーーッシュ！！: 자기 물리 내성 버프(소 3턴, 최대 4누적)+단체 무속성 타격+혼란",
+  "うきうきダンス: 자기 HP 회복(최대 HP 1%×3)+治癒, 지성 버프(소 3턴), 완력·속도 버프(소 3턴, 최대 4누적)",
+  "きらきらドリーム: 전체 무속성 마법+물리 내성 디버프(소 3턴)",
+  "ジャンプキック: 단체 무속성 타격 / ミミちゃんプレス: 단체 지 타격",
+  "혼란 대책: 상태이상 무효나 딜러·핵심 서포터에 혼란 내성 배지"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": false,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": false,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "メルピピア",
+  "深緋の刈人",
+  "シオン(ES)",
+  "イスカ"
+ ],
+ "strategy_kr": "베기 약점이고 내성이 없어 베기 딜러로 몰아친다. 보너스가 剣·刀·斧 +60(格闘技 +20)이라 딜러와 셔틀을 剣·刀·斧로 채우면 편성 보너스 1000까지 노리기 쉽다. 알테마 편성은 メルピピア 지원 + 深緋の刈人·シオン(ES)·イスカ, 셔틀 刀·斧, 버디 リレーノ. 위협은 혼란 정도라 상태이상 무효·혼란 내성 배지로 막는다. 투고: シオン(ES)·シグレ(ES)·菊花の剣客·センヤ(AS)로 1턴 AF, 점수 29억.",
+ "source": "https://altema.jp/anaden/mimichannosho",
+ "hp": 9.378,
+ "posts": [
+  {
+   "score": 2900000000.0,
+   "dmg": null,
+   "team": "シオン(ES)・シグレ(ES)・菊花の剣客・センヤ(AS)（サブ いいマクマク／バディ リレーノ・ガンス）",
+   "src": "https://altema.jp/anaden/mimichannosho",
+   "note": "「スコア29億(最終報酬ライン7.8億)」, 1T AF, 날짜 없음"
+  },
+  {
+   "score": null,
+   "dmg": null,
+   "team": "",
+   "src": "",
+   "note": "YouTube Hinaden, 덱 미상. 376억이 점수인지 피해인지 불명 — 알테마 투고 점수 29억, 마지막 보상 7.85억",
+   "raw": 37600000000
+  }
+ ]
+},
+ {
+ "id": "sk_igyononarehatego",
+ "shoka_part": "호걸",
+ "score_bonus": {
+  "pers": {
+   "拳": 100,
+   "槌": 100,
+   "アウトロー": 200,
+   "記憶喪失": 200
+  },
+  "af": 50,
+  "comp": 1000,
+  "top": 2009171000,
+  "src": "https://altema.jp/anaden/igyononarehatego"
+ },
+ "hp_model": {
+  "bar": 25.0,
+  "bars": 1,
+  "reset": false,
+  "carry": false,
+  "stopper": [],
+  "kt_min": 0,
+  "note_kr": "챌린지 HP 2,500,000,000(25억) 한 줄, 라이프포인트·스토퍼 없음(스텔라는 라이프 2). 연격 대미지 경감 2히트째부터 30%씩. 5턴 스코어전."
+ },
+ "threat": {
+  "lvl": 2,
+  "tank": false,
+  "heal": true,
+  "single": "バイオ・ボム×3(단체 독 + HP 1,000/1,500/2,000 고정), ランダムクロウ(무작위 무속성 베기×3+페인, 5턴 ×3)",
+  "aoe": "アシッド・ポリューション(전체 독), マナ・ハザード(전체 MP 흡수), オフェンス・ハック(완력·지성 디버프 중 5턴), ディフェンス・ハック(물리·마법·전속성 내성 디버프 중 5턴)",
+  "status": "독·페인, 3턴 아군 버프 해제",
+  "note_kr": "탱커 지시 없음. 3턴째 고정 피해가 한 명에게 몰리면 위험 — 최대 HP·독 대책."
+ },
+ "gim_src": [
+  "https://altema.jp/anaden/igyononarehatego"
+ ],
+ "name_kr": "이형의 말로・호 (미확인)",
+ "name_src": "",
+ "name_jp": "異形の成れ果て・豪",
+ "content": "星詠みの書架",
+ "level": 0,
+ "weak": [
+  "pierce",
+  "blunt"
+ ],
+ "resist": [
+  "magic",
+  "fire",
+  "water",
+  "wind",
+  "earth"
+ ],
+ "null": [],
+ "absorb": [],
+ "phases": "챌린지 HP 2,500,000,000(25억), 5턴. 突·打 약점, 마법·화·수·풍·지 내성, 무효·흡수 없음. 라이프포인트 없음(스텔라만), 스토퍼·전회복 기재 없음. 전투 전 特殊シールド展開, 연격 대미지 경감(2히트째부터 30%씩, 100턴).",
+ "mechanics": [
+  "연격 대미지 경감: 스킬의 2히트째부터 1히트마다 30%씩 경감(100턴) → 다단히트보다 한 방",
+  "전투 전 特殊シールド展開 (원문 '連撃数に応じてダメージ軽減を軽減する')",
+  "1턴 マナ・ハザード(전체 MP 흡수), 物理シールド展開(자기 물리 내성 버프 중 2턴), バイオ・チャージ(자기 완력·속도 소 99턴, 최대 9누적), オフェンス・ハック(전체 완력·지성 디버프 중 5턴)",
+  "2턴 ランダムクロウ(무작위 무속성 베기×3+페인), バイオ・チャージ, 先制準備(자기 선제 1턴)",
+  "3턴 アシッド・ポリューション(전체 독), バイオ・ボム×3(단체 독 + HP 1,000/1,500/2,000 고정), 아군 버프 해제",
+  "4턴 ランダムクロウ, バイオ・チャージ, ディフェンス・ハック(전체 물리·마법·전속성 내성 디버프 중 5턴), 자기 디버프 해제",
+  "5턴 ランダムクロウ×3",
+  "보너스: 拳·槌 +100, アウトロー·記憶喪失 +200"
+ ],
+ "needs": {
+  "barrier_pierce": false,
+  "cleanse": true,
+  "guard": false,
+  "status_immune": true,
+  "break": false,
+  "burst": true,
+  "sustain": true,
+  "zone_control": false,
+  "single_target": true,
+  "multi_target": false
+ },
+ "recommended": [
+  "韜晦の討手",
+  "ヒナギク(AS)",
+  "イド",
+  "ハヴォック",
+  "ヴェレット(AS)",
+  "ティティ",
+  "ガーネット",
+  "イヅナ",
+  "クラルテ(AS)",
+  "ニケ(AS)"
+ ],
+ "strategy_kr": "突·打 약점에 마법·4속성 내성이고 연격일수록 피해가 깎이므로 拳·槌 물리 단발 고화력이 기본이다. 보너스가 拳·槌 +100, アウトロー·記憶喪失 +200으로 커서 알테마 예시도 韜晦の討手·ヒナギク(AS)·イド·ハヴォック에 후열 拳·槌 캐릭터를 둔다. 3턴째 독+고정 피해 단체기 3연발과 4턴째 내성 디버프가 오니 최대 HP와 독 대책을 갖춘다. 투고로는 ヴェレット(AS)·ティティ·ガーネット·イヅナ(보너스 1950+100+1000)로 1턴 AF, 2·5턴 SB 운영 스코어 약 29억이 있다.",
+ "source": "https://altema.jp/anaden/igyononarehatego",
+ "hp": 25.0,
+ "posts": [
+  {
+   "score": 2900000000.0,
+   "dmg": null,
+   "bonus": 3050,
+   "team": "メイン: ヴェレット(AS)・ティティ・ガーネット・イヅナ / サブ: クラルテ(AS)・ニケ(AS) / バディ: ガンス(AS)",
+   "src": "https://altema.jp/anaden/igyononarehatego",
+   "note": "원문 「スコアはギリ29億」, ボーナス「1950＋100＋1000」, 1T AF·2T/5T SB. 날짜 없음"
+  }
+ ],
+ "hitgim": [
+  {
+   "k": "multihit",
+   "step": 0.3,
+   "label": "연격 대미지 경감(스킬 한 번 안 2타째부터 30%씩, 100턴 — 챌린지 특징)"
+  }
+ ]
+}
+]

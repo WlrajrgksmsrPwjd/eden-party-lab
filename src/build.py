@@ -149,10 +149,19 @@ if os.path.exists(P('data','bosses_shoka.json')): bosses+=json.load(open(P('data
 for b in json.load(open(P('data','bosses_kesshitsu.json'),encoding='utf-8')):
     b=dict(b); b['kesshitsu']=True; b.pop('enemies',None) if False else None
     bosses.append(b)
+# 보스 설명 속 캐릭터 이름(일본어)은 캐릭터의 한국어 표시 이름으로 먼저 바꾼 뒤 ko() — 음역하면 '미날카·화소의 진군'처럼 깨짐(2026-10-23)
+_CJ=sorted({(c['name_jp'], c.get('name_kr') or '') for c in chars if c.get('name_jp') and c.get('name_kr') and has_jp(c['name_jp'])}, key=lambda x:-len(x[0]))
+_CJ+= [('AS'+j[:-4], k) for j,k in _CJ if j.endswith('(AS)')] + [('ES'+j[:-4], k) for j,k in _CJ if j.endswith('(ES)')] + [('異'+j[:-4], k) for j,k in _CJ if j.endswith('(AS)')]
+_CJ=sorted(set(_CJ), key=lambda x:-len(x[0]))
+def _cj(t):
+    if not t or not has_jp(t): return t
+    for j,k in _CJ:
+        if j in t: t=t.replace(j,k)
+    return t
 for b in bosses:
     for k in ('name_kr','phases','strategy_kr'):
-        if has_jp(b.get(k)): b[k]=ko(b[k])
-    b['mechanics']=[ko(m) for m in b.get('mechanics') or []]
+        if has_jp(b.get(k)): b[k]=ko(_cj(b[k]) if k!='name_kr' else b[k])
+    b['mechanics']=[ko(_cj(m)) for m in b.get('mechanics') or []]
 def js(o): return json.dumps(o,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
 mp=P('data','meta.json')
 meta=json.load(open(mp,encoding='utf-8')) if os.path.exists(mp) else {}
@@ -194,8 +203,9 @@ def _calc_view(o):
     if isinstance(o,list): return [_calc_view(x) for x in o]
     return o
 # 보스 흉성 trigger(연전 편성에서 앞 전투가 붙이는 흉성 판정, 앱 전용 — 엔진 계산과 무관)는 계산 버전에서 뺌(2026-10-18)
+_BV_SKIP={'trigger','posts','shoka_part','name_src','name_kr','gim_src','source','affinity_note_kr','affinity_src','hp_src','phases','note_kr'}
 def _boss_view(o):
-    if isinstance(o,dict): return {k:_boss_view(v) for k,v in o.items() if k not in ('trigger','posts','shoka_part','name_src')} # 화면 전용(투고 기록·서가 소분류)은 계산 버전에서 뺌
+    if isinstance(o,dict): return {k:_boss_view(v) for k,v in o.items() if k not in _BV_SKIP} # 화면 전용(투고 기록·서가 소분류·이름·출처·HP 구조 설명)은 계산 버전에서 뺌 — mechanics·strategy_kr은 엔진 enemyCCOf가 읽어서 남김
     if isinstance(o,list): return [_boss_view(x) for x in o]
     return o
 calc_ver=hashlib.sha1((js(_calc_view(chars))+js(_boss_view(bosses))+js(_bfx)+rd('engine.js')+rd(os.path.join('data','meta_decks.json'))).encode('utf-8')).hexdigest()[:12] # 추천 덱도 탐색 시작점(seeds)이라 포함
