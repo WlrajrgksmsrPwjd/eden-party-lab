@@ -3743,7 +3743,7 @@
 },
  {
  "id": "sk_garudosunosho",
- "shoka_part": "메인 3부 전편",
+ "shoka_part": "메인 3부",
  "score_bonus": {
   "pers": {
    "火": 30,
@@ -3829,7 +3829,7 @@
 },
  {
  "id": "sk_gidorunnosho",
- "shoka_part": "메인 3부 전편",
+ "shoka_part": "메인 3부",
  "score_bonus": {
   "pers": {
    "雷": 30,
@@ -3930,7 +3930,7 @@
 },
  {
  "id": "sk_asupidonosho",
- "shoka_part": "메인 3부 전편",
+ "shoka_part": "메인 3부",
  "score_bonus": {
   "pers": {
    "拳": 45,
@@ -4034,7 +4034,7 @@
 },
  {
  "id": "sk_zomasu88nosyo",
- "shoka_part": "메인 3부 전편",
+ "shoka_part": "메인 3부",
  "score_bonus": {
   "pers": {
    "水": 20,
@@ -4452,8 +4452,8 @@
   "https://altema.jp/anaden/yudhikiumu",
   "https://anothereden.game-info.wiki/d/%C0%B1%B1%D3%A4%DF_CHALLENGE%B9%B6%CE%AC"
  ],
- "name_kr": "유디키움 (미확인)",
- "name_src": "",
+ "name_kr": "유디키움",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
  "name_jp": "ユーディキウム",
  "content": "星詠みの書架",
  "level": 0,
@@ -4498,7 +4498,7 @@
 },
  {
  "id": "sk_flameload",
- "shoka_part": "동료",
+ "shoka_part": "해후",
  "score_bonus": {
   "pers": {
    "水": 30
@@ -4587,7 +4587,7 @@
 },
  {
  "id": "sk_dragonbearershoka",
- "shoka_part": "동료",
+ "shoka_part": "메인 2부 후편",
  "score_bonus": {
   "pers": {
    "竜": 30,
@@ -4666,7 +4666,7 @@
 },
  {
  "id": "sk_azamishoka",
- "shoka_part": "동료",
+ "shoka_part": "해후",
  "score_bonus": {
   "pers": {
    "火": 30,
@@ -4774,7 +4774,7 @@
 },
  {
  "id": "sk_syerinusyoka",
- "shoka_part": "동료",
+ "shoka_part": "해후",
  "score_bonus": {
   "pers": {
    "風": 60,
@@ -4893,7 +4893,7 @@
 },
  {
  "id": "sk_rakuenwomezasumono",
- "shoka_part": "동료",
+ "shoka_part": "외전",
  "score_bonus": {
   "pers": {
    "槍": 30,
@@ -4978,7 +4978,7 @@
 },
  {
  "id": "sk_modorisiotome",
- "shoka_part": "동료",
+ "shoka_part": "메인 3부",
  "score_bonus": {
   "pers": {
    "火": 60,
@@ -5076,7 +5076,7 @@
 },
  {
  "id": "sk_maounosyo",
- "shoka_part": "동료",
+ "shoka_part": "메인 1.5부",
  "score_bonus": {
   "pers": {
    "魔獣": 100,
@@ -5158,7 +5158,7 @@
 },
  {
  "id": "sk_suteropesunosyo",
- "shoka_part": "동료",
+ "shoka_part": "메인 3부",
  "score_bonus": {
   "pers": {
    "杖": 20,
@@ -5243,7 +5243,7 @@
 },
  {
  "id": "sk_guratinerunosyo",
- "shoka_part": "동료",
+ "shoka_part": "메인 1.5부",
  "score_bonus": {
   "pers": {
    "槌": 100,
@@ -5338,7 +5338,7 @@
 },
  {
  "id": "sk_bravestormnosyo",
- "shoka_part": "동료",
+ "shoka_part": "메인 1.5부",
  "score_bonus": {
   "pers": {
    "刀": 100,
@@ -5425,7 +5425,7 @@
 },
  {
  "id": "sk_godhandnosyo",
- "shoka_part": "동료",
+ "shoka_part": "메인 1.5부",
  "score_bonus": {
   "pers": {
    "拳": 100,
@@ -5512,7 +5512,7 @@
 },
  {
  "id": "sk_peninsulafulminu",
- "shoka_part": "외전(外典)",
+ "shoka_part": "외경",
  "score_bonus": {
   "pers": {
    "陰": 60,
@@ -5616,7 +5616,7 @@
 },
  {
  "id": "sk_sinuslridum",
- "shoka_part": "외전(外典)",
+ "shoka_part": "외경",
  "score_bonus": {
   "pers": {
    "晶": 30,
@@ -5728,7 +5728,7 @@
 },
  {
  "id": "sk_maremarginis",
- "shoka_part": "외전(外典)",
+ "shoka_part": "외경",
  "score_bonus": {
   "pers": {
    "雷": 30,
@@ -5958,8 +5958,8 @@
  "gim_src": [
   "https://altema.jp/anaden/mimichannosho"
  ],
- "name_kr": "미미짱 (미확인)",
- "name_src": "",
+ "name_kr": "미미",
+ "name_src": "vendor/ae-builder/ae-data.json (딩 빌더, 한국 서버 「[서가] …의 서」)",
  "name_jp": "ミミちゃん",
  "content": "星詠みの書架",
  "level": 0,

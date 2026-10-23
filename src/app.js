@@ -44,8 +44,8 @@ const bossSub = b => { const c = String(b.content||''), k = bossTop(b);
   if(k==='ad') return /カイロス/.test(c) ? '시층 관측선 카이로스' : /封域/.test(c) ? '봉역' : '베리 하드';
   if(k==='shoka') return b.shoka_part || '';
   return ''; };
-/* 성영의 서가 소분류(2026-10-23, 알테마 星詠みの書架 목록 순): 메인 스토리 부 → 외전 → 협주·군상·동료 → 외전(外典) → 호걸 */
-const SHOKA_PARTS = ['메인 1부','메인 1.5부','메인 2부 전편','메인 2부 중편','메인 2부 후편','메인 3부 전편','외전','협주','군상','동료','외전(外典)','호걸'];
+/* 성영의 서가 소분류(2026-10-23): 한국 서버 분류(딩 빌더 데이터 「(분류) [서가] …의 서」 — 메인·외전·외경·외사·협주·군상·해후), 없는 책은 알테마 분류(호걸 등) */
+const SHOKA_PARTS = ['메인 1부','메인 1.5부','메인 2부 전편','메인 2부 중편','메인 2부 후편','메인 3부','외전','외경','외사','협주','군상','해후','호걸'];
 const subSort = (x, y) => { const a = SHOKA_PARTS.indexOf(x), b = SHOKA_PARTS.indexOf(y); return a>=0 && b>=0 ? a-b : a>=0 ? -1 : b>=0 ? 1 : x.localeCompare(y, 'ko', {numeric:true}); };
 const BOSS_CAT_KR2 = b => [Object.fromEntries(BOSS_TOP)[bossTop(b)], bossSub(b)].filter(Boolean).join(' · ') + (bossCat(b)==='gaishi_h' ? ' (히든)' : '');
 const SHOKA_TL = 5; // 성영의 서가 챌린지 턴 제한(사용자 2026-10-18: '서가 챌린지는 5턴 — 5턴 내 최대 딜과 안정 클리어로 구분')
