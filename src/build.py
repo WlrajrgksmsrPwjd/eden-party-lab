@@ -150,9 +150,9 @@ for b in json.load(open(P('data','bosses_kesshitsu.json'),encoding='utf-8')):
     b=dict(b); b['kesshitsu']=True; b.pop('enemies',None) if False else None
     bosses.append(b)
 # 보스 설명 속 캐릭터 이름(일본어)은 캐릭터의 한국어 표시 이름으로 먼저 바꾼 뒤 ko() — 음역하면 '미날카·화소의 진군'처럼 깨짐(2026-10-23)
-_CJ=sorted({(c['name_jp'], c.get('name_kr') or '') for c in chars if c.get('name_jp') and c.get('name_kr') and has_jp(c['name_jp'])}, key=lambda x:-len(x[0]))
+_CJ=sorted({(c['name_jp'], c.get('name_kr') or '') for c in chars if c.get('name_jp') and c.get('name_kr') and has_jp(c['name_jp'])}, key=lambda x:(-len(x[0]), x))
 _CJ+= [('AS'+j[:-4], k) for j,k in _CJ if j.endswith('(AS)')] + [('ES'+j[:-4], k) for j,k in _CJ if j.endswith('(ES)')] + [('異'+j[:-4], k) for j,k in _CJ if j.endswith('(AS)')]
-_CJ=sorted(set(_CJ), key=lambda x:-len(x[0]))
+_CJ=sorted(set(_CJ), key=lambda x:(-len(x[0]), x))
 def _cj(t):
     if not t or not has_jp(t): return t
     for j,k in _CJ:
