@@ -442,7 +442,7 @@
   "self_buff": {"pwr": 0, "int": 0, "spd": 0, "elem_atk": 100, "weapon_atk": 100, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": true, "mental_focus": true, "overthrow": true, "eagle_eyes": false, "weak_dmg": 0, "multihit": false},
   "party_buff": {"scope": "all", "restrict": "전속성공격 100%는 체인 オートコーディネイト(아군 晶 공격 시, 3회행동). 전무기종 100%·정신통일·심기일체·하극상은 理の再縫(1턴)", "pwr": 0, "int": 0, "spd": 0, "all_elem_atk": 100, "elem_atk": {"crystal": 100}, "weapon_atk": {"all": 100}, "crit_rate": 100, "crit_dmg": 30, "over_crit": false, "singular_focus": true, "mental_focus": true, "overthrow": true, "eagle_eyes": false, "weak_dmg": 0, "multihit": false, "link": false, "barrier_pierce": false, "extra_hit": false, "mp_cost_zero": false, "mp_up": 50},
   "debuff": {"pwr": 50, "int": 50, "spd": 50, "all_elem_res": 50, "elem_res": {}, "phys_res": 0, "mag_res": 0, "weapon_res": {}, "break": "", "weak_expose": "crystal", "weak_expose_noaf": true, "pain_poison": true, "weak_expose_up": {"n": 0.3, "af": 0, "real": 0}},
-  "zone": {"type": "crystal", "awakened": true, "condition": "ショールーム/VC로 輝晶陣, 전개 중 ZONE 각성. 코디네이트 합계 20 누적 시 턴 시작에 極・輝晶陣 자동 전개. SB 시 極・輝晶陣", "breaks": "アビリティ獲得(ターン開始時)"},
+  "zone": {"type": "crystal", "awakened": true, "condition": "ショールーム/VC로 輝晶陣, 전개 중 ZONE 각성. 코디네이트 합계 20 누적 시 턴 시작에 極・輝晶陣 자동 전개. SB 시 極・輝晶陣", "breaks": "アビリティ獲得(ターン開始時)", "restore": "turn"},
   "support": {"heal": 0, "barrier": 3, "dmg_cut": 3, "cleanse": 0, "status_immune": 0, "debuff_guard": 0, "knockback_immune": 0, "guard": 0, "taunt": 0, "mp_recover": 0, "af_gauge": 0, "revive": false},
   "req": "아군의 晶 속성 공격 스킬(체인 최대 3회/턴), 코디네이트 40 누적(理の再縫)",
   "tags": ["chain_ability", "lunatic_copy", "stack_debuff", "shield", "hp_mp_max_up", "first_use_bonus"],

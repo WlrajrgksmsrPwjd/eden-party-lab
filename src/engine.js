@@ -630,7 +630,7 @@ function prepChar(c){
     states: Array.isArray(c.states) && c.states.length ? c.states : null, alts: Array.isArray(c.alts) && c.alts.length ? c.alts : null,
     once: Array.isArray(c.once) ? (c.once.filter(e=>e && e.atk && !e.buddy).length ? c.once.filter(e=>e && e.atk && !e.buddy) : null) : null, // 전투 중 1회·첫 사용 강공격(once.json)
     styleB: Array.isArray(c.style_bonus) && c.style_bonus.length ? c.style_bonus : null,
-    zoneVC: !!(c.zone && c.zone.vc_only), zoneBreaks: c.zone && c.zone.breaks ? c.zone.breaks : null, zoneSbForce: !!(c.zone && (c.zone.sb_force || c.zone.breaks==='sb')), sbRev: !!c.sb_rev, /* SB로 아군 디버프 리버설(1턴) — 스즈누이 영장 고별의 꽃, 2026-10-22 */ /* SB 존 파괴는 SB를 쓰면 늘 일어남('미전개면 파괴'도 이미 그 존이면 같음) — 2026-10-21 9명 문구 대조 */ zoneAwAny: c.zone && c.zone.awaken_any ? c.zone.awaken_any : null,
+    zoneVC: !!(c.zone && c.zone.vc_only), zoneBreaks: c.zone && c.zone.breaks ? c.zone.breaks : null, zoneSbForce: !!(c.zone && (c.zone.sb_force || c.zone.breaks==='sb')), zoneRestore: c.zone && c.zone.restore ? (c.zone.type || null) : null, /* 턴 시작에 그 존을 극으로 다시 까는 캐릭터(존 파괴 포함 — 니나 코디네이트 20, 2026-10-23 사용자 확인: 스즈누이 SB로 환마진이 돼도 다음 턴 휘정진 복귀) */ sbRev: !!c.sb_rev, /* SB로 아군 디버프 리버설(1턴) — 스즈누이 영장 고별의 꽃, 2026-10-22 */ /* SB 존 파괴는 SB를 쓰면 늘 일어남('미전개면 파괴'도 이미 그 존이면 같음) — 2026-10-21 9명 문구 대조 */ zoneAwAny: c.zone && c.zone.awaken_any ? c.zone.awaken_any : null,
     zone, zoneTypes, zspec, zoneAwak: !!(zone&&zone.awakened),
     breakT: (d.break||'').toLowerCase(),
     weakExpose: (d.weak_expose||'').split(/[(\s]/)[0],
@@ -2946,10 +2946,12 @@ function evalTeamX(team, progs, enemy, S, cap, ctx, sw){
 }
 /* SB가 깔린 존과 다른 존을 펴면(2026-10-21 사용자 확인 — 성해진은 SB 존으로 바뀜) 그 뒤 턴은 그 존 — 첫 SB 다음 턴부터 그 존이 깔린 단계(evalTeamZ 단계, bossZone every)로.
    깔린 존 그대로 두는 SB(같은 존 SB·전개 없는 SB, sbKeepZone)도 계산해 성향 기준이 큰 쪽(SB 순서·속도로 고를 수 있다고 봄). S.sbZoneSwitch=false면 끔 */
-function sbSwPhase(ev, S){
+function sbSwPhase(ev, S, team){
   if(!ev || S.sbZoneSwitch===false || S.sbZoneRule===false || ev.score) return null;
   const nz = ev.normal && ev.normal.zone, z = ev.sb && ev.sb.zone; if(!z || !(z.level>0)) return null;
   if(nz && nz.level>0 && nz.key===z.key) return null;
+  /* 깔려 있던 극 존을 턴 시작에 다시 까는 아군(zoneRestore — 니나 極・輝晶陣, 존 파괴 포함)이 있으면 SB로 바뀐 존은 SB 턴뿐 → 다음 턴부터 원래 존(2026-10-23 사용자 확인). 그대로 두는 SB와는 계속 비교 */
+  if(team && nz && nz.level>=2 && S.zoneRestore!==false && team.some(m=>m && m.zoneRestore && m.zoneRestore===nz.key)) return {restore: true, z: z.label || null, by: (team.find(m=>m && m.zoneRestore===nz.key)||{}).name || null};
   const T = (ev.bsim && ev.bsim.turns) || [], N = T.length || 3; let t1 = 0; T.forEach((r,i)=>{ if(!t1 && r && r.sb) t1 = i+1; });
   const from = t1 ? t1 + 1 : N + Math.max(1, Math.round(+ev.sbTurns||4));
   const zn = (ev.normal && ev.normal.zones) || [], lv = z.level>=3 ? 3 : zn.some(q=>q && q.key===z.key && q.level>=2 && q.how!=='개전 자동') ? 2 : 1; // 스킬로 다시 각성할 수 있으면 극
@@ -2959,15 +2961,16 @@ function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
   if(!zl0.length && (S.sbZoneSwitch===false || (ctx && ctx.stFast))) return evalTeamV(team, progs, enemy, S, cap, ctx);
   const S0 = zl0.length ? ({...S, ...{bossZoneLate:null}}) : S, ev0 = evalTeamV(team, progs, enemy, S0, cap, ctx);
   if(ctx && ctx.stFast) return ev0;
-  const swq = sbSwPhase(ev0, S);
+  const swq = sbSwPhase(ev0, S, team);
   if(!swq) return zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, ev0) : ev0;
   const vk = evalKey(ctx), vOfE = e => ({sbOff: e.sbOff || null, uni: e.uni || null, songOff: e.songOff || null, azBy: e.azBy==null ? null : e.azBy, redOff: !!e.redOff, afBuff: +e.afBuf||0});
   const SK = ({...S0, ...{sbKeepZone: true}});
   /* 한 변형(vr)에서 SB로 존이 바뀌는 계획·깔린 존 그대로 두는 SB 중 성향 기준이 큰 쪽(evK: 이미 계산한 그대로 두기 값) */
-  const bestOf = (e0v, vr, evK) => { const sq = sbSwPhase(e0v, S); if(!sq) return zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, e0v) : e0v;
-    const a = evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0.concat([sq]), e0v);
+  const bestOf = (e0v, vr, evK) => { const sq = sbSwPhase(e0v, S, team); if(!sq) return zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, e0v) : e0v;
+    const a = sq.restore ? (zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, e0v) : e0v) : evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0.concat([sq]), e0v);
+    if(sq.restore) a.sbRestore = {z: sq.z, by: sq.by};
     const eK = evK || evalTeamV(team, progs, enemy, SK, cap, ({...ctx||{}, ...{variant: vr}}));
-    if(eK && !sbSwPhase(eK, S)){ const b = zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, eK) : eK;
+    if(eK && !sbSwPhase(eK, S, team)){ const b = zl0.length ? evalTeamZ1(team, progs, enemy, S, cap, ctx, zl0, eK) : eK;
       if(vk(b) > vk(a)*(1+1e-9)){ b.sbKeep = {z: e0v.sb && e0v.sb.zone ? e0v.sb.zone.label : null}; return b; } }
     return a; };
   const vr = ctx && ctx.variant ? ctx.variant : vOfE(ev0), r1 = bestOf(ev0, vr, null);
@@ -2975,7 +2978,7 @@ function evalTeamZ(team, progs, enemy, S, cap, ctx, sw){
   /* 변형(성도 스킬 빼기 등)은 존이 안 바뀐다고 보고 골라서, 그대로 두는 SB로는 다른 변형이 나을 수 있음(2026-10-21 점검: 라디카·AC츠바메·플람라피스(ES)·질바 +8%) → 그대로 두기를 변형까지 다시 골라 그 변형으로도 비교(화면 재계산은 고른 변형으로 같은 비교) */
   const evK2 = evalTeamV(team, progs, enemy, SK, cap, ctx), v2 = evK2 ? vOfE(evK2) : null;
   if(!v2 || JSON.stringify(v2)===JSON.stringify(vOfE(ev0))) return r1;
-  const ev0b = evalTeamV(team, progs, enemy, S0, cap, ({...ctx||{}, ...{variant: v2}})), r2 = bestOf(ev0b, v2, sbSwPhase(evK2, S) ? null : evK2);
+  const ev0b = evalTeamV(team, progs, enemy, S0, cap, ({...ctx||{}, ...{variant: v2}})), r2 = bestOf(ev0b, v2, sbSwPhase(evK2, S, team) ? null : evK2);
   return vk(r2) > vk(r1)*(1+1e-9) ? r2 : r1;
 }
 function evalTeamZ1(team, progs, enemy, S, cap, ctx, zl, ev){
