@@ -1710,7 +1710,7 @@ function turnRecTxt(r, ev, team, mainI){
 const compBack = (x, boss) => { const sp = boss && boss.score_bonus && boss.score_bonus.pers, R = (x.reserves||[]).filter(Boolean); if(!sp) return ''; if(!R.length) return ' — 후열이 있으면 후열도 지정 퍼스널리티여야 함';
   const no = R.filter(c=>![...(c.pers||[])].some(p=>sp[p])); return no.length ? ` — 추천 후열 ${no.map(c=>esc(c.name)).join('·')}은(는) 해당 없음: 지정 퍼스널리티 캐릭터로 바꿔야 1000` : ' — 추천 후열도 해당'; };
 const scoreTxt = v => { v = +v||0; return v>=1e8 ? (v/1e8).toFixed(v>=1e9 ? 1 : 2)+'억점' : Math.round(v).toLocaleString()+'점'; };
-const hgT = r => r && r.hg!=null && +r.hg<0.995 ? ` <span class="hint">(타수 기믹 ×${r.hg})</span>` : '';
+const hgT = r => r && r.hg!=null && +r.hg<0.995 ? ` <span class="hint">(${+r.hg<0.005 ? '타수 기믹 — 피해 없음' : '타수 기믹 ×'+r.hg})</span>` : '';
 /* 처치 계획(engine killTurnsM log): 실전 N턴 뒤 AF 주기·아껴 둔 AF·스토퍼·목숨 처치·존 단계를 묶어서 */
 function killPlanTxt(kt, N){
   const out = [], L = kt.log; let run = null;
@@ -1720,8 +1720,8 @@ function killPlanTxt(kt, N){
     if(ph){ flush(); out.push(`<span class="hint">${l.t}턴부터 ${evTxt(ph)}</span>`); }
     if(!l.af && !evs.length && !l.sb && !(+l.hg<0.9)){ if(run && run.b===l.t-1) { run.b = l.t; run.hold = run.hold || !!l.hold; } else { flush(); run = {a:l.t, b:l.t, hold: !!l.hold}; } continue; }
     flush();
-    const what = l.af ? `<b class="afk">AF</b>${l.sb==='af'?' + SB':''}` : l.sb==='turn' ? 'SB + 평상 공격' : '평상 공격';
-    out.push(`<b>${l.t}턴</b>: ${what}${l.t<=N?' <span class="hint">(위 계획)</span>':''}${evs.length ? ' → '+evs.map(evTxt).join(', ') : ''}${l.cut ? ` <span class="hint">(보스 피해 경감 ×${l.cut})</span>` : ''}${hgT(l)}`);
+    const what = l.af ? `<b class="afk">AF</b>${l.sb==='af'?' + SB':''}${l.imm ? ' <span class="hint">(무적 중 — 행동 수로 축적을 빨리 깎음)</span>' : kt.ip!=null && +l.g>0 && +l.g<100 ? ` <span class="hint">(게이지 ${l.g}%에서)</span>` : ''}` : l.sb==='turn' ? 'SB + 평상 공격' : '평상 공격';
+    out.push(`<b>${l.t}턴</b>: ${what}${l.t<=N && kt.ip==null?' <span class="hint">(위 계획)</span>':''}${evs.length ? ' → '+evs.map(evTxt).join(', ') : ''}${l.cut ? ` <span class="hint">(보스 피해 경감 ×${l.cut})</span>` : ''}${hgT(l)}`);
     if(out.length>=14){ out.push('<span class="hint">…</span>'); run = null; break; } }
   flush();
   if(!kt.sure) out.push('<span class="warn">99턴 안에 못 깰 수 있음</span>');

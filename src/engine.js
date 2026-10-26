@@ -2372,7 +2372,22 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
         const Ht = n*Math.max(1, multSum/Math.max(1e-9, mult*n)), bE = e.stk.brk_each ? Math.max(1, ((2*Ht - 1)/Math.max(1, Ht))/Math.max(1, co.brk||1)) : 0;
         let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+co.typeR+rvAdd(S, co.physR, inc*k))/b0*(bE ? bE : (k>0 ? bF : 1));
         multSum *= sF/n; stk = stk || {inc:0, n:0, nA:0, brk:null, h, unc: S.revmaUncap===true}; stk.inc = Math.max(stk.inc, inc); stk.n = Math.max(stk.n, n); stk.nA = Math.max(stk.nA, Math.min(n, nA)); if(e.stk.brk) stk.brk = e.stk.brk; }
-      per[h] += d1*multSum*xC; trig[h] += n*xC; any=true;
+      /* 25억 경감은 실제 1타에(2026-10-26 버그: 위력 1배 1타에 경감을 건 뒤 위력·타수·브레이크·레브마를 곱해 1타가 경감 없이 커졌음 — 천명 255 벨벳(AS) イレクトリ 1발 660억, 사용자 체감 약 90억).
+         발동 k번째마다 1타 배율(위력 × 레브마 내성 DOWN × 브레이크)을 경감 전에 곱해 다시 계산. S.chainCapHit=false면 예전 */
+      let D = d1*multSum;
+      if(S.chainCapHit!==false){ /* 연계 추가타(links)는 위력·타수·브레이크와 무관하게 발동 1번에 한 번(연계는 실행마다 — 예전엔 위력 3배·5타만큼 같이 곱해졌음) */
+        const noL = q => !q ? q : q.mixL ? ({...q, mixL: q.mixL.map(x=>({...x, co: noL(x.co)}))}) : ({...q, links: null}), hasL = (q => !!q && (q.mixL ? q.mixL.some(x=>x.co && x.co.links && x.co.links.length) : !!(q.links && q.links.length)))(co),
+          coM = hasL ? noL(co) : co, dM1 = hasL ? applyZoneCap(coM, z, S, cap, combo)*fw(co) : d1, dL = hasL ? Math.max(0, d1 - dM1) : 0;
+        const capD = f => f===1 ? dM1 : applyZoneCap(scaleCore(coM, f), z, S, cap, combo)*fw(co), sq = Array.isArray(a.mult_seq) && a.mult_seq.length ? a.mult_seq : null,
+          h0 = Math.max(1, a.hits||1), hc = a.hits_max && sit!=='af' ? (ifV(a.hits_avg_if) || (a.hits_avg!=null ? +a.hits_avg : (h0 + +a.hits_max)/2))/h0 : 1, st = e.stk && sit!=='af' ? e.stk : null,
+          nE = Math.max(1, S.enemyCount||1), inc = st ? pct(+st.res||0)*(ifV(st.avg_if) || +st.avg||1)/(sk.target==='st' ? nE : 1) : 0, b0 = 1+co.typeR+co.physR,
+          bF = st && st.brk ? Math.max(1, ((st.brk===co.el || st.brk===co.wt) ? 1.5 : 1.3)/Math.max(1, co.brk||1)) : 1, b2 = st && st.brk_each ? Math.max(1, 2/Math.max(1, co.brk||1)) : 0;
+        D = 0; for(let k=0;k<Math.ceil(n-1e-9);k++){ const fr = Math.min(1, n-k), m = sq ? (k<sq.length ? +sq[k] : 0) : mult; if(!(m>0)) continue;
+          const rF = st ? (1+co.typeR+rvAdd(S, co.physR, inc*k))/b0 : 1;
+          if(b2){ const f2 = capD(m*rF*b2); D += fr*(k===0 ? (hc - 1/h0)*f2 + capD(m*rF)/h0 : hc*f2); } /* brk_each: 그 턴 첫 타만 1배 */
+          else D += fr*hc*capD(m*rF*(k>0 ? bF : 1));
+          D += fr*dL*rF; } }
+      per[h] += D*xC; trig[h] += n*xC; any=true;
   }
   return any ? {per, trig, trigA, stk, total:per.reduce((x,y)=>x+y,0)} : null;
 }
@@ -2398,7 +2413,12 @@ function counterStk(ctr, ch){
   ctr.per = ctr.per.map((v,i)=>{ const r=ctr.res[i], n=ctr.trig[i]; if(!(v>0) || !r || !(n>0)) return v; const b0 = 1+r.ty+r.ph;
     /* 체인이 건 브레이크(2026-10-20, 2026-10-17 브레이크 재정리와 같게 — 예전 맞는 속성 ×1.5·그 밖 ×1.3): 일반 브레이크는 다음 1타만 2배, 엘리멘탈·웨폰(イレクトリ 雷)은 쌓인 수(BRK_N)만큼 그 속성·타입 타격 2배 — 요격 1번 h타 중 그만큼, 이미 받는 브레이크 이득(r.brk)은 빼고 */
     const hC = Math.max(1, +r.h||1), bF = !bk ? 1 : Math.max(1, (BRK_ONCE.has(bk) ? (hC+1)/hC : (bk===ctr.els[i] || bk===ctr.wts[i]) ? (hC + Math.min(hC, BRK_N))/hC : 1)/Math.max(1, r.brk||1));
-    let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*(1+r.ty+add(r.ph, inc*Math.min(nA0 + k, nc)))/b0*((k>0 || nA0>0) && nc>0 ? bF : 1);
+    const rk = k => (1+r.ty+add(r.ph, inc*Math.min(nA0 + k, nc)))/b0, bOn = k => (k>0 || nA0>0) && nc>0;
+    if(r.L && r.L.length && ch.capHit!==false){ /* 25억 경감은 실제 1타에(2026-10-26, chainCalc와 같게): 브레이크는 2배 받는 타격 몫만 2배로 다시 계산 */
+      const qB = !bk || bF<=1 ? 0 : BRK_ONCE.has(bk) ? 1/hC : (bk===ctr.els[i] || bk===ctr.wts[i]) ? Math.min(hC, BRK_N)/hC : 0, b2 = Math.max(1, 2/Math.max(1, r.brk||1));
+      let w = 0; for(const e of r.L){ for(let k=0;k<Math.ceil(n-1e-9);k++){ const fr = Math.min(1, n-k), f = rk(k), q2 = bOn(k) ? qB : 0; w += e.w/n*fr*(q2>0 ? (1-q2)*e.cd(f) + q2*e.cd(f*b2) : e.cd(f)); } }
+      tot += w; return w; }
+    let sF=0; for(let k=0;k<Math.ceil(n-1e-9);k++) sF += Math.min(1, n-k)*rk(k)*(bOn(k) ? bF : 1);
     const w = v*sF/n; tot += w; return w; });
   ctr.total = tot;
 }
@@ -2677,7 +2697,7 @@ function counterCalc(team, progs, A, enemy, S, cx, FX, z, cap, fw){
       const sk={skill:'요격', target:a2.target, kind:a2.kind, stat:a2.stat, element:a2.element||'none', weapon_type:a2.weapon_type, size:a2.size||'xl', mult:q.mult, hits:Math.max(1,a2.hits||1), repeat:0, crit_sure:a2.crit_sure===true ? true : Math.max(0, Math.min(1, +a2.crit_sure||0)), def_ignore:!!a2.def_ignore, barrier_pierce:!!a2.barrier_pierce, af_combo_x:1, condition:''};
       const t2=team.slice(); t2[i]=({...c, ...{main:sk, sb:null, afSk:null, sbN:null, mainAlt:null, alts:null, _alt:true, _proxy:true}});
       const co=attackerCore(t2, i, progs, A, enemy, S, 'normal', cx, FX, z); if(!co) continue;
-      per[i]+=applyZoneCap(co, z, S, cap, null)*fw(co)*q.n*q.p; trig[i]+=q.n*q.p; els[i]=co.el; wts[i]=co.wt; kinds[i]=co.kind; tgts[i]=co.tgt; res[i]={ty:co.typeR, ph:co.physR, brk:co.brk, h:Math.max(1, +co.totHits||1)}; any=true;
+      const fq = fw(co); per[i]+=applyZoneCap(co, z, S, cap, null)*fq*q.n*q.p; trig[i]+=q.n*q.p; els[i]=co.el; wts[i]=co.wt; kinds[i]=co.kind; tgts[i]=co.tgt; res[i]={ty:co.typeR, ph:co.physR, brk:co.brk, h:Math.max(1, +co.totHits||1), L: [...((res[i] && res[i].L) || []), {w: q.n*q.p, cd: f => applyZoneCap(scaleCore(co, f), z, S, cap, null)*fq}]}; any=true; /* L: 체인 레브마·브레이크를 경감 전 1타에 곱해 다시(counterStk) */
       const za = zoneAF(z, co, false); afg += q.p*q.nb*(za!=null ? za : (enemy && (enemyRel(enemy, co.el)==='weak' || enemyRel(enemy, co.wt)==='weak') ? 3.5 : 1.5)*Math.max(1, co.totHits||1)); }
   }
   return any ? {per, trig, els, wts, kinds, tgts, res, afg, total:per.reduce((x,y)=>x+y,0)} : null;
@@ -2742,11 +2762,12 @@ function hgTurn(G, st, segs, M, only){ const s = st.slice(), used = G.map(()=>0)
     G.forEach((g,j)=>{ if(s[j]==null || (only && !only(g))) return;
       if(g.k==='multihit'){ x *= hgMH(+g.step, sg.p, sg.e); return; }
       let H = 0, Q = 0; M.forEach((q,i)=>{ const h = g.unit==='act' ? (+(sg.u||[])[i]||0) : (+(sg.w||[])[i]||0); H += h; if(hgSel(g, q)) Q += h; });
-      if(sg.ch>0){ H += sg.ch; if(!g.only_el && !g.only_wt && !g.only_kind) Q += sg.ch; } // 체인·요격 발동(1타·1행동씩)
+      if(sg.ch>0){ H += sg.ch; if(!g.only_el && !g.only_wt && !g.only_kind) Q += sg.ch; else if(g.only_el && !g.only_wt && !g.only_kind && sg.chEl) Q += g.only_el.reduce((t,e)=>t + (+sg.chEl[e]||0), 0); } // 체인·요격 발동(1타·1행동씩, 속성만 거르는 기믹은 그 속성 체인·요격만)
       used[j] += Q; const r = hgSeg(g, s[j], H, Q); x *= r.m; if(!g.end) s[j] = r.s; });
     xs.push(x); d += (sg.d||0)*x; d0 += sg.d||0; }
   G.forEach((g,j)=>{ if(s[j]==null || g.k==='multihit' || (only && !only(g))) return; // 턴 종료
-    if(g.end && used[j]>0 && s[j]>0) s[j] = Math.max(0, s[j] - Math.min(+g.cap>0 ? +g.cap : Infinity, (g.per!=null ? +g.per : 1)*used[j]));
+    if(+g.thr>0){ if(used[j] >= +g.thr - 1e-9 && s[j]>0) s[j] = Math.max(0, s[j] - (+g.thr_n>0 ? +g.thr_n : 1)); } /* thr: 그 턴 맞는 공격이 thr 이상이면 thr_n 감소(토비노오사마 祇の祝・厄: 음 공격 행동 10회 이상이면 1 더) */
+    else if(g.end && used[j]>0 && s[j]>0) s[j] = Math.max(0, s[j] - Math.min(+g.cap>0 ? +g.cap : Infinity, (g.per!=null ? +g.per : 1)*used[j]));
     if(+g.decay>0 && s[j]>0) s[j] = Math.max(0, s[j] - +g.decay);
     if(s[j]<0){ s[j] += 1; if(s[j]>=0) s[j] = hgS0(g); }
     else if(g.zero && +g.zero.turns>0 && s[j]===0) s[j] = -(+g.zero.turns);
@@ -2800,7 +2821,7 @@ function battleSim(N, o){
       let hs1 = hs0;
       if(o.hg && hs0){ const M = o.hg.M, segs = []; // 보스 타수 기믹(2026-10-19): AF(또는 평상) → SB 순으로 벗기며 그 구간 피해 ×배율
         if(isAF && rA) segs.push({k:'a', d:dA, w: (rA.n||[]).map((v,i)=>(+v||0)*M[i].h), u: (rA.n||[]).map((v,i)=>(+v||0)*M[i].x), p: rA.per, e: M.map(q=>q.en)});
-        else segs.push({k:'n', d:nd, w: M.map(q=>q.hN), u: M.map(q=>q.aN), p: M.map(q=>q.pn), e: M.map(q=>q.en), ch: o.hg.ch});
+        else segs.push({k:'n', d:nd, w: M.map(q=>q.hN), u: M.map(q=>q.aN), p: M.map(q=>q.pn), e: M.map(q=>q.en), ch: o.hg.ch, chEl: o.hg.chEl});
         if(dS>0) segs.push({k:'s', d:dS, w: M.map(q=>q.hS), u: M.map(q=>q.xS), p: M.map(q=>q.ps), e: M.map(q=>q.es)});
         const R = hgTurn(o.hg.G, hs0, segs, M); hs1 = R.s; rec.hgS = hs1;
         if(Math.abs(R.x - 1) > 1e-9){ const xa = isAF ? R.xs[0] : 1, xn = isAF ? 1 : R.xs[0], xsb = dS>0 ? R.xs[1] : 1;
@@ -3031,7 +3052,7 @@ function evalTeamZ1(team, progs, enemy, S, cap, ctx, zl, ev){
     const z2 = e2.normal && e2.normal.zone;
     ph.push({from: +q.from>1 ? +q.from : null, after: q.after!=null && !(+q.from>1) ? +q.after : null, hp: q.hp!=null ? +q.hp : null, delay: +q.delay||0, auto: !!q.auto, swap: !!q.swap, swBy: q.swap ? q.name||null : null, sbSw: !!q.sbSw, pos: p, key: q.key||null, lv: +q.lv||1, aff: q.aff||null, bar: +q.bar>0 ? +q.bar : 0,
       zone: z2 ? z2.label : null, sustain: +e2.sustain||0, sustainNoAF: +e2.sustainNoAF||0, sustainSB: +e2.sustainSB||0, af: +e2.af||0, afLate: e2.afLate ? {v: +e2.afLate.v||0} : null,
-      afTurns: +e2.afTurns||4, afOff: !!e2.afOff, afDrain: e2.afDrain ? {first: e2.afDrain.first, per: e2.afDrain.per, af: e2.afDrain.af} : null,
+      afTurns: +e2.afTurns||4, afOff: !!e2.afOff, afDrain: e2.afDrain ? {first: e2.afDrain.first, per: e2.afDrain.per, af: e2.afDrain.af} : null, afOffG: +e2.afOffG||0, sbOne: e2.sbOne || null, afGR: e2.afGR || null,
       turns: e2.bsim ? e2.bsim.turns : [], btot: e2.bsim ? +e2.bsim.total||0 : 0, per: e2.bsim ? e2.bsim.per : null, nT: e2.normal ? +e2.normal.total||0 : 0 }); }
   // 실전 N턴: 바뀌는 턴부터 그 단계의 턴 기록
   // HP 기준 단계는 턴마다 그때 단계의 피해로 줄을 깎아(넘친 피해는 안 넘어감 — 한 턴에 목숨 하나) 닿는 턴을 찾음
@@ -3480,7 +3501,11 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       return {el: co.el || null, wt: co.wt || null, kind: co.kind || null, h, x, hN, aN: aN0, hS: sbU ? Math.max(1, +so.totHits||1) + (+so.linkHits||0) : 0, xS: sbU ? Math.max(1, +so.execs||1) : 0,
         en: h/x, es: sbU ? (Math.max(1, +so.totHits||1))/Math.max(1, +so.execs||1) : 1, pn: +(res.normal.per||[])[i]||0, pa: +((R3.afS && R3.afS.per)||[])[i]||0, ps: sbU ? +((res.sb && res.sb.per)||[])[i]||0 : 0}; });
     const ch = (res.normal.chain ? sm(res.normal.chain.trig) : 0) + (res.normal.counter ? sm(res.normal.counter.trig) : 0);
-    return {m, ch, aN, n: +(m.reduce((v,q)=>v+q.hN, 0) + ch).toFixed(1), af: +m.reduce((v,q,i)=>v+(+aN[i]||0)*q.h, 0).toFixed(1), sb: +m.reduce((v,q)=>v+q.hS, 0).toFixed(1)}; })();
+    /* 체인·요격 발동의 속성별 수(2026-10-26: 토비노오사마 祇の祝・厄 '그 턴 음 속성 공격 10회 이상' — 사용자 확인: 행동 횟수, 체인 어빌리티 공격도 셈) */
+    const chEl = {}; const addE = (e, v) => { if(e && v>0) chEl[e] = (chEl[e]||0) + v; };
+    if(res.normal.chain) res.normal.chain.trig.forEach((v,i)=>{ const L = team[i].chain || [], a = L.find(e=>e && e.atk) || null; addE(a && a.atk.element, +v||0); });
+    if(res.normal.counter) res.normal.counter.trig.forEach((v,i)=> addE(res.normal.counter.els && res.normal.counter.els[i], +v||0));
+    return {m, ch, chEl, aN, n: +(m.reduce((v,q)=>v+q.hN, 0) + ch).toFixed(1), af: +m.reduce((v,q,i)=>v+(+aN[i]||0)*q.h, 0).toFixed(1), sb: +m.reduce((v,q)=>v+q.hS, 0).toFixed(1)}; })();
   if(S.lifeCarryN!=null) out.lcN = !!S.lifeCarryN; // 처치 턴(killTurnsM) 목숨 넘김은 쓰는 설정으로
   if(bzG) out.budZ = {label: bzG.z.label, first: bzG.first, per: bzG.per, frac: bzG.frac};
   if(ctx && ctx.timeline){ const tl = turnTimeline(team, progs, enemy, S, cap, ctx, out); out.tl = tl; }
@@ -3546,7 +3571,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     afTailV: (Array.isArray(S.cutWin) && S.cutWin.length) || S.protect ? af : 0,
     cutW: Array.isArray(S.cutWin) && S.cutWin.length ? S.cutWin.filter(w=>w && +w.t>0 && +w.x>=0 && +w.x<1).map(w=>({t:+w.t, x: w.b ? pierceX(+w.x, out.pierceS) : +w.x})) : null, // 보스 개시 피해 경감 구간(앱 effBoss — hp_model.dmg_cut start)
     hg: (()=>{ const G0 = Array.isArray(S.hitGim) && S.hitGim.length && out.hitN ? S.hitGim : null; if(!G0) return null; const G = G0.map(g=> hgTeam(g, out.pierceS, out.resR)); // 보스 타수 기믹(앱 effBoss — hgList(hp_model)): 실전 N턴은 개시·n턴째부터 켜지는 것만(부활 뒤 것은 처치 턴 계산에서)
-      const on = g => (g.on||'start')==='start'; return {G, M: out.hitN.m, ch: out.hitN.ch, s0: G.map(g=> on(g) && !(+g.from>1) ? hgS0(g) : null), at: G.map(g=> on(g) ? Math.max(1, +g.from||1) : 0)}; })(),
+      const on = g => (g.on||'start')==='start'; return {G, M: out.hitN.m, ch: out.hitN.ch, chEl: out.hitN.chEl, s0: G.map(g=> on(g) && !(+g.from>1) ? hgS0(g) : null), at: G.map(g=> on(g) ? Math.max(1, +g.from||1) : 0)}; })(),
     afFull: +S.afFull>0 && +S.afFull<1 ? +S.afFull : 0, // 보스 오라: AF 게이지가 꽉 차 있으면 아군 주는 피해 ×x(진·현현 유나·멜리나 — 게이지 100% 전에 AF)
     teN: res.normal.turnEnd ? res.normal.turnEnd.total : 0, // AF 턴에도 남는 턴 종료 공격(평상 턴 값)
     teAF: teAF0,
@@ -3559,6 +3584,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   simIn.afSbG = afSbG; if(S.afInj) simIn.afInj = S.afInj; if(S.afMin100) simIn.afMin100 = true; /* afMin100: AF는 게이지 100%에서만(EX必殺技 계획 비교용) */ simIn.afFirst = afFirstOn; // afFirst: 순수 AF 안 버프 운용의 첫 AF는 버프를 다 걸고(afRun f1)
   simIn.afTotCap = +S.afTotalCap||0; // AF 한 번 총 피해 상한
   simIn.afOffG = afOffG; out.afOffG = simIn.afOffG>0 ? +simIn.afOffG.toFixed(1) : 0; // AF 턴 뒤 게이지(빅트(AS) AF 턴 종료 공격 포함)
+  if(Array.isArray(S.hitGim) && S.hitGim.length && afCyc){ const a100 = afRun(100, 2, 3, true).dmg; if(a100>0) out.afGR = [50, 60, 70, 80, 90].map(g=> Math.min(1, afRun(g, 2, 3, true).dmg/a100)); } /* 게이지 g%에서 켠 AF ÷ 100% AF — 처치 턴 계산이 '지금 끊어야 하는 줄'에 덜 찬 AF를 쓸 때(타수 기믹 보스만, 2026-10-26) */
   // 지속 딜의 AF도 극 존이 계속 유지될 때만 극(2026-10-17): 개전 자동·1회 각성(네코코(ES) 颯 첫 사용 등)은 2턴 뒤 일반 존 — 평상 턴(susOf)과 같은 비율(일반 0.6·극 0.4)로 섞음. SB로 다시 각성(sbAw)하면 그대로
   if(afCyc && !dInj && nz && nz.level>=2 && !awConst && !sbAw){ const a1 = capAF(afRun(100, 1, 3, true).dmg); if(a1 < af){ const dA = (bzG && !bzG.up ? 1-Math.max(0.4, bzG.frac) : 0.6)*(a1 - af)/afTurns; out.sustain += dA; out.susAfL1 = a1; } }
   if(afCyc && !dInj && bzG && bzG.up){ const aB = capAF(afRun(100, 2, 3, true).dmg); if(aB > af){ out.sustain += bzG.frac*(aB - af)/afTurns; out.susAfB = aB; } } // 버디 각성 극 존 AF는 차지 주기 중 2턴 몫
@@ -3578,6 +3604,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
     let sp = team.map((c,i)=> sbIdx.includes(i) ? Math.max(0, (sbP[i]||0) - (sb3.chain ? sb3.chain.per[i]||0 : 0))*k/(c.sb && +c.sb.once_t>0 ? Math.max(sbTurns, Hs) : sbTurns) : 0); let sv = sp.reduce((x,y)=>x+y,0);
     if(+S.afTotalCap>0 && afCyc && fr>0 && sv>0){ const sbA = sv*fr*fin/Math.max(1e-9, k), room = Math.max(0, +S.afTotalCap - af)/afTurns; if(sbA > room){ const f = (sv - sbA + room)/sv; sp = sp.map(v=>v*f); sv *= f; } } // AF 안 SB도 AF 총 피해 상한(9999억) 안 — AF가 이미 상한이면 0
     out.sustain += sv; out.sustainSB = sv; out.sbPerSus = sp; out.sbTurns = sbTurns;
+    out.sbOne = {v: team.reduce((x,c,i)=> x + (sbIdx.includes(i) ? Math.max(0, (sbP[i]||0) - (sb3.chain ? sb3.chain.per[i]||0 : 0)) : 0), 0), gN: sa*sbWN.reduce((x,v)=>x+v,0), gA: sa*afActs, fin}; /* SB 한 번(평상 턴)·턴당 게이지 — 처치 턴 계산이 SB를 턴마다 따로 셀 때(killTurnsM disc) */
     if(sbFullOf){ const I = sbFullOf.info, O = onVals(), fOn = I.dur/I.per; // sb_full: 주기(I.per턴) 중 I.dur턴은 매 턴 상태가 켜진 SB — 그 턴들의 평소 게이지 몫은 빼고
       const spO = team.map((c,i)=> sbIdx.includes(i) ? Math.max(0, (O.sb.per[i]||0) - (O.sb.chain ? O.sb.chain.per[i]||0 : 0))*fOn : 0), vO = spO.reduce((x,y)=>x+y,0);
       out.sustain += vO - sv*fOn; out.sustainSB = sv*(1-fOn) + vO; out.sbPerSus = sp.map((v,i)=>v*(1-fOn) + spO[i]); out.sbFull = {from: I.from, dur: I.dur, per: I.per, by: I.by, name: I.name, sb: +(vO/fOn).toFixed(0)}; }
@@ -4165,12 +4192,20 @@ function killTurns(ev, boss, margin){
 /* 보스 HP 구조(2026-10-18, 사용자: '부활도 하고 갑개룡같이 풀피 다 까는 기준 40스택에서 5 감소 — 한 번 죽인다고 끝이 아님'): boss.hp_model
    {bar 한 번에 깎아야 할 HP(억), bars 몇 번, reset 턴 종료 전회복(그 턴에 깎은 비율만 진행, step 단위), carry 넘친 피해가 다음 줄로 넘어가는지, kt_min, dmg_cut [{turns, x, when start|revive}]}.
    턴별 피해 = 실전 N턴 기록 → 그 뒤는 평상 턴(지속 딜의 평상 몫) + AF 주기마다 AF(긴 전투 AF) — 평균 지속 딜로 펴면 AF 한 턴에 몰린 피해가 넘쳐 버려지는 걸 못 봄. 추정 오차 여유는 피해 ÷ 1.15 */
+const hgImm = g => (g.k||'stack')==='stack' && (g.on||'start')==='start' && !(+g.from>1) && hgF(g, hgS0(g))<=1e-9; /* 개시 무적 스택 */
 function killTurnsM(ev, boss, hm){
+  /* 개시 무적 스택(hitgim stack: s0에서 피해 0 — 토비노오사마 祇の祝・厄, 2026-10-26): 무적 중엔 피해가 없어 실전 N턴 계획은 의미가 없고, AF를 무적 중에 쓰면(그 턴 음 공격 행동 10회 이상 → 축적 2 소비) 무적이 빨리 끝나는 대신 AF가 늦어짐.
+     → 실전 기록 없이 게이지로 따라가며 '무적 중 AF를 k번(0·1·2) 쓰는' 계획을 각각 돌려 가장 빠른 처치 턴 */
+  const HG0 = hgList(boss), IMM0 = ev.hitN && Array.isArray(ev.hitN.m) && ev.hitN.m.length ? HG0.filter(hgImm) : [];
+  if(!IMM0.length) return killTurnsM0(ev, boss, hm, null);
+  let best = null; for(const ip of [0, 1, 2]){ const r = killTurnsM0(ev, boss, hm, ip); if(r && (!best || r.t < best.t || (r.t===best.t && r.sure && !best.sure))) best = r; }
+  return best; }
+function killTurnsM0(ev, boss, hm, ip){
   const seq = Array.isArray(hm.bar_seq) && hm.bar_seq.length && hm.bar_seq.every(v=>+v>0) ? hm.bar_seq.map(v=>+v*1e8) : null; // 줄마다 크기가 다름(스토퍼마다 전회복: 25%·50%·75%·100%)
   const pf = partsEff(ev, boss), mg = 1.15, barsF = seq ? seq.length : Math.max(1, +hm.bars||1), bars = Math.ceil(barsF - 1e-9), bar = seq ? seq[seq.length-1] : +hm.bar>0 ? +hm.bar*1e8 : (+boss.hp>0 ? +boss.hp*1e8/barsF : 0);
   if(!(bar>0)) return null;
   const barK = k => seq ? seq[Math.min(seq.length-1, k)] : bar;
-  const rec = (ev.bsim && ev.bsim.turns) || [], N = rec.length, per = Math.max(+ev.afOffG>=50 ? 1 : 2, Math.round(+ev.afTurns||4)), afOn = !ev.afOff; /* AF 턴 뒤 게이지가 50% 이상이면 매 턴 AF도(2026-10-19 점검) */
+  const rec = (ev.bsim && ev.bsim.turns) || [], N = rec.length, rN = ip!=null ? 0 : N, /* ip: 개시 무적 계획(무적 중 AF 횟수) — 실전 기록을 안 씀 */ per = Math.max(+ev.afOffG>=50 ? 1 : 2, Math.round(+ev.afTurns||4)), afOn = !ev.afOff; /* AF 턴 뒤 게이지가 50% 이상이면 매 턴 AF도(2026-10-19 점검) */
   const exX = +ev.exAfX>1 ? +ev.exAfX : 1; /* EX必殺技 피해(AF 턴, evalTeamX exDmg) */
   const nD = Math.max(0, (+ev.sustainNoAF||0) + (+ev.sustainSB||0)), /* 평상 턴 한 번(SB는 주기 평균) */ aD = afOn ? exX*Math.max(0, ev.afDrain ? +ev.afDrain.af||0 : ev.afLate ? +ev.afLate.v||0 : +ev.af||0) : 0;
   const lastAF = (()=>{ let k = 0; rec.forEach((r,i)=>{ if(r.af) k = i+1; }); return k; })();
@@ -4178,7 +4213,8 @@ function killTurnsM(ev, boss, hm){
   const ZL = Array.isArray(ev.zLate) && ev.zLate.length ? ev.zLate : null;
   const mdl = p => p ? {per: Math.max(+p.afOffG>=50 ? 1 : 2, Math.round(+p.afTurns||4)), nD: Math.max(0, (+p.sustainNoAF||0) + (+p.sustainSB||0)), aD: p.afOff ? 0 : exX*Math.max(0, p.afDrain ? +p.afDrain.af||0 : p.afLate ? +p.afLate.v||0 : +p.af||0), dr: p.afDrain || null}
     : {per, nD, aD, dr: ev.afDrain || null};
-  const M0 = mdl(null), MZ = ZL ? ZL.map(mdl) : null;
+  const mdx = (m, p) => ({...m, sbO: p.sbOne && +p.sbOne.v>0 ? p.sbOne : null, nD0: Math.max(0, +p.sustainNoAF||0), gR: Array.isArray(p.afGR) ? p.afGR : null, off: Math.min(100, +p.afOffG||0), gI1: Math.max(1, (100 - Math.min(100, +p.afOffG||0))/Math.max(1, (+p.afTurns||4) - 1))});
+  const M0 = mdx(mdl(null), ev), MZ = ZL ? ZL.map(p=> mdx(mdl(p), p)) : null;
   let prog = 0; const trT = ZL ? ZL.map(()=>0) : null; // 깬 줄 수 + 지금 줄 진행 비율, HP 기준 단계가 처음 닿은 턴(2턴 뒤 일반 존 단계용)
   const phaseAt = t => { if(!ZL) return -1; let k = -1;
     ZL.forEach((p,j)=>{ if(p.from){ if(t>=p.from) k = j; return; } if(prog >= (p.after||0) + (p.hp!=null ? 1 - p.hp/100 : 0) - 1e-9){ if(!trT[j]) trT[j] = t; if(t >= trT[j] + (p.delay||0)) k = j; } });
@@ -4195,7 +4231,7 @@ function killTurnsM(ev, boss, hm){
   let rem = seq ? seq[0] : bar*hpF; const reset = !!hm.reset, step = +hm.step>0 ? +hm.step : 0, carry = hm.carry===true, lcN = hm.carry_n!=null ? !!hm.carry_n : ev.lcN!=null ? !!ev.lcN : !!DEFAULT_SETTINGS.lifeCarryN, /* lcN: 평상 턴은 목숨을 깎은 뒤 다음 공격이 부활한 목숨에(부활 = 끼어드는 보스 행동, AF 중엔 못 함 — 2026-10-19 사용자 확인) */ kpt = Math.max(1, Math.round(+hm.kpt||1)); /* kpt: 한 턴에 깰 수 있는 줄 수(결실 애니 박쥐 2마리 — 전체 공격으로 둘 다, 2026-10-19) */
   const win = []; for(const q of cuts) if(q.k==='start' || q.k==='always') win.push({a:1, b:q.turns, x:q.x, st: q.k==='start'}); // 켜진 경감 구간 [a, b]턴
   const bsCut = !!(ev.bsim && ev.bsim.cutS); // 실전 N턴 기록에 개시 경감이 이미 들어감(battleSim cutW)
-  const cutAt = t => win.reduce((m,w)=> t>=w.a && t<=w.b && !(w.st && bsCut && t<=N) ? Math.min(m, w.x) : m, 1);
+  const cutAt = t => win.reduce((m,w)=> t>=w.a && t<=w.b && !(w.st && bsCut && t<=rN) ? Math.min(m, w.x) : m, 1);
   const cutEnd = t => win.reduce((m,w)=> t>=w.a && t<=w.b && w.x<1 ? Math.max(m, w.b) : m, 0); // 지금 경감이 끝나는 턴
   const stopOn = k => stops.length && (hm.stopper_all || k===bars-1);
   const segRem = () => { if(stopOn(done)){ const sv = stops.map(v=>v/100*bar).find(v=>v < rem - 1e-6); if(sv!=null) return rem - sv; } return rem; }; // 다음 스토퍼·줄 끝까지 남은 HP
@@ -4206,37 +4242,50 @@ function killTurnsM(ev, boss, hm){
   const actN = ev.actN || {n: +ev.atkN||4, af: 15}, px0 = () => PR ? (+PR.rel[plv-1]>0 ? +PR.rel[plv-1] : 1) : 1;
   /* 타수로 벗기는 기믹(hgList — hp_model.hitgim + 횟수 배리어 dmg_cut hits, 2026-10-19): 턴마다 그 턴 타수(AF 턴 = AF 행동 × 타수, 평상 턴 = 평상 타수)로 스택을 깎으며 피해 × 평균 배율.
      실전 N턴 기록에 개시 기믹이 이미 들어갔으면(bsim.hgS) 그 턴은 나머지(부활 뒤 기믹)만 곱하고 개시 기믹 스택은 기록대로 */
-  const HG = hgList(boss).map(g=> hgTeam(g, ev.pierceS, ev.resR)), HM = ev.hitN && Array.isArray(ev.hitN.m) && ev.hitN.m.length ? ev.hitN.m : null, HGon = HG.length>0 && !!HM, bsHG = !!(ev.bsim && ev.bsim.hgS);
+  const HG0 = hgList(boss), HG = HG0.map(g=> hgTeam(g, ev.pierceS, ev.resR)), IMM = ip!=null ? HG0.map((g,j)=> hgImm(g) ? j : -1).filter(j=>j>=0) : [], HM = ev.hitN && Array.isArray(ev.hitN.m) && ev.hitN.m.length ? ev.hitN.m : null, HGon = HG.length>0 && !!HM, bsHG = !!(ev.bsim && ev.bsim.hgS);
   let hst = HG.map(g => (g.on||'start')==='start' && !(+g.from>1) ? hgS0(g) : null); const hAt = HG.map(g => (g.on||'start')==='start' ? Math.max(1, +g.from||1) : 0), hgRv2 = HG.some(g=>g.cut && g.on==='revive2');
   const hSeg = (k, d, n) => { const M = HM, aN = n || (ev.hitN && ev.hitN.aN) || [];
     return k==='a' ? {k, d, w: M.map((q,i)=>(+aN[i]||0)*q.h), u: M.map((q,i)=>(+aN[i]||0)*q.x), p: M.map(q=>q.pa), e: M.map(q=>q.en)}
       : k==='s' ? {k, d, w: M.map(q=>q.hS), u: M.map(q=>q.xS), p: M.map(q=>q.ps), e: M.map(q=>q.es)}
-      : {k, d, w: M.map(q=>q.hN), u: M.map(q=>q.aN), p: M.map(q=>q.pn), e: M.map(q=>q.en), ch: (ev.hitN && ev.hitN.ch) || 0}; };
+      : {k, d, w: M.map(q=>q.hN), u: M.map(q=>q.aN), p: M.map(q=>q.pn), e: M.map(q=>q.en), ch: (ev.hitN && ev.hitN.ch) || 0, chEl: (ev.hitN && ev.hitN.chEl) || null}; };
   let hgD0 = 0, hgD1 = 0;
+  /* 개시 무적 계획(ip): AF 게이지 — 시작 게이지(실전 1턴째 시작), 평상 턴마다 (100 − AF 뒤 게이지) ÷ (AF 주기 − 1), 무적 중엔 50%부터 AF(피해 없이 행동 수만), 그 뒤엔 100%에서 */
+  /* disc(2026-10-26): 한 턴에 다 깎아야 하는 줄(reset_at)이 있으면 SB를 평균(지속 딜 SB 몫)이 아니라 게이지가 찬 턴에 한 번에 — 평상 턴 150억 + SB 1,800억처럼 갈리는 덱이 평균 1,000억 아래로 보여 게이지를 못 깨던 것. 무적 중엔 SB를 아낌 */
+  const disc = ip!=null && !!RA && !!M0.sbO; let sG = disc ? Math.max(0, Math.min(100, +((rec[0]||{}).s)||0)) : 0;
+  let gI = Math.max(0, +((rec[0]||{}).g)||0), immAF = 0; const gI1 = Math.max(1, (100 - Math.min(100, +ev.afOffG||0))/Math.max(1, (+ev.afTurns||4) - 1));
   let lastT = lastAF || (N && +rec[N-1].g>=30 ? N+1-per : Math.min(N, 2)), lastK = -1; const log = []; // 실전 N턴에 AF를 안 썼고 게이지가 차 있으면 바로 다음 턴부터
   while(t < 99 && done < bars){ t++; if(RA && RA.has(done)) rem = barK(done); prog = done + Math.max(0, 1 - rem/barK(Math.floor(done)));
     const k = phaseAt(t), M = k>=0 ? MZ[k] : M0, cx = cutAt(t), L = {t, af:false, sb:null, ev:[]};
     if(k!==lastK && k>=0){ L.ev.push({k:'phase', z: ZL[k].zone || null, aff: !!ZL[k].aff, sb: !!ZL[k].sbSw}); } lastK = k;
     let d0;
-    if(t<=N && !(k>=0 && !ZL[k].from)){ const r = rec[t-1]; d0 = Math.max(0, +r.d||0); L.af = !!r.af; L.sb = r.sb || null; if(r.af) L.g = r.af; }
+    if(t<=rN && !(k>=0 && !ZL[k].from)){ const r = rec[t-1]; d0 = Math.max(0, +r.d||0); L.af = !!r.af; L.sb = r.sb || null; if(r.af) L.g = r.af; }
     else if(M.dr){ const f0 = +M.dr.first||0, p0 = +M.dr.per||M.per; L.af = M.aD>0 && t>=f0 && (t-f0)%p0===0; d0 = L.af ? M.aD : M.nD; }
-    else { const ready = M.aD>0 && t - lastT >= M.per, ce = cx<1 ? cutEnd(t) : 0; // 피해 경감이 3턴 안에 끝나면 그때까지 AF를 아낌
+    else { const immNow = ip!=null && IMM.some(j=> hst[j]!=null && hgF(HG[j], hst[j])<=1e-9);
+      const sbO = disc ? M.sbO || M0.sbO : null, nD0 = disc ? M.nD0 : 0;
+      /* 덜 찬 AF(ip, 게이지 50% 이상): 평상 턴(+SB)으로 지금 구간을 못 끊고 그 AF(게이지 비율 gR)로 끊을 수 있으면 — 한 턴에 다 깎아야 하는 줄을 AF 주기마다가 아니라 게이지 50%마다 */
+      const gRat = g => g >= 100 - 1e-6 ? 1 : M.gR ? M.gR[Math.max(0, Math.min(M.gR.length-1, Math.floor((g-50)/10 + 1e-9)))] : 0;
+      const ready = ip!=null ? M.aD>0 && (immNow ? gI >= 50 - 1e-6 && immAF < ip : gI >= 100 - 1e-6) : M.aD>0 && t - lastT >= M.per, ce = cx<1 ? cutEnd(t) : 0; // 피해 경감이 3턴 안에 끝나면 그때까지 AF를 아낌
       const pHold = PR && plv > 2 && Math.max(+actN.n||0, +actN.cap||0) >= (+PR.down||15); /* 내성 단계를 평상 턴으로 내릴 수 있으면 Lv2 이하에서 AF(알테마 '레벨 3이 되면 AF로') */
-      L.af = ready && (reset || M.nD*pf/mg*cx*px0() < segRem() - 1e-6) && !(ce && ce - t < 3) && !pHold; if(ready && !L.af) L.hold = true; d0 = L.af ? M.aD : M.nD; }
+      const sbNow = disc && sG >= 100 - 1e-6 && !immNow && !(RA.has(done) && (nD0 + +sbO.v)*pf/mg*cx*px0() < rem - 1e-6), nX = disc ? nD0 + (sbNow ? +sbO.v : 0) : M.nD; /* 한 턴에 다 깎아야 하는 줄을 못 깎는 SB는 아껴 AF 안에서 */
+      const kX = cx*px0()*pf/mg, gP = gRat(gI), aP = M.aD*gP + (disc && sG + (+sbO.gA||0)*gP >= 100 - 1e-6 ? +sbO.v*(+sbO.fin||1) : 0), partial = ip!=null && !immNow && !ready && M.aD>0 && gI >= 50 - 1e-6 && gP>0 && nX*kX < segRem() - 1e-6 && aP*kX >= segRem() - 1e-6 && !(ce && ce - t < 3);
+      L.af = partial || (ready && (immNow || reset || nX*kX < segRem() - 1e-6) && !(ce && ce - t < 3) && !pHold); if(ready && !L.af) L.hold = true; d0 = L.af ? M.aD*(partial ? gP : 1) : nX; if(partial) L.g = Math.round(gI);
+      if(disc){ if(L.af){ sG += (+sbO.gA||0)*(partial ? gP : 1); if(sG >= 100 - 1e-6 && !immNow){ d0 += +sbO.v*(+sbO.fin||1); sG = 0; L.sb = 'af'; } else sG = Math.min(100, sG); }
+        else { if(sbNow){ sG = 0; L.sb = 'turn'; } sG = Math.min(100, sG + (+sbO.gN||0)); } }
+      if(ip!=null){ if(L.af){ if(immNow){ immAF++; L.imm = true; } gI = M.off; } else gI = Math.min(100, gI + M.gI1); } }
     if(L.af) lastT = t;
     let hx = 1;
-    if(HGon){ hgStart(HG, hst, hAt, t); const r = t<=N && !(k>=0 && !ZL[k].from) ? rec[t-1] : null, segs = [];
+    if(HGon){ hgStart(HG, hst, hAt, t); const r = t<=rN && !(k>=0 && !ZL[k].from) ? rec[t-1] : null, segs = [];
       if(r){ const aD0 = r.af ? Math.max(0, +r.afD||0) : 0, sD0 = Math.max(0, +r.sbD||0), nD0 = Math.max(0, +r.nd||0), oth = Math.max(0, d0 - aD0 - sD0 - nD0);
         segs.push(r.af ? hSeg('a', aD0 + oth, r.afN) : hSeg('n', nD0 + oth)); if(sD0>0) segs.push(hSeg('s', sD0)); }
       else segs.push(L.af ? hSeg('a', d0) : hSeg('n', d0));
       const only = r && bsHG ? (g => (g.on||'start')!=='start') : null, R = hgTurn(HG, hst, segs, HM, only); hx = d0>0 ? R.d/d0 : 1; hst = R.s;
       if(only && Array.isArray(r.hgS)) HG.forEach((g,j)=>{ if((g.on||'start')==='start') hst[j] = r.hgS[j]; });
       if(hx < 0.995) L.hg = +hx.toFixed(2); }
-    const px = PR && !(t<=N && ev.bsim && ev.bsim.protS) ? (+PR.rel[plv-1]>0 ? +PR.rel[plv-1] : 1) : 1; if(PR) L.plv = plv; // 실전 N턴 기록에 이미 들어갔으면 그 턴은 곱하지 않음(단계는 그대로 따라감)
-    let d = d0*pf/mg*cx*px*hx; L.d = d0; if(cx<1) L.cut = cx; if(HGon && done<bars){ const rb = t<=N && !(k>=0 && !ZL[k].from) && bsHG && rec[t-1] && +rec[t-1].hg>0 ? +rec[t-1].hg : 1; hgD0 += d0*pf/mg*cx*px/rb; hgD1 += d; } /* 기믹 없을 때 대비 비율(실전 N턴 기록은 개시 기믹이 이미 곱해져 있어 되돌림) */
+    const px = PR && !(t<=rN && ev.bsim && ev.bsim.protS) ? (+PR.rel[plv-1]>0 ? +PR.rel[plv-1] : 1) : 1; if(PR) L.plv = plv; // 실전 N턴 기록에 이미 들어갔으면 그 턴은 곱하지 않음(단계는 그대로 따라감)
+    let d = d0*pf/mg*cx*px*hx; L.d = d0; if(cx<1) L.cut = cx; if(HGon && done<bars){ const rb = t<=rN && !(k>=0 && !ZL[k].from) && bsHG && rec[t-1] && +rec[t-1].hg>0 ? +rec[t-1].hg : 1; hgD0 += d0*pf/mg*cx*px/rb; hgD1 += d; } /* 기믹 없을 때 대비 비율(실전 N턴 기록은 개시 기믹이 이미 곱해져 있어 되돌림) */
     if(reset){ let p = Math.min(1, d/bar); if(step>0) p = Math.floor(p/step + 1e-9)*step; done += p; L.pr = +done.toFixed(2); if(log.length<60) log.push(L); continue; } // 턴 종료 전회복: 그 턴에 깎은 만큼만(갑개룡 초생명력)
     let kTurn = 0, stopped = false; /* AF 턴: AF 피해는 목숨 하나까지(AF 중 부활 못 함), AF가 끝난 뒤 요격·체인·턴 종료 공격(dPost)은 부활한 목숨에 — 사용자 확인 2026-10-19 */
-    const rT = t<=N && !(k>=0 && !ZL[k].from) ? rec[t-1] : null, dPost = L.af && lcN && rT && d0>0 ? d*Math.min(1, ((+rT.ctrAF||0) + (+rT.teAF||0) + (+rT.teN||0))/d0) : 0; d -= dPost; let inPost = false;
+    const rT = t<=rN && !(k>=0 && !ZL[k].from) ? rec[t-1] : null, dPost = L.af && lcN && rT && d0>0 ? d*Math.min(1, ((+rT.ctrAF||0) + (+rT.teAF||0) + (+rT.teN||0))/d0) : 0; d -= dPost; let inPost = false;
     /* 목숨 넘김(lcN) 평상 턴: 피해를 공격 nA번(평상 턴 공격 행동 수)으로 나눠, 목숨을 끝낸 공격의 넘친 몫은 버림(넘친 피해는 안 넘어감) — 한 턴에 깰 목숨도 nA개까지(2026-10-19 점검) */
     const nA = Math.max(kpt, Math.round(+actN.n||4)); let lcC = lcN && !carry && !L.af, ch = lcC ? d/nA : 0;
     for(;;){
@@ -4257,7 +4306,7 @@ function killTurnsM(ev, boss, hm){
     if(PR){ const na = L.af ? actN.af : Math.max(+actN.n||0, +actN.cap||0); /* 평상 턴은 횟수를 노려 전원이 주력(실행 수 많은 공격)을 쓴다고 봄 */ if(na >= (+PR.down||15)) plv = Math.max(1, plv-1); else if(na <= (+PR.up||4)) plv = Math.min(prN, plv+1); L.acts = na; }
     L.hp = done>=bars ? 0 : Math.round(rem/barK(Math.floor(done))*100); L.n = done; if(log.length<60) log.push(L); }
   const kmin = Math.max(+hm.kt_min||0, +boss.kt_min||0), tt = Math.min(99, Math.max(kmin, t + (+boss.kt_extra||0)));
-  return {t: tt, sure: done>=bars && t<99, bars: barsF, done: Math.min(barsF, +done.toFixed(2)), log, hg: HGon && hgD0>0 && hgD1/hgD0 < 0.99 ? +(hgD1/hgD0).toFixed(2) : null};
+  return {t: tt, sure: done>=bars && t<99, bars: barsF, done: Math.min(barsF, +done.toFixed(2)), log, hg: HGon && hgD0>0 && hgD1/hgD0 < 0.99 ? +(hgD1/hgD0).toFixed(2) : null, ip: ip!=null ? ip : null};
 }
 const S_afOK = ev => !(ev && ev.afOff);
 /* 보스 '턴 단축'(2026-10-18, 추천 덱 대조: 결실 라디카에서 1턴에 잡는 불 덱보다 2턴 걸리는 덱이 1위): 예상 처치 턴(HP 아는 보스만)을 점수에 — × 처치 턴^−0.6(1턴 1, 2턴 0.66, 4턴 0.44). 같은 턴이면 원래 점수 순 */
