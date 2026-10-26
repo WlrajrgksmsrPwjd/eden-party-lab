@@ -35,7 +35,7 @@ const BOSS_CAT_KR = Object.fromEntries(BOSS_CATS);
 /* 보스 대분류·소분류(2026-10-18 사용자 '보스가 많아지니 대분류·소분류'): 대분류 = 서가·외사(외전 포함)·회생·현현·결실·어나더 던전…, 소분류 = 외사 탄·회생 시련·진현현·던전 묶음 */
 const BOSS_TOP = [['shoka','성영의 서가'],['gaishi','외사·외전'],['kaisei','회생(과거와의 결투)'],['kengen','현현'],['kesshitsu','결실 현현'],['ad','어나더 던전'],['rush','보스러시'],['etc','기타']];
 const bossTop = b => { const k = bossCat(b); return k==='gaishi_h' ? 'gaishi' : k; };
-const GAISHI_SUB = {1:'외사 1탄 「환령의 검과 기서의 등불」', 2:'외사 2탄 「환령의 검과 암명의 잔광」', 3:'외사 3탄 「환령의 검과 퇴색의 주먹」'};
+const GAISHI_SUB = {1:'외사 1탄 「환령의 검과 기서의 등불」', 2:'외사 2탄 「환령의 검과 암명의 잔광」', 3:'외사 3탄 「환령의 검과 퇴색의 주먹」', 4:'외사 4탄 「환령의 검과 신은(神隠し)의 저택」'}; /* 4탄 한국어 제목은 미확인(2026-10-26) */
 const KAISEI_SUB = (()=>{ const m = {}; return b => { const key = String(b.id).split('_')[1] || ''; const t = String(b.name_kr||'').match(/—\s*(.+?)\s+EX\d/); if(t) m[key] = t[1]; return m[key] || t && t[1] || '기타 시련'; }; })();
 const bossSub = b => { const c = String(b.content||''), k = bossTop(b);
   if(k==='gaishi'){ const n = (c.match(/第(\d)弾/)||[])[1]; if(n) return GAISHI_SUB[n] || `외사 ${n}탄`; const g = (c.match(/外伝（([^）]+)）/)||[])[1]; return g ? `외전 「${g}」` : '기타'; }
@@ -1715,7 +1715,7 @@ const hgT = r => r && r.hg!=null && +r.hg<0.995 ? ` <span class="hint">(타수 �
 function killPlanTxt(kt, N){
   const out = [], L = kt.log; let run = null;
   const flush = () => { if(run){ out.push(`${run.a===run.b ? run.a+'턴' : run.a+'~'+run.b+'턴'}: 평상 공격${run.hold?' <span class="hint">(AF는 모아 둠 — 평상 턴으로 이 구간을 끊을 수 있음)</span>':''}`); run = null; } };
-  const evTxt = e => e.k==='stop' ? `HP ${e.hp}% 스토퍼` : e.k==='kill' ? (e.last ? '<b>처치</b>' : `목숨 ${e.n} 깸 → 부활`) : e.k==='phase' ? `${e.sb ? 'SB로 존 바뀜' : '보스 존·상성 바뀜'}${e.z?' → '+esc(e.z):''}` : '';
+  const evTxt = e => e.k==='stop' ? `HP ${e.hp}% 스토퍼` : e.k==='kill' ? (e.last ? '<b>처치</b>' : e.g ? '한 턴에 HP를 다 깎음(게이지 파괴·축적 −1)' : `목숨 ${e.n} 깸 → 부활`) : e.k==='phase' ? `${e.sb ? 'SB로 존 바뀜' : '보스 존·상성 바뀜'}${e.z?' → '+esc(e.z):''}` : '';
   for(const l of L){ const evs = l.ev.filter(e=>e.k!=='phase'), ph = l.ev.find(e=>e.k==='phase');
     if(ph){ flush(); out.push(`<span class="hint">${l.t}턴부터 ${evTxt(ph)}</span>`); }
     if(!l.af && !evs.length && !l.sb && !(+l.hg<0.9)){ if(run && run.b===l.t-1) { run.b = l.t; run.hold = run.hold || !!l.hold; } else { flush(); run = {a:l.t, b:l.t, hold: !!l.hold}; } continue; }
