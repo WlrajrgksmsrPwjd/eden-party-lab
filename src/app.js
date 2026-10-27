@@ -1718,10 +1718,11 @@ function killPlanTxt(kt, N){
   const evTxt = e => e.k==='stop' ? `HP ${e.hp}% 스토퍼` : e.k==='kill' ? (e.last ? '<b>처치</b>' : e.g ? '한 턴에 HP를 다 깎음(게이지 파괴·축적 −1)' : `목숨 ${e.n} 깸 → 부활`) : e.k==='phase' ? `${e.sb ? 'SB로 존 바뀜' : '보스 존·상성 바뀜'}${e.z?' → '+esc(e.z):''}` : '';
   for(const l of L){ const evs = l.ev.filter(e=>e.k!=='phase'), ph = l.ev.find(e=>e.k==='phase');
     if(ph){ flush(); out.push(`<span class="hint">${l.t}턴부터 ${evTxt(ph)}</span>`); }
+    if(l.evade){ flush(); out.push(`<b>${l.t}턴</b>: 보스 회피 턴 <span class="hint">(공격이 안 통하고 AF·SB 게이지도 안 참 — 버프·준비${+l.gEx>0 ? ` · 턴 끝 EX로 AF 게이지 +${l.gEx}%` : ''})</span>`); continue; }
     if(!l.af && !evs.length && !l.sb && !(+l.hg<0.9)){ if(run && run.b===l.t-1) { run.b = l.t; run.hold = run.hold || !!l.hold; } else { flush(); run = {a:l.t, b:l.t, hold: !!l.hold}; } continue; }
     flush();
     const what = l.af ? `<b class="afk">AF</b>${l.sb==='af'?' + SB':''}${l.imm ? ' <span class="hint">(무적 중 — 행동 수로 축적을 빨리 깎음)</span>' : kt.ip!=null && +l.g>0 && +l.g<100 ? ` <span class="hint">(게이지 ${l.g}%에서)</span>` : ''}` : l.sb==='turn' ? 'SB + 평상 공격' : '평상 공격';
-    out.push(`<b>${l.t}턴</b>: ${what}${l.t<=N && kt.ip==null?' <span class="hint">(위 계획)</span>':''}${evs.length ? ' → '+evs.map(evTxt).join(', ') : ''}${l.cut ? ` <span class="hint">(보스 피해 경감 ×${l.cut})</span>` : ''}${hgT(l)}`);
+    out.push(`<b>${l.t}턴</b>: ${what}${l.t<=N && kt.ip==null?' <span class="hint">(위 계획)</span>':''}${evs.length ? ' → '+evs.map(evTxt).join(', ') : ''}${l.drain ? ' <span class="hint">(부활 때 AF 게이지 0)</span>' : ''}${l.ex && !(+l.gEx>0) ? ' <span class="hint">(AF 끝 EX → 다음 턴 끝 AF 게이지)</span>' : +l.gEx>0 ? ` <span class="hint">(EX로 AF 게이지 +${l.gEx}%)</span>` : ''}${l.cut ? ` <span class="hint">(보스 피해 경감 ×${l.cut})</span>` : ''}${hgT(l)}`);
     if(out.length>=14){ out.push('<span class="hint">…</span>'); run = null; break; } }
   flush();
   if(!kt.sure) out.push('<span class="warn">99턴 안에 못 깰 수 있음</span>');
@@ -2697,6 +2698,7 @@ function effBoss(b, sel){
   if(b && b.hp_model && b.hp_model.protect) bzS = Object.assign({}, bzS, {protect: b.hp_model.protect}); // 공격 행동 수로 내려가는 보스 내성 단계(마크바브) → 실전 N턴
   { const cw = ((b && b.hp_model && b.hp_model.dmg_cut)||[]).filter(q=>q && /^start/.test(String(q.when||'start')) && q.x!=null && +q.x>=0 && +q.x<1 && +q.turns>0 && !(+q.hits>0)).map(q=>({t:+q.turns, x:+q.x, b: /배리어|バリア/.test(String(q.when||''))})); if(cw.length) bzS = Object.assign({}, bzS, {cutWin: cw}); } /* b: 배리어 경감 — 엔진이 팀 배리어 관통 몫만큼 덜 깎음 */ // 개시 피해 경감 구간 → 실전 N턴 계획이 그 뒤에 AF (횟수 배리어는 아래 타수 기믹)
   if(shokaChal(b)) bzS = Object.assign({}, bzS, {afScoreCap: 999999999}, b.score_bonus && b.score_bonus.pers ? {scoreBonus: {pers: b.score_bonus.pers, af: b.score_bonus.af, comp: b.score_bonus.comp}} : null); // 서가 챌린지 점수: AF 중 준 피해는 한 번에 999,999,999까지만(알테마 星詠みの書架) — 스텔라 난이도 id는 처치형이라 제외
+  if(b && b.af_start_drain) bzS = Object.assign({}, bzS, {afStart: 0}); // 개시에 AF 게이지 소진(토비노오사마 'アナザーフォースゲージを枯渇') — 캐릭터 개전 AF(뮬루스(ES) 100% 등)는 그 뒤라 그대로
   { const hg = b && E.hgList ? E.hgList(b) : []; if(hg.length) bzS = Object.assign({}, bzS, {hitGim: hg}); } // 타수로 벗기는 기믹(스택·횟수 배리어·연격 경감, 2026-10-19) → 실전 N턴·처치 턴
   if(!b || !(b.modifiers||[]).length) return {boss:b, S:bzS, pledge:null};
   const ms = modsOn(b, sel); if(!ms.length) return {boss:b, S:bzS, pledge:null};
