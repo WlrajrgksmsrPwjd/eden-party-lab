@@ -3496,6 +3496,12 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   out.afCastN = sim && sim.afCast ? +sim.afCast.reduce((x,y)=>x+y, 0).toFixed(3) : 0; // 평상 턴에 그 버프 스킬을 거는 턴 비율(멤버 합)
   out.afMinD = afPlC ? Math.min(...afPlC.flatMap(L=>(L||[]).map(e=>+e.d||3)), 99) : 99; // AF 안 버프 중 가장 짧은 지속(턴)
   out.afBufSk = afBufC && afPlC ? afPlC.map(L=>(L||[]).map(e=>e.s)) : null; out.afBufW = afBufC ? +afBW.toFixed(2) : null; // AF 안 버프 운용: 캐릭터별 스킬, 다시 거는 AF 비율
+  /* 버스트 평상 턴(2026-10-27, 유튜브 床舐 토비노오사마 8턴: 회피 턴에 버프를 걸어 두고 다음 턴 SB + 전원 공격으로 3,000억+): 전원이 주력을 쓰고 버프가 다 켜진 평상 턴 값 — 처치 턴 계산이 회피 턴 다음 턴에 씀(타수 기믹 보스만) */
+  if(Array.isArray(S.hitGim) && S.hitGim.length && res.normal && res.normal.zone && !(ctx && ctx.stFast)){
+    const svN = res.normal, svS = sim ? {act: sim.act, alt: sim.alt, na: sim.na} : null, svW = wN, svU = uptLow;
+    try{ if(sim) Object.assign(sim, {act: team.map(()=>1), alt: team.map(()=>0), na: team.map(()=>0)}); uptLow = false; wN = team.map(()=>1);
+      runSit('normal', res.normal.zone); out.nBurst = res.normal.total; }
+    finally { res.normal = svN; if(svS) Object.assign(sim, svS); wN = svW; uptLow = svU; } }
   out.hitN = (()=>{ const cs = res.normal.cores || [], sc = (res.sb && res.sb.cores) || [], aN = (R3.afA && R3.afA.n) || [], sm = a => (a||[]).reduce((x,y)=>x+(+y||0), 0);
     const m = team.map((c,i)=>{ const co = cs[i] || {}, so = sc[i] || {}, h = Math.max(1, +co.totHits||1) + (+co.linkHits||0), x = Math.max(1, +co.execs||1), sbU = !!(c.stellar && progs[i] && progs[i].sbOK);
       const hN = simUse ? (sim.act[i]||0)*h + (sim.alt[i]||0) + (sim.na[i]||0) : h, aN0 = simUse ? (sim.act[i]||0)*x + (sim.alt[i]||0) + (sim.na[i]||0) : x;
@@ -4260,7 +4266,7 @@ function killTurnsM0(ev, boss, hm, ip){
   let gI = Math.max(0, +((rec[0]||{}).g)||0), immAF = 0; const gI1 = Math.max(1, (100 - Math.min(100, +ev.afOffG||0))/Math.max(1, (+ev.afTurns||4) - 1));
   /* 회피 턴(hm.evade_alt {from, until}, 2026-10-27 토비노오사마: 1번째 부활 뒤 '1턴마다 공격이 안 통하는(전부 회피) 턴' — 그 턴은 피해 0·AF·SB 게이지도 안 참, 유튜브 床舐 8턴 5·7턴째)·
      부활 때 AF 게이지 소진(hm.af_drain_at: 그 줄이 시작될 때 — 'アナザーフォースゲージを枯渇'). 개시 무적 계획(ip)에서만(게이지를 따라감) */
-  const EVA = ip!=null && hm.evade_alt && +hm.evade_alt.from>=0 ? hm.evade_alt : null, ADR = ip!=null && Array.isArray(hm.af_drain_at) ? new Set(hm.af_drain_at.map(Number)) : null; let tEv = 0;
+  const EVA = ip!=null && hm.evade_alt && +hm.evade_alt.from>=0 ? hm.evade_alt : null, ADR = ip!=null && Array.isArray(hm.af_drain_at) ? new Set(hm.af_drain_at.map(Number)) : null; let tEv = 0, prevEv = false; const nBu = +ev.nBurst>0 ? +ev.nBurst : 0;
   /* EX必殺技 AF 게이지(ip): 100%에서 켠 AF 끝에 EX가 나가면 다음 턴 끝에 afg(뮬루스(ES) 50·30·10 — 회피 턴에도), 평상 턴 충전(gI1)은 EX 평균 없이 */
   const exQ = ip!=null ? (ev.exInfo||[]).find(x=>x && +x.afg>0) || null : null; let exUse = 0, exPend = null;
   const exTick = () => { if(exPend && exPend.t === t){ gI = Math.min(100, gI + exPend.v); L0x.gEx = exPend.v; exPend = null; } }; let L0x = {};
@@ -4269,17 +4275,17 @@ function killTurnsM0(ev, boss, hm, ip){
     const k = phaseAt(t), M = k>=0 ? MZ[k] : M0, cx = cutAt(t), L = {t, af:false, sb:null, ev:[]};
     if(k!==lastK && k>=0){ L.ev.push({k:'phase', z: ZL[k].zone || null, aff: !!ZL[k].aff, sb: !!ZL[k].sbSw}); } lastK = k;
     L0x = L;
-    if(EVA && tEv>0 && done >= +EVA.from && done < (+EVA.until||bars) && (t - tEv) % 2 === 1){ L.evade = true; L.d = 0; L.hp = Math.round(rem/barK(Math.floor(done))*100); L.n = done; exTick(); if(log.length<60) log.push(L); continue; }
+    if(EVA && tEv>0 && done >= +EVA.from && done < (+EVA.until||bars) && (t - tEv) % 2 === 1){ prevEv = true; L.evade = true; L.d = 0; L.hp = Math.round(rem/barK(Math.floor(done))*100); L.n = done; exTick(); if(log.length<60) log.push(L); continue; }
     let d0;
     if(t<=rN && !(k>=0 && !ZL[k].from)){ const r = rec[t-1]; d0 = Math.max(0, +r.d||0); L.af = !!r.af; L.sb = r.sb || null; if(r.af) L.g = r.af; }
     else if(M.dr){ const f0 = +M.dr.first||0, p0 = +M.dr.per||M.per; L.af = M.aD>0 && t>=f0 && (t-f0)%p0===0; d0 = L.af ? M.aD : M.nD; }
     else { const immNow = ip!=null && IMM.some(j=> hst[j]!=null && hgF(HG[j], hst[j])<=1e-9);
-      const sbO = disc ? M.sbO || M0.sbO : null, nD0 = disc ? M.nD0 : 0;
+      const sbO = disc ? M.sbO || M0.sbO : null, burst = prevEv && nBu > (disc ? M.nD0 : M.nD), nD0 = disc ? (burst ? nBu : M.nD0) : 0; prevEv = false; if(burst) L.burst = true; /* 회피 턴에 버프를 걸어 둔 다음 턴: 전원 공격(버스트 평상 턴) */
       /* 덜 찬 AF(ip, 게이지 50% 이상): 평상 턴(+SB)으로 지금 구간을 못 끊고 그 AF(게이지 비율 gR)로 끊을 수 있으면 — 한 턴에 다 깎아야 하는 줄을 AF 주기마다가 아니라 게이지 50%마다 */
       const gRat = g => g >= 100 - 1e-6 ? 1 : M.gR ? M.gR[Math.max(0, Math.min(M.gR.length-1, Math.floor((g-50)/10 + 1e-9)))] : 0;
       const ready = ip!=null ? M.aD>0 && (immNow ? gI >= 50 - 1e-6 && immAF < ip : gI >= 100 - 1e-6) : M.aD>0 && t - lastT >= M.per, ce = cx<1 ? cutEnd(t) : 0; // 피해 경감이 3턴 안에 끝나면 그때까지 AF를 아낌
       const pHold = PR && plv > 2 && Math.max(+actN.n||0, +actN.cap||0) >= (+PR.down||15); /* 내성 단계를 평상 턴으로 내릴 수 있으면 Lv2 이하에서 AF(알테마 '레벨 3이 되면 AF로') */
-      const sbNow = disc && sG >= 100 - 1e-6 && !immNow && !(RA.has(done) && (nD0 + +sbO.v)*pf/mg*cx*px0() < rem - 1e-6), nX = disc ? nD0 + (sbNow ? +sbO.v : 0) : M.nD; /* 한 턴에 다 깎아야 하는 줄을 못 깎는 SB는 아껴 AF 안에서 */
+      const sbNow = disc && sG >= 100 - 1e-6 && !immNow && !(RA.has(done) && (nD0 + +sbO.v)*pf/mg*cx*px0() < rem - 1e-6), nX = disc ? nD0 + (sbNow ? +sbO.v : 0) : (burst ? nBu : M.nD); /* 한 턴에 다 깎아야 하는 줄을 못 깎는 SB는 아껴 AF 안에서 */
       const kX = cx*px0()*pf/mg, gP = gRat(gI), aP = M.aD*gP + (disc && sG + (+sbO.gA||0)*gP >= 100 - 1e-6 ? +sbO.v*(+sbO.fin||1) : 0), partial = ip!=null && !immNow && !ready && M.aD>0 && gI >= 50 - 1e-6 && gP>0 && nX*kX < segRem() - 1e-6 && aP*kX >= segRem() - 1e-6 && !(ce && ce - t < 3);
       L.af = partial || (ready && (immNow || reset || nX*kX < segRem() - 1e-6) && !(ce && ce - t < 3) && !pHold); if(ready && !L.af) L.hold = true; d0 = L.af ? M.aD*(partial ? gP : 1) : nX; if(partial) L.g = Math.round(gI);
       if(disc){ if(L.af){ sG += (+sbO.gA||0)*(partial ? gP : 1); if(sG >= 100 - 1e-6 && !immNow){ d0 += +sbO.v*(+sbO.fin||1); sG = Math.min(100, Math.max(0, sG - 100)); L.sb = 'af'; } else sG = Math.min(100, sG); } /* AF 안에서 SB를 쓰고 남은 AF 행동이 다시 채운 몫은 남김(2026-10-27, 床舐 8턴: 6턴째 AF 시작에 SB → 8턴째 다시 SB) */
