@@ -153,14 +153,14 @@ EXTRA_BRIEF.md 형식. 빌드 때 각 캐릭터의 `ex`(personality·mp·turns·
 - `zone`: `"none"`(AF에선 그 사람이 존을 못 폄), `"base"`(AF에선 극 없이 일반 존).
 - 체인 어빌리티·오더 스킬·요격·카운터는 AF 중 발동하지 않는다(사용자 확인). 체인 추격은 평상 턴(평상 턴 SB 포함)만.
 
-캐릭터에 `sb_normal`(SB가 아닐 때 성도 스킬, 스킬 형식 + mcond·af_x 가능)을 두면 AF 행동마다 주력과 비교해 큰 쪽을 쓴다(AF 중 MP 0, 사용자 확인). party_buff `mp_atk`(MP消費攻撃 대미지 %, 최댓값 하나·장비 +15%를 대체).
+캐릭터에 `sb_normal`(SB가 아닐 때 성도 스킬, 스킬 형식 + mcond·af_x 가능)을 두면 AF 행동마다 주력과 비교해 큰 쪽을 쓴다(AF 중 MP 0, 사용자 확인). 2026-10-28부터 평상 턴에도 주력과 1회 대미지로 비교(존이면 그 존의 행동당 AF 게이지, 없으면 타수가 주력보다 적으면 기본은 주력 — evalTeamV가 쓰는 쪽·안 쓰는 쪽도 계산, 변형 `sbNn`·`sbNx`). 필드 `nx`(평상 턴 배율 보정, 없으면 `af_x`), `cycle: 0.5`(주력과 그 비율로 섞음 — 주력보다 셀 때만, 허수아비는 주력만), `hp_low: true`(적 HP 50% 아래에서 쓰는 쪽 — 섞는 비율 = S.hpLowFrac, 서가 챌린지 0.95). party_buff `mp_atk`(MP消費攻撃 대미지 %, 최댓값 하나·장비 +15%를 대체).
 
 스킬(main·sb)에는 `af_x`(AF·SB 때 위력 배율: 턴 종료 공격·요격형·HP 소모 조건 등)와 `repeat_af`(AF·SB 때 재공격 횟수)를 둘 수 있다. `af_note`는 근거.
 
 # 스킬 위력 조건 (`skill_cond.json`)
 
 키 = 캐릭터 id, 값 = `{"main": {...}, "sb": {...}}`. 스킬의 `mult`(최대 배율)는 `need` 조건이 모두 맞을 때만 쓰고, 아니면 `base`. `steps`는 중간 단계 `[[배율, [조건…]], …]`.
-조건: `{"zone":[키],"zlv":2}` `{"req":{…}}` `{"stack":"이름","turns":N}`(이름에 '소비형'이면 쓸 때마다 다 소모) `{"hp":"self|max|low"}` `{"mp":"high"}` `{"af":true|false}` `{"enemy":"poison|pain|weak|break|debuffs"}` `{"turn":">=N"}`(AF·SB = 1턴째로 판정) `{"noaf":true}`(AF·SB 땐 불충족) `{"other":"…"}`(판정 불가 → 60%로 계산). 조건마다 `af_p`(AF·SB 때 충족 비율 직접 지정: 개전 축적량·AF 중 안 느는 축적, 대조 근거는 알테마)를 둘 수 있다. `{"af":…}`는 SB도 AF 안에서 쓰는 것으로 본다.
+조건: `{"zone":[키],"zlv":2}` `{"req":{…}}` `{"stack":"이름","turns":N}`(이름에 '소비형'이면 쓸 때마다 다 소모) `{"hp":"self|max|low"}` `{"mp":"high"}` `{"af":true|false}` `{"enemy":"poison|pain|weak|hasweak|break|debuffs"}`(hasweak = 약점을 가진 적이 있으면 — 속성·타입 무관, 아군 약점 부여 포함) `{"turn":">=N"}`(AF·SB = 1턴째로 판정) `{"noaf":true}`(AF·SB 땐 불충족) `{"other":"…"}`(판정 불가 → 60%로 계산). 조건마다 `af_p`(AF·SB 때 충족 비율 직접 지정: 개전 축적량·AF 중 안 느는 축적, 대조 근거는 알테마)를 둘 수 있다. `{"af":…}`는 SB도 AF 안에서 쓰는 것으로 본다.
 
 # 결실 현현 보스 (`bosses_kesshitsu.json`)
 

@@ -182,7 +182,7 @@ function workerMain(){
   /* 이 함수는 문자열로 워커에 들어간다. 바깥 변수를 쓰지 않는다. */
   const E = self.AEOpt;
   let byId = new Map(), SP = null;
-  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null, redOff: !!ev.redOff, afBuff: +ev.afBuf||0, adNone: ev.adNone==null ? null : !!ev.adNone, adT: ev.adPick || null} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
+  const vOf = ev => ev ? {sbOff: ev.sbOff || null, uni: ev.uni || null, songOff: ev.songOff || null, azBy: ev.azBy || null, redOff: !!ev.redOff, afBuff: +ev.afBuf||0, adNone: ev.adNone==null ? null : !!ev.adNone, adT: ev.adPick || null, sbNn: ev.sbNn || null, sbNx: ev.sbNx || null} : null; // 고른 변형(성도 스킬 빼기·유니즌·자동 존) — 화면 재계산이 한 번만 돌게
   const liteOpt = r => r.error ? {error:r.error, results:[], evaluated:r.evaluated||0, poolSize:r.poolSize||0, focus:r.focus||null} : {
     results: r.results.map(x=>({rank:x.rank, ids:x.team.map(c=>c.id), score:x.score, rel:x.rel, norm:x.norm, miss:x.miss, recCount:x.recCount,
       reserveIds:x.reserves.map(c=>c.id), fixedBackIds:[...(x.fixedBack||[])], v:vOf(x.ev), bud:x.bud||null, bg:x.bg||null})),
