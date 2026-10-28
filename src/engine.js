@@ -1182,8 +1182,11 @@ function attackerCore(team, idx, progs, A, enemy, S, situation, ctx, FX, zone){
     /* nx: 평상 턴 배율 보정(없으면 af_x — 축적·HP 소모 같은 자원 제약은 평상 턴에도), cycle: 주력과 그 비율로 섞음(셴화 HP 50% 위 ホライゾン·아래 テッセラクト) */
     const sN = c.sbN, nx = sN.nx!=null ? +sN.nx : (sN.af_x!=null ? +sN.af_x : 1), skN = nx!==1 ? ({...sN, ...{mult: (+sN.mult||1)*nx}}) : sN;
     const t2 = team.slice(); t2[idx] = ({...c, ...{main: skN, mainAlt: null, alts: null, _sbN: true, _alt: true}});
-    const co2 = attackerCore0(t2, idx, progs, A, enemy, S, situation, ctx, FX, zone);
-    if(co2 && +sN.cycle>0){ const cw = sN.hp_low && S.hpLowFrac!=null ? Math.min(1, +S.hpLowFrac) : Math.min(1, +sN.cycle); if(A.dummy || !(applyZoneCap(co2, zone, S, null, 1) > applyZoneCap(co1, zone, S, null, 1))) return co1; return Object.assign(mixCores([{w: 1 - cw, co: co1}, {w: cw, co: co2}], zone, S), {viaSbN: true}); } /* hp_low: 'HP 50% 아래에서 쓰는 쪽' — 섞는 비율 = 적 HP가 50% 아래인 시간(S.hpLowFrac, 없으면 cycle) */
+    let co2 = attackerCore0(t2, idx, progs, A, enemy, S, situation, ctx, FX, zone);
+    /* 주력에 붙은 효과(buff_acts main — 엘레노아 디버프·테오도로스 브레이크 등)는 주력을 써야 걸림 → 성도 스킬을 쓰더라도 지속 턴마다 한 번은 주력(1/지속, 2026-10-28 점검: 예전엔 주력 효과가 늘 켜진 채 성도 스킬만 씀) */
+    const mB = c.bact && c.bact.main, mainW = mB && (mB.size||mB.length||0)>0 ? 1/Math.max(2, +c.buffTurns||3) : 0;
+    if(co2 && +sN.cycle>0){ const cw = Math.min(1 - mainW, sN.hp_low && S.hpLowFrac!=null ? Math.min(1, +S.hpLowFrac) : Math.min(1, +sN.cycle)); if(A.dummy || !(applyZoneCap(co2, zone, S, null, 1) > applyZoneCap(co1, zone, S, null, 1))) return co1; return Object.assign(mixCores([{w: 1 - cw, co: co1}, {w: cw, co: co2}], zone, S), {viaSbN: true}); } /* hp_low: 'HP 50% 아래에서 쓰는 쪽' — 섞는 비율 = 적 HP가 50% 아래인 시간(S.hpLowFrac, 없으면 cycle) */
+    if(co2 && mainW>0) co2 = Object.assign(mixCores([{w: mainW, co: co1}, {w: 1 - mainW, co: co2}], zone, S), {viaSbN: true});
     if(co2 && applyZoneCap(co2, zone, S, null, 1) > applyZoneCap(co1, zone, S, null, 1)*(1+1e-9)){
       /* AF 게이지: 존이면 실행당, 없으면 타당 — 성도 스킬이 1회 대미지는 세도 게이지가 덜 차면(꽃피우는 공주(AS) 앵화란만 2실행 → 一閃ノ華 1실행) 기본은 주력, evalTeamV가 성도 스킬 쪽(progs.sbNn)도 계산해 비교 */
       const g = co => { const za = zone && zone.level>0 ? zoneAFAct(zone, co, false) : null; return za!=null ? za : (+co.totHits||+co.nT||1); }; /* 존이면 그 존의 행동당 충전(속성·타입이 안 맞으면 0), 없으면 타수 */
@@ -2405,7 +2408,7 @@ function chainCalc(team, progs, A, enemy, S, sit, cx, FX, z, cores, sim, cap, co
           D += fr*dL*rF; } }
       per[h] += D*xC; trig[h] += n*xC; any=true;
   }
-  return any ? {per, trig, trigA, stk, total:per.reduce((x,y)=>x+y,0)} : null;
+  return any ? {per, trig, trigA, stk, capHit: S.chainCapHit!==false, total:per.reduce((x,y)=>x+y,0)} : null; // capHit: 요격(counterStk)도 같은 설정으로(2026-10-28 점검)
 }
 /* 체인이 쌓는 내성 DOWN(stk)을 같은 턴 요격에도: 요격 k번째(0부터)는 그 앞의 체인 발동 min(k, 체인 수)번만큼 깎인 상태 */
 /* 턴 동안 쌓이는 내성 DOWN 스택(イレクトリ レヴマ: 1개당 물리·마법 내성 10% DOWN, 최대 99 — 2026-10-19): 다른 내성 DOWN과 합쳐 100% 상한
@@ -3133,7 +3136,7 @@ function evalTeamV(team, progs, enemy, S, cap, ctx){
   /* 평상 턴 성도 스킬(2026-10-28): 1회 대미지는 세지만 AF 게이지가 덜 차서 기본은 주력을 쓴 멤버(ev.sbNrej) → 성도 스킬을 쓰는 쪽(progs.sbNn)도 계산해 성향 기준이 큰 쪽(ev.sbNn) */
   const sbNPick = (ev, pr, c1) => { if(!ev || !(ev.sbNrej || ev.sbNuse) || (ctx && ctx.stFast) || S.sbNormalTurn===false || S.sbNVar===false) return ev;
     const idx = a => a ? a.map((v,i)=>v?i:-1).filter(i=>i>=0) : [], ixOn = idx(ev.sbNrej), ixOff = idx(ev.sbNuse), vk = evalKey(ctx); let best = ev;
-    const sets = [].concat(ixOn.length ? [{on: ixOn}] : [], ixOn.length>1 ? ixOn.map(i=>({on:[i]})) : [], ixOff.length ? [{off: ixOff}] : [], ixOff.length===2 ? ixOff.map(i=>({off:[i]})) : []); /* 평상 턴 성도 스킬: 게이지 때문에 안 쓴 멤버는 쓰는 쪽(sbNn), 쓴 멤버는 안 쓰는 쪽(sbNx — 버프 일정·AF 주기가 얽혀 전체로는 손해일 때)도 계산 */
+    const sets = [].concat(ixOn.length ? [{on: ixOn}] : [], ixOn.length>1 ? ixOn.map(i=>({on:[i]})) : [], ixOff.length ? [{off: ixOff}] : [], ixOff.length>=2 && ixOff.length<=3 ? ixOff.map(i=>({off:[i]})) : []); /* 평상 턴 성도 스킬: 게이지 때문에 안 쓴 멤버는 쓰는 쪽(sbNn), 쓴 멤버는 안 쓰는 쪽(sbNx — 버프 일정·AF 주기가 얽혀 전체로는 손해일 때)도 계산 */
     for(const q of sets){ const L = q.on || q.off, f = q.on ? {sbNn:true} : {sbNx:true}, p2 = pr.map((p,i)=> L.includes(i) ? ({...p, ...f}) : p), c2 = ({...c1, ...{_svM: new Map()}}), e2 = redPick(evalTeam0(team, p2, enemy, S, cap, c2), p2, c2);
       if(vk(e2) > vk(best)*(1+1e-9)){ e2.sbNn = q.on ? team.map((c,i)=> L.includes(i)) : null; e2.sbNx = q.off ? team.map((c,i)=> L.includes(i)) : null; best = e2; } }
     return best; };
@@ -3212,6 +3215,7 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
       const zid = pl ? zk+':'+(z?z.level:0) : (A.aura && zk && AURA_Z.has(zk) ? (invA ? zk : 'Z') : ''); // 아군 전체 글래 보유 표시가 없으면 격진의 힘은 '그 존에 있나'만 갈림
       let h = z && z.level>=2 ? 7 : 3; for(let q=0;q<zid.length;q++) h = (h*31 + zid.charCodeAt(q)) % 1000003; key = (key*1000003 + h) % 2147483629; }
     if(A.stOn) key = (key*7 + 5) % 2147483629; // 상태를 켠 계산(sb_full 턴)
+    if(A._bU) key = (key*13 + 9) % 2147483629; // 버스트 평상 턴(장착한 버프 전부 켬)
     if(A.sbNo) for(const i of A.sbNo) key = (key*11 + 3 + i) % 2147483629; // SB 안 쓰는 파괴 캐릭터(SB 전용 효과 없음) // 존 각성(극·절) 여부도: 각성의 힘 글래스터(×1.25)
     if(mz){ let b=1; for(const c of team) if(c.mzone) for(const cd of c.mzone){ b = b*2 + (zoneMatch(cd.zone, z) && (!cd.zlv || (z&&z.level>=cd.zlv)) ? 1 : 0); }
       if(ez) b = b*17 + (z && z.kind==='elem' && z.level>0 ? ELEMS.indexOf(z.types[0])+2 : 1);
@@ -3523,10 +3527,12 @@ function evalTeam0(team, progs, enemy, S, cap, ctx){
   out.afBufSk = afBufC && afPlC ? afPlC.map(L=>(L||[]).map(e=>e.s)) : null; out.afBufW = afBufC ? +afBW.toFixed(2) : null; // AF 안 버프 운용: 캐릭터별 스킬, 다시 거는 AF 비율
   /* 버스트 평상 턴(2026-10-27, 유튜브 床舐 토비노오사마 8턴: 회피 턴에 버프를 걸어 두고 다음 턴 SB + 전원 공격으로 3,000억+): 전원이 주력을 쓰고 버프가 다 켜진 평상 턴 값 — 처치 턴 계산이 회피 턴 다음 턴에 씀(타수 기믹 보스만) */
   if(Array.isArray(S.hitGim) && S.hitGim.length && res.normal && res.normal.zone && !(ctx && ctx.stFast)){
-    const svN = res.normal, svS = sim ? {act: sim.act, alt: sim.alt, na: sim.na} : null, svW = wN, svU = uptLow;
-    try{ if(sim) Object.assign(sim, {act: team.map(()=>1), alt: team.map(()=>0), na: team.map(()=>0)}); uptLow = false; wN = team.map(()=>1);
+    const svN = res.normal, svS = sim ? {act: sim.act, alt: sim.alt, na: sim.na} : null, svW = wN, svU = uptLow, svA = uptArr;
+    try{ if(sim) Object.assign(sim, {act: team.map(()=>1), alt: team.map(()=>0), na: team.map(()=>0)}); wN = team.map(()=>1);
+      /* 버프는 장착해서 쓰는 것만 다 켬(유지율 > 0 → 1) — 장착 못 한 스킬·유지율 0 항목은 그대로 꺼 둠(2026-10-28 점검: 예전엔 upt 없이 전부 켜짐) */
+      if(simUse){ uptArr = sim.upt.map((u,j)=> sim.kup[j] ? {mf: Object.fromEntries(Object.entries(sim.kup[j]).map(([x,v])=>[x, v>0 ? 1 : 0]))} : (u>0 ? 1 : 0)); uptLow = true; } else uptLow = false; A._bU = true;
       runSit('normal', res.normal.zone); out.nBurst = res.normal.total; }
-    finally { res.normal = svN; if(svS) Object.assign(sim, svS); wN = svW; uptLow = svU; } }
+    finally { res.normal = svN; if(svS) Object.assign(sim, svS); wN = svW; uptLow = svU; uptArr = svA; A._bU = false; } }
   out.hitN = (()=>{ const cs = res.normal.cores || [], sc = (res.sb && res.sb.cores) || [], aN = (R3.afA && R3.afA.n) || [], sm = a => (a||[]).reduce((x,y)=>x+(+y||0), 0);
     const m = team.map((c,i)=>{ const co = cs[i] || {}, so = sc[i] || {}, h = Math.max(1, +co.totHits||1) + (+co.linkHits||0), x = Math.max(1, +co.execs||1), sbU = !!(c.stellar && progs[i] && progs[i].sbOK);
       const hN = simUse ? (sim.act[i]||0)*h + (sim.alt[i]||0) + (sim.na[i]||0) : h, aN0 = simUse ? (sim.act[i]||0)*x + (sim.alt[i]||0) + (sim.na[i]||0) : x;
@@ -4227,7 +4233,7 @@ function killTurns(ev, boss, margin){
 /* 보스 HP 구조(2026-10-18, 사용자: '부활도 하고 갑개룡같이 풀피 다 까는 기준 40스택에서 5 감소 — 한 번 죽인다고 끝이 아님'): boss.hp_model
    {bar 한 번에 깎아야 할 HP(억), bars 몇 번, reset 턴 종료 전회복(그 턴에 깎은 비율만 진행, step 단위), carry 넘친 피해가 다음 줄로 넘어가는지, kt_min, dmg_cut [{turns, x, when start|revive}]}.
    턴별 피해 = 실전 N턴 기록 → 그 뒤는 평상 턴(지속 딜의 평상 몫) + AF 주기마다 AF(긴 전투 AF) — 평균 지속 딜로 펴면 AF 한 턴에 몰린 피해가 넘쳐 버려지는 걸 못 봄. 추정 오차 여유는 피해 ÷ 1.15 */
-const hgImm = g => (g.k||'stack')==='stack' && (g.on||'start')==='start' && !(+g.from>1) && hgF(g, hgS0(g))<=1e-9; /* 개시 무적 스택 */
+const hgImm = g => (g.k||'stack')==='stack' && (g.on||'start')==='start' && !(+g.from>1) && g.per!=null && +g.per===0 && (+g.thr>0 || +g.decay>0) && hgF(g, hgS0(g))<=1e-9; /* 개시 무적 스택: 타격으론 안 깎이고(per 0) 문턱·턴으로만 줄어드는 것(토비노오사마 祝・厄) — 타격마다 깎이는 내성 스택(명룡왕·다아트)은 아님(2026-10-28 점검) */
 function killTurnsM(ev, boss, hm){
   /* 개시 무적 스택(hitgim stack: s0에서 피해 0 — 토비노오사마 祇の祝・厄, 2026-10-26): 무적 중엔 피해가 없어 실전 N턴 계획은 의미가 없고, AF를 무적 중에 쓰면(그 턴 음 공격 행동 10회 이상 → 축적 2 소비) 무적이 빨리 끝나는 대신 AF가 늦어짐.
      → 실전 기록 없이 게이지로 따라가며 '무적 중 AF를 k번(0·1·2) 쓰는' 계획을 각각 돌려 가장 빠른 처치 턴 */
